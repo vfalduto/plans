@@ -1,0 +1,619 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Débit meuble SDB</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wght@400;500;700;800&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+<style>:root{
+  --paper:#F7F8F6; --ink:#1D2A33; --muted:#5E6B73; --line:#C9D0D4; --wood:#B07A45;
+  --water:#2F7FB5; --tri:#C8412C; --flow:#2E8B57; --green:#7FA35A;
+  --panel:#FFFFFF; --cab:#ECE6DA; --tall:#D8CFBD; --tech:#E1E6E9; --glass:#CFE4F2; --tile:#EFEBE4;
+  --mA:#E9DDC8; --mB:#F1D9A8; --mC:#D9E2E6; --mD:#BFC6CB; --mE:#C9A27A;
+  color-scheme:light;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --paper:#141A1F; --ink:#E4EAED; --muted:#9AA7AE; --line:#34414A; --wood:#C9925A;
+    --water:#5AA8DE; --tri:#E8664F; --flow:#4CB97A; --green:#9CC175;
+    --panel:#1B2329; --cab:#2A3338; --tall:#394449; --tech:#26303A; --glass:#1F3A4E; --tile:#1E252B;
+    --mA:#3A3428; --mB:#4A3C22; --mC:#2B363D; --mD:#3B444A; --mE:#5A4330;
+    color-scheme:dark;
+  }
+}
+:root[data-theme="dark"]{
+  --paper:#141A1F; --ink:#E4EAED; --muted:#9AA7AE; --line:#34414A; --wood:#C9925A;
+  --water:#5AA8DE; --tri:#E8664F; --flow:#4CB97A; --green:#9CC175;
+  --panel:#1B2329; --cab:#2A3338; --tall:#394449; --tech:#26303A; --glass:#1F3A4E; --tile:#1E252B;
+  --mA:#3A3428; --mB:#4A3C22; --mC:#2B363D; --mD:#3B444A; --mE:#5A4330;
+  color-scheme:dark;
+}
+*{box-sizing:border-box}
+html,body{margin:0}
+body{background:var(--paper);color:var(--ink);font-family:Archivo,system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;line-height:1.55;font-size:16px}
+.wrap{max-width:1180px;margin:0 auto;padding:28px 16px 64px}
+.kicker{font-family:"JetBrains Mono",ui-monospace,Menlo,monospace;font-size:12px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted)}
+h1{font-size:clamp(28px,5vw,44px);line-height:1.08;margin:6px 0 12px;font-weight:800;letter-spacing:-.01em}
+h2{font-size:26px;margin:4px 0 8px;font-weight:800}
+h3{font-size:15px;margin:0 0 6px}
+section{margin-top:52px;padding-top:8px;border-top:2px solid var(--line)}
+.pitch{font-size:17px;max-width:820px}
+.changes{max-width:880px;font-size:15px;padding-left:20px}
+.toc{display:flex;flex-wrap:wrap;gap:8px;margin:18px 0 0}
+.toc a{font-size:14px;color:var(--ink);text-decoration:none;border:1px solid var(--line);border-radius:999px;padding:4px 12px;background:var(--panel)}
+.fig{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:12px}
+.figs{display:grid;grid-template-columns:1.3fr 1fr;gap:12px;margin:14px 0}
+@media (max-width:980px){.figs{grid-template-columns:1fr}}
+.scroll svg{display:block;width:100%;height:auto;max-height:900px}
+.cap{font-size:12.5px;color:var(--muted);margin:8px 2px 0}
+.grid2{display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:12px}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:14px 16px}
+.card ul,.card ol{padding-left:18px;margin:4px 0}.card li{margin:3px 0;font-size:15px}
+.warnh{color:var(--tri)}
+.scroll-t{overflow-x:auto}
+table{border-collapse:collapse;width:100%;font-size:14px;min-width:760px}
+th,td{text-align:left;padding:7px 8px;border-bottom:1px solid var(--line);vertical-align:top}
+th{font-size:12px;text-transform:uppercase;letter-spacing:.05em;color:var(--muted);font-weight:600}
+td.n{font-family:"JetBrains Mono",ui-monospace,monospace;font-size:13px;white-space:nowrap;text-align:right}
+td.r{font-family:"JetBrains Mono",ui-monospace,monospace;font-weight:600;white-space:nowrap}
+td.u{font-size:13px;color:var(--muted)}
+tr.mat td{background:var(--tile);font-weight:700;border-bottom:1px solid var(--ink)}
+.sw{display:inline-block;width:12px;height:12px;border:1px solid var(--ink);border-radius:2px;vertical-align:-1px;margin-right:6px}
+.note{font-size:13px;color:var(--muted)}
+.warn{border-left:3px solid var(--tri);padding:8px 12px;background:var(--panel);font-size:14px;margin:10px 0;max-width:880px}
+.warn:empty{display:none}
+.hyp{border-left:3px solid var(--wood);padding:8px 12px;background:var(--panel);font-size:14px;margin:14px 0;max-width:880px}
+.switch{display:flex;flex-wrap:wrap;gap:8px;margin:18px 0 6px}
+.switch button{font:inherit;font-size:14px;padding:8px 14px;border-radius:999px;border:1px solid var(--line);background:var(--panel);color:var(--ink);cursor:pointer}
+.switch button[aria-selected="true"]{background:var(--ink);color:var(--paper);border-color:var(--ink)}
+.switch button:focus-visible,.dims input:focus-visible,.dims button:focus-visible{outline:2px solid var(--wood);outline-offset:2px}
+.dims{display:flex;flex-wrap:wrap;gap:12px;align-items:flex-end;margin:12px 0}
+.dims label{display:flex;flex-direction:column;font-size:13px;color:var(--muted);gap:4px}
+.dims input{font:inherit;font-family:"JetBrains Mono",ui-monospace,monospace;font-size:15px;width:110px;padding:7px 9px;border:1px solid var(--line);border-radius:8px;background:var(--panel);color:var(--ink)}
+.dims button{font:inherit;font-size:14px;padding:8px 14px;border-radius:8px;border:1px solid var(--line);background:var(--panel);color:var(--ink);cursor:pointer}
+.sum{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:12px;margin:12px 0}
+.sum .card b{font-family:"JetBrains Mono",ui-monospace,monospace;font-size:20px;display:block}
+.sheets{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,520px),1fr));gap:12px;margin:12px 0}
+[hidden]{display:none!important}
+
+svg text{font-family:Archivo,system-ui,sans-serif;fill:var(--ink)}
+.w{fill:var(--ink)}
+.floorl{stroke:var(--ink);stroke-width:4}
+.ceil{stroke:var(--muted);stroke-width:2;stroke-dasharray:14 10}
+.pA{fill:var(--mA);stroke:var(--ink);stroke-width:1.6}
+.pB{fill:var(--mB);stroke:var(--ink);stroke-width:1.6}
+.pC{fill:var(--mC);stroke:var(--ink);stroke-width:1.6}
+.pD{fill:var(--mD);stroke:var(--ink);stroke-width:1.6}
+.pE{fill:var(--mE);stroke:var(--ink);stroke-width:1.6}
+.bg{fill:var(--cab);fill-opacity:.55;stroke:var(--ink);stroke-width:1}
+.hid{fill:none;stroke:var(--ink);stroke-width:1.4;stroke-dasharray:10 6}
+.door{fill:var(--mA);fill-opacity:.82;stroke:var(--ink);stroke-width:1.6}
+.ll{fill:var(--tech);stroke:var(--ink);stroke-width:1.6}
+.app{fill:none;stroke:var(--ink);stroke-width:1.6}
+.hole{fill:var(--paper);stroke:var(--ink);stroke-width:1.6}
+.niche{fill:var(--glass);fill-opacity:.45}
+.dim{stroke:var(--muted);stroke-width:1.2;fill:none}
+.dimt{fill:var(--muted);font-family:"JetBrains Mono",ui-monospace,monospace !important;font-size:22px}
+.lbl{font-size:24px}
+.lbls{font-size:20px}
+.tag{font-family:"JetBrains Mono",ui-monospace,monospace !important;font-weight:600;font-size:22px}
+.tagbg{fill:var(--panel);stroke:var(--ink);stroke-width:1.2}
+.muted{fill:var(--muted)}
+.sheet{fill:var(--panel);stroke:var(--ink);stroke-width:3}
+.trim{fill:none;stroke:var(--muted);stroke-width:2;stroke-dasharray:12 8}
+.sht{font-family:"JetBrains Mono",ui-monospace,monospace !important;font-size:30px;font-weight:600}
+.shs{font-family:"JetBrains Mono",ui-monospace,monospace !important;font-size:24px;fill:var(--muted)}
+</style>
+</head>
+<body>
+<div class="wrap">
+<svg width="0" height="0" style="position:absolute" aria-hidden="true" focusable="false"><defs>
+  <marker id="tk" viewBox="0 0 10 10" refX="5" refY="5" markerWidth="8" markerHeight="8" orient="auto"><path d="M2 8 L8 2" style="stroke:var(--muted)" stroke-width="1.4"/></marker>
+</defs></svg>
+
+<div class="kicker">Salle de bain · meuble linge V2.2 · débit V1</div>
+<h1>Meuble linge de la salle de bain — débit</h1>
+<p class="pitch">Liste des pièces à découper pour réaliser le meuble de la <a href="sdb-meuble-v2.html">V2.2</a> : caisson à paniers, plan de travail avec trappe, caisson haut à portes coulissantes. Les cotes sont en millimètres et se recalculent à partir des dimensions relevées de l&#x27;alcôve. Les deux versions (machine à droite ou à gauche) utilisent exactement les mêmes pièces ; seul le montage change.</p>
+
+<nav class="toc">
+  <a href="#cotes">Cotes de l&#x27;alcôve</a><a href="#schemas">Schémas</a><a href="#liste">Liste de débit</a><a href="#calepinage">Calepinage</a><a href="#quincaillerie">Quincaillerie</a><a href="#montage">Montage</a><a href="#verif">À vérifier</a><a href="#changements">Changements</a>
+</nav>
+
+<section id="cotes">
+<h2>Cotes de l&#x27;alcôve</h2>
+<p class="pitch">Valeurs du plan par défaut. Mesurez l&#x27;alcôve en trois points (bas, milieu, haut) et saisissez la plus petite valeur : toutes les pièces se recalculent.</p>
+<div class="dims">
+  <label>Largeur mur à mur (nord → sud)<input id="inL" type="number" inputmode="numeric" step="1" min="1000" max="1300" value="1140"></label>
+  <label>Profondeur (bord d&#x27;alcôve → mur du fond)<input id="inP" type="number" inputmode="numeric" step="1" min="600" max="760" value="670"></label>
+  <label>Hauteur sol → plafond<input id="inH" type="number" inputmode="numeric" step="1" min="2300" max="2700" value="2500"></label>
+  <button type="button" id="reset">Valeurs du plan</button>
+</div>
+<div class="warn" id="warn" role="status"></div>
+<div class="hyp">Jeux retenus : 3 mm par mur pour le plan et le caisson bas, 5 mm par mur pour le caisson haut, façades à 10 mm en retrait du bord de l&#x27;alcôve, plan à 10 mm du mur du fond (joint silicone). Panneaux de 19 mm, fonds de 8 mm, plan de 30 mm. Hauteurs fixées par la V2.2 : plan à 900, niche jusqu&#x27;à 1450, caisson haut jusqu&#x27;à 20 mm du plafond.</div>
+</section>
+
+<section id="schemas">
+<h2>Schémas</h2>
+<div class="switch" role="tablist" aria-label="Côté de la machine">
+  <button type="button" role="tab" data-v="d" aria-selected="true"><b>Machine à droite</b> · côté lavabo</button>
+  <button type="button" role="tab" data-v="g" aria-selected="false"><b>Machine à gauche</b> · côté porte</button>
+</div>
+<p class="pitch" id="sidetxt"></p>
+<div class="figs">
+  <div class="fig"><h3>Vue de face (vers l&#x27;est), repères des pièces</h3><div class="scroll" id="elev"></div>
+  <p class="cap">Portes coulissantes dessinées fermées, étagères et montant en pointillé derrière. Les repères renvoient à la liste de débit.</p></div>
+  <div class="fig"><h3>Coupe à travers un tiroir-panier (vue vers le nord)</h3><div class="scroll" id="sect"></div>
+  <p class="cap">La trappe du robinet est hors de cette coupe (au fond du plan, centrée sur le meuble) ; son encoche est dessinée en pointillé.</p></div>
+</div>
+<div class="figs">
+  <div class="fig"><h3>Plan de travail (vu de dessus) et façade d&#x27;un tiroir</h3><div class="scroll" id="topv"></div>
+  <p class="cap">L&#x27;encoche de la trappe est centrée sur la largeur du plan : même plan dans les deux versions. Le couvercle se taille dans la chute de l&#x27;encoche.</p></div>
+  <div class="fig"><h3>Façade de tiroir-panier (A6)</h3><div class="scroll" id="facev"></div>
+  <p class="cap">Fente à linge découpée dans la façade, volet basculant (B3) sur deux pivots, goulotte (B4) derrière.</p></div>
+</div>
+</section>
+
+<section id="liste">
+<h2>Liste de débit</h2>
+<p class="pitch" id="listpitch"></p>
+<div class="scroll-t"><table>
+<thead><tr><th>Rep.</th><th>Pièce</th><th style="text-align:right">Qté</th><th style="text-align:right">Long.</th><th style="text-align:right">Larg.</th><th>Chants vus</th><th>Usinages, remarques</th></tr></thead>
+<tbody id="tbody"></tbody>
+</table></div>
+<p class="note">Longueur = sens du fil (contreplaqué) ou du décor (mélaminé). Pour du MDF hydrofuge peint, « chants vus » = chants à poncer et à peindre ; pour du mélaminé, chants à plaquer (ABS 1 mm).</p>
+</section>
+
+<section id="calepinage">
+<h2>Calepinage</h2>
+<p class="pitch">Proposition de découpe dans des panneaux du commerce (trait de scie 4 mm, 10 mm de rive). Indicatif : un magasin qui fait la découpe établira son propre plan. Formats modifiables ci-dessous. Les pièces sont tournées librement (MDF) : avec un décor ou un fil bois, imposer le sens des façades et des portes.</p>
+<div class="dims">
+  <label>Panneau 19 mm (L × l)<input id="fA" type="text" value="2440 × 1220"></label>
+  <label>Contreplaqué 12 mm<input id="fB" type="text" value="2500 × 1250"></label>
+  <label>Panneau 8 mm<input id="fC" type="text" value="2440 × 1220"></label>
+</div>
+<div class="sum" id="sum"></div>
+<div class="sheets" id="sheets"></div>
+</section>
+
+<section id="quincaillerie">
+<h2>Quincaillerie et achats</h2>
+<div class="grid2">
+<div class="card"><h3>Ferrures</h3><ul>
+<li>2 paires de coulisses à billes, sortie totale, <b id="qRun">500</b> mm, latérales 12,7 mm, charge ≥ 30 kg.</li>
+<li>1 kit pour 2 portes coulissantes intérieures au caisson (rail haut + rail bas), portes de 19 mm, ≈ 10 kg par porte.</li>
+<li>4 tourillons ou axes Ø 6 × 30 (pivots des volets).</li>
+<li>24 taquets d&#x27;étagère Ø 5 (6 étagères × 4).</li>
+<li>2 poignées pour les tiroirs (ou poussoirs « push-open »), 2 poignées cuvettes pour les portes.</li>
+<li>4 patins ou vérins réglables sous le caisson bas.</li>
+</ul></div>
+<div class="card"><h3>Fixation et finition</h3><ul>
+<li>Vis à bois 4 × 40 et 4 × 16 (fonds, coulisses), vis d&#x27;assemblage (confirmat 7 × 50) ou tourillons + colle D3.</li>
+<li>Chevilles adaptées aux murs (caisson haut vissé dans les deux murs latéraux et le mur du fond).</li>
+<li>Silicone sanitaire : joints plan / murs et caisson haut / murs.</li>
+<li>Peinture ou vernis pour pièces humides si MDF hydrofuge brut, chants compris.</li>
+</ul></div>
+<div class="card"><h3>Équipements (achat)</h3><ul>
+<li>10 bacs en plastique ≈ 160 × 160 × 350 pour la pharmacie.</li>
+<li>Profil LED + alimentation sous le caisson haut (éclairage de la niche).</li>
+<li>Bloc 2 prises + USB, crochet pour le sèche-cheveux.</li>
+<li>Robinet d&#x27;arrêt encastré et prise de la machine (plombier, électricien).</li>
+</ul></div>
+</div>
+</section>
+
+<section id="montage">
+<h2>Ordre de montage</h2>
+<div class="card" style="max-width:880px"><ol>
+<li>Faire poser le robinet encastré à 800 du sol, centré sur la largeur, et la prise de la machine avant tout.</li>
+<li>Assembler le caisson bas : côtés A1 sur le dessous A2 (à 100 du sol), montant A3, traverses A4, fond C2 vissé au dos. Visser les coulisses avant de fermer.</li>
+<li>Poser le caisson à 3 mm du mur <span data-side></span>, régler les patins pour que le dessus soit à 870 partout, visser au mur latéral.</li>
+<li>Poser les tasseaux E1 au mur du fond (dessous à 870) et la cornière E2 sur le mur <span data-other></span>, toujours à 870.</li>
+<li>Découper l&#x27;encoche du plan D1, coller-visser les tasseaux de feuillure B5, poser le plan, joint silicone sur les murs. Ajuster le couvercle D2.</li>
+<li>Monter les bacs (B1, B2, C3), les goulottes (B4 + C4) et les volets (B3), puis fixer les façades A6 sur les bacs ; régler les jeux à 3 mm.</li>
+<li>Assembler le caisson haut (A7, A8, A9, fond C1), poser les rails du kit. Le poser sur deux cales de 550 posées sur le plan, le visser dans les murs.</li>
+<li>Poser le fileur A13 en l&#x27;ajustant au plafond, les étagères A10 et A11, les portes A12, puis la machine.</li>
+</ol></div>
+</section>
+
+<section id="verif">
+<h2>À vérifier avant de commander</h2>
+<div class="grid2">
+<div class="card"><h3 class="warnh">Points d&#x27;attention</h3><ul>
+<li><b>Volume des paniers</b> : avec un montant central, des coulisses latérales et des bacs en contreplaqué de 12, chaque bac fait <b id="vol">39 L</b> utiles, et non 45 L comme sur le plan V2.2 (les bacs de 20 cm du plan ne tiennent pas dans une ouverture de 234 avec les coulisses).</li>
+<li><b>Hauteur de la machine</b> : le dessous du plan est à 870 ; la machine doit faire au plus 850 (pieds réglés) pour garder 8 mm sous les tasseaux de feuillure de la trappe.</li>
+<li><b>Plan de 30 mm</b> : un plan stratifié standard de 38 mm abaisse le dessous à 862 et ne laisse plus de place au-dessus de la machine. Rester en 30 mm (contreplaqué, compact, massif) ou monter le plan à 908.</li>
+<li><b>Largeur de la machine</b> : la cornière au lieu d&#x27;un tasseau laisse <b id="llz">609</b> mm pour une machine de 600.</li>
+</ul></div>
+<div class="card"><h3>Hypothèses à confirmer</h3><ul>
+<li>Formats de panneaux de 2440 × 1220 et 2500 × 1250 (de mémoire, non vérifié) : à confirmer en magasin.</li>
+<li>Hauteur des portes coulissantes et des rainures : selon la notice du kit choisi (ici hauteur intérieure − 12).</li>
+<li>Murs d&#x27;aplomb et d&#x27;équerre : si l&#x27;écart dépasse 5 mm entre le haut et le bas, prévoir des fileurs latéraux à ajuster au lieu des jeux de 3 et 5 mm.</li>
+<li>Façades en applique de 261 (le plan V2.2 dessinait 250 + une joue de 20 visible) : même aspect, découpe plus simple.</li>
+</ul></div>
+</div>
+</section>
+
+<p class="note" style="margin-top:20px">Repère : comme dans la V2.2, la vue de face regarde vers l&#x27;est ; nord (porte) à gauche, sud (lavabo) à droite. « Droite » et « gauche » s&#x27;entendent face au meuble. Toutes les cotes en mm.</p>
+
+<section id="changements">
+<h2>Changements</h2>
+<div class="scroll-t"><table style="min-width:620px">
+<thead><tr><th>Version</th><th>Date</th><th>Changements</th></tr></thead>
+<tbody>
+<tr><td><b>V1</b></td><td>01/10/2026</td><td>Première liste de débit d&#x27;après la V2.2 du meuble : 5 matériaux, 26 repères, schémas cotés, calepinage, quincaillerie et ordre de montage. Cotes recalculées depuis les mesures de l&#x27;alcôve.</td></tr>
+</tbody></table></div>
+</section>
+</div>
+
+<script>
+(function(){
+'use strict';
+var T=19, F=8, B=12, PT=30;
+var MATS={
+  A:{n:'Panneau hydrofuge 19 mm',d:'MDF hydrofuge à peindre ou mélaminé hydrofuge'},
+  B:{n:'Contreplaqué bouleau 12 mm',d:'bacs, volets, goulottes, feuillures'},
+  C:{n:'Panneau hydrofuge 8 mm',d:'fonds'},
+  D:{n:'Plan de travail 30 mm',d:'contreplaqué, compact ou massif, hydrofuge'},
+  E:{n:'Tasseaux et cornière',d:'sapin raboté traité 27 × 40, cornière alu 30 × 30 × 3'}
+};
+var DEF={L:1140,P:670,H:2500};
+var side='d';
+
+function geo(L,P,H){
+  var g={L:L,P:P,H:H,j:3,ju:5};
+  g.Wc=525; g.Hc=900-PT; g.Dc=P-130; g.sideD=g.Dc-F;
+  g.inW=g.Wc-2*T; g.open=(g.inW-T)/2;
+  g.run=[550,500,450,400].filter(function(r){return r<=g.sideD-20})[0]||400;
+  g.boxW=Math.floor(g.open-25.4); g.boxD=g.run; g.boxH=450;
+  g.faceW=(g.Wc-3)/2; g.faceH=g.Hc-3-100;
+  g.montH=g.Hc-T-(100+T);
+  g.planW=L-2*g.j; g.planD=P-20;
+  g.notchX=L/2-150-g.j;
+  g.llZone=L-2*g.j-g.Wc-3;
+  g.Wu=L-2*g.ju; g.Hu=H-20-1450; g.sideUD=450-F;
+  g.inUW=g.Wu-2*T; g.inUH=g.Hu-2*T; g.montUD=g.sideUD-60;
+  g.shelfW=Math.floor((g.inUW-T)/2-2); g.shelfD=372;
+  g.doorH=g.inUH-12; g.doorW=Math.ceil((g.inUW+30)/2);
+  g.cleat=Math.round(L/2-185-g.j); g.corn=g.planD-30;
+  g.vol=Math.round((g.boxW-2*B)*(g.boxD-2*B)*g.boxH/1e5)/10;
+  return g;
+}
+function parts(g){
+  return [
+  {r:'A1',m:'A',n:'Côté du caisson bas',q:2,l:g.Hc,w:g.sideD,c:'avant',u:'Coulisses sur la face intérieure ; descend jusqu’au sol'},
+  {r:'A2',m:'A',n:'Dessous du caisson bas',q:1,l:g.inW,w:g.sideD,c:'—',u:'Entre les côtés, dessus à 119 du sol'},
+  {r:'A3',m:'A',n:'Montant central bas',q:1,l:g.montH,w:g.sideD,c:'avant',u:'Coulisses sur les deux faces ; ouvertures de '+fmt(g.open)},
+  {r:'A4',m:'A',n:'Traverse haute',q:2,l:g.inW,w:100,c:'—',u:'À plat, avant et arrière, sous le plan'},
+  {r:'A5',m:'A',n:'Plinthe',q:1,l:g.inW,w:98,c:'1 long',u:'Entre les côtés, 20 mm en retrait'},
+  {r:'A6',m:'A',n:'Façade de tiroir-panier',q:2,l:g.faceH,w:g.faceW,c:'4 + fente',u:'Fente 190 × 120, bas de fente à 600 du bas de façade, centrée ; 2 trous Ø 6 de pivot dans les flancs de la fente, 10 sous le haut'},
+  {r:'A7',m:'A',n:'Côté du caisson haut',q:2,l:g.Hu,w:g.sideUD,c:'avant',u:'Crémaillère Ø 5 pas 32 côté intérieur, à 60 du chant avant'},
+  {r:'A8',m:'A',n:'Dessus et dessous du caisson haut',q:2,l:g.inUW,w:g.sideUD,c:'avant',u:'Rails du kit coulissant à l’avant (60 mm) ; profil LED sous le dessous'},
+  {r:'A9',m:'A',n:'Montant central haut',q:1,l:g.inUH,w:g.montUD,c:'avant',u:'Crémaillère sur les deux faces ; en retrait de 60 derrière les rails'},
+  {r:'A10',m:'A',n:'Étagère serviettes',q:2,l:g.shelfW,w:g.shelfD,c:'avant',u:'Réglable ; cases d’environ 310'},
+  {r:'A11',m:'A',n:'Étagère pharmacie et produits divers',q:4,l:g.shelfW,w:g.shelfD,c:'avant',u:'Réglable ; pour bacs de 160 de haut'},
+  {r:'A12',m:'A',n:'Porte coulissante',q:2,l:g.doorH,w:g.doorW,c:'4',u:'Recouvrement 30 au centre ; hauteur selon la notice du kit ; poignée cuvette'},
+  {r:'A13',m:'A',n:'Fileur de plafond',q:1,l:g.Wu,w:40,c:'1 long',u:'Vissé sur le chant avant du dessus, ajusté au plafond'},
+  {r:'B1',m:'B',n:'Côté de bac',q:4,l:g.boxD,w:g.boxH,c:'haut',u:'Coulisse '+g.run+' vissée sur la face extérieure'},
+  {r:'B2',m:'B',n:'Avant et arrière de bac',q:4,l:g.boxW-2*B,w:g.boxH,c:'haut',u:'Entre les côtés ; l’avant reçoit la façade A6'},
+  {r:'B3',m:'B',n:'Volet de fente',q:2,l:186,w:116,c:'4',u:'Pivots Ø 6 en haut, retombe fermé par son poids'},
+  {r:'B4',m:'B',n:'Goulotte',q:2,l:g.boxW-2*B,w:160,c:'—',u:'Inclinée à 45° du bas de la fente vers le bac'},
+  {r:'B5',m:'B',n:'Tasseau de feuillure de trappe',q:2,l:100,w:40,c:'—',u:'Sous le plan, de part et d’autre de l’encoche, dépasse de 10'},
+  {r:'C1',m:'C',n:'Fond du caisson haut',q:1,l:g.Wu,w:g.Hu,c:'—',u:'Vissé au dos'},
+  {r:'C2',m:'C',n:'Fond du caisson bas',q:1,l:g.Hc-100,w:g.Wc,c:'—',u:'Vissé au dos, de 100 à 870'},
+  {r:'C3',m:'C',n:'Fond de bac',q:2,l:g.boxD,w:g.boxW,c:'—',u:'Vissé sous le bac'},
+  {r:'C4',m:'C',n:'Joue de goulotte',q:2,l:120,w:120,c:'—',u:'Couper en diagonale : 4 triangles'},
+  {r:'D1',m:'D',n:'Plan de travail',q:1,l:g.planW,w:g.planD,c:'avant',u:'Encoche 300 × 100 au fond, à '+fmt(g.notchX)+' des deux bords'},
+  {r:'D2',m:'D',n:'Couvercle de trappe',q:1,l:296,w:98,c:'4',u:'Taillé dans la chute de l’encoche ; trou de doigt Ø 25'},
+  {r:'E1',m:'E',n:'Tasseau arrière 27 × 40',q:2,l:g.cleat,w:40,c:'—',u:'Mur du fond, dessous à 870, de part et d’autre de la trappe'},
+  {r:'E2',m:'E',n:'Cornière alu 30 × 30 × 3',q:1,l:g.corn,w:30,c:'—',u:'Mur latéral côté machine, aile horizontale sous le plan'}
+  ];
+}
+function fmt(v){return (Math.round(v*10)/10).toString().replace('.',',')}
+function esc(s){return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;')}
+
+/* ---------- tableau ---------- */
+function renderTable(ps){
+  var h='',cur='';
+  ps.forEach(function(p){
+    if(p.m!==cur){cur=p.m;h+='<tr class="mat"><td colspan="7"><span class="sw" style="background:var(--m'+cur+')"></span>'+cur+' — '+MATS[cur].n+' <span class="note" style="font-weight:400">· '+MATS[cur].d+'</span></td></tr>';}
+    h+='<tr><td class="r">'+p.r+'</td><td>'+esc(p.n)+'</td><td class="n">'+p.q+'</td><td class="n">'+fmt(p.l)+'</td><td class="n">'+fmt(p.w)+'</td><td class="u">'+p.c+'</td><td class="u">'+esc(p.u)+'</td></tr>';
+  });
+  document.getElementById('tbody').innerHTML=h;
+}
+
+/* ---------- calepinage ---------- */
+function parseF(s){var m=String(s).match(/(\d+)\D+(\d+)/);return m?[+m[1],+m[2]]:null}
+function nest(list,PW,PH){
+  var cands=[nestShelf(list,PW,PH)];
+  [function(x,y){return y.a*y.b-x.a*x.b},function(x,y){return Math.max(y.a,y.b)-Math.max(x.a,x.b)},function(x,y){return Math.min(y.a,y.b)-Math.min(x.a,x.b)}]
+    .forEach(function(c){cands.push(nestGuil(list,PW,PH,c))});
+  cands.sort(function(x,y){return x.over.length-y.over.length||x.panels.length-y.panels.length});
+  return cands[0];
+}
+function nestGuil(list,PW,PH,cmp){
+  var k=4,tr=10,W=PW-2*tr,HH=PH-2*tr,items=[],panels=[],over=[];
+  list.forEach(function(p){for(var i=0;i<p.q;i++)items.push({r:p.r,a:p.l,b:p.w})});
+  items.sort(cmp);
+  function best(it){
+    var bst=null;
+    panels.forEach(function(pn,pi){pn.fr.forEach(function(f,fi){
+      [[it.a,it.b],[it.b,it.a]].forEach(function(o){
+        if(o[0]<=f.w&&o[1]<=f.h){var sc=pi*1e7+Math.min(f.w-o[0],f.h-o[1]);if(!bst||sc<bst.sc)bst={sc:sc,pn:pn,fi:fi,w:o[0],h:o[1]}}
+      });
+    })});
+    return bst;
+  }
+  items.forEach(function(it){
+    var b=best(it);
+    if(!b){
+      if(!((it.a<=W&&it.b<=HH)||(it.b<=W&&it.a<=HH))){over.push(it);return}
+      panels.push({fr:[{x:0,y:0,w:W,h:HH}],it:[]});b=best(it);
+    }
+    var f=b.pn.fr.splice(b.fi,1)[0],rw=f.w-b.w-k,rh=f.h-b.h-k;
+    b.pn.it.push({r:it.r,x:f.x,y:f.y,w:b.w,h:b.h});
+    var n=rw>rh
+      ?[{x:f.x+b.w+k,y:f.y,w:rw,h:f.h},{x:f.x,y:f.y+b.h+k,w:b.w,h:rh}]
+      :[{x:f.x+b.w+k,y:f.y,w:rw,h:b.h},{x:f.x,y:f.y+b.h+k,w:f.w,h:rh}];
+    n.forEach(function(r){if(r.w>0&&r.h>0)b.pn.fr.push(r)});
+  });
+  return {panels:panels,over:over,tr:tr};
+}
+function nestShelf(list,PW,PH){
+  var k=4,tr=10,W=PW-2*tr,HH=PH-2*tr,items=[],panels=[],over=[];
+  list.forEach(function(p){for(var i=0;i<p.q;i++)items.push({r:p.r,a:Math.max(p.l,p.w),b:Math.min(p.l,p.w)})});
+  items.sort(function(x,y){return y.b-x.b||y.a-x.a});
+  items.forEach(function(it){
+    var done=false;
+    for(var i=0;i<panels.length&&!done;i++){
+      var pn=panels[i];
+      for(var s=0;s<pn.sh.length&&!done;s++){
+        var sh=pn.sh[s];
+        if(it.b<=sh.h&&sh.x+it.a<=W){pn.it.push({r:it.r,x:sh.x,y:sh.y,w:it.a,h:it.b});sh.x+=it.a+k;done=true}
+        else if(it.a<=sh.h&&sh.x+it.b<=W){pn.it.push({r:it.r,x:sh.x,y:sh.y,w:it.b,h:it.a});sh.x+=it.b+k;done=true}
+      }
+      if(!done&&it.a<=W&&pn.y+it.b<=HH){pn.sh.push({y:pn.y,h:it.b,x:it.a+k});pn.it.push({r:it.r,x:0,y:pn.y,w:it.a,h:it.b});pn.y+=it.b+k;done=true}
+    }
+    if(!done){
+      if(it.a<=W&&it.b<=HH)panels.push({sh:[{y:0,h:it.b,x:it.a+k}],it:[{r:it.r,x:0,y:0,w:it.a,h:it.b}],y:it.b+k});
+      else over.push(it);
+    }
+  });
+  return {panels:panels,over:over,tr:tr};
+}
+function sheetSvg(pn,PW,PH,tr,m,title){
+  var o='<svg viewBox="-20 -60 '+(PW+40)+' '+(PH+80)+'" role="img" aria-label="'+esc(title)+'">';
+  o+='<text class="sht" x="0" y="-22">'+esc(title)+'</text>';
+  o+='<rect class="sheet" x="0" y="0" width="'+PW+'" height="'+PH+'"/>';
+  o+='<rect class="trim" x="'+tr+'" y="'+tr+'" width="'+(PW-2*tr)+'" height="'+(PH-2*tr)+'"/>';
+  pn.it.forEach(function(r){
+    var x=r.x+tr,y=r.y+tr;
+    o+='<rect class="p'+m+'" x="'+x+'" y="'+y+'" width="'+r.w+'" height="'+r.h+'"/>';
+    var fs=Math.max(14,Math.min(34,Math.min(r.w/4.5,r.h/2.6)));
+    o+='<text class="tag" style="font-size:'+fs+'px" x="'+(x+r.w/2)+'" y="'+(y+r.h/2)+'" text-anchor="middle">'+r.r+'</text>';
+    if(r.h>fs*2.4)o+='<text class="dimt" style="font-size:'+(fs*.72)+'px" x="'+(x+r.w/2)+'" y="'+(y+r.h/2+fs*.95)+'" text-anchor="middle">'+fmt(r.w)+' × '+fmt(r.h)+'</text>';
+  });
+  return o+'</svg>';
+}
+function renderNest(ps){
+  var sum='',sh='';
+  ['A','B','C'].forEach(function(m){
+    var f=parseF(document.getElementById('f'+m).value)||[2440,1220];
+    var PW=Math.max(f[0],f[1]),PH=Math.min(f[0],f[1]);
+    var list=ps.filter(function(p){return p.m===m});
+    var area=list.reduce(function(a,p){return a+p.q*p.l*p.w},0)/1e6;
+    var r=nest(list,PW,PH);
+    var used=r.panels.length;
+    sum+='<div class="card"><span class="sw" style="background:var(--m'+m+')"></span>'+MATS[m].n+'<b>'+used+' panneau'+(used>1?'x':'')+'</b><span class="note">'+fmt(Math.round(area*100)/100)+' m² de pièces · '+PW+' × '+PH+(r.over.length?' · <span style="color:var(--tri)">'+r.over.length+' pièce(s) hors format</span>':'')+'</span></div>';
+    r.panels.forEach(function(pn,i){sh+='<div class="fig">'+sheetSvg(pn,PW,PH,r.tr,m,m+' · panneau '+(i+1)+'/'+used)+'</div>'});
+  });
+  var g=G;
+  sum+='<div class="card"><span class="sw" style="background:var(--mD)"></span>Plan de travail 30 mm<b>1 plan</b><span class="note">longueur ≥ '+fmt(g.planW)+', profondeur ≥ '+fmt(g.planD)+'</span></div>';
+  sum+='<div class="card"><span class="sw" style="background:var(--mE)"></span>Tasseaux et cornière<b>1 + 1 barre</b><span class="note">tasseau 27 × 40 de '+fmt(2*g.cleat+10)+' · cornière de '+fmt(g.corn)+'</span></div>';
+  document.getElementById('sum').innerHTML=sum;
+  document.getElementById('sheets').innerHTML=sh;
+}
+
+/* ---------- dessins ---------- */
+function S(){this.o=''}
+S.prototype.r=function(x,y,w,h,c,st){this.o+='<rect class="'+c+'" x="'+x+'" y="'+y+'" width="'+w+'" height="'+h+'"'+(st?' style="'+st+'"':'')+'/>';return this};
+S.prototype.l=function(x1,y1,x2,y2,c){this.o+='<line class="'+c+'" x1="'+x1+'" y1="'+y1+'" x2="'+x2+'" y2="'+y2+'"/>';return this};
+S.prototype.t=function(x,y,s,c,a,rot){this.o+='<text class="'+(c||'lbl')+'" x="'+x+'" y="'+y+'" text-anchor="'+(a||'middle')+'"'+(rot?' transform="rotate(-90 '+x+' '+y+')"':'')+'>'+s+'</text>';return this};
+S.prototype.tag=function(x,y,s){var w=s.length*14+14;this.o+='<rect class="tagbg" x="'+(x-w/2)+'" y="'+(y-19)+'" width="'+w+'" height="26" rx="13"/>';return this.t(x,y,s,'tag')};
+S.prototype.hd=function(x1,x2,y,s){this.l(x1,y,x2,y,'dim').l(x1,y-10,x1,y+10,'dim').l(x2,y-10,x2,y+10,'dim');return this.t((x1+x2)/2,y-7,s,'dimt')};
+S.prototype.vd=function(x,y1,y2,s){this.l(x,y1,x,y2,'dim').l(x-10,y1,x+10,y1,'dim').l(x-10,y2,x+10,y2,'dim');return this.t(x-8,(y1+y2)/2,s,'dimt','middle',true)};
+
+var G;
+function elev(g,v){
+  var L=g.L,H=g.H,s=new S(),Y=function(h){return H-h};
+  var cu=v==='d'?g.j:L-g.j-g.Wc, llu=v==='d'?cu+g.Wc:g.j, llW=L-2*g.j-g.Wc;
+  s.r(-60,-10,60,H+10,'w').r(L,-10,60,H+10,'w');
+  s.l(-260,H,L+200,H,'floorl').l(-260,0,L+200,0,'ceil');
+  s.t(-70,H+40,'nord · porte','lbls muted','end').t(L+70,H+40,'sud · lavabo','lbls muted','start');
+  // niche
+  s.r(0,Y(1450),L,550,'niche');
+  s.t(L/2,Y(1200),'niche 550 (prises, LED)','lbls muted');
+  // machine
+  var lx=llu+(llW-600)/2;
+  s.r(lx,Y(850),600,850,'ll');
+  s.o+='<circle class="app" cx="'+(lx+300)+'" cy="'+Y(470)+'" r="190"/>';
+  s.t(lx+300,Y(140),'machine 600 × 850 (achat)','lbls');
+  // cornière
+  s.r(v==='d'?L-3:0,Y(870),3,30,'pE').r(v==='d'?L-30:0,Y(870),30,3,'pE');
+  s.tag(v==='d'?L-60:60,Y(800),'E2');
+  // caisson bas
+  s.r(cu,Y(100),T,100,'pA').r(cu+g.Wc-T,Y(100),T,100,'pA');
+  s.r(cu+T,Y(98),g.inW,98,'pA').tag(cu+g.Wc/2,Y(40),'A5');
+  for(var i=0;i<2;i++){
+    var fx=cu+i*(g.faceW+3);
+    s.r(fx,Y(867),g.faceW,g.faceH,'pA');
+    s.r(fx+(g.faceW-190)/2,Y(820),190,120,'hole');
+    s.tag(fx+g.faceW/2,Y(480),'A6');
+  }
+  s.l(cu+g.Wc/2,Y(867),cu+g.Wc/2,Y(100),'hid');
+  // plan + trappe
+  s.r(g.j,Y(900),g.planW,PT,'pD');
+  s.r(L/2-150,Y(900),300,PT,'hid');
+  s.tag(g.j+(v==='d'?g.planW-90:90),Y(940),'D1').tag(L/2,Y(940),'D2');
+  // caisson haut
+  var ux=g.ju,top=H-20;
+  s.r(ux,Y(top),T,g.Hu,'pA').r(ux+g.Wu-T,Y(top),T,g.Hu,'pA');
+  s.r(ux+T,Y(top),g.inUW,T,'pA').r(ux+T,Y(1450+T),g.inUW,T,'pA');
+  var cxm=ux+T+(g.inUW-T)/2;
+  s.r(cxm,Y(top-T),T,g.inUH,'hid');
+  [1810,2140].forEach(function(h){if(h<top-T-40)s.r(ux+T,Y(h+T),cxm-ux-T,T,'hid')});
+  [1670,1890,2110,2290].forEach(function(h){if(h<top-T-40)s.r(cxm+T,Y(h+T),ux+g.Wu-T-cxm-T,T,'hid')});
+  var dy=1450+T+6;
+  s.r(ux+T,Y(dy+g.doorH),g.doorW,g.doorH,'door');
+  s.r(ux+g.Wu-T-g.doorW,Y(dy+g.doorH),g.doorW,g.doorH,'door');
+  s.l(ux+T+g.doorW-60,Y(dy+g.doorH/2-80),ux+T+g.doorW-60,Y(dy+g.doorH/2+80),'app');
+  s.l(ux+g.Wu-T-g.doorW+60,Y(dy+g.doorH/2-80),ux+g.Wu-T-g.doorW+60,Y(dy+g.doorH/2+80),'app');
+  s.r(ux,Y(top+20),g.Wu,40,'pA');
+  s.tag(L/2,Y(top+5)+36,'A13');
+  s.tag(ux+T+g.doorW/2,Y(dy+g.doorH*.62),'A12').tag(ux+g.Wu-T-g.doorW/2,Y(dy+g.doorH*.62),'A12');
+  s.t(ux+T+g.doorW/2,Y(dy+g.doorH*.62)+36,'serviettes · A10','lbls').t(ux+g.Wu-T-g.doorW/2,Y(dy+g.doorH*.62)+36,'pharmacie · A11','lbls');
+  s.tag(ux+T/2+30,Y(1450)+60,'A7').tag(L/2,Y(1450+T)+34,'A8').tag(cxm+T/2,Y(dy+g.doorH*.25),'A9');
+  s.tag(cu+g.Wc/2,Y(870)+44,'A1–A4');
+  // cotes
+  s.hd(0,L,H+90,fmt(L)+' (alcôve)');
+  s.hd(cu,cu+g.Wc,H+150,fmt(g.Wc)+' caisson');
+  s.hd(lx-((llW-600)/2),lx+600+(llW-600)/2,H+150,fmt(g.llZone)+' machine');
+  s.hd(ux,ux+g.Wu,-40,fmt(g.Wu)+' caisson haut');
+  var dx=-150;
+  s.vd(dx,Y(100),Y(0),'100').vd(dx,Y(867),Y(100),fmt(g.faceH)).vd(dx,Y(900),Y(870),'30');
+  s.vd(dx,Y(1450),Y(900),'550').vd(dx,Y(top),Y(1450),fmt(g.Hu)).vd(dx,Y(H),Y(top),'20');
+  s.vd(-230,Y(H),Y(0),fmt(H));
+  return '<svg viewBox="-280 -80 '+(L+420)+' '+(H+280)+'" role="img" aria-label="Vue de face cotée">'+s.o+'</svg>';
+}
+function sect(g){
+  var H=g.H,D=g.P-10,s=new S(),Y=function(h){return H-h};
+  s.r(D,-10,60,H+10,'w');
+  s.l(-260,H,D+120,H,'floorl').l(-260,0,D+120,0,'ceil');
+  s.t(-240,-20,'ouest (pièce) ←   → est (mur)','lbls muted','start');
+  // côté du caisson (fond de vue)
+  s.r(T,Y(870),g.sideD,870,'bg');
+  s.r(T+g.sideD,Y(870),F,770,'pC');
+  s.r(T,Y(119),g.sideD,T,'pA').r(T,Y(870),100,T,'pA').r(T+g.sideD-100,Y(870),100,T,'pA');
+  s.r(T+20,Y(98),T,98,'pA');
+  // bac
+  var bz=125;
+  s.r(T,Y(bz+8),g.boxD,8,'pC');
+  s.r(T,Y(bz+8+g.boxH),B,g.boxH,'pB').r(T+g.boxD-B,Y(bz+8+g.boxH),B,g.boxH,'pB');
+  s.l(T+B,Y(bz+8+g.boxH),T+g.boxD-B,Y(bz+8+g.boxH),'hid');
+  s.t(T+g.boxD/2,Y(bz+260),'bac '+fmt(g.vol).replace(',0','')+' L','lbl');
+  s.tag(T+g.boxD/2,Y(bz+180),'B1 B2 C3');
+  // façade + fente + goulotte
+  s.r(0,Y(867),T,47,'pA').r(0,Y(700),T,600,'pA');
+  s.r(3,Y(818),12,116,'pB');
+  s.o+='<line class="app" style="stroke-width:12;stroke:var(--wood)" x1="'+(T+6)+'" y1="'+Y(694)+'" x2="'+(T+130)+'" y2="'+Y(570)+'"/>';
+  s.tag(-70,Y(780),'B3').tag(T+190,Y(660),'B4').tag(-60,Y(400),'A6');
+  // plan
+  s.r(0,Y(900),g.planD,PT,'pD');
+  s.r(g.planD-100,Y(900),100,PT,'hid');
+  s.tag(g.planD/2,Y(940),'D1');
+  s.r(D-27,Y(870),27,40,'pE').tag(D-90,Y(820),'E1');
+  // caisson haut
+  var ux=D-450,top=H-20;
+  s.r(ux,Y(top),g.sideUD,g.Hu,'bg');
+  s.r(ux+g.sideUD,Y(top),F,g.Hu,'pC');
+  s.r(ux,Y(top),g.sideUD,T,'pA').r(ux,Y(1450+T),g.sideUD,T,'pA');
+  s.r(ux+10,Y(top-T-4),T,g.doorH,'door').r(ux+34,Y(top-T-4),T,g.doorH,'door');
+  [1670,1890,2110,2290].forEach(function(h){if(h<top-T-40)s.r(ux+60,Y(h+T),g.shelfD,T,'pA')});
+  s.r(ux,Y(top+20),T,40,'pA');
+  s.tag(ux+60+g.shelfD/2,Y(1780),'A11').tag(ux-70,Y(2000),'A12').tag(ux+60+g.shelfD/2,Y(top)+50,'A8').tag(D-40,Y(1980),'C1');
+  s.tag(T+g.sideD/2,Y(800),'A1').tag(D-40,Y(500),'C2');
+  // cotes
+  s.hd(0,g.planD,H+70,fmt(g.planD)+' plan');
+  s.hd(T,T+g.sideD+F,H+130,fmt(g.Dc)+' caisson');
+  s.hd(0,D,H+190,fmt(D)+' façade → mur');
+  s.hd(ux,D,-40,'450');
+  s.hd(ux,ux+60,Y(1450)+60,'60');
+  s.vd(-140,Y(820),Y(700),'120').vd(-140,Y(700),Y(100),'600');
+  s.vd(-200,Y(bz+8+g.boxH),Y(bz),fmt(g.boxH+8));
+  return '<svg viewBox="-280 -80 '+(D+420)+' '+(H+300)+'" role="img" aria-label="Coupe à travers un tiroir-panier">'+s.o+'</svg>';
+}
+function topv(g){
+  var s=new S(),W=g.planW,D=g.planD,nx=g.notchX;
+  s.o+='<path class="pD" d="M0 0 H'+W+' V'+D+' H0 Z"/>';
+  s.r(nx,0,300,100,'hole');
+  s.r(nx+2,2,296,96,'hid');
+  s.r(nx-40,0,40,100,'pB').r(nx+300,0,40,100,'pB');
+  s.t(W/2,D/2,'D1 · plan '+fmt(W)+' × '+fmt(D)+' × 30','lbl');
+  s.t(W/2,D/2+34,'avant (côté pièce)','lbls muted');
+  s.t(nx+150,62,'D2','tag');
+  s.t(nx-20,140,'B5','tag').t(nx+320,140,'B5','tag');
+  s.t(W/2,-90,'mur du fond','lbls muted');
+  s.hd(0,nx,-40,fmt(nx)).hd(nx,nx+300,-40,'300').hd(nx+300,W,-40,fmt(nx));
+  s.vd(W+60,0,100,'100').vd(W+120,0,D,fmt(D));
+  s.hd(0,W,D+60,fmt(W));
+  return '<svg viewBox="-60 -130 '+(W+220)+' '+(D+240)+'" role="img" aria-label="Plan de travail vu de dessus">'+s.o+'</svg>';
+}
+function facev(g){
+  var s=new S(),W=g.faceW,H=g.faceH,Y=function(h){return H-h},m=(W-190)/2;
+  s.r(0,0,W,H,'pA');
+  s.r(m,Y(720),190,120,'hole');
+  s.o+='<circle class="app" cx="'+m+'" cy="'+Y(710)+'" r="5"/><circle class="app" cx="'+(m+190)+'" cy="'+Y(710)+'" r="5"/>';
+  s.t(W/2,Y(660)+8,'fente','lbls muted').t(W/2,Y(350),'A6','tag');
+  s.hd(0,W,H+60,fmt(W)).hd(0,m,Y(600)+110,fmt(m)).hd(m,m+190,Y(600)+50,'190');
+  s.vd(-50,Y(720),Y(600),'120').vd(-50,Y(600),Y(0),'600').vd(-50,Y(H),Y(720),fmt(H-720));
+  s.vd(-130,0,H,fmt(H));
+  s.t(W+30,Y(710)+8,'pivots Ø 6','lbls','start');
+  return '<svg viewBox="-180 -40 '+(W+400)+' '+(H+140)+'" role="img" aria-label="Façade de tiroir-panier">'+s.o+'</svg>';
+}
+
+/* ---------- orchestration ---------- */
+function num(id,d){var v=parseFloat(document.getElementById(id).value);return isFinite(v)?v:d}
+function render(){
+  var L=num('inL',DEF.L),P=num('inP',DEF.P),H=num('inH',DEF.H);
+  G=geo(L,P,H);var g=G,ps=parts(g),w=[];
+  if(g.llZone<605)w.push('Il reste '+fmt(g.llZone)+' mm pour la machine (600 + jeu) : alcôve trop étroite pour un caisson de 525.');
+  if(g.sideD<480)w.push('Caisson bas trop peu profond pour des coulisses de 450 : vérifier la profondeur.');
+  if(g.Hu<800)w.push('Caisson haut de '+fmt(g.Hu)+' seulement : plafond bas.');
+  if(g.planD>650)w.push('Plan de '+fmt(g.planD)+' de profondeur : plus profond qu’un plan standard de 650.');
+  document.getElementById('warn').innerHTML=w.join('<br>');
+  renderTable(ps);
+  var n=ps.reduce(function(a,p){return a+(p.m<'D'?p.q:0)},0);
+  document.getElementById('listpitch').textContent=n+' pièces en panneau, 1 plan de travail, 2 tasseaux et 1 cornière. Toutes les cotes sont finies, en mm (longueur × largeur).';
+  document.getElementById('vol').textContent=fmt(g.vol)+' L';
+  document.getElementById('llz').textContent=fmt(g.llZone);
+  document.getElementById('qRun').textContent=g.run;
+  renderNest(ps);
+  draw();
+  try{localStorage.setItem('sdb-debit-dims',JSON.stringify({L:L,P:P,H:H}))}catch(e){}
+}
+function draw(){
+  var g=G;
+  document.getElementById('elev').innerHTML=elev(g,side);
+  document.getElementById('sect').innerHTML=sect(g);
+  document.getElementById('topv').innerHTML=topv(g);
+  document.getElementById('facev').innerHTML=facev(g);
+  var near=side==='d'?'nord (côté porte)':'sud (côté lavabo)',far=side==='d'?'sud (côté lavabo)':'nord (côté porte)';
+  document.getElementById('sidetxt').innerHTML=side==='d'
+    ?'<b>Machine à droite.</b> Caisson à paniers contre le mur nord, machine contre le mur sud ; la cornière E2 se visse sur le mur sud.'
+    :'<b>Machine à gauche.</b> Caisson à paniers contre le mur sud, machine contre le mur nord ; la cornière E2 se visse sur le mur nord.';
+  document.querySelectorAll('[data-side]').forEach(function(e){e.textContent=near});
+  document.querySelectorAll('[data-other]').forEach(function(e){e.textContent=far});
+}
+var bs=document.querySelectorAll('.switch button');
+function show(v){
+  side=v;
+  bs.forEach(function(b){b.setAttribute('aria-selected',b.getAttribute('data-v')===v?'true':'false')});
+  try{localStorage.setItem('sdb-v2',v)}catch(e){}
+  if(G)draw();
+}
+bs.forEach(function(b){b.addEventListener('click',function(){show(b.getAttribute('data-v'))})});
+['inL','inP','inH','fA','fB','fC'].forEach(function(id){document.getElementById(id).addEventListener('input',render)});
+document.getElementById('reset').addEventListener('click',function(){
+  document.getElementById('inL').value=DEF.L;document.getElementById('inP').value=DEF.P;document.getElementById('inH').value=DEF.H;render();
+});
+try{var sv=JSON.parse(localStorage.getItem('sdb-debit-dims')||'null');if(sv){['L','P','H'].forEach(function(k){if(sv[k])document.getElementById('in'+k).value=sv[k]})}}catch(e){}
+var v0=null;try{v0=localStorage.getItem('sdb-v2')}catch(e){}
+if(/^#[dg]$/.test(location.hash))v0=location.hash.slice(1);
+if(v0==='g')side='g';
+show(side);
+render();
+})();
+</script>
+</body>
+</html>
