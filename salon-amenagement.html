@@ -216,15 +216,16 @@ section{margin-top:52px;padding-top:8px;border-top:2px solid var(--line)}
 <pattern id="tl" width="30" height="30" patternUnits="userSpaceOnUse"><path class="tl" d="M30 0 L0 0 L0 30"/></pattern>
 <marker id="tk" viewBox="0 0 10 10" refX="5" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M2 8 L8 2" style="stroke:var(--muted)" stroke-width="1.4"/></marker>
 </defs></svg>
-<div class="kicker">Salon · V3 · variantes A / B · plan et élévations</div>
+<div class="kicker">Salon · V3.1 · variantes A / B / C · plan et élévations</div>
 <h1>Aménagement du salon</h1>
-<p class="pitch">Une bibliothèque, une table pour recevoir six à huit personnes côté couloir, et un coin salon tourné vers la baie avec le canapé SÖDERHAMN. Deux variantes : bibliothèque au nord (A) ou à l'ouest (B) ; le bouton bascule le plan et les élévations. L'historique est en fin de document (<a href="#changements">Changements</a>).</p>
+<p class="pitch">Une bibliothèque, une table pour recevoir six à huit personnes côté couloir, et un coin salon tourné vers la baie avec le canapé SÖDERHAMN. Trois variantes : bibliothèque au nord (A) ou à l'ouest (B), et la A inversée avec le repas côté baie (C) ; le bouton bascule le plan et les élévations. L'historique est en fin de document (<a href="#changements">Changements</a>).</p>
 <div class="stats"><div class="stat"><b>6 → 8</b><span>couverts</span></div><div class="stat"><b>198 × 99</b><span>SÖDERHAMN 3 places</span></div><div class="stat"><b>414 / 262</b><span>bibliothèque A / B (cm)</span></div><div class="stat"><b>19,7 m²</b><span>surface du salon</span></div></div>
 
 <h2>Plans à l'échelle</h2>
 <div class="switch" role="tablist" aria-label="Variante">
   <button type="button" role="tab" data-v="A" aria-selected="true"><b>A</b> · Bibliothèque au nord</button>
   <button type="button" role="tab" data-v="B" aria-selected="false"><b>B</b> · Bibliothèque à l'ouest</button>
+  <button type="button" role="tab" data-v="C" aria-selected="false"><b>C</b> · Repas côté baie</button>
 </div>
 <div data-panel="A">
 <div class="fig"><div class="scroll"><svg viewBox="-140 -45 820 470" class="" role="img" aria-label="Plan du salon, variante A"><rect x="-130" y="-10" width="120" height="278" class="room" />
@@ -403,6 +404,95 @@ section{margin-top:52px;padding-top:8px;border-top:2px solid var(--line)}
 <circle cx="160" cy="0" r="1.3" class="mf"/>
 <circle cx="160" cy="70" r="1.3" class="mf"/>
 <text x="164" y="38" class="passt" text-anchor="start">70</text></svg></div><p class="cap">Variante B. Plan vu de dessus, 1 unité = 1 cm. La bibliothèque occupe le mur ouest jusqu'au passage ; la table se décale de 35 vers l'est, le canapé de 19.</p></div>
+</div>
+<div data-panel="C" hidden>
+<div class="fig"><div class="scroll"><svg viewBox="-140 -45 820 470" class="" role="img" aria-label="Plan du salon, variante C"><rect x="-130" y="-10" width="120" height="278" class="room" />
+<text x="-70" y="60" class="roomt" text-anchor="middle">Cellier</text>
+<text x="-70" y="180" class="roomt" text-anchor="middle">WC</text>
+<rect x="-130" y="268" width="120" height="102" class="room" />
+<text x="-70" y="330" class="roomt" text-anchor="middle">Couloir</text>
+<rect x="556" y="-10" width="110" height="380" class="room" />
+<text x="611" y="330" class="roomt" text-anchor="middle">Pièce 1</text>
+<rect x="0" y="370" width="556" height="50" class="room" />
+<text x="278" y="400" class="roomt" text-anchor="middle">Chambre</text>
+<polygon points="0,0 414,0 414,3 544,3 544,358 0,358" class="appf" style="stroke:none"/>
+<polygon points="0,0 414,0 414,3 544,3 544,358 0,358" class="tile"/>
+<rect x="-10" y="-12" width="424" height="12" class="w" />
+<rect x="414" y="-12" width="142" height="15" class="w" />
+<rect x="-10" y="0" width="10" height="268" class="w" />
+<rect x="-10" y="343" width="10" height="27" class="w" />
+<rect x="-10" y="358" width="566" height="12" class="w" />
+<rect x="544" y="3" width="12" height="69" class="w" />
+<rect x="544" y="274" width="12" height="96" class="w" />
+<rect x="544" y="72" width="12" height="202" class="win" />
+<line x1="550" y1="72" x2="550" y2="274" class="glass"/>
+<text x="568" y="173" class="lbls muted" text-anchor="middle" transform="rotate(-90 568 173)">baie 202</text>
+<line x1="-10" y1="268" x2="0" y2="268" class="app"/>
+<line x1="-10" y1="343" x2="0" y2="343" class="app"/>
+<text x="12" y="305" class="lblx muted" text-anchor="middle" transform="rotate(-90 12 305)">passage</text>
+<path d="M0 -30 L544 -30" class="dim" marker-start="url(#tk)" marker-end="url(#tk)"/>
+<text x="272" y="-32.5" class="dimt" text-anchor="middle">544</text>
+<path d="M-18 0 L-18 358" class="dim" marker-start="url(#tk)" marker-end="url(#tk)"/>
+<text x="-20.5" y="179" class="dimt" text-anchor="middle" transform="rotate(-90 -20.5 179)">358</text>
+<rect x="0" y="0" width="414" height="35" class="tall" />
+<line x1="82.8" y1="0" x2="82.8" y2="35" class="app"/>
+<line x1="165.6" y1="0" x2="165.6" y2="35" class="app"/>
+<line x1="248.4" y1="0" x2="248.4" y2="35" class="app"/>
+<line x1="331.2" y1="0" x2="331.2" y2="35" class="app"/>
+<text x="207" y="22" class="lbls" text-anchor="middle"><tspan class="lblb">①</tspan> Bibliothèque 414 × 35 · h 250 · 5 travées</text>
+<rect x="0" y="60" width="99" height="198" class="sofa" rx="4" />
+<rect x="0" y="60" width="99" height="6" class="sofac" rx="2" />
+<rect x="0" y="252" width="99" height="6" class="sofac" rx="2" />
+<rect x="0" y="66" width="22" height="186" class="sofac" rx="3" />
+<rect x="24" y="67" width="73" height="61.3" class="sofac" rx="3" />
+<rect x="24" y="128.3" width="73" height="61.3" class="sofac" rx="3" />
+<rect x="24" y="189.6" width="73" height="61.3" class="sofac" rx="3" />
+<text x="12" y="159" class="lblx" text-anchor="middle" transform="rotate(-90 12 159)"><tspan class="lblb">③</tspan> SÖDERHAMN 3 places + accoudoirs · 198 × 99</text>
+<rect x="142" y="109" width="60" height="100" class="tbl" rx="4" />
+<text x="172" y="162" class="lblx" text-anchor="middle">table basse</text>
+<g transform="rotate(-35 265 100)">
+<rect x="225" y="60" width="80" height="80" class="sofa" rx="8" />
+<rect x="285" y="60" width="18" height="80" class="sofac" rx="4" />
+</g>
+<text x="262" y="104" class="lbls" text-anchor="middle"><tspan class="lblb">④</tspan> Fauteuil</text>
+<circle cx="240" cy="225" r="16" class="tbl"/>
+<text x="240" y="227" class="lblx" text-anchor="middle">pouf</text>
+<circle cx="115" cy="50" r="8" class="lamp"/>
+<rect x="320" y="60" width="160" height="80" class="dine" />
+<rect x="320" y="230" width="160" height="80" class="dine" />
+<rect x="280" y="140" width="40" height="90" class="ghost" />
+<text x="300" y="188" class="lblx muted" text-anchor="middle" transform="rotate(-90 300 188)">allonge</text>
+<rect x="320" y="140" width="160" height="90" class="tbl" rx="3" />
+<rect x="325" y="96" width="44" height="44" class="stool" rx="5" />
+<rect x="325" y="234" width="44" height="44" class="stool" rx="5" />
+<rect x="378" y="96" width="44" height="44" class="stool" rx="5" />
+<rect x="378" y="234" width="44" height="44" class="stool" rx="5" />
+<rect x="431" y="96" width="44" height="44" class="stool" rx="5" />
+<rect x="431" y="234" width="44" height="44" class="stool" rx="5" />
+<circle cx="400" cy="185" r="10" class="lamp"/>
+<text x="360" y="182" class="lbls" text-anchor="middle"><tspan class="lblb">②</tspan> Table 160 × 90</text>
+<text x="360" y="192" class="lbls" text-anchor="middle">6 → 8</text>
+<circle cx="526" cy="330" r="13" class="plant"/>
+<path d="M60 258 L60 358" class="pass"/>
+<circle cx="60" cy="258" r="1.3" class="mf"/>
+<circle cx="60" cy="358" r="1.3" class="mf"/>
+<text x="57" y="310" class="passt" text-anchor="middle" transform="rotate(-90 57 310)">100</text>
+<path d="M99 230 L142 230" class="pass"/>
+<circle cx="99" cy="230" r="1.3" class="mf"/>
+<circle cx="142" cy="230" r="1.3" class="mf"/>
+<text x="120" y="227" class="passt" text-anchor="middle">43</text>
+<path d="M480 185 L544 185" class="pass"/>
+<circle cx="480" cy="185" r="1.3" class="mf"/>
+<circle cx="544" cy="185" r="1.3" class="mf"/>
+<text x="512" y="182" class="passt" text-anchor="middle">64</text>
+<path d="M400 310 L400 358" class="pass"/>
+<circle cx="400" cy="310" r="1.3" class="mf"/>
+<circle cx="400" cy="358" r="1.3" class="mf"/>
+<text x="397" y="336" class="passt" text-anchor="middle" transform="rotate(-90 397 336)">48</text>
+<path d="M380 35 L380 60" class="pass"/>
+<circle cx="380" cy="35" r="1.3" class="mf"/>
+<circle cx="380" cy="60" r="1.3" class="mf"/>
+<text x="384" y="50" class="passt" text-anchor="start">25 + recul</text></svg></div><p class="cap">Variante C. Plan vu de dessus, 1 unité = 1 cm. A inversée : le canapé est contre le mur ouest, côté couloir, et regarde la baie ; la table est en travers, près de la baie.</p></div>
 </div>
 <div class="legend"><span><svg viewBox="0 0 26 14"><rect x="0" y="0" width="26" height="14" class="tall"/></svg>Bibliothèque</span><span><svg viewBox="0 0 26 14"><rect x="0" y="0" width="26" height="14" class="sofa"/></svg>Assises</span><span><svg viewBox="0 0 26 14"><rect x="0" y="0" width="26" height="14" class="tbl"/></svg>Tables</span><span><svg viewBox="0 0 26 14"><rect x="0" y="0" width="26" height="14" class="stool"/></svg>Chaises</span><span><svg viewBox="0 0 26 14"><rect x="1" y="1" width="24" height="12" class="dine"/></svg>Recul des chaises (80)</span><span><svg viewBox="0 0 26 14"><rect x="1" y="1" width="24" height="12" class="ghost"/></svg>Table rallongée</span><span><svg viewBox="0 0 26 14"><circle cx="13" cy="7" r="6" class="lamp"/></svg>Lampe</span><span><svg viewBox="0 0 26 14"><line x1="1" y1="7" x2="25" y2="7" class="pass"/></svg>Passage libre (cm)</span></div>
 <h2>Élévations</h2>
@@ -837,6 +927,257 @@ section{margin-top:52px;padding-top:8px;border-top:2px solid var(--line)}
 <text x="0" y="262" class="lblx muted" text-anchor="start">sud</text>
 <text x="358" y="262" class="lblx muted" text-anchor="end">nord</text></svg></div><p class="cap">B · Coin repas, vu depuis l'est : la table se trouve devant la bibliothèque, avec 80 cm de recul pour les chaises.</p></div>
 </div>
+<div data-panel="C" hidden>
+<div class="fig"><div class="scroll"><svg viewBox="-35 -12 620 290" class="" role="img" aria-label="Variante C, élévation du mur nord"><line x1="-10" y1="250" x2="554" y2="250" class="floorl"/>
+<line x1="-10" y1="0" x2="554" y2="0" class="el-ceil"/>
+<text x="2" y="-3" class="lblx muted" text-anchor="start">plafond 250</text>
+<rect x="-10" y="0" width="10" height="250" class="w" />
+<rect x="544" y="0" width="12" height="250" class="w" />
+<rect x="0" y="0" width="414" height="250" class="tall" />
+<line x1="0" y1="0" x2="0" y2="250" class="app"/>
+<line x1="41.4" y1="170" x2="41.4" y2="250" class="app"/>
+<rect x="33.4" y="176" width="6" height="2" class="dark" />
+<rect x="43.4" y="176" width="6" height="2" class="dark" />
+<line x1="0" y1="40" x2="82.8" y2="40" class="app"/>
+<rect x="6" y="14" width="7.5" height="26" class="book" />
+<rect x="15.5" y="17" width="7.5" height="23" class="book" />
+<rect x="25" y="20" width="7.5" height="20" class="book" />
+<rect x="34.5" y="14" width="7.5" height="26" class="book" />
+<rect x="44" y="17" width="7.5" height="23" class="book" />
+<rect x="53.5" y="20" width="7.5" height="20" class="book" />
+<rect x="63" y="14" width="7.5" height="26" class="book" />
+<line x1="0" y1="75" x2="82.8" y2="75" class="app"/>
+<rect x="6" y="49" width="7.5" height="26" class="book" />
+<rect x="15.5" y="52" width="7.5" height="23" class="book" />
+<rect x="25" y="55" width="7.5" height="20" class="book" />
+<rect x="34.5" y="49" width="7.5" height="26" class="book" />
+<rect x="44" y="52" width="7.5" height="23" class="book" />
+<rect x="53.5" y="55" width="7.5" height="20" class="book" />
+<rect x="63" y="49" width="7.5" height="26" class="book" />
+<line x1="0" y1="110" x2="82.8" y2="110" class="app"/>
+<rect x="6" y="84" width="7.5" height="26" class="book" />
+<rect x="15.5" y="87" width="7.5" height="23" class="book" />
+<rect x="25" y="90" width="7.5" height="20" class="book" />
+<rect x="34.5" y="84" width="7.5" height="26" class="book" />
+<rect x="44" y="87" width="7.5" height="23" class="book" />
+<rect x="53.5" y="90" width="7.5" height="20" class="book" />
+<rect x="63" y="84" width="7.5" height="26" class="book" />
+<line x1="0" y1="140" x2="82.8" y2="140" class="app"/>
+<rect x="6" y="114" width="7.5" height="26" class="book" />
+<rect x="15.5" y="117" width="7.5" height="23" class="book" />
+<rect x="25" y="120" width="7.5" height="20" class="book" />
+<rect x="34.5" y="114" width="7.5" height="26" class="book" />
+<line x1="0" y1="170" x2="82.8" y2="170" class="app"/>
+<rect x="6" y="144" width="7.5" height="26" class="book" />
+<rect x="15.5" y="147" width="7.5" height="23" class="book" />
+<rect x="25" y="150" width="7.5" height="20" class="book" />
+<rect x="34.5" y="144" width="7.5" height="26" class="book" />
+<rect x="44" y="147" width="7.5" height="23" class="book" />
+<rect x="53.5" y="150" width="7.5" height="20" class="book" />
+<rect x="63" y="144" width="7.5" height="26" class="book" />
+<line x1="82.8" y1="0" x2="82.8" y2="250" class="app"/>
+<line x1="124.2" y1="170" x2="124.2" y2="250" class="app"/>
+<rect x="116.2" y="176" width="6" height="2" class="dark" />
+<rect x="126.2" y="176" width="6" height="2" class="dark" />
+<line x1="82.8" y1="40" x2="165.6" y2="40" class="app"/>
+<rect x="88.8" y="14" width="7.5" height="26" class="book" />
+<rect x="98.3" y="17" width="7.5" height="23" class="book" />
+<rect x="107.8" y="20" width="7.5" height="20" class="book" />
+<rect x="117.3" y="14" width="7.5" height="26" class="book" />
+<rect x="126.8" y="17" width="7.5" height="23" class="book" />
+<rect x="136.3" y="20" width="7.5" height="20" class="book" />
+<rect x="145.8" y="14" width="7.5" height="26" class="book" />
+<line x1="82.8" y1="75" x2="165.6" y2="75" class="app"/>
+<rect x="88.8" y="49" width="7.5" height="26" class="book" />
+<rect x="98.3" y="52" width="7.5" height="23" class="book" />
+<rect x="107.8" y="55" width="7.5" height="20" class="book" />
+<rect x="117.3" y="49" width="7.5" height="26" class="book" />
+<rect x="126.8" y="52" width="7.5" height="23" class="book" />
+<rect x="136.3" y="55" width="7.5" height="20" class="book" />
+<rect x="145.8" y="49" width="7.5" height="26" class="book" />
+<line x1="82.8" y1="110" x2="165.6" y2="110" class="app"/>
+<rect x="88.8" y="84" width="7.5" height="26" class="book" />
+<rect x="98.3" y="87" width="7.5" height="23" class="book" />
+<rect x="107.8" y="90" width="7.5" height="20" class="book" />
+<rect x="117.3" y="84" width="7.5" height="26" class="book" />
+<rect x="126.8" y="87" width="7.5" height="23" class="book" />
+<rect x="136.3" y="90" width="7.5" height="20" class="book" />
+<rect x="145.8" y="84" width="7.5" height="26" class="book" />
+<line x1="82.8" y1="140" x2="165.6" y2="140" class="app"/>
+<rect x="88.8" y="114" width="7.5" height="26" class="book" />
+<rect x="98.3" y="117" width="7.5" height="23" class="book" />
+<rect x="107.8" y="120" width="7.5" height="20" class="book" />
+<rect x="117.3" y="114" width="7.5" height="26" class="book" />
+<line x1="82.8" y1="170" x2="165.6" y2="170" class="app"/>
+<rect x="88.8" y="144" width="7.5" height="26" class="book" />
+<rect x="98.3" y="147" width="7.5" height="23" class="book" />
+<rect x="107.8" y="150" width="7.5" height="20" class="book" />
+<rect x="117.3" y="144" width="7.5" height="26" class="book" />
+<rect x="126.8" y="147" width="7.5" height="23" class="book" />
+<rect x="136.3" y="150" width="7.5" height="20" class="book" />
+<rect x="145.8" y="144" width="7.5" height="26" class="book" />
+<line x1="165.6" y1="0" x2="165.6" y2="250" class="app"/>
+<line x1="207" y1="170" x2="207" y2="250" class="app"/>
+<rect x="199" y="176" width="6" height="2" class="dark" />
+<rect x="209" y="176" width="6" height="2" class="dark" />
+<line x1="165.6" y1="40" x2="248.4" y2="40" class="app"/>
+<rect x="171.6" y="14" width="7.5" height="26" class="book" />
+<rect x="181.1" y="17" width="7.5" height="23" class="book" />
+<rect x="190.6" y="20" width="7.5" height="20" class="book" />
+<rect x="200.1" y="14" width="7.5" height="26" class="book" />
+<rect x="209.6" y="17" width="7.5" height="23" class="book" />
+<rect x="219.1" y="20" width="7.5" height="20" class="book" />
+<rect x="228.6" y="14" width="7.5" height="26" class="book" />
+<line x1="165.6" y1="75" x2="248.4" y2="75" class="app"/>
+<rect x="171.6" y="49" width="7.5" height="26" class="book" />
+<rect x="181.1" y="52" width="7.5" height="23" class="book" />
+<rect x="190.6" y="55" width="7.5" height="20" class="book" />
+<rect x="200.1" y="49" width="7.5" height="26" class="book" />
+<rect x="209.6" y="52" width="7.5" height="23" class="book" />
+<rect x="219.1" y="55" width="7.5" height="20" class="book" />
+<rect x="228.6" y="49" width="7.5" height="26" class="book" />
+<line x1="165.6" y1="110" x2="248.4" y2="110" class="app"/>
+<rect x="171.6" y="84" width="7.5" height="26" class="book" />
+<rect x="181.1" y="87" width="7.5" height="23" class="book" />
+<rect x="190.6" y="90" width="7.5" height="20" class="book" />
+<rect x="200.1" y="84" width="7.5" height="26" class="book" />
+<rect x="209.6" y="87" width="7.5" height="23" class="book" />
+<rect x="219.1" y="90" width="7.5" height="20" class="book" />
+<rect x="228.6" y="84" width="7.5" height="26" class="book" />
+<line x1="165.6" y1="140" x2="248.4" y2="140" class="app"/>
+<rect x="171.6" y="114" width="7.5" height="26" class="book" />
+<rect x="181.1" y="117" width="7.5" height="23" class="book" />
+<rect x="190.6" y="120" width="7.5" height="20" class="book" />
+<rect x="200.1" y="114" width="7.5" height="26" class="book" />
+<line x1="165.6" y1="170" x2="248.4" y2="170" class="app"/>
+<rect x="171.6" y="144" width="7.5" height="26" class="book" />
+<rect x="181.1" y="147" width="7.5" height="23" class="book" />
+<rect x="190.6" y="150" width="7.5" height="20" class="book" />
+<rect x="200.1" y="144" width="7.5" height="26" class="book" />
+<rect x="209.6" y="147" width="7.5" height="23" class="book" />
+<rect x="219.1" y="150" width="7.5" height="20" class="book" />
+<rect x="228.6" y="144" width="7.5" height="26" class="book" />
+<line x1="248.4" y1="0" x2="248.4" y2="250" class="app"/>
+<line x1="289.8" y1="170" x2="289.8" y2="250" class="app"/>
+<rect x="281.8" y="176" width="6" height="2" class="dark" />
+<rect x="291.8" y="176" width="6" height="2" class="dark" />
+<line x1="248.4" y1="40" x2="331.2" y2="40" class="app"/>
+<rect x="254.4" y="14" width="7.5" height="26" class="book" />
+<rect x="263.9" y="17" width="7.5" height="23" class="book" />
+<rect x="273.4" y="20" width="7.5" height="20" class="book" />
+<rect x="282.9" y="14" width="7.5" height="26" class="book" />
+<rect x="292.4" y="17" width="7.5" height="23" class="book" />
+<rect x="301.9" y="20" width="7.5" height="20" class="book" />
+<rect x="311.4" y="14" width="7.5" height="26" class="book" />
+<line x1="248.4" y1="75" x2="331.2" y2="75" class="app"/>
+<rect x="254.4" y="49" width="7.5" height="26" class="book" />
+<rect x="263.9" y="52" width="7.5" height="23" class="book" />
+<rect x="273.4" y="55" width="7.5" height="20" class="book" />
+<rect x="282.9" y="49" width="7.5" height="26" class="book" />
+<rect x="292.4" y="52" width="7.5" height="23" class="book" />
+<rect x="301.9" y="55" width="7.5" height="20" class="book" />
+<rect x="311.4" y="49" width="7.5" height="26" class="book" />
+<line x1="248.4" y1="110" x2="331.2" y2="110" class="app"/>
+<rect x="254.4" y="84" width="7.5" height="26" class="book" />
+<rect x="263.9" y="87" width="7.5" height="23" class="book" />
+<rect x="273.4" y="90" width="7.5" height="20" class="book" />
+<rect x="282.9" y="84" width="7.5" height="26" class="book" />
+<rect x="292.4" y="87" width="7.5" height="23" class="book" />
+<rect x="301.9" y="90" width="7.5" height="20" class="book" />
+<rect x="311.4" y="84" width="7.5" height="26" class="book" />
+<line x1="248.4" y1="140" x2="331.2" y2="140" class="app"/>
+<rect x="254.4" y="114" width="7.5" height="26" class="book" />
+<rect x="263.9" y="117" width="7.5" height="23" class="book" />
+<rect x="273.4" y="120" width="7.5" height="20" class="book" />
+<rect x="282.9" y="114" width="7.5" height="26" class="book" />
+<line x1="248.4" y1="170" x2="331.2" y2="170" class="app"/>
+<rect x="254.4" y="144" width="7.5" height="26" class="book" />
+<rect x="263.9" y="147" width="7.5" height="23" class="book" />
+<rect x="273.4" y="150" width="7.5" height="20" class="book" />
+<rect x="282.9" y="144" width="7.5" height="26" class="book" />
+<rect x="292.4" y="147" width="7.5" height="23" class="book" />
+<rect x="301.9" y="150" width="7.5" height="20" class="book" />
+<rect x="311.4" y="144" width="7.5" height="26" class="book" />
+<line x1="331.2" y1="0" x2="331.2" y2="250" class="app"/>
+<line x1="372.6" y1="170" x2="372.6" y2="250" class="app"/>
+<rect x="364.6" y="176" width="6" height="2" class="dark" />
+<rect x="374.6" y="176" width="6" height="2" class="dark" />
+<line x1="331.2" y1="40" x2="414" y2="40" class="app"/>
+<rect x="337.2" y="14" width="7.5" height="26" class="book" />
+<rect x="346.7" y="17" width="7.5" height="23" class="book" />
+<rect x="356.2" y="20" width="7.5" height="20" class="book" />
+<rect x="365.7" y="14" width="7.5" height="26" class="book" />
+<rect x="375.2" y="17" width="7.5" height="23" class="book" />
+<rect x="384.7" y="20" width="7.5" height="20" class="book" />
+<rect x="394.2" y="14" width="7.5" height="26" class="book" />
+<line x1="331.2" y1="75" x2="414" y2="75" class="app"/>
+<rect x="337.2" y="49" width="7.5" height="26" class="book" />
+<rect x="346.7" y="52" width="7.5" height="23" class="book" />
+<rect x="356.2" y="55" width="7.5" height="20" class="book" />
+<rect x="365.7" y="49" width="7.5" height="26" class="book" />
+<rect x="375.2" y="52" width="7.5" height="23" class="book" />
+<rect x="384.7" y="55" width="7.5" height="20" class="book" />
+<rect x="394.2" y="49" width="7.5" height="26" class="book" />
+<line x1="331.2" y1="110" x2="414" y2="110" class="app"/>
+<rect x="337.2" y="84" width="7.5" height="26" class="book" />
+<rect x="346.7" y="87" width="7.5" height="23" class="book" />
+<rect x="356.2" y="90" width="7.5" height="20" class="book" />
+<rect x="365.7" y="84" width="7.5" height="26" class="book" />
+<rect x="375.2" y="87" width="7.5" height="23" class="book" />
+<rect x="384.7" y="90" width="7.5" height="20" class="book" />
+<rect x="394.2" y="84" width="7.5" height="26" class="book" />
+<line x1="331.2" y1="140" x2="414" y2="140" class="app"/>
+<rect x="337.2" y="114" width="7.5" height="26" class="book" />
+<rect x="346.7" y="117" width="7.5" height="23" class="book" />
+<rect x="356.2" y="120" width="7.5" height="20" class="book" />
+<rect x="365.7" y="114" width="7.5" height="26" class="book" />
+<line x1="331.2" y1="170" x2="414" y2="170" class="app"/>
+<rect x="337.2" y="144" width="7.5" height="26" class="book" />
+<rect x="346.7" y="147" width="7.5" height="23" class="book" />
+<rect x="356.2" y="150" width="7.5" height="20" class="book" />
+<rect x="365.7" y="144" width="7.5" height="26" class="book" />
+<rect x="375.2" y="147" width="7.5" height="23" class="book" />
+<rect x="384.7" y="150" width="7.5" height="20" class="book" />
+<rect x="394.2" y="144" width="7.5" height="26" class="book" />
+<text x="207" y="215" class="lbls" text-anchor="middle">① portes basses h 80 (vaisselle de réception, nappes, jeux)</text>
+<rect x="320" y="175" width="160" height="4" class="tbl" />
+<line x1="325" y1="179" x2="325" y2="250" class="app"/>
+<line x1="475" y1="179" x2="475" y2="250" class="app"/>
+<rect x="327" y="160" width="40" height="45" class="stool" rx="3" />
+<rect x="380" y="160" width="40" height="45" class="stool" rx="3" />
+<rect x="433" y="160" width="40" height="45" class="stool" rx="3" />
+<text x="400" y="196" class="lblx" text-anchor="middle">② table et chaises (devant)</text>
+<path d="M0 262 L414 262" class="dim" marker-start="url(#tk)" marker-end="url(#tk)"/>
+<text x="207" y="270" class="dimt" text-anchor="middle">414</text>
+<path d="M560 0 L560 250" class="dim" marker-start="url(#tk)" marker-end="url(#tk)"/>
+<text x="568" y="125" class="dimt" text-anchor="middle" transform="rotate(-90 568 125)">250</text>
+<path d="M-20 170 L-20 250" class="dim" marker-start="url(#tk)" marker-end="url(#tk)"/>
+<text x="-22.5" y="210" class="dimt" text-anchor="middle" transform="rotate(-90 -22.5 210)">80</text></svg></div><p class="cap">C · Mur nord, vu depuis le sud : la bibliothèque est la même qu'en A ; la table et ses chaises sont devant, côté baie.</p></div>
+<div class="fig"><div class="scroll"><svg viewBox="-20 -12 420 300" class="small" role="img" aria-label="Variante C, mur ouest avec le canapé"><line x1="-10" y1="250" x2="368" y2="250" class="floorl"/>
+<line x1="-10" y1="0" x2="368" y2="0" class="el-ceil"/>
+<text x="2" y="-3" class="lblx muted" text-anchor="start">plafond 250</text>
+<rect x="15" y="46" width="75" height="204" class="room" />
+<text x="52.5" y="150" class="lbls muted" text-anchor="middle">passage</text>
+<text x="52.5" y="159" class="lbls muted" text-anchor="middle">vers le couloir</text>
+<rect x="323" y="0" width="35" height="250" class="tall" />
+<text x="340.5" y="125" class="lblb" text-anchor="middle">①</text>
+<rect x="100" y="167" width="198" height="83" class="sofa" rx="4" />
+<rect x="100" y="180" width="6" height="70" class="sofac" rx="2" />
+<rect x="292" y="180" width="6" height="70" class="sofac" rx="2" />
+<rect x="106" y="172" width="62" height="38" class="sofac" rx="4" />
+<rect x="106" y="210" width="62" height="18" class="sofac" rx="3" />
+<rect x="168" y="172" width="62" height="38" class="sofac" rx="4" />
+<rect x="168" y="210" width="62" height="18" class="sofac" rx="3" />
+<rect x="230" y="172" width="62" height="38" class="sofac" rx="4" />
+<rect x="230" y="210" width="62" height="18" class="sofac" rx="3" />
+<text x="199" y="244" class="lblx" text-anchor="middle">③ SÖDERHAMN 3 places + accoudoirs · 198 · h 83</text>
+<rect x="188" y="60" width="100" height="70" class="mirror" />
+<text x="238" y="98" class="lbls" text-anchor="middle">tableau</text>
+<text x="0" y="262" class="lblx muted" text-anchor="start">sud</text>
+<text x="358" y="262" class="lblx muted" text-anchor="end">nord</text>
+<path d="M100 272 L298 272" class="dim" marker-start="url(#tk)" marker-end="url(#tk)"/>
+<text x="199" y="280" class="dimt" text-anchor="middle">198</text></svg></div><p class="cap">C · Mur ouest, vu depuis l'est : le canapé SÖDERHAMN est adossé au mur, entre la bibliothèque et le passage du couloir.</p></div>
+</div>
 
 <h2>Principe</h2>
 <div class="grid2">
@@ -844,13 +1185,14 @@ section{margin-top:52px;padding-top:8px;border-top:2px solid var(--line)}
 <div class="card"><h3>② Table pour recevoir, côté couloir</h3><p>Table de 160 × 90 près du passage vers le couloir, donc au plus court depuis la cuisine. 6 couverts ; avec une allonge de 40 vers le sud et une chaise en bout, on passe à 8 sans gêner le passage. 80 cm de recul derrière chaque chaise.</p></div>
 <div class="card"><h3>A · Bibliothèque au nord</h3><p>414 × 35 sur tout le mur nord, 5 travées, environ 30 m d'étagères. Portes basses jusqu'à 80 pour ce qui sert à recevoir. Elle est accessible depuis le coin repas comme depuis le salon. 96 cm entre la table et le canapé, 66 le long de la baie.</p></div>
 <div class="card"><h3>B · Bibliothèque à l'ouest</h3><p>262 × 35 sur le mur ouest, du coin nord au passage, 3 travées, environ 19 m d'étagères : une « salle à manger bibliothèque ». Le mur nord reste libre (tableaux). Tout se décale vers l'est : il ne reste que les 80 de recul entre la table et le canapé, et la table basse passe à 50 de large pour garder 67 le long de la baie.</p></div>
+<div class="card"><h3>C · Repas côté baie</h3><p>La A inversée. Le canapé s'adosse au mur ouest (il reste 10 cm avant le passage) et regarde la baie à travers le coin repas. La table, en travers, est dans la lumière ; son bout reste à 64 cm de la baie, et une allonge de 40 côté salon donne 8 couverts. On entre au sud sur 100 cm de large. Plus loin de la cuisine, et le fauteuil, tourné vers le canapé, masque une partie de la bibliothèque.</p></div>
 </div>
 
 <h2>Points à vérifier</h2>
 <div class="hyp"><ul>
 <li><b>La baie du mur est</b> (202 cm d'après le relevé) : avec une coulissante, les 66 à 67 cm laissés devant suffisent ; une baie battante vers l'intérieur demanderait plus.</li>
 <li><b>Le décroché nord-est</b> (130 cm, mur 3 cm plus bas) : le relevé n'y montre pas d'ouverture.</li>
-<li><b>Suspension</b> : il faut un point lumineux au-dessus de la table, probablement à déplacer (A : x ≈ 125, y ≈ 165 ; B : x ≈ 160, y ≈ 150).</li>
+<li><b>Suspension</b> : il faut un point lumineux au-dessus de la table, probablement à déplacer (A : x ≈ 125, y ≈ 165 ; B : x ≈ 160, y ≈ 150 ; C : x ≈ 400, y ≈ 185).</li>
 <li><b>Bibliothèque</b> : à fixer au mur (charge d'environ 25 kg par mètre d'étagère) ; vérifier qu'il n'y a ni radiateur ni prise sur le mur choisi. En B, le mur ouest est la cloison du cellier et du WC : vérifier qu'elle supporte la fixation.</li>
 </ul></div>
 <script>
@@ -863,8 +1205,8 @@ section{margin-top:52px;padding-top:8px;border-top:2px solid var(--line)}
   }
   bs.forEach(function(b){b.addEventListener('click',function(){show(b.getAttribute('data-v'))})});
   var v=null;try{v=localStorage.getItem('salon-var')}catch(e){}
-  if(/^#[AB]$/.test(location.hash))v=location.hash.slice(1);
-  if(v==='B')show(v);
+  if(/^#[ABC]$/.test(location.hash))v=location.hash.slice(1);
+  if(v==='B'||v==='C')show(v);
 })();
 </script>
 
@@ -872,7 +1214,7 @@ section{margin-top:52px;padding-top:8px;border-top:2px solid var(--line)}
 <h2>Changements</h2>
 <div class="scroll-t"><table>
 <thead><tr><th>Version</th><th>Date</th><th>Changements</th></tr></thead>
-<tbody><tr><td><b>V3</b></td><td>01/10/2026</td><td>Canapé remplacé par le module 3 places IKEA SÖDERHAMN avec deux accoudoirs (186 + 2 × 6 = 198 × 99). Ajout de la variante B : bibliothèque 262 × 35 sur le mur ouest, table et salon décalés vers l'est, table basse 50 × 100. Bouton A/B sur le plan et les élévations. La V2.1 est archivée (archive/salon-amenagement-v2.html).</td></tr><tr><td><b>V2.1</b></td><td>01/10/2026</td><td>Le salon n'a pas de porte : l'ouverture vers le couloir est un passage libre (plan et vue B).</td></tr><tr><td><b>V2</b></td><td>01/10/2026</td><td>Plus de télévision ni de bureau (demande du client). Bibliothèque 414 × 35 sur tout le mur nord, table 160 × 90 pour 6 (8 avec allonge) côté porte, canapé 210 × 95 dos à la table et tourné vers la baie, fauteuil dans le décroché. Buffet supprimé. La V1 est archivée (archive/salon-amenagement-v1.html).</td></tr><tr><td><b>V1</b></td><td>01/10/2026</td><td>Première proposition à partir du relevé : bibliothèque 284 × 35 avec niche TV sur le mur nord, canapé 230 × 95 contre le mur sud, table basse, buffet 160 × 45 à l'ouest, bureau 120 × 60 et fauteuil près de la baie. Plan et deux élévations.</td></tr></tbody>
+<tbody><tr><td><b>V3.1</b></td><td>01/10/2026</td><td>Ajout de la variante C : la A avec les zones inversées. Canapé SÖDERHAMN contre le mur ouest, tourné vers la baie, table 160 × 90 en travers près de la baie (64 cm devant la baie), allonge côté salon, fauteuil en biais. Plan et deux élévations.</td></tr><tr><td><b>V3</b></td><td>01/10/2026</td><td>Canapé remplacé par le module 3 places IKEA SÖDERHAMN avec deux accoudoirs (186 + 2 × 6 = 198 × 99). Ajout de la variante B : bibliothèque 262 × 35 sur le mur ouest, table et salon décalés vers l'est, table basse 50 × 100. Bouton A/B sur le plan et les élévations. La V2.1 est archivée (archive/salon-amenagement-v2.html).</td></tr><tr><td><b>V2.1</b></td><td>01/10/2026</td><td>Le salon n'a pas de porte : l'ouverture vers le couloir est un passage libre (plan et vue B).</td></tr><tr><td><b>V2</b></td><td>01/10/2026</td><td>Plus de télévision ni de bureau (demande du client). Bibliothèque 414 × 35 sur tout le mur nord, table 160 × 90 pour 6 (8 avec allonge) côté porte, canapé 210 × 95 dos à la table et tourné vers la baie, fauteuil dans le décroché. Buffet supprimé. La V1 est archivée (archive/salon-amenagement-v1.html).</td></tr><tr><td><b>V1</b></td><td>01/10/2026</td><td>Première proposition à partir du relevé : bibliothèque 284 × 35 avec niche TV sur le mur nord, canapé 230 × 95 contre le mur sud, table basse, buffet 160 × 45 à l'ouest, bureau 120 × 60 et fauteuil près de la baie. Plan et deux élévations.</td></tr></tbody>
 </table></div>
 </section>
 </div>
