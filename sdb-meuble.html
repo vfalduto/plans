@@ -1,0 +1,575 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Meuble salle de bain</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wght@400;500;700;800&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+<style>:root{
+  --paper:#F7F8F6; --ink:#1D2A33; --muted:#5E6B73; --line:#C9D0D4; --wood:#B07A45;
+  --water:#2F7FB5; --tri:#C8412C; --flow:#2E8B57; --green:#7FA35A;
+  --panel:#FFFFFF; --cab:#ECE6DA; --tall:#D8CFBD; --tech:#E1E6E9; --glass:#CFE4F2; --tile:#EFEBE4;
+  color-scheme:light;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --paper:#141A1F; --ink:#E4EAED; --muted:#9AA7AE; --line:#34414A; --wood:#C9925A;
+    --water:#5AA8DE; --tri:#E8664F; --flow:#4CB97A; --green:#9CC175;
+    --panel:#1B2329; --cab:#2A3338; --tall:#394449; --tech:#26303A; --glass:#1F3A4E; --tile:#1E252B;
+    color-scheme:dark;
+  }
+}
+:root[data-theme="dark"]{
+  --paper:#141A1F; --ink:#E4EAED; --muted:#9AA7AE; --line:#34414A; --wood:#C9925A;
+  --water:#5AA8DE; --tri:#E8664F; --flow:#4CB97A; --green:#9CC175;
+  --panel:#1B2329; --cab:#2A3338; --tall:#394449; --tech:#26303A; --glass:#1F3A4E; --tile:#1E252B;
+  color-scheme:dark;
+}
+*{box-sizing:border-box}
+html,body{margin:0}
+body{background:var(--paper);color:var(--ink);font-family:Archivo,system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;line-height:1.55;font-size:16px}
+.wrap{max-width:1180px;margin:0 auto;padding:28px 16px 64px}
+.kicker{font-family:"JetBrains Mono",ui-monospace,Menlo,monospace;font-size:12px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted)}
+h1{font-size:clamp(28px,5vw,44px);line-height:1.08;margin:6px 0 12px;font-weight:800;letter-spacing:-.01em}
+h2{font-size:26px;margin:4px 0 8px;font-weight:800}
+h3{font-size:15px;margin:0 0 6px}
+section{margin-top:52px;padding-top:8px;border-top:2px solid var(--line)}
+.pitch{font-size:17px;max-width:820px}
+.changes{max-width:880px;font-size:15px;padding-left:20px}
+.hyp{border-left:3px solid var(--wood);padding:8px 12px;background:var(--panel);font-size:14px;margin:14px 0;max-width:880px}
+.toc{display:flex;flex-wrap:wrap;gap:8px;margin:18px 0 0}
+.toc a{font-size:14px;color:var(--ink);text-decoration:none;border:1px solid var(--line);border-radius:999px;padding:4px 12px;background:var(--panel)}
+.figs{display:grid;grid-template-columns:1.25fr 1fr;gap:12px;margin:14px 0}
+.span2{grid-column:1 / -1}
+.span2 svg{max-height:600px}
+@media (max-width:980px){.figs{grid-template-columns:1fr}}
+.fig{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:12px}
+.scroll svg{display:block;width:100%;height:auto;max-height:860px}
+.cap{font-size:12.5px;color:var(--muted);margin:8px 2px 0}
+.grid2{display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:12px}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:14px 16px}
+.card ul{padding-left:18px;margin:4px 0}.card li{margin:3px 0;font-size:15px}
+.okh{color:var(--flow)}.warnh{color:var(--tri)}
+.scroll-t{overflow-x:auto}
+table{border-collapse:collapse;width:100%;font-size:14px;min-width:620px}
+th,td{text-align:left;padding:7px 8px;border-bottom:1px solid var(--line);vertical-align:top}
+.okc{color:var(--flow);font-weight:700}.warnc{color:var(--tri);font-weight:700}
+.note{font-size:13px;color:var(--muted)}
+
+svg text{font-family:Archivo,system-ui,sans-serif;fill:var(--ink)}
+.w{fill:var(--ink)}
+.sdbf{fill:var(--tile)}
+.tl{fill:none;stroke:var(--line);stroke-width:.4}
+.hrl{stroke:var(--tri);stroke-width:.8;stroke-opacity:.5}
+.red{fill:url(#hr);stroke:var(--tri);stroke-width:.8}
+.rt{fill:var(--tri);font-weight:700}
+.green{fill:none;stroke:var(--green);stroke-width:1.6;stroke-dasharray:4 2}
+.doorzone{fill:var(--tri);fill-opacity:.05}
+.doorarc{fill:none;stroke:var(--ink);stroke-width:.5}
+.leaf{fill:var(--ink)}
+.leafg{fill:none;stroke:var(--tri);stroke-width:.7;stroke-dasharray:3 2}
+.cab{fill:var(--cab);stroke:var(--ink);stroke-width:.5}
+.tall{fill:var(--tall);stroke:var(--ink);stroke-width:.5}
+.plinth{fill:var(--tall);stroke:var(--ink);stroke-width:.4}
+.bask{fill:var(--wood);fill-opacity:.28;stroke:var(--ink);stroke-width:.5}
+.niche{fill:var(--glass);fill-opacity:.6;stroke:var(--water);stroke-width:.6}
+.open{fill:none;stroke:none}
+.shelf{fill:var(--wood);fill-opacity:.6;stroke:var(--ink);stroke-width:.3}
+.top{fill:var(--muted);stroke:var(--ink);stroke-width:.3}
+.fill{fill:var(--line);fill-opacity:.4;stroke:var(--ink);stroke-width:.3}
+.lm{fill:var(--tech);stroke:var(--ink);stroke-width:.5}
+.appf{fill:var(--panel);stroke:var(--ink);stroke-width:.6}
+.app{fill:none;stroke:var(--ink);stroke-width:.5}
+.hose{fill:none;stroke:var(--water);stroke-width:1}
+.cleat{fill:var(--wood)}
+.upper{fill:none;stroke:var(--muted);stroke-width:.5;stroke-dasharray:3 1.5}
+.swing{fill:none;stroke:var(--muted);stroke-width:.45;stroke-dasharray:1.5 1.2}
+.conf{fill:var(--tri);fill-opacity:.55}
+.plug{fill:var(--panel);stroke:var(--ink);stroke-width:.4}
+.hook{fill:none;stroke:var(--ink);stroke-width:.9}
+.floorl{stroke:var(--ink);stroke-width:1.2}
+.ceil{stroke:var(--muted);stroke-width:.6;stroke-dasharray:4 3}
+.dim{stroke:var(--muted);stroke-width:.35;fill:none}
+.dimt{fill:var(--muted);font-family:"JetBrains Mono",ui-monospace,monospace !important;font-size:4.4px}
+.lbl{font-size:5.4px}
+.lbls{font-size:4.8px}
+.lblx{font-size:4px}
+.lblb{font-size:5.4px;font-weight:700}
+.muted{fill:var(--muted)}
+.sec{stroke:var(--tri);stroke-width:.5;stroke-dasharray:6 2 1.5 2;fill:none}
+.secm{fill:var(--tri)}
+.sect{fill:var(--tri);font-weight:800;font-size:6px}
+</style>
+</head>
+<body>
+<div class="wrap">
+<div class="kicker">Salle de bain 3,4 m² · alcôve 67 × 114 · 3 propositions · plan et coupes</div>
+<h1>Meuble linge de la salle de bain</h1>
+<ul class="changes">
+  <li><b>Programme</b> : lave-linge, niche avec prises pour le sèche-cheveux et le chargeur de brosse à dents, rangements dont deux paniers à linge sale.</li>
+  <li><b>Emprise</b> : uniquement l'alcôve verte (x 167 → 234, y 0 → 114). Douche et lavabo inchangés.</li>
+  <li><b>Contrainte principale</b> : la porte d'entrée ouvre vers l'intérieur. Ouverte à 90°, son vantail passe à environ 10 cm devant les façades, sur les 76 premiers centimètres côté nord.</li>
+</ul>
+<div class="hyp"><b>Hypothèses à vérifier sur place.</b> Cotes relevées sur le plan : paumelles de la porte à x ≈ 157, vantail de 76. Hauteur sous plafond 250. Lave-linge standard 60 × 60 × 85 ; l'alcôve de 67 laisse 4 cm pour les tuyaux et 2 cm de façade. D'après la NF C 15-100 (de mémoire, non vérifié ; à valider par l'électricien) : l'alcôve est à plus de 60 cm du receveur, donc hors des volumes 1 et 2 ; les prises y sont possibles, et la LL doit avoir un circuit spécialisé de 20 A. Caissons en panneaux hydrofuges (CTB-H) sur plinthe ou pieds.</div>
+
+<nav class="toc"><a href="#p1">P1 « Plan de pliage »</a><a href="#p2">P2 « Machine à hauteur »</a><a href="#p3">P3 « Quotidien côté lavabo »</a><a href="#cmp">Comparatif</a></nav>
+
+<section id="p1">
+<div class="kicker">Proposition 1</div>
+<h2>« Plan de pliage »</h2>
+<p class="pitch">Un meuble bas continu sous un plan de 114 × 66 à 90 cm, la lave-linge au sol côté lavabo, les deux paniers à linge en tiroirs à côté, et toute la crédence en niche ouverte sous des éléments hauts peu profonds.</p>
+<div class="figs">
+  <div class="fig span2"><h3>Plan</h3><div class="scroll"><svg viewBox="-22 -30 290 208" role="img" aria-label="Plan de la salle de bain, proposition 1">
+<defs>
+  <pattern id="hn" width="3" height="3" patternUnits="userSpaceOnUse" patternTransform="rotate(45)"><line x1="0" y1="0" x2="0" y2="3" style="stroke:var(--ink);stroke-width:.7"/></pattern>
+  <pattern id="hr" width="5" height="5" patternUnits="userSpaceOnUse" patternTransform="rotate(45)"><line x1="0" y1="0" x2="0" y2="5" class="hrl"/></pattern>
+  <pattern id="tile" width="10" height="10" patternUnits="userSpaceOnUse"><path class="tl" d="M10 0 L0 0 L0 10"/></pattern>
+  <marker id="tk" viewBox="0 0 10 10" refX="5" refY="5" markerWidth="5" markerHeight="5" orient="auto"><path d="M2 8 L8 2" style="stroke:var(--muted)" stroke-width="1.4"/></marker>
+</defs>
+<polygon class="sdbf" points="0,0 234,0 234,114 167,114 167,160 0,160"/><polygon fill="url(#tile)" points="0,0 234,0 234,114 167,114 167,160 0,160"/>
+<path class="w" fill-rule="evenodd" d="M-5 -5 H239 V122 H175 V165 H-5 Z M0 0 V160 H167 V114 H234 V0 Z"/>
+<rect x="81" y="-5.5" width="76" height="6" style="fill:var(--paper)"/>
+<path class="doorzone" d="M81 0 A76 76 0 0 0 157 76 L157 0 Z"/>
+<path class="doorarc" d="M81 0 A76 76 0 0 0 157 76"/>
+<rect class="leaf" x="153" y="0" width="4" height="76"/>
+<text class="lblx muted" x="119" y="-9" text-anchor="middle" >porte d&#x27;entrée 76 (hyp.)</text>
+<text class="lblx muted" x="145" y="40" text-anchor="middle" transform="rotate(-90 145 40)">vantail</text>
+<text class="lblx muted" x="149" y="40" text-anchor="middle" transform="rotate(-90 149 40)">ouvert à 90°</text>
+<rect class="red" x="5" y="50" width="73" height="105"/>
+<text class="lbl rt" x="41.5" y="100" text-anchor="middle" >Douche</text><text class="lblx rt" x="41.5" y="106" text-anchor="middle" >non modifiée</text>
+<rect class="red" x="82" y="114" width="83" height="46"/>
+<text class="lbl rt" x="123.5" y="136" text-anchor="middle" >Lavabo</text><text class="lblx rt" x="123.5" y="142" text-anchor="middle" >non modifié</text>
+<rect class="green" x="167" y="0" width="67" height="114"/>
+<rect class="cab" x="168" y="0" width="66" height="2"/>
+<rect class="cab" x="168" y="2" width="66" height="50"/>
+<text class="lblb" x="201.0" y="19.0" text-anchor="middle" >Paniers</text>
+<text class="lblx" x="201.0" y="25.0" text-anchor="middle" >2 tiroirs-paniers</text>
+<text class="lblx" x="201.0" y="31.0" text-anchor="middle" >superposés</text>
+<text class="lblx" x="201.0" y="37.0" text-anchor="middle" >sous le plan</text>
+<rect class="cab" x="168" y="52" width="66" height="1"/>
+<rect class="lm" x="170" y="53" width="64" height="61"/>
+<rect class="appf" x="172" y="54" width="58" height="59" rx="1.5"/>
+<line class="app" x1="172" y1="59" x2="172" y2="108" style="stroke-width:2"/>
+<text class="lblb" x="202.0" y="78.5" text-anchor="middle" >LL</text>
+<text class="lblx" x="202.0" y="84.5" text-anchor="middle" >au sol</text>
+<text class="lblx" x="202.0" y="90.5" text-anchor="middle" >sous le plan</text>
+<rect class="upper" x="199" y="0" width="35" height="114"/>
+<rect class="swing" x="118" y="2" width="50" height="50"/>
+<text class="lblx muted" x="130" y="29" text-anchor="middle" >tiroir tiré</text><text class="lblx muted" x="130" y="34" text-anchor="middle" >(50)</text>
+<path class="conf" d="M153 2 h4 v50 h-4z"/>
+<line class="dim" x1="157" y1="58" x2="168" y2="58"/>
+<text class="dimt" x="162.5" y="64" text-anchor="middle" >11</text>
+<line class="dim" x1="167" y1="-16" x2="234" y2="-16" marker-start="url(#tk)" marker-end="url(#tk)"/><line class="dim" x1="167" y1="-19" x2="167" y2="-13"/><line class="dim" x1="234" y1="-19" x2="234" y2="-13"/><text class="dimt" x="200.5" y="-17.6" text-anchor="middle" >67 (alcôve)</text>
+<line class="dim" x1="0" y1="-24" x2="234" y2="-24" marker-start="url(#tk)" marker-end="url(#tk)"/><line class="dim" x1="0" y1="-27" x2="0" y2="-21"/><line class="dim" x1="234" y1="-27" x2="234" y2="-21"/><text class="dimt" x="117.0" y="-25.6" text-anchor="middle" >234</text>
+<line class="dim" x1="248" y1="0" x2="248" y2="114"/><line class="dim" x1="245" y1="0" x2="251" y2="0"/><line class="dim" x1="245" y1="114" x2="251" y2="114"/><text class="dimt" x="246" y="57.0" text-anchor="middle" transform="rotate(-90 246 57.0)">114</text>
+<line class="dim" x1="-14" y1="0" x2="-14" y2="160"/><line class="dim" x1="-17" y1="0" x2="-11" y2="0"/><line class="dim" x1="-17" y1="160" x2="-11" y2="160"/><text class="dimt" x="-16" y="80.0" text-anchor="middle" transform="rotate(-90 -16 80.0)">160</text>
+<line class="dim" x1="258" y1="0" x2="258" y2="53"/><line class="dim" x1="255" y1="0" x2="261" y2="0"/><line class="dim" x1="255" y1="53" x2="261" y2="53"/><text class="dimt" x="260" y="26.5" text-anchor="middle" transform="rotate(-90 260 26.5)">2+50+1</text>
+<line class="dim" x1="258" y1="53" x2="258" y2="114"/><line class="dim" x1="255" y1="53" x2="261" y2="53"/><line class="dim" x1="255" y1="114" x2="261" y2="114"/><text class="dimt" x="260" y="83.5" text-anchor="middle" transform="rotate(-90 260 83.5)">61 niche LL</text>
+<line class="sec" x1="140" y1="106" x2="244" y2="106"/>
+<path class="secm" d="M141 106 l3 -6 l3 6z"/><path class="secm" d="M237 106 l3 -6 l3 6z"/>
+<text class="sect" x="143" y="112" text-anchor="middle" >B</text><text class="sect" x="240" y="112" text-anchor="middle" >B</text>
+<path class="secm" d="M166 -2 l-4 -3 v6z"/><text class="sect" x="160" y="3" text-anchor="end" >A</text>
+<text class="lblx muted" x="117" y="176" text-anchor="middle" >N ↑ · échelle : 1 carreau = 10 cm</text>
+</svg></div>
+  <p class="cap">Façades à x 168. En pointillé fin : ouvertures des tiroirs et des portes ; hachures rouges : zones non modifiées ; pointillé épais : éléments hauts ; rectangle rouge plein : recouvrement avec le vantail ouvert.</p></div>
+  <div class="fig"><h3>Élévation A : face au meuble (vue vers l'est)</h3><div class="scroll"><svg viewBox="-34 -14 196 292" role="img" aria-label="Élévation face au meuble, proposition 1">
+<defs>
+  <pattern id="hn" width="3" height="3" patternUnits="userSpaceOnUse" patternTransform="rotate(45)"><line x1="0" y1="0" x2="0" y2="3" style="stroke:var(--ink);stroke-width:.7"/></pattern>
+  <pattern id="hr" width="5" height="5" patternUnits="userSpaceOnUse" patternTransform="rotate(45)"><line x1="0" y1="0" x2="0" y2="5" class="hrl"/></pattern>
+  <pattern id="tile" width="10" height="10" patternUnits="userSpaceOnUse"><path class="tl" d="M10 0 L0 0 L0 10"/></pattern>
+  <marker id="tk" viewBox="0 0 10 10" refX="5" refY="5" markerWidth="5" markerHeight="5" orient="auto"><path d="M2 8 L8 2" style="stroke:var(--muted)" stroke-width="1.4"/></marker>
+</defs>
+<rect class="w" x="-6" y="-4" width="6" height="258"/>
+<rect class="w" x="114" y="-4" width="8" height="258"/>
+<line class="floorl" x1="-30" y1="250" x2="160" y2="250"/>
+<line class="ceil" x1="-30" y1="0" x2="160" y2="0"/>
+<text class="lblx muted" x="140" y="-3" text-anchor="middle" >plafond 250 (hyp.)</text>
+<text class="lblx muted" x="-17" y="258" text-anchor="middle" >nord</text><text class="lblx muted" x="135" y="258" text-anchor="middle" >sud · lavabo</text>
+<rect class="cab" x="0" y="163" width="2" height="87"/>
+<rect class="plinth" x="2" y="240" width="50" height="10"/>
+<rect class="bask" x="2" y="202" width="50" height="38"/>
+<text class="lbls" x="27.0" y="219.2" text-anchor="middle" >Panier 1</text>
+<text class="lblx" x="27.0" y="225.2" text-anchor="middle" >tiroir 50 · ~45 L</text>
+<rect class="bask" x="2" y="163" width="50" height="38"/>
+<text class="lbls" x="27.0" y="180.2" text-anchor="middle" >Panier 2</text>
+<text class="lblx" x="27.0" y="186.2" text-anchor="middle" >tiroir 50 · ~45 L</text>
+<rect class="cab" x="52" y="163" width="1" height="87"/>
+<rect class="lm" x="53.5" y="165" width="60.0" height="85"/>
+<rect class="appf" x="54.0" y="165" width="59.0" height="85" rx="1.5"/>
+<line class="app" x1="54.0" y1="179" x2="113.0" y2="179"/>
+<circle class="app" cx="83.5" cy="200" r="17"/><circle class="app" cx="83.5" cy="200" r="12.5"/>
+<rect class="top" x="0" y="160" width="114" height="3"/>
+<rect class="niche" x="0" y="105" width="114" height="55"/>
+<text class="lbls" x="57.0" y="127.7" text-anchor="middle" >Niche filante 114 × 55</text>
+<text class="lblx" x="57.0" y="133.7" text-anchor="middle" >prises + USB à 110 · crochet sèche-cheveux</text>
+<text class="lblx" x="57.0" y="139.7" text-anchor="middle" >socle brosse à dents · ruban LED</text>
+<rect class="cab" x="0" y="20" width="57" height="85"/>
+<text class="lbls" x="28.5" y="60.7" text-anchor="middle" >Haut 35</text>
+<text class="lblx" x="28.5" y="66.7" text-anchor="middle" >abattant relevable</text>
+<rect class="cab" x="57" y="20" width="57" height="85"/>
+<text class="lbls" x="85.5" y="60.7" text-anchor="middle" >Haut 35</text>
+<text class="lblx" x="85.5" y="66.7" text-anchor="middle" >abattant relevable</text>
+<rect class="fill" x="0" y="0" width="114" height="20"/>
+<text class="lbls" x="57.0" y="11.2" text-anchor="middle" >bandeau de finition</text>
+<circle class="plug" cx="92" cy="152" r="2.2"/><circle class="plug" cx="98" cy="152" r="2.2"/><rect class="plug" x="103" y="150" width="6" height="4" rx="1"/>
+<path class="hook" d="M10 114 v6 q0 3 3 3"/>
+<rect class="leafg" x="-5" y="46" width="81" height="204"/>
+<text class="lblx rt" x="57" y="272" text-anchor="middle" >pointillé rouge : vantail de la porte ouvert à 90°, 10 cm devant</text>
+<line class="dim" x1="-22" y1="160" x2="-22" y2="250"/><line class="dim" x1="-25" y1="160" x2="-19" y2="160"/><line class="dim" x1="-25" y1="250" x2="-19" y2="250"/><text class="dimt" x="-24" y="205.0" text-anchor="middle" transform="rotate(-90 -24 205.0)">90</text>
+<line class="dim" x1="-22" y1="105" x2="-22" y2="160"/><line class="dim" x1="-25" y1="105" x2="-19" y2="105"/><line class="dim" x1="-25" y1="160" x2="-19" y2="160"/><text class="dimt" x="-24" y="132.5" text-anchor="middle" transform="rotate(-90 -24 132.5)">55</text>
+<line class="dim" x1="-22" y1="20" x2="-22" y2="105"/><line class="dim" x1="-25" y1="20" x2="-19" y2="20"/><line class="dim" x1="-25" y1="105" x2="-19" y2="105"/><text class="dimt" x="-24" y="62.5" text-anchor="middle" transform="rotate(-90 -24 62.5)">85</text>
+<line class="dim" x1="0" y1="260" x2="114" y2="260" marker-start="url(#tk)" marker-end="url(#tk)"/><line class="dim" x1="0" y1="257" x2="0" y2="263"/><line class="dim" x1="114" y1="257" x2="114" y2="263"/><text class="dimt" x="57.0" y="258.4" text-anchor="middle" >114</text>
+</svg></div></div>
+  <div class="fig"><h3>Coupe B-B : vue vers le nord</h3><div class="scroll"><svg viewBox="130 -14 130 282" role="img" aria-label="Coupe B-B, proposition 1">
+<defs>
+  <pattern id="hn" width="3" height="3" patternUnits="userSpaceOnUse" patternTransform="rotate(45)"><line x1="0" y1="0" x2="0" y2="3" style="stroke:var(--ink);stroke-width:.7"/></pattern>
+  <pattern id="hr" width="5" height="5" patternUnits="userSpaceOnUse" patternTransform="rotate(45)"><line x1="0" y1="0" x2="0" y2="5" class="hrl"/></pattern>
+  <pattern id="tile" width="10" height="10" patternUnits="userSpaceOnUse"><path class="tl" d="M10 0 L0 0 L0 10"/></pattern>
+  <marker id="tk" viewBox="0 0 10 10" refX="5" refY="5" markerWidth="5" markerHeight="5" orient="auto"><path d="M2 8 L8 2" style="stroke:var(--muted)" stroke-width="1.4"/></marker>
+</defs>
+<rect class="w" x="234" y="-4" width="6" height="258"/>
+<line class="floorl" x1="130" y1="250" x2="252" y2="250"/>
+<line class="ceil" x1="130" y1="0" x2="252" y2="0"/>
+<rect class="leafg" x="153" y="46" width="4" height="204"/>
+<text class="lblx muted" x="150" y="130" text-anchor="middle" transform="rotate(-90 150 130)">vantail de la porte ouvert à 90°</text>
+<rect class="fill" x="170" y="250" width="64" height="0"/>
+<rect class="top" x="168" y="160" width="66" height="3"/>
+<rect class="niche" x="168" y="105" width="66" height="55"/>
+<text class="lbls" x="201.0" y="130.7" text-anchor="middle" >niche 66 de prof.</text>
+<text class="lblx" x="201.0" y="136.7" text-anchor="middle" >sous haut de 35</text>
+<rect class="cab" x="199" y="20" width="35" height="85"/>
+<text class="lbls" x="216.5" y="60.7" text-anchor="middle" >Haut</text>
+<text class="lblx" x="216.5" y="66.7" text-anchor="middle" >35</text>
+<rect class="fill" x="199" y="0" width="35" height="20"/>
+<rect class="appf" x="170" y="165" width="60" height="85" rx="1.5"/>
+<rect class="app" x="167" y="188" width="3" height="34"/>
+<path class="hose" d="M230 175 q4 0 4 -6 V155"/>
+<text class="lbls" x="200.0" y="205" text-anchor="middle" >LL 60 × 60 × 85</text>
+<text class="lblx" x="200.0" y="211" text-anchor="middle" >tuyaux derrière : 4</text>
+<path class="swing" d="M199 105 q-14 -4 -22 -24"/>
+<text class="lblx muted" x="186" y="84" text-anchor="middle" >abattant</text>
+<line class="dim" x1="168" y1="260" x2="234" y2="260" marker-start="url(#tk)" marker-end="url(#tk)"/><line class="dim" x1="168" y1="257" x2="168" y2="263"/><line class="dim" x1="234" y1="257" x2="234" y2="263"/><text class="dimt" x="201.0" y="258.4" text-anchor="middle" >66</text>
+<line class="dim" x1="157" y1="260" x2="168" y2="260" marker-start="url(#tk)" marker-end="url(#tk)"/><line class="dim" x1="157" y1="257" x2="157" y2="263"/><line class="dim" x1="168" y1="257" x2="168" y2="263"/><text class="dimt" x="162.5" y="258.4" text-anchor="middle" >11</text>
+<text class="lblx muted" x="200" y="-4" text-anchor="middle" >est →</text>
+</svg></div></div>
+</div>
+<div class="grid2">
+  <div class="card"><h3 class="okh">Points forts</h3><ul><li>Seul plan de 114 × 66 : on plie et on pose le linge sur place.</li><li>Niche la plus grande (114 × 55) : sèche-cheveux, chargeur, trousse et produits du quotidien, sans porte.</li><li>LL au sol, côté lavabo : évacuation et arrivée d&#x27;eau au plus court.</li><li>Meuble le plus simple et le moins cher : caissons standard de cuisine (plinthe 10, plan 87-90).</li></ul></div>
+  <div class="card"><h3 class="warnh">Points faibles</h3><ul><li>Chargement de la LL en se baissant (hublot à ~50 cm).</li><li>Les tiroirs-paniers (y 2 → 52) ne sortent que porte d&#x27;entrée fermée : ils heurtent le vantail ouvert.</li><li>Niche ouverte : le désordre reste visible.</li></ul></div>
+</div>
+</section>
+<section id="p2">
+<div class="kicker">Proposition 2</div>
+<h2>« Machine à hauteur »</h2>
+<p class="pitch">La lave-linge est posée sur un socle de 40 cm qui cache les deux paniers à linge dans un tiroir double. Au-dessus : la niche puis un placard de stock. Côté porte, une colonne pleine hauteur pour les serviettes.</p>
+<div class="figs">
+  <div class="fig span2"><h3>Plan</h3><div class="scroll"><svg viewBox="-22 -30 290 208" role="img" aria-label="Plan de la salle de bain, proposition 2">
+<defs>
+  <pattern id="hn" width="3" height="3" patternUnits="userSpaceOnUse" patternTransform="rotate(45)"><line x1="0" y1="0" x2="0" y2="3" style="stroke:var(--ink);stroke-width:.7"/></pattern>
+  <pattern id="hr" width="5" height="5" patternUnits="userSpaceOnUse" patternTransform="rotate(45)"><line x1="0" y1="0" x2="0" y2="5" class="hrl"/></pattern>
+  <pattern id="tile" width="10" height="10" patternUnits="userSpaceOnUse"><path class="tl" d="M10 0 L0 0 L0 10"/></pattern>
+  <marker id="tk" viewBox="0 0 10 10" refX="5" refY="5" markerWidth="5" markerHeight="5" orient="auto"><path d="M2 8 L8 2" style="stroke:var(--muted)" stroke-width="1.4"/></marker>
+</defs>
+<polygon class="sdbf" points="0,0 234,0 234,114 167,114 167,160 0,160"/><polygon fill="url(#tile)" points="0,0 234,0 234,114 167,114 167,160 0,160"/>
+<path class="w" fill-rule="evenodd" d="M-5 -5 H239 V122 H175 V165 H-5 Z M0 0 V160 H167 V114 H234 V0 Z"/>
+<rect x="81" y="-5.5" width="76" height="6" style="fill:var(--paper)"/>
+<path class="doorzone" d="M81 0 A76 76 0 0 0 157 76 L157 0 Z"/>
+<path class="doorarc" d="M81 0 A76 76 0 0 0 157 76"/>
+<rect class="leaf" x="153" y="0" width="4" height="76"/>
+<text class="lblx muted" x="119" y="-9" text-anchor="middle" >porte d&#x27;entrée 76 (hyp.)</text>
+<text class="lblx muted" x="145" y="40" text-anchor="middle" transform="rotate(-90 145 40)">vantail</text>
+<text class="lblx muted" x="149" y="40" text-anchor="middle" transform="rotate(-90 149 40)">ouvert à 90°</text>
+<rect class="red" x="5" y="50" width="73" height="105"/>
+<text class="lbl rt" x="41.5" y="100" text-anchor="middle" >Douche</text><text class="lblx rt" x="41.5" y="106" text-anchor="middle" >non modifiée</text>
+<rect class="red" x="82" y="114" width="83" height="46"/>
+<text class="lbl rt" x="123.5" y="136" text-anchor="middle" >Lavabo</text><text class="lblx rt" x="123.5" y="142" text-anchor="middle" >non modifié</text>
+<rect class="green" x="167" y="0" width="67" height="114"/>
+<rect class="tall" x="168" y="0" width="66" height="2"/>
+<rect class="tall" x="168" y="2" width="66" height="50"/>
+<text class="lblb" x="201.0" y="19.0" text-anchor="middle" >Colonne</text>
+<text class="lblx" x="201.0" y="25.0" text-anchor="middle" >serviettes</text>
+<text class="lblx" x="201.0" y="31.0" text-anchor="middle" >produits</text>
+<text class="lblx" x="201.0" y="37.0" text-anchor="middle" >stock</text>
+<rect class="tall" x="168" y="52" width="66" height="1"/>
+<rect class="lm" x="170" y="53" width="64" height="61"/>
+<rect class="appf" x="172" y="54" width="58" height="59" rx="1.5"/>
+<line class="app" x1="172" y1="59" x2="172" y2="108" style="stroke-width:2"/>
+<text class="lblb" x="202.0" y="78.5" text-anchor="middle" >LL</text>
+<text class="lblx" x="202.0" y="84.5" text-anchor="middle" >sur socle 40</text>
+<text class="lblx" x="202.0" y="90.5" text-anchor="middle" >paniers dessous</text>
+<path class="swing" d="M168 52 A50 50 0 0 0 118 2"/>
+<line class="swing" x1="168" y1="52" x2="118" y2="52"/>
+<path class="conf" d="M153 16 h4 v36 h-4z"/>
+<line class="dim" x1="157" y1="58" x2="168" y2="58"/>
+<text class="dimt" x="162.5" y="64" text-anchor="middle" >11</text>
+<line class="dim" x1="167" y1="-16" x2="234" y2="-16" marker-start="url(#tk)" marker-end="url(#tk)"/><line class="dim" x1="167" y1="-19" x2="167" y2="-13"/><line class="dim" x1="234" y1="-19" x2="234" y2="-13"/><text class="dimt" x="200.5" y="-17.6" text-anchor="middle" >67 (alcôve)</text>
+<line class="dim" x1="0" y1="-24" x2="234" y2="-24" marker-start="url(#tk)" marker-end="url(#tk)"/><line class="dim" x1="0" y1="-27" x2="0" y2="-21"/><line class="dim" x1="234" y1="-27" x2="234" y2="-21"/><text class="dimt" x="117.0" y="-25.6" text-anchor="middle" >234</text>
+<line class="dim" x1="248" y1="0" x2="248" y2="114"/><line class="dim" x1="245" y1="0" x2="251" y2="0"/><line class="dim" x1="245" y1="114" x2="251" y2="114"/><text class="dimt" x="246" y="57.0" text-anchor="middle" transform="rotate(-90 246 57.0)">114</text>
+<line class="dim" x1="-14" y1="0" x2="-14" y2="160"/><line class="dim" x1="-17" y1="0" x2="-11" y2="0"/><line class="dim" x1="-17" y1="160" x2="-11" y2="160"/><text class="dimt" x="-16" y="80.0" text-anchor="middle" transform="rotate(-90 -16 80.0)">160</text>
+<line class="dim" x1="258" y1="0" x2="258" y2="53"/><line class="dim" x1="255" y1="0" x2="261" y2="0"/><line class="dim" x1="255" y1="53" x2="261" y2="53"/><text class="dimt" x="260" y="26.5" text-anchor="middle" transform="rotate(-90 260 26.5)">2+50+1</text>
+<line class="dim" x1="258" y1="53" x2="258" y2="114"/><line class="dim" x1="255" y1="53" x2="261" y2="53"/><line class="dim" x1="255" y1="114" x2="261" y2="114"/><text class="dimt" x="260" y="83.5" text-anchor="middle" transform="rotate(-90 260 83.5)">61 baie LL</text>
+<line class="sec" x1="140" y1="106" x2="244" y2="106"/>
+<path class="secm" d="M141 106 l3 -6 l3 6z"/><path class="secm" d="M237 106 l3 -6 l3 6z"/>
+<text class="sect" x="143" y="112" text-anchor="middle" >B</text><text class="sect" x="240" y="112" text-anchor="middle" >B</text>
+<path class="secm" d="M166 -2 l-4 -3 v6z"/><text class="sect" x="160" y="3" text-anchor="end" >A</text>
+<text class="lblx muted" x="117" y="176" text-anchor="middle" >N ↑ · échelle : 1 carreau = 10 cm</text>
+</svg></div>
+  <p class="cap">Façades à x 168. En pointillé fin : ouvertures des tiroirs et des portes ; hachures rouges : zones non modifiées ; pointillé épais : éléments hauts ; rectangle rouge plein : recouvrement avec le vantail ouvert.</p></div>
+  <div class="fig"><h3>Élévation A : face au meuble (vue vers l'est)</h3><div class="scroll"><svg viewBox="-34 -14 196 292" role="img" aria-label="Élévation face au meuble, proposition 2">
+<defs>
+  <pattern id="hn" width="3" height="3" patternUnits="userSpaceOnUse" patternTransform="rotate(45)"><line x1="0" y1="0" x2="0" y2="3" style="stroke:var(--ink);stroke-width:.7"/></pattern>
+  <pattern id="hr" width="5" height="5" patternUnits="userSpaceOnUse" patternTransform="rotate(45)"><line x1="0" y1="0" x2="0" y2="5" class="hrl"/></pattern>
+  <pattern id="tile" width="10" height="10" patternUnits="userSpaceOnUse"><path class="tl" d="M10 0 L0 0 L0 10"/></pattern>
+  <marker id="tk" viewBox="0 0 10 10" refX="5" refY="5" markerWidth="5" markerHeight="5" orient="auto"><path d="M2 8 L8 2" style="stroke:var(--muted)" stroke-width="1.4"/></marker>
+</defs>
+<rect class="w" x="-6" y="-4" width="6" height="258"/>
+<rect class="w" x="114" y="-4" width="8" height="258"/>
+<line class="floorl" x1="-30" y1="250" x2="160" y2="250"/>
+<line class="ceil" x1="-30" y1="0" x2="160" y2="0"/>
+<text class="lblx muted" x="140" y="-3" text-anchor="middle" >plafond 250 (hyp.)</text>
+<text class="lblx muted" x="-17" y="258" text-anchor="middle" >nord</text><text class="lblx muted" x="135" y="258" text-anchor="middle" >sud · lavabo</text>
+<rect class="tall" x="0" y="20" width="2" height="230"/>
+<rect class="plinth" x="2" y="240" width="50" height="10"/>
+<rect class="tall" x="2" y="130" width="50" height="110"/>
+<text class="lbls" x="27.0" y="180.2" text-anchor="middle" >Porte basse</text>
+<text class="lblx" x="27.0" y="186.2" text-anchor="middle" >serviettes</text>
+<text class="lblx" x="27.0" y="192.2" text-anchor="middle" >4 étagères</text>
+<rect class="tall" x="2" y="20" width="50" height="109"/>
+<text class="lbls" x="27.0" y="69.7" text-anchor="middle" >Porte haute</text>
+<text class="lblx" x="27.0" y="75.7" text-anchor="middle" >produits</text>
+<text class="lblx" x="27.0" y="81.7" text-anchor="middle" >stock</text>
+<rect class="tall" x="52" y="20" width="1" height="230"/>
+<rect class="bask" x="53" y="210" width="61" height="40"/>
+<text class="lbls" x="83.5" y="225.2" text-anchor="middle" >Tiroir double bac</text>
+<text class="lblx" x="83.5" y="231.2" text-anchor="middle" >2 paniers × ~35 L</text>
+<text class="lblx" x="83.5" y="237.2" text-anchor="middle" >blanc / couleur</text>
+<rect class="top" x="53" y="207" width="61" height="3"/>
+<rect class="lm" x="53.5" y="122" width="60.0" height="85"/>
+<rect class="appf" x="54.0" y="122" width="59.0" height="85" rx="1.5"/>
+<line class="app" x1="54.0" y1="136" x2="113.0" y2="136"/>
+<circle class="app" cx="83.5" cy="157" r="17"/><circle class="app" cx="83.5" cy="157" r="12.5"/>
+<rect class="top" x="53" y="119" width="61" height="3"/>
+<rect class="niche" x="53" y="84" width="61" height="35"/>
+<text class="lbls" x="83.5" y="99.7" text-anchor="middle" >Niche 61 × 35</text>
+<text class="lblx" x="83.5" y="105.7" text-anchor="middle" >prises, USB, crochet</text>
+<rect class="tall" x="53" y="20" width="61" height="64"/>
+<text class="lbls" x="83.5" y="50.2" text-anchor="middle" >Placard</text>
+<text class="lblx" x="83.5" y="56.2" text-anchor="middle" >lessive, recharges</text>
+<rect class="fill" x="0" y="0" width="114" height="20"/>
+<text class="lbls" x="57.0" y="11.2" text-anchor="middle" >bandeau de finition</text>
+<circle class="plug" cx="92" cy="113" r="2.2"/><circle class="plug" cx="98" cy="113" r="2.2"/><rect class="plug" x="103" y="111" width="6" height="4" rx="1"/>
+<path class="hook" d="M57 88 v6 q0 3 3 3"/>
+<rect class="leafg" x="-5" y="46" width="81" height="204"/>
+<text class="lblx rt" x="57" y="272" text-anchor="middle" >pointillé rouge : vantail de la porte ouvert à 90°, 10 cm devant</text>
+<line class="dim" x1="-22" y1="207" x2="-22" y2="250"/><line class="dim" x1="-25" y1="207" x2="-19" y2="207"/><line class="dim" x1="-25" y1="250" x2="-19" y2="250"/><text class="dimt" x="-24" y="228.5" text-anchor="middle" transform="rotate(-90 -24 228.5)">43</text>
+<line class="dim" x1="-22" y1="122" x2="-22" y2="207"/><line class="dim" x1="-25" y1="122" x2="-19" y2="122"/><line class="dim" x1="-25" y1="207" x2="-19" y2="207"/><text class="dimt" x="-24" y="164.5" text-anchor="middle" transform="rotate(-90 -24 164.5)">85</text>
+<line class="dim" x1="-22" y1="84" x2="-22" y2="119"/><line class="dim" x1="-25" y1="84" x2="-19" y2="84"/><line class="dim" x1="-25" y1="119" x2="-19" y2="119"/><text class="dimt" x="-24" y="101.5" text-anchor="middle" transform="rotate(-90 -24 101.5)">35</text>
+<line class="dim" x1="-22" y1="20" x2="-22" y2="84"/><line class="dim" x1="-25" y1="20" x2="-19" y2="20"/><line class="dim" x1="-25" y1="84" x2="-19" y2="84"/><text class="dimt" x="-24" y="52.0" text-anchor="middle" transform="rotate(-90 -24 52.0)">64</text>
+<line class="dim" x1="0" y1="260" x2="114" y2="260" marker-start="url(#tk)" marker-end="url(#tk)"/><line class="dim" x1="0" y1="257" x2="0" y2="263"/><line class="dim" x1="114" y1="257" x2="114" y2="263"/><text class="dimt" x="57.0" y="258.4" text-anchor="middle" >114</text>
+</svg></div></div>
+  <div class="fig"><h3>Coupe B-B : vue vers le nord</h3><div class="scroll"><svg viewBox="130 -14 130 282" role="img" aria-label="Coupe B-B, proposition 2">
+<defs>
+  <pattern id="hn" width="3" height="3" patternUnits="userSpaceOnUse" patternTransform="rotate(45)"><line x1="0" y1="0" x2="0" y2="3" style="stroke:var(--ink);stroke-width:.7"/></pattern>
+  <pattern id="hr" width="5" height="5" patternUnits="userSpaceOnUse" patternTransform="rotate(45)"><line x1="0" y1="0" x2="0" y2="5" class="hrl"/></pattern>
+  <pattern id="tile" width="10" height="10" patternUnits="userSpaceOnUse"><path class="tl" d="M10 0 L0 0 L0 10"/></pattern>
+  <marker id="tk" viewBox="0 0 10 10" refX="5" refY="5" markerWidth="5" markerHeight="5" orient="auto"><path d="M2 8 L8 2" style="stroke:var(--muted)" stroke-width="1.4"/></marker>
+</defs>
+<rect class="w" x="234" y="-4" width="6" height="258"/>
+<line class="floorl" x1="130" y1="250" x2="252" y2="250"/>
+<line class="ceil" x1="130" y1="0" x2="252" y2="0"/>
+<rect class="leafg" x="153" y="46" width="4" height="204"/>
+<text class="lblx muted" x="150" y="130" text-anchor="middle" transform="rotate(-90 150 130)">vantail de la porte ouvert à 90°</text>
+<rect class="bask" x="168" y="210" width="66" height="40"/>
+<text class="lbls" x="201.0" y="228.2" text-anchor="middle" >tiroir double bac</text>
+<text class="lblx" x="201.0" y="234.2" text-anchor="middle" >coulisses 60, 40 kg</text>
+<rect class="top" x="168" y="207" width="66" height="3"/>
+<rect class="top" x="168" y="119" width="66" height="3"/>
+<rect class="niche" x="168" y="84" width="66" height="35"/>
+<text class="lbls" x="201.0" y="102.7" text-anchor="middle" >niche 66 de prof.</text>
+<rect class="tall" x="168" y="20" width="66" height="64"/>
+<text class="lbls" x="201.0" y="53.2" text-anchor="middle" >Placard</text>
+<rect class="fill" x="168" y="0" width="66" height="20"/>
+<rect class="appf" x="170" y="122" width="60" height="85" rx="1.5"/>
+<rect class="app" x="167" y="145" width="3" height="34"/>
+<path class="hose" d="M230 132 q4 0 4 -6 V112"/>
+<text class="lbls" x="200.0" y="162" text-anchor="middle" >LL 60 × 60 × 85</text>
+<text class="lblx" x="200.0" y="168" text-anchor="middle" >tuyaux derrière : 4</text>
+<rect class="cleat" x="231" y="210" width="3" height="5"/>
+<text class="lblx muted" x="200" y="201" text-anchor="middle" >plateau 30 mm vissé sur tasseaux</text>
+<line class="dim" x1="168" y1="260" x2="234" y2="260" marker-start="url(#tk)" marker-end="url(#tk)"/><line class="dim" x1="168" y1="257" x2="168" y2="263"/><line class="dim" x1="234" y1="257" x2="234" y2="263"/><text class="dimt" x="201.0" y="258.4" text-anchor="middle" >66</text>
+<line class="dim" x1="157" y1="260" x2="168" y2="260" marker-start="url(#tk)" marker-end="url(#tk)"/><line class="dim" x1="157" y1="257" x2="157" y2="263"/><line class="dim" x1="168" y1="257" x2="168" y2="263"/><text class="dimt" x="162.5" y="258.4" text-anchor="middle" >11</text>
+<text class="lblx muted" x="200" y="-4" text-anchor="middle" >est →</text>
+</svg></div></div>
+</div>
+<div class="grid2">
+  <div class="card"><h3 class="okh">Points forts</h3><ul><li>Hublot à ~95 cm : on charge et on vide sans se baisser (comme le four en hauteur de la cuisine).</li><li>Paniers directement sous la machine, tri blanc / couleur, accessibles même porte d&#x27;entrée ouverte.</li><li>Niche à hauteur de visage, juste à côté du miroir du lavabo.</li><li>Tout est fermé sauf la niche : aspect le plus net.</li></ul></div>
+  <div class="card"><h3 class="warnh">Points faibles</h3><ul><li>Plus de plan de pliage (le dessus de la LL est sous la niche).</li><li>Socle à faire sur mesure et rigide (essorage) : plateau vissé aux trois murs de l&#x27;alcôve.</li><li>La colonne serviettes (y 2 → 52) ne s&#x27;ouvre que porte d&#x27;entrée fermée.</li><li>Haut de la niche à 166 : peu pratique pour une personne petite.</li></ul></div>
+</div>
+</section>
+<section id="p3">
+<div class="kicker">Proposition 3</div>
+<h2>« Quotidien côté lavabo »</h2>
+<p class="pitch">La lave-linge passe côté porte (utilisée porte fermée), avec des étagères ouvertes au-dessus. Tout ce qui sert chaque jour (paniers et niche) est regroupé dans une colonne côté lavabo, hors de la zone du vantail.</p>
+<div class="figs">
+  <div class="fig span2"><h3>Plan</h3><div class="scroll"><svg viewBox="-22 -30 290 208" role="img" aria-label="Plan de la salle de bain, proposition 3">
+<defs>
+  <pattern id="hn" width="3" height="3" patternUnits="userSpaceOnUse" patternTransform="rotate(45)"><line x1="0" y1="0" x2="0" y2="3" style="stroke:var(--ink);stroke-width:.7"/></pattern>
+  <pattern id="hr" width="5" height="5" patternUnits="userSpaceOnUse" patternTransform="rotate(45)"><line x1="0" y1="0" x2="0" y2="5" class="hrl"/></pattern>
+  <pattern id="tile" width="10" height="10" patternUnits="userSpaceOnUse"><path class="tl" d="M10 0 L0 0 L0 10"/></pattern>
+  <marker id="tk" viewBox="0 0 10 10" refX="5" refY="5" markerWidth="5" markerHeight="5" orient="auto"><path d="M2 8 L8 2" style="stroke:var(--muted)" stroke-width="1.4"/></marker>
+</defs>
+<polygon class="sdbf" points="0,0 234,0 234,114 167,114 167,160 0,160"/><polygon fill="url(#tile)" points="0,0 234,0 234,114 167,114 167,160 0,160"/>
+<path class="w" fill-rule="evenodd" d="M-5 -5 H239 V122 H175 V165 H-5 Z M0 0 V160 H167 V114 H234 V0 Z"/>
+<rect x="81" y="-5.5" width="76" height="6" style="fill:var(--paper)"/>
+<path class="doorzone" d="M81 0 A76 76 0 0 0 157 76 L157 0 Z"/>
+<path class="doorarc" d="M81 0 A76 76 0 0 0 157 76"/>
+<rect class="leaf" x="153" y="0" width="4" height="76"/>
+<text class="lblx muted" x="119" y="-9" text-anchor="middle" >porte d&#x27;entrée 76 (hyp.)</text>
+<text class="lblx muted" x="145" y="40" text-anchor="middle" transform="rotate(-90 145 40)">vantail</text>
+<text class="lblx muted" x="149" y="40" text-anchor="middle" transform="rotate(-90 149 40)">ouvert à 90°</text>
+<rect class="red" x="5" y="50" width="73" height="105"/>
+<text class="lbl rt" x="41.5" y="100" text-anchor="middle" >Douche</text><text class="lblx rt" x="41.5" y="106" text-anchor="middle" >non modifiée</text>
+<rect class="red" x="82" y="114" width="83" height="46"/>
+<text class="lbl rt" x="123.5" y="136" text-anchor="middle" >Lavabo</text><text class="lblx rt" x="123.5" y="142" text-anchor="middle" >non modifié</text>
+<rect class="green" x="167" y="0" width="67" height="114"/>
+<rect class="lm" x="170" y="0" width="64" height="61"/>
+<rect class="appf" x="172" y="1" width="58" height="59" rx="1.5"/>
+<line class="app" x1="172" y1="6" x2="172" y2="55" style="stroke-width:2"/>
+<text class="lblb" x="202.0" y="25.5" text-anchor="middle" >LL</text>
+<text class="lblx" x="202.0" y="31.5" text-anchor="middle" >au sol</text>
+<text class="lblx" x="202.0" y="37.5" text-anchor="middle" >étagères au-dessus</text>
+<rect class="tall" x="168" y="61" width="66" height="1"/>
+<rect class="tall" x="168" y="62" width="66" height="52"/>
+<text class="lblb" x="201.0" y="80.0" text-anchor="middle" >Colonne</text>
+<text class="lblx" x="201.0" y="86.0" text-anchor="middle" >2 tiroirs-paniers</text>
+<text class="lblx" x="201.0" y="92.0" text-anchor="middle" >niche</text>
+<text class="lblx" x="201.0" y="98.0" text-anchor="middle" >placard</text>
+<rect class="upper" x="204" y="0" width="30" height="61"/>
+<rect class="swing" x="118" y="62" width="50" height="52"/>
+<text class="lblx muted" x="135" y="95" text-anchor="middle" >tiroir tiré</text>
+<path class="conf" d="M153 62 h4 v14 h-4z"/>
+<line class="dim" x1="157" y1="58" x2="168" y2="58"/>
+<text class="dimt" x="162.5" y="64" text-anchor="middle" >11</text>
+<line class="dim" x1="167" y1="-16" x2="234" y2="-16" marker-start="url(#tk)" marker-end="url(#tk)"/><line class="dim" x1="167" y1="-19" x2="167" y2="-13"/><line class="dim" x1="234" y1="-19" x2="234" y2="-13"/><text class="dimt" x="200.5" y="-17.6" text-anchor="middle" >67 (alcôve)</text>
+<line class="dim" x1="0" y1="-24" x2="234" y2="-24" marker-start="url(#tk)" marker-end="url(#tk)"/><line class="dim" x1="0" y1="-27" x2="0" y2="-21"/><line class="dim" x1="234" y1="-27" x2="234" y2="-21"/><text class="dimt" x="117.0" y="-25.6" text-anchor="middle" >234</text>
+<line class="dim" x1="248" y1="0" x2="248" y2="114"/><line class="dim" x1="245" y1="0" x2="251" y2="0"/><line class="dim" x1="245" y1="114" x2="251" y2="114"/><text class="dimt" x="246" y="57.0" text-anchor="middle" transform="rotate(-90 246 57.0)">114</text>
+<line class="dim" x1="-14" y1="0" x2="-14" y2="160"/><line class="dim" x1="-17" y1="0" x2="-11" y2="0"/><line class="dim" x1="-17" y1="160" x2="-11" y2="160"/><text class="dimt" x="-16" y="80.0" text-anchor="middle" transform="rotate(-90 -16 80.0)">160</text>
+<line class="dim" x1="258" y1="0" x2="258" y2="61"/><line class="dim" x1="255" y1="0" x2="261" y2="0"/><line class="dim" x1="255" y1="61" x2="261" y2="61"/><text class="dimt" x="260" y="30.5" text-anchor="middle" transform="rotate(-90 260 30.5)">61 niche LL</text>
+<line class="dim" x1="258" y1="61" x2="258" y2="114"/><line class="dim" x1="255" y1="61" x2="261" y2="61"/><line class="dim" x1="255" y1="114" x2="261" y2="114"/><text class="dimt" x="260" y="87.5" text-anchor="middle" transform="rotate(-90 260 87.5)">1+52</text>
+<line class="sec" x1="140" y1="30" x2="244" y2="30"/>
+<path class="secm" d="M141 30 l3 -6 l3 6z"/><path class="secm" d="M237 30 l3 -6 l3 6z"/>
+<text class="sect" x="143" y="36" text-anchor="middle" >B</text><text class="sect" x="240" y="36" text-anchor="middle" >B</text>
+<path class="secm" d="M166 -2 l-4 -3 v6z"/><text class="sect" x="160" y="3" text-anchor="end" >A</text>
+<text class="lblx muted" x="117" y="176" text-anchor="middle" >N ↑ · échelle : 1 carreau = 10 cm</text>
+</svg></div>
+  <p class="cap">Façades à x 168. En pointillé fin : ouvertures des tiroirs et des portes ; hachures rouges : zones non modifiées ; pointillé épais : éléments hauts ; rectangle rouge plein : recouvrement avec le vantail ouvert.</p></div>
+  <div class="fig"><h3>Élévation A : face au meuble (vue vers l'est)</h3><div class="scroll"><svg viewBox="-34 -14 196 292" role="img" aria-label="Élévation face au meuble, proposition 3">
+<defs>
+  <pattern id="hn" width="3" height="3" patternUnits="userSpaceOnUse" patternTransform="rotate(45)"><line x1="0" y1="0" x2="0" y2="3" style="stroke:var(--ink);stroke-width:.7"/></pattern>
+  <pattern id="hr" width="5" height="5" patternUnits="userSpaceOnUse" patternTransform="rotate(45)"><line x1="0" y1="0" x2="0" y2="5" class="hrl"/></pattern>
+  <pattern id="tile" width="10" height="10" patternUnits="userSpaceOnUse"><path class="tl" d="M10 0 L0 0 L0 10"/></pattern>
+  <marker id="tk" viewBox="0 0 10 10" refX="5" refY="5" markerWidth="5" markerHeight="5" orient="auto"><path d="M2 8 L8 2" style="stroke:var(--muted)" stroke-width="1.4"/></marker>
+</defs>
+<rect class="w" x="-6" y="-4" width="6" height="258"/>
+<rect class="w" x="114" y="-4" width="8" height="258"/>
+<line class="floorl" x1="-30" y1="250" x2="160" y2="250"/>
+<line class="ceil" x1="-30" y1="0" x2="160" y2="0"/>
+<text class="lblx muted" x="140" y="-3" text-anchor="middle" >plafond 250 (hyp.)</text>
+<text class="lblx muted" x="-17" y="258" text-anchor="middle" >nord</text><text class="lblx muted" x="135" y="258" text-anchor="middle" >sud · lavabo</text>
+<rect class="lm" x="0.5" y="165" width="60.0" height="85"/>
+<rect class="appf" x="1.0" y="165" width="59.0" height="85" rx="1.5"/>
+<line class="app" x1="1.0" y1="179" x2="60.0" y2="179"/>
+<circle class="app" cx="30.5" cy="200" r="17"/><circle class="app" cx="30.5" cy="200" r="12.5"/>
+<rect class="top" x="0" y="160" width="61" height="3"/>
+<rect class="shelf" x="0" y="133" width="61" height="2"/>
+<rect class="shelf" x="0" y="103" width="61" height="2"/>
+<rect class="shelf" x="0" y="73" width="61" height="2"/>
+<rect class="shelf" x="0" y="43" width="61" height="2"/>
+<rect class="open" x="0" y="135" width="61" height="25"/>
+<text class="lbls" x="30.5" y="148.7" text-anchor="middle" >serviettes roulées</text>
+<rect class="open" x="0" y="75" width="61" height="28"/>
+<text class="lbls" x="30.5" y="90.2" text-anchor="middle" >étagères 30 de prof.</text>
+<rect class="tall" x="61" y="20" width="1" height="230"/>
+<rect class="plinth" x="62" y="240" width="52" height="10"/>
+<rect class="bask" x="62" y="202" width="52" height="38"/>
+<text class="lbls" x="88.0" y="219.2" text-anchor="middle" >Panier 1</text>
+<text class="lblx" x="88.0" y="225.2" text-anchor="middle" >tiroir 52 · ~45 L</text>
+<rect class="bask" x="62" y="163" width="52" height="38"/>
+<text class="lbls" x="88.0" y="180.2" text-anchor="middle" >Panier 2</text>
+<text class="lblx" x="88.0" y="186.2" text-anchor="middle" >tiroir 52 · ~45 L</text>
+<rect class="top" x="62" y="160" width="52" height="3"/>
+<rect class="niche" x="62" y="110" width="52" height="50"/>
+<text class="lbls" x="88.0" y="130.2" text-anchor="middle" >Niche 52 × 50</text>
+<text class="lblx" x="88.0" y="136.2" text-anchor="middle" >prises, USB</text>
+<text class="lblx" x="88.0" y="142.2" text-anchor="middle" >crochet, LED</text>
+<rect class="tall" x="62" y="20" width="52" height="90"/>
+<text class="lbls" x="88.0" y="60.2" text-anchor="middle" >Porte haute</text>
+<text class="lblx" x="88.0" y="66.2" text-anchor="middle" >paumelles côté LL</text>
+<text class="lblx" x="88.0" y="72.2" text-anchor="middle" >stock</text>
+<rect class="fill" x="0" y="0" width="114" height="20"/>
+<text class="lbls" x="57.0" y="11.2" text-anchor="middle" >bandeau de finition</text>
+<circle class="plug" cx="92" cy="155" r="2.2"/><circle class="plug" cx="98" cy="155" r="2.2"/><rect class="plug" x="103" y="153" width="6" height="4" rx="1"/>
+<path class="hook" d="M66 114 v6 q0 3 3 3"/>
+<rect class="leafg" x="-5" y="46" width="81" height="204"/>
+<text class="lblx rt" x="57" y="272" text-anchor="middle" >pointillé rouge : vantail de la porte ouvert à 90°, 10 cm devant</text>
+<line class="dim" x1="-22" y1="160" x2="-22" y2="250"/><line class="dim" x1="-25" y1="160" x2="-19" y2="160"/><line class="dim" x1="-25" y1="250" x2="-19" y2="250"/><text class="dimt" x="-24" y="205.0" text-anchor="middle" transform="rotate(-90 -24 205.0)">90</text>
+<line class="dim" x1="-22" y1="110" x2="-22" y2="160"/><line class="dim" x1="-25" y1="110" x2="-19" y2="110"/><line class="dim" x1="-25" y1="160" x2="-19" y2="160"/><text class="dimt" x="-24" y="135.0" text-anchor="middle" transform="rotate(-90 -24 135.0)">50</text>
+<line class="dim" x1="-22" y1="20" x2="-22" y2="110"/><line class="dim" x1="-25" y1="20" x2="-19" y2="20"/><line class="dim" x1="-25" y1="110" x2="-19" y2="110"/><text class="dimt" x="-24" y="65.0" text-anchor="middle" transform="rotate(-90 -24 65.0)">90</text>
+<line class="dim" x1="0" y1="260" x2="114" y2="260" marker-start="url(#tk)" marker-end="url(#tk)"/><line class="dim" x1="0" y1="257" x2="0" y2="263"/><line class="dim" x1="114" y1="257" x2="114" y2="263"/><text class="dimt" x="57.0" y="258.4" text-anchor="middle" >114</text>
+</svg></div></div>
+  <div class="fig"><h3>Coupe B-B : vue vers le nord</h3><div class="scroll"><svg viewBox="130 -14 130 282" role="img" aria-label="Coupe B-B, proposition 3">
+<defs>
+  <pattern id="hn" width="3" height="3" patternUnits="userSpaceOnUse" patternTransform="rotate(45)"><line x1="0" y1="0" x2="0" y2="3" style="stroke:var(--ink);stroke-width:.7"/></pattern>
+  <pattern id="hr" width="5" height="5" patternUnits="userSpaceOnUse" patternTransform="rotate(45)"><line x1="0" y1="0" x2="0" y2="5" class="hrl"/></pattern>
+  <pattern id="tile" width="10" height="10" patternUnits="userSpaceOnUse"><path class="tl" d="M10 0 L0 0 L0 10"/></pattern>
+  <marker id="tk" viewBox="0 0 10 10" refX="5" refY="5" markerWidth="5" markerHeight="5" orient="auto"><path d="M2 8 L8 2" style="stroke:var(--muted)" stroke-width="1.4"/></marker>
+</defs>
+<rect class="w" x="234" y="-4" width="6" height="258"/>
+<line class="floorl" x1="130" y1="250" x2="252" y2="250"/>
+<line class="ceil" x1="130" y1="0" x2="252" y2="0"/>
+<rect class="leafg" x="153" y="46" width="4" height="204"/>
+<text class="lblx muted" x="150" y="130" text-anchor="middle" transform="rotate(-90 150 130)">vantail de la porte ouvert à 90°</text>
+<rect class="top" x="168" y="160" width="66" height="3"/>
+<rect class="shelf" x="204" y="133" width="30" height="2"/>
+<rect class="shelf" x="204" y="103" width="30" height="2"/>
+<rect class="shelf" x="204" y="73" width="30" height="2"/>
+<rect class="shelf" x="204" y="43" width="30" height="2"/>
+<rect class="fill" x="204" y="0" width="30" height="20"/>
+<rect class="appf" x="170" y="165" width="60" height="85" rx="1.5"/>
+<rect class="app" x="167" y="188" width="3" height="34"/>
+<path class="hose" d="M230 175 q4 0 4 -6 V155"/>
+<text class="lbls" x="200.0" y="205" text-anchor="middle" >LL 60 × 60 × 85</text>
+<text class="lblx" x="200.0" y="211" text-anchor="middle" >tuyaux derrière : 4</text>
+<text class="lblx" x="219" y="90" text-anchor="middle" >étagères</text>
+<text class="lblx" x="219" y="95" text-anchor="middle" >ouvertes 30</text>
+<line class="dim" x1="168" y1="260" x2="234" y2="260" marker-start="url(#tk)" marker-end="url(#tk)"/><line class="dim" x1="168" y1="257" x2="168" y2="263"/><line class="dim" x1="234" y1="257" x2="234" y2="263"/><text class="dimt" x="201.0" y="258.4" text-anchor="middle" >66</text>
+<line class="dim" x1="157" y1="260" x2="168" y2="260" marker-start="url(#tk)" marker-end="url(#tk)"/><line class="dim" x1="157" y1="257" x2="157" y2="263"/><line class="dim" x1="168" y1="257" x2="168" y2="263"/><text class="dimt" x="162.5" y="258.4" text-anchor="middle" >11</text>
+<text class="lblx muted" x="200" y="-4" text-anchor="middle" >est →</text>
+</svg></div></div>
+</div>
+<div class="grid2">
+  <div class="card"><h3 class="okh">Points forts</h3><ul><li>Niche et paniers presque hors de la zone du vantail : utilisables porte d&#x27;entrée ouverte.</li><li>Niche juste à droite du lavabo, là où l&#x27;on se coiffe et se brosse les dents.</li><li>Étagères ouvertes au-dessus de la LL : rien à ouvrir dans le passage du vantail, serviettes à portée.</li><li>Plan de 61 × 66 sur la LL pour poser la lessive ou plier.</li></ul></div>
+  <div class="card"><h3 class="warnh">Points faibles</h3><ul><li>LL côté porte : évacuation ~60 cm plus loin du lavabo.</li><li>Hublot de la LL et ouverture de la porte d&#x27;entrée en conflit : on lance une machine porte fermée.</li><li>Étagères ouvertes : poussière et humidité, serviettes à la vue.</li><li>Premier tiroir-panier : 14 cm de recouvrement avec le vantail ouvert (voir plan).</li></ul></div>
+</div>
+</section>
+
+<section id="cmp">
+<h2>Comparatif</h2>
+<div class="scroll-t"><table>
+<thead><tr><th>Critère</th><th>P1 Plan de pliage</th><th>P2 Machine à hauteur</th><th>P3 Quotidien côté lavabo</th></tr></thead>
+<tbody>
+<tr><td>Hauteur du hublot</td><td>~50 (se baisser)</td><td class="okc">~95</td><td>~50 (se baisser)</td></tr>
+<tr><td>Surface pour plier</td><td class="okc">114 × 66</td><td>aucune</td><td>61 × 66</td></tr>
+<tr><td>Niche (l × h)</td><td class="okc">114 × 55, sans porte</td><td>61 × 35, à 131–166</td><td>52 × 50, à 90–140</td></tr>
+<tr><td>Paniers utilisables porte d'entrée ouverte</td><td class="warnc">non</td><td class="okc">oui</td><td>presque (14 cm de recouvrement)</td></tr>
+<tr><td>Rangement fermé</td><td>2 hauts de 35 de prof.</td><td class="okc">colonne 50 + placard au-dessus de la LL</td><td>1 placard 52</td></tr>
+<tr><td>Distance de l'évacuation</td><td class="okc">courte (côté lavabo)</td><td class="okc">courte</td><td>+60 cm</td></tr>
+<tr><td>Fabrication</td><td class="okc">caissons de cuisine standard</td><td>socle sur mesure renforcé</td><td>standard + étagères</td></tr>
+</tbody></table></div>
+<p class="note">Variante possible sur chaque proposition : une butée de porte au sol qui arrête le vantail vers 80° laisse environ 23 cm devant les façades au lieu de 10.</p>
+</section>
+</div>
+</body>
+</html>

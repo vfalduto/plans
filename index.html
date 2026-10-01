@@ -1,0 +1,68 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Plans maison</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wght@400;600;800&family=JetBrains+Mono:wght@400&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#f7f4ee;--card:#fffdf9;--ink:#24211c;--muted:#6e675c;--line:#e3ddd2;--accent:#5f7a5c}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#1b1a17;--card:#24221e;--ink:#ece7dd;--muted:#a39b8d;--line:#3a362f;--accent:#9db998}}
+:root[data-theme="dark"]{--bg:#1b1a17;--card:#24221e;--ink:#ece7dd;--muted:#a39b8d;--line:#3a362f;--accent:#9db998}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:Archivo,system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;line-height:1.5}
+main{max-width:860px;margin:0 auto;padding:48px 16px 64px}
+h1{font-size:clamp(28px,5vw,40px);font-weight:800;margin:0 0 8px;letter-spacing:-.01em}
+h2{font-size:13px;text-transform:uppercase;letter-spacing:.08em;color:var(--muted);margin:40px 0 12px;font-weight:600}
+.lead{color:var(--muted);margin:0}
+.grid{display:grid;gap:12px;grid-template-columns:repeat(auto-fill,minmax(240px,1fr))}
+a.card{display:block;padding:18px;background:var(--card);border:1px solid var(--line);border-radius:12px;color:inherit;text-decoration:none;transition:border-color .15s}
+a.card:hover{border-color:var(--accent)}
+.card b{display:block;font-size:17px;margin-bottom:4px}
+.card span{color:var(--muted);font-size:14px}
+.file{font-family:"JetBrains Mono",ui-monospace,Menlo,monospace;font-size:12px;color:var(--accent);margin-top:10px;display:block}
+ul.arch{list-style:none;padding:0;margin:0;display:flex;flex-wrap:wrap;gap:8px}
+ul.arch a{display:inline-block;padding:6px 10px;border:1px solid var(--line);border-radius:8px;color:var(--muted);text-decoration:none;font-size:14px}
+ul.arch a:hover{color:var(--ink);border-color:var(--accent)}
+</style>
+</head>
+<body>
+<main>
+  <h1>Plans maison</h1>
+  <p class="lead">Cuisine et salle de bain : plans, nuancier, rendus.</p>
+
+  <h2>Cuisine</h2>
+  <div class="grid">
+    <a class="card" href="cuisine-plan.html"><b>Plan de la cuisine</b><span>Mur de droite aligné, V2 — variantes A/B/C, plan et coupes.</span><span class="file">cuisine-plan.html</span></a>
+    <a class="card" href="cuisine-couleurs.html"><b>Couleurs</b><span>Façades, bois, murs et crédence zellige avec le parquet bâtons rompus.</span><span class="file">cuisine-couleurs.html</span></a>
+    <a class="card" href="cuisine-rendus.html"><b>Rendus Gemini</b><span>Images générées, pièces jointes et prompts à copier.</span><span class="file">cuisine-rendus.html</span></a>
+  </div>
+
+  <h2>Salle de bain</h2>
+  <div class="grid">
+    <a class="card" href="sdb-meuble-v2.html"><b>Meuble linge V2</b><span>Base P1 : plan filant, fentes à linge, trappe robinet, hauts 45 au plafond. Machine à droite / à gauche.</span><span class="file">sdb-meuble-v2.html</span></a>
+    <a class="card" href="sdb-meuble.html"><b>Meuble linge V1</b><span>Alcôve 67 × 114 : 3 propositions.</span><span class="file">sdb-meuble.html</span></a>
+  </div>
+
+  <h2>Archives cuisine</h2>
+  <ul class="arch">
+    <li><a href="archive/cuisine-proposition-1.html">Proposition 1</a></li>
+    <li><a href="archive/cuisine-proposition-2-v1.html">2 v1</a></li>
+    <li><a href="archive/cuisine-proposition-2.html">2</a></li>
+    <li><a href="archive/cuisine-proposition-3.html">3</a></li>
+    <li><a href="archive/cuisine-proposition-4-v1.html">4 v1</a></li>
+    <li><a href="archive/cuisine-proposition-4.html">4</a></li>
+    <li><a href="archive/cuisine-proposition-5.html">5</a></li>
+    <li><a href="archive/cuisine-proposition-6.html">6</a></li>
+    <li><a href="archive/cuisine-proposition-6-v2.html">6 v2</a></li>
+    <li><a href="archive/cuisine-proposition-6-v2b.html">6 v2b</a></li>
+    <li><a href="archive/cuisine-proposition-6-v3.html">6 v3</a></li>
+    <li><a href="archive/cuisine-proposition-7.html">7</a></li>
+    <li><a href="archive/cuisine-proposition-8.html">8</a></li>
+    <li><a href="archive/cuisine-proposition-9.html">9</a></li>
+    <li><a href="archive/cuisine-couleurs-avant-bois.html">Couleurs (avant bois)</a></li>
+  </ul>
+</main>
+</body>
+</html>

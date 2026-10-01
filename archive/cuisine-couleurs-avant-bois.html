@@ -1,0 +1,272 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Couleurs cuisine</title>
+<style>
+  :root { --bg:#f6f3ee; --ink:#2a2622; --muted:#6d655c; --card:#fff; --line:#e4ddd2; }
+  * { box-sizing:border-box; }
+  body { margin:0; background:var(--bg); color:var(--ink); font:15px/1.5 -apple-system, "Helvetica Neue", sans-serif; }
+  main { max-width:1280px; margin:0 auto; padding:28px 16px 60px; }
+  h1 { font-size:26px; margin:0 0 4px; }
+  .intro { display:flex; gap:20px; align-items:center; flex-wrap:wrap; margin-bottom:26px; color:var(--muted); }
+  .intro img { width:180px; border-radius:8px; }
+  .intro p { max-width:720px; margin:0; }
+  .grid { display:grid; grid-template-columns:repeat(auto-fill, minmax(380px, 1fr)); gap:20px; }
+  .card { background:var(--card); border:1px solid var(--line); border-radius:12px; overflow:hidden; }
+  .card.bad { outline:2px dashed #c0563b; }
+  svg { display:block; width:100%; height:auto; }
+  .body { padding:14px 16px 16px; }
+  .body h2 { font-size:17px; margin:0 0 4px; display:flex; justify-content:space-between; gap:8px; }
+  .note { font-size:13px; color:#fff; background:#5b7a4f; border-radius:20px; padding:1px 9px; white-space:nowrap; align-self:center; }
+  .bad .note { background:#c0563b; }
+  .body p { margin:0 0 10px; color:var(--muted); font-size:14px; }
+  .sw { display:flex; gap:6px; flex-wrap:wrap; }
+  .sw span { display:flex; align-items:center; gap:5px; font-size:12px; color:var(--muted); }
+  .sw i { width:18px; height:18px; border-radius:4px; border:1px solid #0002; display:inline-block; }
+</style>
+</head>
+<body>
+<main>
+  <h1>Quelle couleur avec ce parquet en bâtons rompus&nbsp;?</h1>
+  <div class="intro">
+    <img src="../images/cuisine-sol-reference.png" alt="Parquet chêne huilé en bâtons rompus">
+    <p>Chêne miel moyen, sous-ton orangé chaud, veinage marqué. Règle générale : éviter de répéter le même bois orangé sur les façades, et choisir soit une couleur <b>complémentaire froide/désaturée</b> (bleus, verts), soit un <b>neutre chaud clair</b> qui laisse le sol dominer. Rendus schématiques (vue de face, cuisine linéaire + colonne four/LV à droite, fenêtre à gauche).</p>
+  </div>
+  <h1 style="margin-top:40px">Murs &amp; crédence zellige</h1>
+  <div class="intro"><p>Base retenue : inox brossé, terrazzo gris clair ou ciment clair. Le zellige (carreaux 10×10 émaillés à la main, teinte et brillance irrégulières) est l'endroit idéal pour mettre la couleur forte : petite surface, encadrée par les meubles. Pièce petite → <b>murs clairs et chauds</b> (crème, lin, sable, rose argile pâle), jamais blanc pur ni gris froid ; hauts de la couleur des murs pour qu'ils « disparaissent ».</p></div>
+  <div id="gridzel"></div>
+  <h1 style="margin-top:40px">Seventies + inox brossé + terrazzo / ciment</h1>
+  <div class="intro"><p>L'inox brossé est un métal <b>froid</b> : il va mieux avec des façades désaturées (pétrole, sauge, olive, chocolat, crème) qu'avec des tons très chauds. Le plan fait le lien avec le sol : un <b>terrazzo gris clair</b> (éclats gris, anthracite, blanc — éventuellement quelques éclats de la couleur des façades), ou un <b>ciment très clair</b> (gris perle légèrement chaud, jamais gris bleuté). Pièce petite : <b>plan clair, murs et hauts crème</b>, la couleur uniquement sur les bas ou la crédence. Poignées barres fines ou boutons ronds inox, mitigeur inox brossé.</p></div>
+  <div class="grid" id="gridmat"></div>
+  <h1 style="margin-top:40px">Seventies revisité</h1>
+  <div class="intro"><p>Les teintes 70s (olive, chocolat, pétrole, moutarde, lie-de-vin) mais <b>désaturées et « sales »</b>, en <b>une ou deux touches</b> max : bicolore bas/haut, petits carreaux carrés brillants en crédence, façades rainurées, poignées rondes laiton brossé, globe opaline. Ton parquet chêne miel fait déjà la moitié du travail seventies — pas besoin d'orange en plus.</p></div>
+  <div class="grid" id="grid70"></div>
+  <h1 style="margin-top:40px">Classiques</h1>
+  <div class="grid" id="grid"></div>
+</main>
+<script>
+const SCHEMES = [
+  { name:"Vert sauge", note:"Top choix", fronts:"#8d9b80", wall:"#efeae0", top:"#ece7de", splash:"#f3efe7", handle:"#b8954a", upper:"#efeae0",
+    why:"Le vert grisé calme l'orangé du chêne sans le contredire. Résultat doux et lumineux, idéal pour une petite pièce." },
+  { name:"Bleu encre", note:"Top choix", fronts:"#2f3c4b", wall:"#f1ede6", top:"#dcd7ce", splash:"#e9e4db", handle:"#b8954a", upper:"#f1ede6",
+    why:"Complémentaire de l'orange : le parquet ressort davantage. Garder les hauts clairs (ou étagères) pour ne pas assombrir." },
+  { name:"Blanc cassé + noir", note:"Valeur sûre", fronts:"#e7e1d5", wall:"#f5f2ec", top:"#46423d", splash:"#f5f2ec", handle:"#1f1f1f", upper:"#e7e1d5",
+    why:"Un blanc crème (pas un blanc pur, qui ferait jaunir le bois) + plan sombre. Le sol devient la vedette." },
+  { name:"Vert forêt", note:"Caractère", fronts:"#35463a", wall:"#ebe5d9", top:"#efebe3", splash:"#efebe3", handle:"#b8954a", upper:"#ebe5d9",
+    why:"Profond et chaleureux, très « cuisine de maison » avec laiton. Plus sombre : prévoir un bon éclairage sous meubles." },
+  { name:"Cachemire / greige", note:"Discret", fronts:"#b3a898", wall:"#f1ece4", top:"#e8e3da", splash:"#f1ece4", handle:"#8a8a88", upper:"#f1ece4",
+    why:"Ton sur ton minéral, très doux. Risque de manquer un peu de contraste : jouer sur une crédence texturée." },
+  { name:"À éviter : chêne sur chêne", note:"Déconseillé", bad:true, fronts:"#b27a3f", wall:"#f2e6cf", top:"#d9c29c", splash:"#f2e6cf", handle:"#8a6a3a", upper:"#b27a3f",
+    why:"Façades bois orangé + murs jaunes : tout se confond, effet « tout miel ». Idem pour le jaune, le rouge brique et le blanc très froid." },
+];
+
+const INOX = "#b7babd";
+const MATERIALS = [
+  { name:"Pétrole fumé · terrazzo gris clair", note:"Top choix", fronts:"#2f5557", upper:"#f0ebe2", wall:"#f3eee6", top:"#e1dfdb", terrazzo:["#8f8f8d","#5e5f60","#b9b8b4","#f7f6f3","#3e3f41"], splash:"#f1ede6", tile:"#d6d1c8", handle:INOX, round:true, globe:true,
+    why:"Le terrazzo gris clair et l'inox forment un duo minéral cohérent ; le pétrole apporte la couleur 70s, le parquet la chaleur." },
+  { name:"Olive rainuré · terrazzo gris clair", note:"Top choix", fronts:"#6f6c45", upper:"#efe7d6", wall:"#f2ece0", top:"#e0ddd7", terrazzo:["#8f8f8d","#5e5f60","#b9b8b4","#f7f6f3","#6f6c45"], splash:"#efe7d6", tile:"#d2c7ae", handle:INOX, bar:true, fluted:true, globe:true,
+    why:"Très 70s : quelques éclats olive dans un terrazzo gris font le lien avec les façades. L'inox rend l'ensemble graphique." },
+  { name:"Sauge · ciment clair", note:"Doux", fronts:"#8d9b80", upper:"#f1ede5", wall:"#f4f0e9", top:"#dcd9d3", cement:true, splash:"#eeeae3", tile:"#d3cec5", handle:INOX, bar:true, globe:true,
+    why:"Le plus lumineux des verts : ciment très clair, murs crème. Idéal petite pièce, esprit nordique 70s." },
+  { name:"Chocolat · ciment clair", note:"Caractère", fronts:"#4a3429", upper:"#efe9de", wall:"#f4efe6", top:"#dedbd5", cement:true, splash:"#ece6db", tile:"#cfc7b9", handle:INOX, bar:true, fluted:true, globe:true,
+    why:"Bas brun profond, tout le reste clair : le ciment clair et les hauts crème compensent le foncé dans une petite pièce." },
+  { name:"Crème rainuré · terrazzo gris + moutarde", note:"Lumineux", fronts:"#e8e0cf", upper:"#e8e0cf", wall:"#f5f1e8", top:"#e2e0dc", terrazzo:["#8f8f8d","#5e5f60","#b9b8b4","#f7f6f3","#3e3f41"], splash:"#c89a35", tile:"#a67d25", handle:INOX, round:true, fluted:true, globe:true,
+    why:"Le plus aérien : tout clair, la couleur 70s passe uniquement par la crédence moutarde en petits carreaux." },
+  { name:"À éviter : gris froid total", note:"Déconseillé", bad:true, fronts:"#8e959c", upper:"#8e959c", wall:"#e9ecef", top:"#a7adb3", cement:true, splash:"#dfe3e6", handle:INOX, bar:true,
+    why:"Gris moyen bleuté partout + inox : effet labo, pièce qui rapetisse, et le parquet paraît plus orange. Le gris doit rester sur le plan, en clair." },
+];
+
+const TZ = ["#8f8f8d","#5e5f60","#b9b8b4","#f7f6f3","#3e3f41"];
+const Z = (o) => Object.assign({ handle:INOX, top:"#e1dfdb", terrazzo:TZ, globe:true }, o, { upper:o.upper||o.wall });
+const ZELLIGE = [
+  { title:"Façades pétrole fumé #2f5557", items:[
+    Z({ name:"Crème + zellige ivoire", note:"Valeur sûre", fronts:"#2f5557", round:true, wall:"#f3eee4", zellige:"#efe7d6",
+      why:"Le plus lumineux : le zellige ivoire donne du relief et de la brillance sans ajouter de couleur. Le pétrole reste la vedette." }),
+    Z({ name:"Lin + zellige terracotta", note:"Top choix", fronts:"#2f5557", round:true, wall:"#ebe2d2", zellige:"#b9674a",
+      why:"Terracotta et pétrole : le duo 70s par excellence, complémentaire. Les murs lin relient la crédence au parquet." }),
+    Z({ name:"Crème + zellige vert sauge", note:"Doux", fronts:"#2f5557", round:true, wall:"#f2ede3", zellige:"#8fa28f",
+      why:"Camaïeu de verts-bleus, apaisant. Plus calme que la terracotta, plus vivant que l'ivoire." }),
+  ]},
+  { title:"Façades olive rainurées #6f6c45", items:[
+    Z({ name:"Crème + zellige blanc cassé", note:"Valeur sûre", fronts:"#6f6c45", bar:true, fluted:true, wall:"#f2ebdc", zellige:"#ede4d0", terrazzo:[...TZ.slice(0,4),"#6f6c45"],
+      why:"Doux et chaleureux, l'olive et les rainures portent le style. Crédence qui accroche la lumière de la fenêtre." }),
+    Z({ name:"Sable + zellige moutarde", note:"Top choix", fronts:"#6f6c45", bar:true, fluted:true, wall:"#ece2cd", zellige:"#c89a35", terrazzo:[...TZ.slice(0,4),"#6f6c45"],
+      why:"Olive + moutarde brillant : la référence seventies, modernisée par l'inox et le terrazzo gris. Lumineux malgré les bas foncés." }),
+    Z({ name:"Blanc chaud + zellige olive ton sur ton", note:"Chic", fronts:"#6f6c45", bar:true, fluted:true, wall:"#f4f0e7", zellige:"#7f7c50", terrazzo:[...TZ.slice(0,4),"#6f6c45"],
+      why:"Monochrome olive mat (façades) / brillant (zellige) : très élégant. Murs très clairs pour compenser." }),
+  ]},
+  { title:"Façades crème rainurées #e8e0cf", items:[
+    Z({ name:"Blanc chaud + zellige vert sauge", note:"Lumineux", fronts:"#e8e0cf", round:true, fluted:true, wall:"#f5f1e8", zellige:"#8fa28f",
+      why:"Pour agrandir au maximum : tout est clair, la couleur n'est que sur la crédence." }),
+    Z({ name:"Rose argile pâle + zellige terracotta rosé", note:"Chaleureux", fronts:"#e8e0cf", round:true, fluted:true, wall:"#efe1d7", zellige:"#c47b5f",
+      why:"Ambiance douce et solaire, 70s sans le dire. Le rose très pâle réchauffe l'inox." }),
+    Z({ name:"Crème + zellige bleu pétrole", note:"Contraste", fronts:"#e8e0cf", round:true, fluted:true, wall:"#f2ece1", zellige:"#2f5557",
+      why:"Une bande de bleu profond et brillant entre deux zones claires : graphique, et complémentaire du parquet." }),
+  ]},
+  { title:"À éviter", items:[
+    Z({ name:"Murs foncés + zellige foncé", note:"Déconseillé", bad:true, fronts:"#2f5557", round:true, wall:"#5d6b5a", upper:"#2f5557", zellige:"#35463a",
+      why:"Dans une petite pièce, murs et crédence sombres + bas foncés : la pièce rétrécit et le plan gris fait tache." }),
+    Z({ name:"Blanc pur + zellige blanc pur", note:"Déconseillé", bad:true, fronts:"#6f6c45", bar:true, wall:"#fbfcfd", zellige:"#f7f9fb",
+      why:"Blanc bleuté + inox + gris : froid, et le parquet vire à l'orange par contraste. Toujours un blanc cassé chaud." }),
+  ]},
+];
+
+const SEVENTIES = [
+  { name:"Olive & crème", note:"Top choix", fronts:"#6f6c45", upper:"#ede3cc", wall:"#f1e9d8", top:"#e6dccb", splash:"#efe4cc", tile:"#cdbf9f", handle:"#b08d4c", fluted:true, round:true, globe:true,
+    why:"L'olive brunâtre est LE vert des 70s ; le crème et le laiton brossé le modernisent. S'accorde naturellement avec le chêne miel." },
+  { name:"Pétrole fumé & terracotta", note:"Top choix", fronts:"#2f5557", upper:"#f0e8da", wall:"#f2ece2", top:"#e9e3d8", splash:"#b9674a", tile:"#8f4a33", handle:"#b08d4c", round:true, globe:true,
+    why:"Le bleu-vert fumé contraste avec l'orangé du sol ; la crédence terracotta en petits carreaux apporte la note 70s sans surcharger." },
+  { name:"Chocolat & beurre", note:"Audacieux", fronts:"#4a3429", upper:"#efdca6", wall:"#f4ecd9", top:"#efe8da", splash:"#f0e0b0", tile:"#cdb77c", handle:"#c9c9c9", fluted:true, globe:true,
+    why:"Le duo culte chocolat / jaune beurre, version douce. Plan clair indispensable pour décoller les bas bruns du parquet." },
+  { name:"Eucalyptus & moutarde", note:"Lumineux", fronts:"#8c9c86", upper:"#c89a35", wall:"#f2ede3", top:"#ece6da", splash:"#eae4d6", tile:"#c9c0ad", handle:"#b08d4c", round:true, globe:true,
+    why:"Vert poussiéreux en bas, moutarde en petite dose en haut : gai sans être criard. Idéal si la pièce manque de lumière." },
+  { name:"Lie-de-vin & rose argile", note:"Tendance 2026", fronts:"#5b2f36", upper:"#e8d5c8", wall:"#f1e8e0", top:"#ece4dc", splash:"#d9b3a2", tile:"#b58a78", handle:"#b08d4c", fluted:true, round:true, globe:true,
+    why:"Les rouges profonds et bruns violacés montent en 2026. Chaleureux et chic, à réserver aux bas et à contrebalancer par du clair." },
+  { name:"À éviter : orange + marron partout", note:"Déconseillé", bad:true, fronts:"#c0652a", upper:"#6b4428", wall:"#e9c98e", top:"#8a5a33", splash:"#d9a55a", tile:"#a8733a", handle:"#d8b04a", round:true,
+    why:"La copie littérale 1975 : orange brûlé, bois foncé, murs jaunes. Avec ce parquet orangé, c'est l'effet « musée » assuré." },
+];
+
+// ---------- mini moteur de perspective ----------
+const W = 800, H = 560, CX = 400, CY = 230, F = 450;
+const CAM = { x:0, y:165, z:-150 };
+const RX = 162.5, D = 252, CEIL = 250;
+const P = (x, y, z) => { const d = z - CAM.z; return [CX + F*(x-CAM.x)/d, CY - F*(y-CAM.y)/d]; };
+const poly = (pts, fill, extra="") => `<polygon points="${pts.map(p=>P(...p).map(v=>v.toFixed(1)).join(",")).join(" ")}" fill="${fill}" ${extra}/>`;
+function shade(hex, k) { // k<0 assombrit, k>0 éclaircit
+  const n = parseInt(hex.slice(1),16); let r=n>>16, g=n>>8&255, b=n&255;
+  const f = c => Math.round(k<0 ? c*(1+k) : c+(255-c)*k);
+  return "#"+[f(r),f(g),f(b)].map(c=>c.toString(16).padStart(2,"0")).join("");
+}
+// quad sur un plan : "z" (face avant à z fixe), "x" (flanc à x fixe), "y" (dessus à y fixe)
+function face(axis, v, a0, a1, b0, b1, fill, extra) {
+  if (axis==="z") return poly([[a0,b0,v],[a1,b0,v],[a1,b1,v],[a0,b1,v]], fill, extra);
+  if (axis==="x") return poly([[v,b0,a0],[v,b0,a1],[v,b1,a1],[v,b1,a0]], fill, extra);
+  return poly([[a0,v,b0],[a1,v,b0],[a1,v,b1],[a0,v,b1]], fill, extra);
+}
+
+// parquet bâtons rompus : réseau (W,W)/(L,-L), tourné à 45°
+function floorPlanks(seed) {
+  let s = seed; const rnd = () => (s = (s*16807) % 2147483647) / 2147483647;
+  const Wp = 9, Lp = 45, c = Math.SQRT1_2, out = [];
+  const rot = ([u,v]) => [ (u - v)*c, 126 + (u + v)*c - 120 ];
+  for (let i=-70;i<=70;i++) for (let j=-20;j<=20;j++) {
+    const ox = i*Wp + j*Lp, oy = i*Wp - j*Lp;
+    for (const r of [[0,0,Lp,Wp],[0,Wp,Wp,Lp]]) {
+      const [x0,y0,w,h] = [ox+r[0], oy+r[1], r[2], r[3]];
+      const pts = [[x0,y0],[x0+w,y0],[x0+w,y0+h],[x0,y0+h]].map(rot);
+      const mx = pts.reduce((a,p)=>a+p[0],0)/4, mz = pts.reduce((a,p)=>a+p[1],0)/4;
+      if (Math.abs(mx) > RX+40 || mz < -60 || mz > D+40) continue;
+      const l = 30 + rnd()*14, sat = 45 + rnd()*15, hue = 27 + rnd()*6;
+      out.push(poly(pts.map(([x,z])=>[x,0,z]), `hsl(${hue},${sat}%,${l}%)`, 'stroke="#3a2412" stroke-opacity=".45" stroke-width=".6"'));
+    }
+  }
+  return out.join("");
+}
+const FLOOR = floorPlanks(42);
+
+function scene(s, idx) {
+  const g = [];
+  const zF = D - 60;                      // façade des bas
+  // murs, plafond
+  g.push(face("z", D, -RX, RX, 0, CEIL, s.wall));
+  g.push(face("x", -RX, -40, D, 0, CEIL, shade(s.wall,-0.05)));
+  g.push(face("x", RX, -40, D, 0, CEIL, shade(s.wall,-0.10)));
+  g.push(face("y", CEIL, -RX, RX, -40, D, shade(s.wall,0.3)));
+  // sol clippé
+  g.push(`<clipPath id="fl${idx}">${face("y",0,-RX,RX,-40,D,"#000")}</clipPath>`);
+  g.push(`<g clip-path="url(#fl${idx})">${FLOOR}${face("y",0,-RX,RX,-40,D,`url(#light${idx})`)}</g>`);
+  // plinthes
+  g.push(face("x", -RX, -40, D, 0, 8, shade(s.wall,-0.15)));
+  g.push(face("x", RX, -40, D, 0, 8, shade(s.wall,-0.2)));
+  // fenêtre mur gauche (allège 106)
+  g.push(face("x", -RX, 70, 170, 106, 222, shade(s.wall,-0.2)));
+  g.push(face("x", -RX+0.1, 75, 165, 111, 217, "#cfe0ea"));
+  g.push(face("x", -RX+0.2, 118, 122, 111, 217, "#fff"));
+  // crédence
+  g.push(face("z", D-0.1, -RX, 100, 92, 150, s.splash));
+  if (s.zellige) { // zellige 10×10 : teinte et brillance irrégulières
+    let sd = 99 + idx; const rnd = () => (sd = (sd*16807) % 2147483647) / 2147483647;
+    for (let x=-RX; x<100; x+=10) for (let y=92; y<150; y+=10) {
+      const x1 = Math.min(x+10,100), y1 = Math.min(y+10,150), j = (rnd()-0.5)*0.22;
+      g.push(face("z", D-0.15, x+0.3, x1-0.3, y+0.3, y1-0.3, shade(s.zellige, j), `stroke="${shade(s.zellige,0.35)}" stroke-width=".5"`));
+      if (rnd() < 0.35) g.push(face("z", D-0.2, x+1.5, x+1.5+rnd()*4, y1-3, y1-1.8, "#fff", 'opacity=".35"'));
+    }
+  } else if (s.tile) { // petits carreaux carrés 10×10
+    for (let x=-RX+10; x<100; x+=10) g.push(face("z", D-0.15, x, x+0.4, 92, 150, s.tile));
+    for (let y=102; y<150; y+=10) g.push(face("z", D-0.15, -RX, 100, y, y+0.4, s.tile));
+  }
+  // hauts
+  const up = s.upper;
+  g.push(face("y", 150, -110, 100, D-35, D, shade(up,-0.25)));
+  g.push(face("z", D-35, -110, 100, 150, 220, up, `stroke="${shade(up,-0.2)}" stroke-width="1"`));
+  for (const x of [-57.5, -5, 47.5]) g.push(face("z", D-35.2, x, x+0.4, 150, 220, shade(up,-0.3)));
+  // bas : plinthe, caissons, plan
+  g.push(face("z", zF+5, -RX, 100, 0, 10, shade(s.fronts,-0.45)));
+  g.push(face("z", zF, -RX, 100, 10, 88, s.fronts));
+  for (const x of [-96, -30, 35]) g.push(face("z", zF-0.1, x, x+0.5, 10, 88, shade(s.fronts,-0.3)));
+  if (s.fluted) for (let x=-RX+4; x<100; x+=4) g.push(face("z", zF-0.05, x, x+0.35, 12, 86, shade(s.fronts,-0.18)));
+  for (const x of [-129, -63, 3, 67]) {
+    if (s.round) { const [px,py] = P(x,80,zF-0.2), r = F*2.4/(zF-CAM.z); g.push(`<circle cx="${px}" cy="${py}" r="${r}" fill="${s.handle}"/>`); }
+    else if (s.bar) g.push(face("z", zF-0.2, x-9, x+9, 81, 82.2, s.handle));
+    else g.push(face("z", zF-0.2, x-6, x+6, 80, 82, s.handle));
+  }
+  g.push(face("y", 92, -RX, 100, zF-2, D, s.top));
+  if (s.terrazzo || s.cement) { // texture du plan (dessus + chant)
+    let sd = 7 + idx; const rnd = () => (sd = (sd*16807) % 2147483647) / 2147483647;
+    const n = s.terrazzo ? 900 : 60;
+    for (let k=0;k<n;k++) {
+      const onEdge = rnd() < 0.25, x = -RX + rnd()*(100+RX);
+      const [px,py] = onEdge ? P(x, 88 + rnd()*4, zF-2.1) : P(x, 92.05, zF-2 + rnd()*60);
+      if (s.terrazzo) {
+        const c = s.terrazzo[Math.floor(rnd()*s.terrazzo.length)], r = 0.4 + rnd()*1.3;
+        g.push(`<ellipse cx="${px.toFixed(1)}" cy="${py.toFixed(1)}" rx="${(r*1.4).toFixed(2)}" ry="${(onEdge?r:r*0.45).toFixed(2)}" fill="${c}"/>`);
+      } else {
+        const r = 4 + rnd()*14;
+        g.push(`<ellipse cx="${px.toFixed(1)}" cy="${py.toFixed(1)}" rx="${r.toFixed(1)}" ry="${(onEdge?r*0.2:r*0.25).toFixed(1)}" fill="${rnd()<.5?"#000":"#fff"}" opacity=".05"/>`);
+      }
+    }
+  }
+  g.push(face("z", zF-2, -RX, 100, 88, 92, shade(s.top,-0.15)));
+  // plaque induction + évier
+  g.push(face("y", 92.2, -40, 20, zF+8, zF+50, "#161616"));
+  g.push(face("y", 92.2, -145, -95, zF+10, zF+48, shade(s.top,-0.3)));
+  g.push(face("z", D-6, -121, -118, 92, 125, s.handle===INOX?INOX:"#9a9a9a"));
+  // colonne four + LV
+  const zC = zF;
+  g.push(face("x", 100, zC, D, 0, 220, shade(s.fronts,-0.18)));
+  g.push(face("z", zC, 100, RX, 10, 220, s.fronts, `stroke="${shade(s.fronts,-0.25)}"`));
+  g.push(face("z", zC-0.1, 104, RX-4, 125, 180, "#1b1b1b"));
+  g.push(face("z", zC-0.2, 108, RX-8, 131, 170, "#2c2f33"));
+  g.push(face("z", zC-0.1, 104, RX-4, 72, 120, shade(s.fronts,0.04), `stroke="${shade(s.fronts,-0.25)}"`));
+  g.push(face("z", zC-0.3, 125, 140, 116, 117.5, s.handle));
+  g.push(face("z", zC-0.3, 125, 140, 186, 187.5, s.handle));
+  g.push(face("z", zC-0.1, 100, RX, 0, 10, shade(s.fronts,-0.45)));
+  if (s.globe) { // suspension globe opaline
+    const [x0,y0] = P(-20,CEIL,130), [gx,gy] = P(-20,200,130), r = F*16/(130-CAM.z);
+    g.push(`<line x1="${x0}" y1="${y0}" x2="${gx}" y2="${gy}" stroke="#555" stroke-width="1"/>`);
+    g.push(`<circle cx="${gx}" cy="${gy+r*0.9}" r="${r}" fill="#fbf6ea" stroke="#e2d6bd"/>`);
+  }
+  return `<svg viewBox="0 0 ${W} ${H}" role="img" aria-label="Cuisine ${s.name}">
+    <defs><linearGradient id="light${idx}" x1="0" x2="1"><stop offset="0" stop-color="#fff" stop-opacity=".18"/><stop offset=".6" stop-color="#fff" stop-opacity="0"/><stop offset="1" stop-color="#000" stop-opacity=".12"/></linearGradient></defs>
+    ${g.join("")}</svg>`;
+}
+
+const card = (s,i) => `
+  <article class="card${s.bad?" bad":""}">
+    ${scene(s,i)}
+    <div class="body">
+      <h2>${s.name}<span class="note">${s.note}</span></h2>
+      <p>${s.why}</p>
+      <div class="sw">${[["Façades",s.fronts],...(s.upper!==s.wall?[["Hauts",s.upper]]:[]),["Murs",s.wall],[s.terrazzo?"Terrazzo":s.cement?"Béton":"Plan",s.top],...(s.zellige?[["Zellige",s.zellige]]:s.tile?[["Crédence",s.splash]]:[]),["Poignées",s.handle]]
+        .map(([l,c])=>`<span><i style="background:${c}"></i>${l} ${c}</span>`).join("")}</div>
+    </div>
+  </article>`;
+document.getElementById("gridzel").innerHTML = ZELLIGE.map((grp,gi)=>`<h3 style="margin:22px 0 10px;font-size:16px">${grp.title}</h3><div class="grid">${grp.items.map((s,i)=>card(s,300+gi*10+i)).join("")}</div>`).join("");
+document.getElementById("gridmat").innerHTML = MATERIALS.map((s,i)=>card(s,i+200)).join("");
+document.getElementById("grid70").innerHTML = SEVENTIES.map((s,i)=>card(s,i+100)).join("");
+document.getElementById("grid").innerHTML = SCHEMES.map(card).join("");
+</script>
+</body>
+</html>

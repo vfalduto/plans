@@ -1,0 +1,664 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Meuble salle de bain V2</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wght@400;500;700;800&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+<style>:root{
+  --paper:#F7F8F6; --ink:#1D2A33; --muted:#5E6B73; --line:#C9D0D4; --wood:#B07A45;
+  --water:#2F7FB5; --tri:#C8412C; --flow:#2E8B57; --green:#7FA35A;
+  --panel:#FFFFFF; --cab:#ECE6DA; --tall:#D8CFBD; --tech:#E1E6E9; --glass:#CFE4F2; --tile:#EFEBE4;
+  color-scheme:light;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --paper:#141A1F; --ink:#E4EAED; --muted:#9AA7AE; --line:#34414A; --wood:#C9925A;
+    --water:#5AA8DE; --tri:#E8664F; --flow:#4CB97A; --green:#9CC175;
+    --panel:#1B2329; --cab:#2A3338; --tall:#394449; --tech:#26303A; --glass:#1F3A4E; --tile:#1E252B;
+    color-scheme:dark;
+  }
+}
+:root[data-theme="dark"]{
+  --paper:#141A1F; --ink:#E4EAED; --muted:#9AA7AE; --line:#34414A; --wood:#C9925A;
+  --water:#5AA8DE; --tri:#E8664F; --flow:#4CB97A; --green:#9CC175;
+  --panel:#1B2329; --cab:#2A3338; --tall:#394449; --tech:#26303A; --glass:#1F3A4E; --tile:#1E252B;
+  color-scheme:dark;
+}
+*{box-sizing:border-box}
+html,body{margin:0}
+body{background:var(--paper);color:var(--ink);font-family:Archivo,system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;line-height:1.55;font-size:16px}
+.wrap{max-width:1180px;margin:0 auto;padding:28px 16px 64px}
+.kicker{font-family:"JetBrains Mono",ui-monospace,Menlo,monospace;font-size:12px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted)}
+h1{font-size:clamp(28px,5vw,44px);line-height:1.08;margin:6px 0 12px;font-weight:800;letter-spacing:-.01em}
+h2{font-size:26px;margin:4px 0 8px;font-weight:800}
+h3{font-size:15px;margin:0 0 6px}
+section{margin-top:52px;padding-top:8px;border-top:2px solid var(--line)}
+.pitch{font-size:17px;max-width:820px}
+.changes{max-width:880px;font-size:15px;padding-left:20px}
+.hyp{border-left:3px solid var(--wood);padding:8px 12px;background:var(--panel);font-size:14px;margin:14px 0;max-width:880px}
+.toc{display:flex;flex-wrap:wrap;gap:8px;margin:18px 0 0}
+.toc a{font-size:14px;color:var(--ink);text-decoration:none;border:1px solid var(--line);border-radius:999px;padding:4px 12px;background:var(--panel)}
+.figs{display:grid;grid-template-columns:1.25fr 1fr;gap:12px;margin:14px 0}
+.span2{grid-column:1 / -1}
+.span2 svg{max-height:600px}
+@media (max-width:980px){.figs{grid-template-columns:1fr}}
+.fig{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:12px}
+.scroll svg{display:block;width:100%;height:auto;max-height:860px}
+.cap{font-size:12.5px;color:var(--muted);margin:8px 2px 0}
+.grid2{display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:12px}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:14px 16px}
+.card ul{padding-left:18px;margin:4px 0}.card li{margin:3px 0;font-size:15px}
+.okh{color:var(--flow)}.warnh{color:var(--tri)}
+.scroll-t{overflow-x:auto}
+table{border-collapse:collapse;width:100%;font-size:14px;min-width:620px}
+th,td{text-align:left;padding:7px 8px;border-bottom:1px solid var(--line);vertical-align:top}
+.okc{color:var(--flow);font-weight:700}.warnc{color:var(--tri);font-weight:700}
+.note{font-size:13px;color:var(--muted)}
+
+svg text{font-family:Archivo,system-ui,sans-serif;fill:var(--ink)}
+.w{fill:var(--ink)}
+.sdbf{fill:var(--tile)}
+.tl{fill:none;stroke:var(--line);stroke-width:.4}
+.hrl{stroke:var(--tri);stroke-width:.8;stroke-opacity:.5}
+.red{fill:url(#hr);stroke:var(--tri);stroke-width:.8}
+.rt{fill:var(--tri);font-weight:700}
+.green{fill:none;stroke:var(--green);stroke-width:1.6;stroke-dasharray:4 2}
+.doorzone{fill:var(--tri);fill-opacity:.05}
+.doorarc{fill:none;stroke:var(--ink);stroke-width:.5}
+.leaf{fill:var(--ink)}
+.leafg{fill:none;stroke:var(--tri);stroke-width:.7;stroke-dasharray:3 2}
+.cab{fill:var(--cab);stroke:var(--ink);stroke-width:.5}
+.tall{fill:var(--tall);stroke:var(--ink);stroke-width:.5}
+.plinth{fill:var(--tall);stroke:var(--ink);stroke-width:.4}
+.bask{fill:var(--wood);fill-opacity:.28;stroke:var(--ink);stroke-width:.5}
+.niche{fill:var(--glass);fill-opacity:.6;stroke:var(--water);stroke-width:.6}
+.open{fill:none;stroke:none}
+.shelf{fill:var(--wood);fill-opacity:.6;stroke:var(--ink);stroke-width:.3}
+.top{fill:var(--muted);stroke:var(--ink);stroke-width:.3}
+.fill{fill:var(--line);fill-opacity:.4;stroke:var(--ink);stroke-width:.3}
+.lm{fill:var(--tech);stroke:var(--ink);stroke-width:.5}
+.appf{fill:var(--panel);stroke:var(--ink);stroke-width:.6}
+.app{fill:none;stroke:var(--ink);stroke-width:.5}
+.hose{fill:none;stroke:var(--water);stroke-width:1}
+.cleat{fill:var(--wood)}
+.upper{fill:none;stroke:var(--muted);stroke-width:.5;stroke-dasharray:3 1.5}
+.swing{fill:none;stroke:var(--muted);stroke-width:.45;stroke-dasharray:1.5 1.2}
+.conf{fill:var(--tri);fill-opacity:.55}
+.plug{fill:var(--panel);stroke:var(--ink);stroke-width:.4}
+.hook{fill:none;stroke:var(--ink);stroke-width:.9}
+.floorl{stroke:var(--ink);stroke-width:1.2}
+.ceil{stroke:var(--muted);stroke-width:.6;stroke-dasharray:4 3}
+.dim{stroke:var(--muted);stroke-width:.35;fill:none}
+.dimt{fill:var(--muted);font-family:"JetBrains Mono",ui-monospace,monospace !important;font-size:4.4px}
+.lbl{font-size:5.4px}
+.lbls{font-size:4.8px}
+.lblx{font-size:4px}
+.lblb{font-size:5.4px;font-weight:700}
+.muted{fill:var(--muted)}
+.sec{stroke:var(--tri);stroke-width:.5;stroke-dasharray:6 2 1.5 2;fill:none}
+.secm{fill:var(--tri)}
+.sect{fill:var(--tri);font-weight:800;font-size:6px}
+
+.slot{fill:var(--paper);stroke:var(--ink);stroke-width:.6}
+.trap{fill:url(#hn);stroke:var(--ink);stroke-width:.6}
+.valve{fill:var(--water);stroke:var(--ink);stroke-width:.3}
+.towel{fill:var(--glass);stroke:var(--ink);stroke-width:.25}
+.box{fill:var(--panel);stroke:var(--ink);stroke-width:.3}
+.binl{fill:var(--wood);fill-opacity:.35;stroke:var(--ink);stroke-width:.5}
+.lead{stroke:var(--muted);stroke-width:.35;fill:none}
+.rail{stroke:var(--ink);stroke-width:.6}
+.switch{display:flex;flex-wrap:wrap;gap:8px;margin:18px 0 6px}
+.switch button{font:inherit;font-size:14px;padding:8px 14px;border-radius:999px;border:1px solid var(--line);background:var(--panel);color:var(--ink);cursor:pointer}
+.switch button[aria-selected="true"]{background:var(--ink);color:var(--paper);border-color:var(--ink)}
+.switch button:focus-visible{outline:2px solid var(--wood);outline-offset:2px}
+[hidden]{display:none!important}
+.figs3{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,330px),1fr));gap:12px;margin:12px 0}
+</style>
+</head>
+<body>
+<div class="wrap">
+<svg width="0" height="0" style="position:absolute" aria-hidden="true" focusable="false"><defs>
+  <pattern id="hn" width="3" height="3" patternUnits="userSpaceOnUse" patternTransform="rotate(45)"><line x1="0" y1="0" x2="0" y2="3" style="stroke:var(--ink);stroke-width:.5"/></pattern>
+  <pattern id="hr" width="5" height="5" patternUnits="userSpaceOnUse" patternTransform="rotate(45)"><line x1="0" y1="0" x2="0" y2="5" class="hrl"/></pattern>
+  <pattern id="tile" width="10" height="10" patternUnits="userSpaceOnUse"><path class="tl" d="M10 0 L0 0 L0 10"/></pattern>
+  <marker id="tk" viewBox="0 0 10 10" refX="5" refY="5" markerWidth="5" markerHeight="5" orient="auto"><path d="M2 8 L8 2" style="stroke:var(--muted)" stroke-width="1.4"/></marker>
+</defs></svg>
+<div class="kicker">Salle de bain · alcôve 67 × 114 · V2.2 · plan et coupes</div>
+<h1>Meuble linge de la salle de bain — V2</h1>
+<p class="pitch">Un plan de travail filant de 114 × 66 à 90 cm couvre la lave-linge et deux tiroirs-paniers de 45 L, avec une fente à linge dans leurs façades. Au-dessus : une niche de 55 avec les prises, puis des placards de 45 de profondeur jusqu&#x27;au plafond pour les serviettes, la pharmacie et les produits divers. Le bouton ci-dessous place la machine à droite ou à gauche ; il change toutes les vues.</p>
+
+<div class="switch" role="tablist" aria-label="Côté de la machine">
+  <button type="button" role="tab" data-v="d" aria-selected="true"><b>Machine à droite</b> · côté lavabo</button>
+  <button type="button" role="tab" data-v="g" aria-selected="false"><b>Machine à gauche</b> · côté porte</button>
+</div>
+<div data-panel="d">
+<p class="pitch"><b>Machine à droite (côté lavabo).</b> Machine au sol côté lavabo, sous le plan. Les deux paniers sont côté porte : on jette le linge par les fentes des façades, porte d&#x27;entrée fermée.</p>
+<div class="figs">
+<div class="fig span2"><h3>Plan</h3><div class="scroll"><svg viewBox="-22 -32 304 212" role="img" aria-label="Plan, machine à droite">
+<polygon class="sdbf" points="0,0 234,0 234,114 167,114 167,160 0,160"/><polygon fill="url(#tile)" points="0,0 234,0 234,114 167,114 167,160 0,160"/>
+<path class="w" fill-rule="evenodd" d="M-5 -5 H239 V122 H175 V165 H-5 Z M0 0 V160 H167 V114 H234 V0 Z"/>
+<rect x="81" y="-5.5" width="76" height="6" style="fill:var(--paper)"/>
+<path class="doorzone" d="M81 0 A76 76 0 0 0 157 76 L157 0 Z"/><path class="doorarc" d="M81 0 A76 76 0 0 0 157 76"/>
+<rect class="leaf" x="153" y="0" width="4" height="76"/>
+<text class="lblx muted" x="119" y="-9" text-anchor="middle">porte d&#x27;entrée 76 · vantail dessiné ouvert à 90°</text>
+<rect class="red" x="5" y="50" width="73" height="105"/>
+<text class="lbl rt" x="41.5" y="100" text-anchor="middle">Douche</text>
+<text class="lblx rt" x="41.5" y="106" text-anchor="middle">non modifiée</text>
+<rect class="red" x="82" y="114" width="83" height="46"/>
+<text class="lbl rt" x="123.5" y="136" text-anchor="middle">Lavabo</text>
+<text class="lblx rt" x="123.5" y="142" text-anchor="middle">non modifié</text>
+<rect class="cab" x="168" y="0" width="66" height="2"/>
+<rect class="cab" x="168" y="52" width="66" height="1"/>
+<rect class="cab" x="168" y="2" width="66" height="25"/>
+<rect class="binl" x="172" y="4.5" width="50" height="20" style="stroke-dasharray:2 1"/>
+<rect class="slot" x="166.5" y="5" width="2.5" height="19"/>
+<text class="lbls" x="207" y="13.5" text-anchor="middle">Panier 1</text>
+<text class="lblx" x="207" y="19" text-anchor="middle">45 L · fente en façade</text>
+<rect class="swing" x="116" y="2" width="52" height="25"/>
+<rect class="cab" x="168" y="27" width="66" height="25"/>
+<rect class="binl" x="172" y="29.5" width="50" height="20" style="stroke-dasharray:2 1"/>
+<rect class="slot" x="166.5" y="30" width="2.5" height="19"/>
+<text class="lbls" x="207" y="38.5" text-anchor="middle">Panier 2</text>
+<text class="lblx" x="207" y="44" text-anchor="middle">45 L · fente en façade</text>
+<rect class="swing" x="116" y="27" width="52" height="25"/>
+<rect class="lm" x="168" y="53" width="66" height="61"/>
+<rect class="appf" x="168" y="53.5" width="60" height="60" rx="1.5"/>
+<line class="app" x1="166" y1="59" x2="166" y2="108" style="stroke-width:2"/>
+<text class="lblb" x="198" y="74.5" text-anchor="middle">LL</text>
+<text class="lblx" x="198" y="80.5" text-anchor="middle">au sol, sous le plan</text>
+<rect class="trap" x="224" y="42" width="10" height="30"/>
+<circle class="valve" cx="232.5" cy="57" r="1.6"/>
+<path class="lead" d="M224 64 L214 64"/>
+<text class="lblx" x="198" y="66" text-anchor="middle">trappe robinet</text>
+<path class="swing" d="M164 106.5 A47 47 0 0 1 164 12.5"/>
+<line class="swing" x1="162" y1="59.5" x2="162" y2="12.5" style="stroke-width:1.2"/>
+<text class="lblx muted" x="128" y="89.5" text-anchor="middle">hublot</text>
+<rect class="upper" x="189" y="0" width="45" height="114"/>
+<line class="upper" x1="189" y1="57" x2="234" y2="57"/>
+<rect class="conf" x="153" y="2" width="4" height="25"/>
+<rect class="conf" x="153" y="27" width="4" height="25"/>
+<rect class="conf" x="153" y="58.5" width="4" height="2"/>
+<line class="dim" x1="167" y1="-16" x2="234" y2="-16" marker-start="url(#tk)" marker-end="url(#tk)"/><line class="dim" x1="167" y1="-19" x2="167" y2="-13"/><line class="dim" x1="234" y1="-19" x2="234" y2="-13"/><text class="dimt" x="200.5" y="-17.4" text-anchor="middle">67 (alcôve)</text>
+<line class="dim" x1="0" y1="-24" x2="234" y2="-24" marker-start="url(#tk)" marker-end="url(#tk)"/><line class="dim" x1="0" y1="-27" x2="0" y2="-21"/><line class="dim" x1="234" y1="-27" x2="234" y2="-21"/><text class="dimt" x="117" y="-25.4" text-anchor="middle">234</text>
+<line class="dim" x1="-14" y1="0" x2="-14" y2="160"/><line class="dim" x1="-17" y1="0" x2="-11" y2="0"/><line class="dim" x1="-17" y1="160" x2="-11" y2="160"/><text class="dimt" x="-16" y="80" text-anchor="middle" transform="rotate(-90 -16 80)">160</text>
+<line class="dim" x1="268" y1="0" x2="268" y2="114"/><line class="dim" x1="265" y1="0" x2="271" y2="0"/><line class="dim" x1="265" y1="114" x2="271" y2="114"/><text class="dimt" x="266" y="57" text-anchor="middle" transform="rotate(-90 266 57)">114</text>
+<line class="dim" x1="254" y1="2" x2="254" y2="27"/><line class="dim" x1="251" y1="2" x2="257" y2="2"/><line class="dim" x1="251" y1="27" x2="257" y2="27"/><text class="dimt" x="252" y="14.5" text-anchor="middle" transform="rotate(-90 252 14.5)">25</text>
+<line class="dim" x1="254" y1="27" x2="254" y2="52"/><line class="dim" x1="251" y1="27" x2="257" y2="27"/><line class="dim" x1="251" y1="52" x2="257" y2="52"/><text class="dimt" x="252" y="39.5" text-anchor="middle" transform="rotate(-90 252 39.5)">25</text>
+<line class="dim" x1="254" y1="53" x2="254" y2="114"/><line class="dim" x1="251" y1="53" x2="257" y2="53"/><line class="dim" x1="251" y1="114" x2="257" y2="114"/><text class="dimt" x="252" y="83.5" text-anchor="middle" transform="rotate(-90 252 83.5)">61 LL</text>
+<line class="dim" x1="157" y1="108" x2="168" y2="108"/>
+<text class="dimt" x="162.5" y="105" text-anchor="middle">11</text>
+<line class="sec" x1="140" y1="57" x2="244" y2="57"/>
+<path class="secm" d="M141 57 l3 -6 l3 6z"/><path class="secm" d="M237 57 l3 -6 l3 6z"/>
+<text class="sect" x="136" y="59" text-anchor="middle">B</text>
+<line class="sec" x1="140" y1="39.5" x2="244" y2="39.5"/>
+<path class="secm" d="M141 39.5 l3 -6 l3 6z"/><path class="secm" d="M237 39.5 l3 -6 l3 6z"/>
+<text class="sect" x="136" y="41.5" text-anchor="middle">C</text>
+<path class="secm" d="M166 -2 l-4 -3 v6z"/><text class="sect" x="160" y="3" text-anchor="end">A</text>
+<text class="lblx muted" x="117" y="176" text-anchor="middle">N ↑ · 1 carreau = 10 cm · hauts P 45 en pointillé épais</text>
+</svg></div><p class="cap">Façades à x 168. Fentes à linge dans les façades des paniers (trait blanc) ; trappe du robinet (hachurée) découpée au fond du plan, centrée sur le meuble. Pointillé fin : tiroirs-paniers tirés et hublot ; pointillé épais : hauts de 45 ; rectangle rouge plein : recouvrement avec le vantail ouvert.</p></div>
+<div class="fig span2"><h3>Élévation A : face au meuble (vue vers l&#x27;est)</h3><div class="scroll"><svg viewBox="-34 -14 196 296" role="img" aria-label="Élévation face au meuble, machine à droite">
+<rect class="w" x="-6" y="-4" width="6" height="258"/>
+<rect class="w" x="114" y="-4" width="8" height="258"/>
+<line class="floorl" x1="-30" y1="250" x2="160" y2="250"/><line class="ceil" x1="-30" y1="0" x2="160" y2="0"/>
+<text class="lblx muted" x="140" y="-3" text-anchor="middle">plafond 250</text>
+<text class="lblx muted" x="-17" y="258" text-anchor="middle">nord · porte</text><text class="lblx muted" x="135" y="258" text-anchor="middle">sud · lavabo</text>
+<rect class="cab" x="0" y="163" width="2" height="87"/>
+<rect class="cab" x="52" y="163" width="1" height="87"/>
+<rect class="plinth" x="2" y="240" width="25" height="10"/>
+<rect class="bask" x="2.3" y="163" width="24.4" height="77"/>
+<rect class="binl" x="4.5" y="193" width="20" height="45" style="stroke-dasharray:2 1;fill-opacity:.15"/>
+<rect class="slot" x="5" y="168" width="19" height="12" rx="2"/>
+<text class="lblx muted" x="14.5" y="173.5" text-anchor="middle">fente</text>
+<text class="lbls" x="14.5" y="186" text-anchor="middle">Panier 1</text>
+<text class="lblx" x="14.5" y="191" text-anchor="middle">coulissant</text>
+<text class="lblx" x="14.5" y="214" text-anchor="middle">~45 L</text>
+<rect class="plinth" x="27" y="240" width="25" height="10"/>
+<rect class="bask" x="27.3" y="163" width="24.4" height="77"/>
+<rect class="binl" x="29.5" y="193" width="20" height="45" style="stroke-dasharray:2 1;fill-opacity:.15"/>
+<rect class="slot" x="30" y="168" width="19" height="12" rx="2"/>
+<text class="lblx muted" x="39.5" y="173.5" text-anchor="middle">fente</text>
+<text class="lbls" x="39.5" y="186" text-anchor="middle">Panier 2</text>
+<text class="lblx" x="39.5" y="191" text-anchor="middle">coulissant</text>
+<text class="lblx" x="39.5" y="214" text-anchor="middle">~45 L</text>
+<rect class="lm" x="53.5" y="165" width="60" height="85"/>
+<rect class="appf" x="54" y="165" width="59" height="85" rx="1.5"/>
+<line class="app" x1="54" y1="179" x2="113" y2="179"/>
+<circle class="app" cx="83.5" cy="200" r="17"/><circle class="app" cx="83.5" cy="200" r="12.5"/>
+<text class="lblx" x="83.5" y="245" text-anchor="middle">LL 60 × 60 × 85</text>
+<rect class="trap" x="42" y="160" width="30" height="3"/>
+<text class="lblx" x="57" y="158.5" text-anchor="middle">trappe robinet (au fond, centrée sur le meuble)</text>
+<rect class="top" x="0" y="160" width="114" height="3"/>
+<rect class="niche" x="0" y="105" width="114" height="55"/>
+<text class="lbls" x="57" y="126" text-anchor="middle">Niche filante 114 × 55</text>
+<text class="lblx" x="57" y="132" text-anchor="middle">prises + USB à 110 · crochet sèche-cheveux · LED</text>
+<circle class="plug" cx="92" cy="150" r="2.2"/><circle class="plug" cx="98" cy="150" r="2.2"/><rect class="plug" x="103" y="148" width="6" height="4" rx="1"/>
+<path class="hook" d="M10 110 v6 q0 3 3 3"/>
+<rect class="cab" x="0" y="2" width="57" height="103"/>
+<rect class="cab" x="57" y="2" width="57" height="103"/>
+<rect class="fill" x="0" y="0" width="114" height="2"/>
+<line class="rail" x1="0" y1="103" x2="114" y2="103"/><line class="rail" x1="0" y1="4" x2="114" y2="4"/>
+<line class="app" x1="57" y1="2" x2="57" y2="105" style="stroke-width:1.2"/>
+<line class="app" x1="51" y1="55" x2="51" y2="65" style="stroke-width:1"/><line class="app" x1="63" y1="55" x2="63" y2="65" style="stroke-width:1"/>
+<text class="lbls" x="28.5" y="45" text-anchor="middle">Serviettes</text>
+<text class="lblx" x="28.5" y="51" text-anchor="middle">~20 serviettes</text>
+<text class="lblx muted" x="28.5" y="75" text-anchor="middle">porte coulissante</text>
+<text class="lbls" x="85.5" y="45" text-anchor="middle">Pharmacie et</text>
+<text class="lbls" x="85.5" y="51" text-anchor="middle">produits divers</text>
+<text class="lblx muted" x="85.5" y="75" text-anchor="middle">porte coulissante</text>
+<rect class="leafg" x="-5" y="46" width="81" height="204"/>
+<text class="lblx rt" x="57" y="272" text-anchor="middle">pointillé rouge : vantail de la porte ouvert à 90°, 10 cm devant</text>
+<line class="dim" x1="-22" y1="163" x2="-22" y2="250"/><line class="dim" x1="-25" y1="163" x2="-19" y2="163"/><line class="dim" x1="-25" y1="250" x2="-19" y2="250"/><text class="dimt" x="-24" y="206.5" text-anchor="middle" transform="rotate(-90 -24 206.5)">87</text>
+<line class="dim" x1="-22" y1="105" x2="-22" y2="160"/><line class="dim" x1="-25" y1="105" x2="-19" y2="105"/><line class="dim" x1="-25" y1="160" x2="-19" y2="160"/><text class="dimt" x="-24" y="132.5" text-anchor="middle" transform="rotate(-90 -24 132.5)">55</text>
+<line class="dim" x1="-22" y1="2" x2="-22" y2="105"/><line class="dim" x1="-25" y1="2" x2="-19" y2="2"/><line class="dim" x1="-25" y1="105" x2="-19" y2="105"/><text class="dimt" x="-24" y="53.5" text-anchor="middle" transform="rotate(-90 -24 53.5)">103</text>
+<text class="dimt" x="-27" y="163" text-anchor="middle">3</text>
+<line class="dim" x1="0" y1="264" x2="114" y2="264" marker-start="url(#tk)" marker-end="url(#tk)"/><line class="dim" x1="0" y1="261" x2="0" y2="267"/><line class="dim" x1="114" y1="261" x2="114" y2="267"/><text class="dimt" x="57" y="262.6" text-anchor="middle">114</text>
+<line class="dim" x1="2" y1="-8" x2="27" y2="-8" marker-start="url(#tk)" marker-end="url(#tk)"/><line class="dim" x1="2" y1="-11" x2="2" y2="-5"/><line class="dim" x1="27" y1="-11" x2="27" y2="-5"/><text class="dimt" x="14.5" y="-9.4" text-anchor="middle">25</text>
+<line class="dim" x1="27" y1="-8" x2="52" y2="-8" marker-start="url(#tk)" marker-end="url(#tk)"/><line class="dim" x1="27" y1="-11" x2="27" y2="-5"/><line class="dim" x1="52" y1="-11" x2="52" y2="-5"/><text class="dimt" x="39.5" y="-9.4" text-anchor="middle">25</text>
+<line class="dim" x1="53" y1="-8" x2="114" y2="-8" marker-start="url(#tk)" marker-end="url(#tk)"/><line class="dim" x1="53" y1="-11" x2="53" y2="-5"/><line class="dim" x1="114" y1="-11" x2="114" y2="-5"/><text class="dimt" x="83.5" y="-9.4" text-anchor="middle">61</text>
+</svg></div></div>
+</div><div class="figs3">
+<div class="fig"><h3>Coupe B-B : machine et trappe (vue vers le nord)</h3><div class="scroll"><svg viewBox="104 -14 156 284" role="img" aria-label="Coupe B-B, machine à droite">
+<rect class="w" x="234" y="-4" width="6" height="258"/>
+<line class="floorl" x1="104" y1="250" x2="252" y2="250"/><line class="ceil" x1="104" y1="0" x2="252" y2="0"/>
+<rect class="leafg" x="153" y="46" width="4" height="204"/>
+<text class="lblx muted" x="150" y="140" text-anchor="middle" transform="rotate(-90 150 140)">vantail ouvert à 90°</text>
+<rect class="niche" x="168" y="105" width="66" height="55"/>
+<text class="lblx" x="176" y="130" text-anchor="middle">niche</text>
+<rect class="cab" x="189" y="2" width="45" height="103"/>
+<rect class="fill" x="189" y="0" width="45" height="2"/>
+<line class="rail" x1="190.5" y1="2" x2="190.5" y2="105"/><line class="rail" x1="192.5" y1="2" x2="192.5" y2="105"/>
+<rect class="shelf" x="195" y="81.2" width="37.2" height="1.8"/>
+<rect class="shelf" x="195" y="59.2" width="37.2" height="1.8"/>
+<rect class="shelf" x="195" y="37.2" width="37.2" height="1.8"/>
+<rect class="shelf" x="195" y="19.2" width="37.2" height="1.8"/>
+<rect class="box" x="196" y="87" width="16" height="16"/>
+<rect class="box" x="214" y="87" width="16" height="16"/>
+<rect class="box" x="196" y="63.2" width="16" height="16"/>
+<rect class="box" x="214" y="63.2" width="16" height="16"/>
+<rect class="box" x="196" y="41.2" width="16" height="16"/>
+<rect class="box" x="214" y="41.2" width="16" height="16"/>
+<rect class="box" x="196" y="22" width="16" height="13.2"/>
+<rect class="box" x="214" y="22" width="16" height="13.2"/>
+<rect class="box" x="196" y="5" width="16" height="12.2"/>
+<rect class="box" x="214" y="5" width="16" height="12.2"/>
+<text class="lblx" x="186" y="35" text-anchor="end">pharmacie et</text>
+<text class="lblx" x="186" y="40" text-anchor="end">produits divers</text>
+<text class="lblx muted" x="186" y="45" text-anchor="end">bacs à tirer</text>
+<path d="M168 160 H224 V163 H168 Z" class="top"/>
+<path d="M234 160 H232 V163 H234 Z" class="top"/>
+<rect class="trap" x="224" y="160" width="8" height="3"/>
+<path class="lead" d="M228 159 L228 150 L214 146"/>
+<text class="lblx" x="203" y="145" text-anchor="middle">trappe 30 × 10</text>
+<text class="lblx muted" x="203" y="150" text-anchor="middle">couvercle amovible</text>
+<rect class="appf" x="168" y="165" width="60" height="85" rx="1.5"/>
+<rect class="app" x="165" y="188" width="3" height="34"/>
+<path class="hose" d="M228 178 q4 0 4 4 V170"/>
+<rect class="valve" x="231" y="168" width="3" height="4"/>
+<path class="lead" d="M231 170 L214 186"/>
+<text class="lblx" x="201" y="188" text-anchor="middle">robinet encastré h 80</text>
+<text class="lblx" x="201" y="193" text-anchor="middle">+ prise LL à côté</text>
+<text class="lbls" x="198" y="215" text-anchor="middle">LL 60 × 60 × 85</text>
+<text class="lblx" x="198" y="221" text-anchor="middle">jeu arrière 6</text>
+<line class="dim" x1="228" y1="262" x2="234" y2="262" marker-start="url(#tk)" marker-end="url(#tk)"/><line class="dim" x1="228" y1="259" x2="228" y2="265"/><line class="dim" x1="234" y1="259" x2="234" y2="265"/><text class="dimt" x="231" y="260.6" text-anchor="middle">6</text>
+<line class="dim" x1="168" y1="262" x2="234" y2="262" marker-start="url(#tk)" marker-end="url(#tk)"/><line class="dim" x1="168" y1="259" x2="168" y2="265"/><line class="dim" x1="234" y1="259" x2="234" y2="265"/><text class="dimt" x="201" y="260.6" text-anchor="middle">66</text>
+<line class="dim" x1="157" y1="262" x2="168" y2="262" marker-start="url(#tk)" marker-end="url(#tk)"/><line class="dim" x1="157" y1="259" x2="157" y2="265"/><line class="dim" x1="168" y1="259" x2="168" y2="265"/><text class="dimt" x="162.5" y="260.6" text-anchor="middle">11</text>
+<line class="dim" x1="189" y1="-6" x2="234" y2="-6" marker-start="url(#tk)" marker-end="url(#tk)"/><line class="dim" x1="189" y1="-9" x2="189" y2="-3"/><line class="dim" x1="234" y1="-9" x2="234" y2="-3"/><text class="dimt" x="211.5" y="-7.4" text-anchor="middle">45</text>
+<line class="dim" x1="248" y1="105" x2="248" y2="160"/><line class="dim" x1="245" y1="105" x2="251" y2="105"/><line class="dim" x1="245" y1="160" x2="251" y2="160"/><text class="dimt" x="246" y="132.5" text-anchor="middle" transform="rotate(-90 246 132.5)">55</text>
+<text class="lblx muted" x="120" y="-4" text-anchor="middle">ouest ←   → est</text>
+</svg></div></div>
+<div class="fig"><h3>Coupe C-C : panier et fente (vue vers le nord)</h3><div class="scroll"><svg viewBox="104 -14 156 284" role="img" aria-label="Coupe C-C, machine à droite">
+<rect class="w" x="234" y="-4" width="6" height="258"/>
+<line class="floorl" x1="104" y1="250" x2="252" y2="250"/><line class="ceil" x1="104" y1="0" x2="252" y2="0"/>
+<rect class="leafg" x="153" y="46" width="4" height="204"/>
+<text class="lblx muted" x="150" y="140" text-anchor="middle" transform="rotate(-90 150 140)">vantail ouvert à 90°</text>
+<rect class="niche" x="168" y="105" width="66" height="55"/>
+<text class="lblx" x="176" y="130" text-anchor="middle">niche</text>
+<rect class="cab" x="189" y="2" width="45" height="103"/>
+<rect class="fill" x="189" y="0" width="45" height="2"/>
+<line class="rail" x1="190.5" y1="2" x2="190.5" y2="105"/><line class="rail" x1="192.5" y1="2" x2="192.5" y2="105"/>
+<rect class="shelf" x="195" y="67.2" width="37.2" height="1.8"/>
+<rect class="shelf" x="195" y="34.2" width="37.2" height="1.8"/>
+<rect class="towel" x="196" y="98" width="35" height="5"/>
+<rect class="towel" x="196" y="93" width="35" height="5"/>
+<rect class="towel" x="196" y="88" width="35" height="5"/>
+<rect class="towel" x="196" y="83" width="35" height="5"/>
+<rect class="towel" x="196" y="78" width="35" height="5"/>
+<rect class="towel" x="196" y="73" width="35" height="5"/>
+<rect class="towel" x="196" y="62.2" width="35" height="5"/>
+<rect class="towel" x="196" y="57.2" width="35" height="5"/>
+<rect class="towel" x="196" y="52.2" width="35" height="5"/>
+<rect class="towel" x="196" y="47.2" width="35" height="5"/>
+<rect class="towel" x="196" y="42.2" width="35" height="5"/>
+<rect class="towel" x="196" y="29.2" width="35" height="5"/>
+<rect class="towel" x="196" y="24.2" width="35" height="5"/>
+<rect class="towel" x="196" y="19.2" width="35" height="5"/>
+<rect class="towel" x="196" y="14.2" width="35" height="5"/>
+<rect class="towel" x="196" y="9.2" width="35" height="5"/>
+<text class="lblx" x="186" y="35" text-anchor="end">serviettes</text>
+<text class="lblx muted" x="186" y="40" text-anchor="end">pliées 25 × 35</text>
+<text class="lblx muted" x="186" y="45" text-anchor="end">6 par pile</text>
+<rect class="top" x="168" y="160" width="66" height="3"/>
+<rect class="plinth" x="170" y="240" width="64" height="10"/>
+<rect class="bask" x="168" y="180" width="2" height="60"/>
+<rect class="bask" x="168" y="163" width="2" height="5"/>
+<path class="app" d="M170 180 L181 191" style="stroke-width:.9"/>
+<path class="app" d="M168 180 L161 173" style="stroke-dasharray:1.5 1"/>
+<path class="swing" d="M150 172 L178 172 Q186 172 188 188 M185 185 L188 189 L191 185"/>
+<path class="lead" d="M169 174 L196 142"/>
+<text class="lblx" x="212" y="137" text-anchor="middle">fente en façade 19 × 12</text>
+<text class="lblx muted" x="212" y="142" text-anchor="middle">volet basculant, goulotte</text>
+<rect class="binl" x="172" y="193" width="50" height="45"/>
+<rect class="cab" x="170" y="238" width="62" height="2"/>
+<text class="lbls" x="197" y="214" text-anchor="middle">bac 20 × 50 × 45</text>
+<text class="lblx" x="197" y="220" text-anchor="middle">= 45 L</text>
+<rect class="swing" x="116" y="163" width="54" height="77"/>
+<text class="lblx muted" x="135" y="204" text-anchor="middle">tiré 52</text>
+<rect class="conf" x="153" y="163" width="4" height="77"/>
+<line class="dim" x1="248" y1="168" x2="248" y2="180"/><line class="dim" x1="245" y1="168" x2="251" y2="168"/><line class="dim" x1="245" y1="180" x2="251" y2="180"/><text class="dimt" x="246" y="174" text-anchor="middle" transform="rotate(-90 246 174)">12</text>
+<line class="dim" x1="168" y1="262" x2="234" y2="262" marker-start="url(#tk)" marker-end="url(#tk)"/><line class="dim" x1="168" y1="259" x2="168" y2="265"/><line class="dim" x1="234" y1="259" x2="234" y2="265"/><text class="dimt" x="201" y="260.6" text-anchor="middle">66</text>
+<line class="dim" x1="157" y1="262" x2="168" y2="262" marker-start="url(#tk)" marker-end="url(#tk)"/><line class="dim" x1="157" y1="259" x2="157" y2="265"/><line class="dim" x1="168" y1="259" x2="168" y2="265"/><text class="dimt" x="162.5" y="260.6" text-anchor="middle">11</text>
+<line class="dim" x1="189" y1="-6" x2="234" y2="-6" marker-start="url(#tk)" marker-end="url(#tk)"/><line class="dim" x1="189" y1="-9" x2="189" y2="-3"/><line class="dim" x1="234" y1="-9" x2="234" y2="-3"/><text class="dimt" x="211.5" y="-7.4" text-anchor="middle">45</text>
+<line class="dim" x1="248" y1="105" x2="248" y2="160"/><line class="dim" x1="245" y1="105" x2="251" y2="105"/><line class="dim" x1="245" y1="160" x2="251" y2="160"/><text class="dimt" x="246" y="132.5" text-anchor="middle" transform="rotate(-90 246 132.5)">55</text>
+<text class="lblx muted" x="120" y="-4" text-anchor="middle">ouest ←   → est</text>
+</svg></div></div>
+</div><div class="grid2">
+<div class="card"><h3 class="okh">Points forts</h3><ul><li>Évacuation et arrivée d&#x27;eau au plus court, côté lavabo.</li><li>Paniers côté porte : on se déshabille en entrant et on jette le linge par la fente en façade.</li><li>Hublot à charnière à gauche ouvrant à 180° : une fois ouvert, il se rabat contre les paniers et libère le passage.</li></ul></div>
+<div class="card"><h3 class="warnh">Points faibles</h3><ul><li>Paniers (y 2 → 52) derrière le vantail ouvert : fentes et tiroirs ne servent que porte d&#x27;entrée fermée.</li><li>Le hublot passe à 7 cm du vantail : on ouvre la machine porte d&#x27;entrée fermée (comme dans la variante gauche).</li></ul></div>
+</div></div>
+<div data-panel="g" hidden>
+<p class="pitch"><b>Machine à gauche (côté porte).</b> Machine au sol côté porte, sous le plan. Les deux paniers passent côté lavabo, presque hors de la zone du vantail.</p>
+<div class="figs">
+<div class="fig span2"><h3>Plan</h3><div class="scroll"><svg viewBox="-22 -32 304 212" role="img" aria-label="Plan, machine à gauche">
+<polygon class="sdbf" points="0,0 234,0 234,114 167,114 167,160 0,160"/><polygon fill="url(#tile)" points="0,0 234,0 234,114 167,114 167,160 0,160"/>
+<path class="w" fill-rule="evenodd" d="M-5 -5 H239 V122 H175 V165 H-5 Z M0 0 V160 H167 V114 H234 V0 Z"/>
+<rect x="81" y="-5.5" width="76" height="6" style="fill:var(--paper)"/>
+<path class="doorzone" d="M81 0 A76 76 0 0 0 157 76 L157 0 Z"/><path class="doorarc" d="M81 0 A76 76 0 0 0 157 76"/>
+<rect class="leaf" x="153" y="0" width="4" height="76"/>
+<text class="lblx muted" x="119" y="-9" text-anchor="middle">porte d&#x27;entrée 76 · vantail dessiné ouvert à 90°</text>
+<rect class="red" x="5" y="50" width="73" height="105"/>
+<text class="lbl rt" x="41.5" y="100" text-anchor="middle">Douche</text>
+<text class="lblx rt" x="41.5" y="106" text-anchor="middle">non modifiée</text>
+<rect class="red" x="82" y="114" width="83" height="46"/>
+<text class="lbl rt" x="123.5" y="136" text-anchor="middle">Lavabo</text>
+<text class="lblx rt" x="123.5" y="142" text-anchor="middle">non modifié</text>
+<rect class="cab" x="168" y="112" width="66" height="2"/>
+<rect class="cab" x="168" y="61" width="66" height="1"/>
+<rect class="cab" x="168" y="62" width="66" height="25"/>
+<rect class="binl" x="172" y="64.5" width="50" height="20" style="stroke-dasharray:2 1"/>
+<rect class="slot" x="166.5" y="65" width="2.5" height="19"/>
+<text class="lbls" x="207" y="73.5" text-anchor="middle">Panier 1</text>
+<text class="lblx" x="207" y="79" text-anchor="middle">45 L · fente en façade</text>
+<rect class="swing" x="116" y="62" width="52" height="25"/>
+<rect class="cab" x="168" y="87" width="66" height="25"/>
+<rect class="binl" x="172" y="89.5" width="50" height="20" style="stroke-dasharray:2 1"/>
+<rect class="slot" x="166.5" y="90" width="2.5" height="19"/>
+<text class="lbls" x="207" y="98.5" text-anchor="middle">Panier 2</text>
+<text class="lblx" x="207" y="104" text-anchor="middle">45 L · fente en façade</text>
+<rect class="swing" x="116" y="87" width="52" height="25"/>
+<rect class="lm" x="168" y="0" width="66" height="61"/>
+<rect class="appf" x="168" y="0.5" width="60" height="60" rx="1.5"/>
+<line class="app" x1="166" y1="6" x2="166" y2="55" style="stroke-width:2"/>
+<text class="lblb" x="198" y="21.5" text-anchor="middle">LL</text>
+<text class="lblx" x="198" y="27.5" text-anchor="middle">au sol, sous le plan</text>
+<rect class="trap" x="224" y="42" width="10" height="30"/>
+<circle class="valve" cx="232.5" cy="57" r="1.6"/>
+<path class="lead" d="M224 48 L214 48"/>
+<text class="lblx" x="198" y="50" text-anchor="middle">trappe robinet</text>
+<path class="swing" d="M164 53.5 A47 47 0 0 1 117 6.5 L164 6.5"/>
+<text class="lblx muted" x="128" y="36.5" text-anchor="middle">hublot</text>
+<rect class="upper" x="189" y="0" width="45" height="114"/>
+<line class="upper" x1="189" y1="57" x2="234" y2="57"/>
+<rect class="conf" x="153" y="62" width="4" height="14"/>
+<rect class="conf" x="153" y="5.5" width="4" height="2"/>
+<line class="dim" x1="167" y1="-16" x2="234" y2="-16" marker-start="url(#tk)" marker-end="url(#tk)"/><line class="dim" x1="167" y1="-19" x2="167" y2="-13"/><line class="dim" x1="234" y1="-19" x2="234" y2="-13"/><text class="dimt" x="200.5" y="-17.4" text-anchor="middle">67 (alcôve)</text>
+<line class="dim" x1="0" y1="-24" x2="234" y2="-24" marker-start="url(#tk)" marker-end="url(#tk)"/><line class="dim" x1="0" y1="-27" x2="0" y2="-21"/><line class="dim" x1="234" y1="-27" x2="234" y2="-21"/><text class="dimt" x="117" y="-25.4" text-anchor="middle">234</text>
+<line class="dim" x1="-14" y1="0" x2="-14" y2="160"/><line class="dim" x1="-17" y1="0" x2="-11" y2="0"/><line class="dim" x1="-17" y1="160" x2="-11" y2="160"/><text class="dimt" x="-16" y="80" text-anchor="middle" transform="rotate(-90 -16 80)">160</text>
+<line class="dim" x1="268" y1="0" x2="268" y2="114"/><line class="dim" x1="265" y1="0" x2="271" y2="0"/><line class="dim" x1="265" y1="114" x2="271" y2="114"/><text class="dimt" x="266" y="57" text-anchor="middle" transform="rotate(-90 266 57)">114</text>
+<line class="dim" x1="254" y1="0" x2="254" y2="61"/><line class="dim" x1="251" y1="0" x2="257" y2="0"/><line class="dim" x1="251" y1="61" x2="257" y2="61"/><text class="dimt" x="252" y="30.5" text-anchor="middle" transform="rotate(-90 252 30.5)">61 LL</text>
+<line class="dim" x1="254" y1="62" x2="254" y2="87"/><line class="dim" x1="251" y1="62" x2="257" y2="62"/><line class="dim" x1="251" y1="87" x2="257" y2="87"/><text class="dimt" x="252" y="74.5" text-anchor="middle" transform="rotate(-90 252 74.5)">25</text>
+<line class="dim" x1="254" y1="87" x2="254" y2="112"/><line class="dim" x1="251" y1="87" x2="257" y2="87"/><line class="dim" x1="251" y1="112" x2="257" y2="112"/><text class="dimt" x="252" y="99.5" text-anchor="middle" transform="rotate(-90 252 99.5)">25</text>
+<line class="dim" x1="157" y1="100" x2="168" y2="100"/>
+<text class="dimt" x="162.5" y="97" text-anchor="middle">11</text>
+<line class="sec" x1="140" y1="57" x2="244" y2="57"/>
+<path class="secm" d="M141 57 l3 -6 l3 6z"/><path class="secm" d="M237 57 l3 -6 l3 6z"/>
+<text class="sect" x="136" y="59" text-anchor="middle">B</text>
+<line class="sec" x1="140" y1="74.5" x2="244" y2="74.5"/>
+<path class="secm" d="M141 74.5 l3 -6 l3 6z"/><path class="secm" d="M237 74.5 l3 -6 l3 6z"/>
+<text class="sect" x="136" y="76.5" text-anchor="middle">C</text>
+<path class="secm" d="M166 -2 l-4 -3 v6z"/><text class="sect" x="160" y="3" text-anchor="end">A</text>
+<text class="lblx muted" x="117" y="176" text-anchor="middle">N ↑ · 1 carreau = 10 cm · hauts P 45 en pointillé épais</text>
+</svg></div><p class="cap">Façades à x 168. Fentes à linge dans les façades des paniers (trait blanc) ; trappe du robinet (hachurée) découpée au fond du plan, centrée sur le meuble. Pointillé fin : tiroirs-paniers tirés et hublot ; pointillé épais : hauts de 45 ; rectangle rouge plein : recouvrement avec le vantail ouvert.</p></div>
+<div class="fig span2"><h3>Élévation A : face au meuble (vue vers l&#x27;est)</h3><div class="scroll"><svg viewBox="-34 -14 196 296" role="img" aria-label="Élévation face au meuble, machine à gauche">
+<rect class="w" x="-6" y="-4" width="6" height="258"/>
+<rect class="w" x="114" y="-4" width="8" height="258"/>
+<line class="floorl" x1="-30" y1="250" x2="160" y2="250"/><line class="ceil" x1="-30" y1="0" x2="160" y2="0"/>
+<text class="lblx muted" x="140" y="-3" text-anchor="middle">plafond 250</text>
+<text class="lblx muted" x="-17" y="258" text-anchor="middle">nord · porte</text><text class="lblx muted" x="135" y="258" text-anchor="middle">sud · lavabo</text>
+<rect class="cab" x="112" y="163" width="2" height="87"/>
+<rect class="cab" x="61" y="163" width="1" height="87"/>
+<rect class="plinth" x="62" y="240" width="25" height="10"/>
+<rect class="bask" x="62.3" y="163" width="24.4" height="77"/>
+<rect class="binl" x="64.5" y="193" width="20" height="45" style="stroke-dasharray:2 1;fill-opacity:.15"/>
+<rect class="slot" x="65" y="168" width="19" height="12" rx="2"/>
+<text class="lblx muted" x="74.5" y="173.5" text-anchor="middle">fente</text>
+<text class="lbls" x="74.5" y="186" text-anchor="middle">Panier 1</text>
+<text class="lblx" x="74.5" y="191" text-anchor="middle">coulissant</text>
+<text class="lblx" x="74.5" y="214" text-anchor="middle">~45 L</text>
+<rect class="plinth" x="87" y="240" width="25" height="10"/>
+<rect class="bask" x="87.3" y="163" width="24.4" height="77"/>
+<rect class="binl" x="89.5" y="193" width="20" height="45" style="stroke-dasharray:2 1;fill-opacity:.15"/>
+<rect class="slot" x="90" y="168" width="19" height="12" rx="2"/>
+<text class="lblx muted" x="99.5" y="173.5" text-anchor="middle">fente</text>
+<text class="lbls" x="99.5" y="186" text-anchor="middle">Panier 2</text>
+<text class="lblx" x="99.5" y="191" text-anchor="middle">coulissant</text>
+<text class="lblx" x="99.5" y="214" text-anchor="middle">~45 L</text>
+<rect class="lm" x="0.5" y="165" width="60" height="85"/>
+<rect class="appf" x="1" y="165" width="59" height="85" rx="1.5"/>
+<line class="app" x1="1" y1="179" x2="60" y2="179"/>
+<circle class="app" cx="30.5" cy="200" r="17"/><circle class="app" cx="30.5" cy="200" r="12.5"/>
+<text class="lblx" x="30.5" y="245" text-anchor="middle">LL 60 × 60 × 85</text>
+<rect class="trap" x="42" y="160" width="30" height="3"/>
+<text class="lblx" x="57" y="158.5" text-anchor="middle">trappe robinet (au fond, centrée sur le meuble)</text>
+<rect class="top" x="0" y="160" width="114" height="3"/>
+<rect class="niche" x="0" y="105" width="114" height="55"/>
+<text class="lbls" x="57" y="126" text-anchor="middle">Niche filante 114 × 55</text>
+<text class="lblx" x="57" y="132" text-anchor="middle">prises + USB à 110 · crochet sèche-cheveux · LED</text>
+<circle class="plug" cx="92" cy="150" r="2.2"/><circle class="plug" cx="98" cy="150" r="2.2"/><rect class="plug" x="103" y="148" width="6" height="4" rx="1"/>
+<path class="hook" d="M10 110 v6 q0 3 3 3"/>
+<rect class="cab" x="0" y="2" width="57" height="103"/>
+<rect class="cab" x="57" y="2" width="57" height="103"/>
+<rect class="fill" x="0" y="0" width="114" height="2"/>
+<line class="rail" x1="0" y1="103" x2="114" y2="103"/><line class="rail" x1="0" y1="4" x2="114" y2="4"/>
+<line class="app" x1="57" y1="2" x2="57" y2="105" style="stroke-width:1.2"/>
+<line class="app" x1="51" y1="55" x2="51" y2="65" style="stroke-width:1"/><line class="app" x1="63" y1="55" x2="63" y2="65" style="stroke-width:1"/>
+<text class="lbls" x="28.5" y="45" text-anchor="middle">Serviettes</text>
+<text class="lblx" x="28.5" y="51" text-anchor="middle">~20 serviettes</text>
+<text class="lblx muted" x="28.5" y="75" text-anchor="middle">porte coulissante</text>
+<text class="lbls" x="85.5" y="45" text-anchor="middle">Pharmacie et</text>
+<text class="lbls" x="85.5" y="51" text-anchor="middle">produits divers</text>
+<text class="lblx muted" x="85.5" y="75" text-anchor="middle">porte coulissante</text>
+<rect class="leafg" x="-5" y="46" width="81" height="204"/>
+<text class="lblx rt" x="57" y="272" text-anchor="middle">pointillé rouge : vantail de la porte ouvert à 90°, 10 cm devant</text>
+<line class="dim" x1="-22" y1="163" x2="-22" y2="250"/><line class="dim" x1="-25" y1="163" x2="-19" y2="163"/><line class="dim" x1="-25" y1="250" x2="-19" y2="250"/><text class="dimt" x="-24" y="206.5" text-anchor="middle" transform="rotate(-90 -24 206.5)">87</text>
+<line class="dim" x1="-22" y1="105" x2="-22" y2="160"/><line class="dim" x1="-25" y1="105" x2="-19" y2="105"/><line class="dim" x1="-25" y1="160" x2="-19" y2="160"/><text class="dimt" x="-24" y="132.5" text-anchor="middle" transform="rotate(-90 -24 132.5)">55</text>
+<line class="dim" x1="-22" y1="2" x2="-22" y2="105"/><line class="dim" x1="-25" y1="2" x2="-19" y2="2"/><line class="dim" x1="-25" y1="105" x2="-19" y2="105"/><text class="dimt" x="-24" y="53.5" text-anchor="middle" transform="rotate(-90 -24 53.5)">103</text>
+<text class="dimt" x="-27" y="163" text-anchor="middle">3</text>
+<line class="dim" x1="0" y1="264" x2="114" y2="264" marker-start="url(#tk)" marker-end="url(#tk)"/><line class="dim" x1="0" y1="261" x2="0" y2="267"/><line class="dim" x1="114" y1="261" x2="114" y2="267"/><text class="dimt" x="57" y="262.6" text-anchor="middle">114</text>
+<line class="dim" x1="0" y1="-8" x2="61" y2="-8" marker-start="url(#tk)" marker-end="url(#tk)"/><line class="dim" x1="0" y1="-11" x2="0" y2="-5"/><line class="dim" x1="61" y1="-11" x2="61" y2="-5"/><text class="dimt" x="30.5" y="-9.4" text-anchor="middle">61</text>
+<line class="dim" x1="62" y1="-8" x2="87" y2="-8" marker-start="url(#tk)" marker-end="url(#tk)"/><line class="dim" x1="62" y1="-11" x2="62" y2="-5"/><line class="dim" x1="87" y1="-11" x2="87" y2="-5"/><text class="dimt" x="74.5" y="-9.4" text-anchor="middle">25</text>
+<line class="dim" x1="87" y1="-8" x2="112" y2="-8" marker-start="url(#tk)" marker-end="url(#tk)"/><line class="dim" x1="87" y1="-11" x2="87" y2="-5"/><line class="dim" x1="112" y1="-11" x2="112" y2="-5"/><text class="dimt" x="99.5" y="-9.4" text-anchor="middle">25</text>
+</svg></div></div>
+</div><div class="figs3">
+<div class="fig"><h3>Coupe B-B : machine et trappe (vue vers le nord)</h3><div class="scroll"><svg viewBox="104 -14 156 284" role="img" aria-label="Coupe B-B, machine à gauche">
+<rect class="w" x="234" y="-4" width="6" height="258"/>
+<line class="floorl" x1="104" y1="250" x2="252" y2="250"/><line class="ceil" x1="104" y1="0" x2="252" y2="0"/>
+<rect class="leafg" x="153" y="46" width="4" height="204"/>
+<text class="lblx muted" x="150" y="140" text-anchor="middle" transform="rotate(-90 150 140)">vantail ouvert à 90°</text>
+<rect class="niche" x="168" y="105" width="66" height="55"/>
+<text class="lblx" x="176" y="130" text-anchor="middle">niche</text>
+<rect class="cab" x="189" y="2" width="45" height="103"/>
+<rect class="fill" x="189" y="0" width="45" height="2"/>
+<line class="rail" x1="190.5" y1="2" x2="190.5" y2="105"/><line class="rail" x1="192.5" y1="2" x2="192.5" y2="105"/>
+<rect class="shelf" x="195" y="81.2" width="37.2" height="1.8"/>
+<rect class="shelf" x="195" y="59.2" width="37.2" height="1.8"/>
+<rect class="shelf" x="195" y="37.2" width="37.2" height="1.8"/>
+<rect class="shelf" x="195" y="19.2" width="37.2" height="1.8"/>
+<rect class="box" x="196" y="87" width="16" height="16"/>
+<rect class="box" x="214" y="87" width="16" height="16"/>
+<rect class="box" x="196" y="63.2" width="16" height="16"/>
+<rect class="box" x="214" y="63.2" width="16" height="16"/>
+<rect class="box" x="196" y="41.2" width="16" height="16"/>
+<rect class="box" x="214" y="41.2" width="16" height="16"/>
+<rect class="box" x="196" y="22" width="16" height="13.2"/>
+<rect class="box" x="214" y="22" width="16" height="13.2"/>
+<rect class="box" x="196" y="5" width="16" height="12.2"/>
+<rect class="box" x="214" y="5" width="16" height="12.2"/>
+<text class="lblx" x="186" y="35" text-anchor="end">pharmacie et</text>
+<text class="lblx" x="186" y="40" text-anchor="end">produits divers</text>
+<text class="lblx muted" x="186" y="45" text-anchor="end">bacs à tirer</text>
+<path d="M168 160 H224 V163 H168 Z" class="top"/>
+<path d="M234 160 H232 V163 H234 Z" class="top"/>
+<rect class="trap" x="224" y="160" width="8" height="3"/>
+<path class="lead" d="M228 159 L228 150 L214 146"/>
+<text class="lblx" x="203" y="145" text-anchor="middle">trappe 30 × 10</text>
+<text class="lblx muted" x="203" y="150" text-anchor="middle">couvercle amovible</text>
+<rect class="appf" x="168" y="165" width="60" height="85" rx="1.5"/>
+<rect class="app" x="165" y="188" width="3" height="34"/>
+<path class="hose" d="M228 178 q4 0 4 4 V170"/>
+<rect class="valve" x="231" y="168" width="3" height="4"/>
+<path class="lead" d="M231 170 L214 186"/>
+<text class="lblx" x="201" y="188" text-anchor="middle">robinet encastré h 80</text>
+<text class="lblx" x="201" y="193" text-anchor="middle">+ prise LL à côté</text>
+<text class="lbls" x="198" y="215" text-anchor="middle">LL 60 × 60 × 85</text>
+<text class="lblx" x="198" y="221" text-anchor="middle">jeu arrière 6</text>
+<line class="dim" x1="228" y1="262" x2="234" y2="262" marker-start="url(#tk)" marker-end="url(#tk)"/><line class="dim" x1="228" y1="259" x2="228" y2="265"/><line class="dim" x1="234" y1="259" x2="234" y2="265"/><text class="dimt" x="231" y="260.6" text-anchor="middle">6</text>
+<line class="dim" x1="168" y1="262" x2="234" y2="262" marker-start="url(#tk)" marker-end="url(#tk)"/><line class="dim" x1="168" y1="259" x2="168" y2="265"/><line class="dim" x1="234" y1="259" x2="234" y2="265"/><text class="dimt" x="201" y="260.6" text-anchor="middle">66</text>
+<line class="dim" x1="157" y1="262" x2="168" y2="262" marker-start="url(#tk)" marker-end="url(#tk)"/><line class="dim" x1="157" y1="259" x2="157" y2="265"/><line class="dim" x1="168" y1="259" x2="168" y2="265"/><text class="dimt" x="162.5" y="260.6" text-anchor="middle">11</text>
+<line class="dim" x1="189" y1="-6" x2="234" y2="-6" marker-start="url(#tk)" marker-end="url(#tk)"/><line class="dim" x1="189" y1="-9" x2="189" y2="-3"/><line class="dim" x1="234" y1="-9" x2="234" y2="-3"/><text class="dimt" x="211.5" y="-7.4" text-anchor="middle">45</text>
+<line class="dim" x1="248" y1="105" x2="248" y2="160"/><line class="dim" x1="245" y1="105" x2="251" y2="105"/><line class="dim" x1="245" y1="160" x2="251" y2="160"/><text class="dimt" x="246" y="132.5" text-anchor="middle" transform="rotate(-90 246 132.5)">55</text>
+<text class="lblx muted" x="120" y="-4" text-anchor="middle">ouest ←   → est</text>
+</svg></div></div>
+<div class="fig"><h3>Coupe C-C : panier et fente (vue vers le nord)</h3><div class="scroll"><svg viewBox="104 -14 156 284" role="img" aria-label="Coupe C-C, machine à gauche">
+<rect class="w" x="234" y="-4" width="6" height="258"/>
+<line class="floorl" x1="104" y1="250" x2="252" y2="250"/><line class="ceil" x1="104" y1="0" x2="252" y2="0"/>
+<rect class="leafg" x="153" y="46" width="4" height="204"/>
+<text class="lblx muted" x="150" y="140" text-anchor="middle" transform="rotate(-90 150 140)">vantail ouvert à 90°</text>
+<rect class="niche" x="168" y="105" width="66" height="55"/>
+<text class="lblx" x="176" y="130" text-anchor="middle">niche</text>
+<rect class="cab" x="189" y="2" width="45" height="103"/>
+<rect class="fill" x="189" y="0" width="45" height="2"/>
+<line class="rail" x1="190.5" y1="2" x2="190.5" y2="105"/><line class="rail" x1="192.5" y1="2" x2="192.5" y2="105"/>
+<rect class="shelf" x="195" y="81.2" width="37.2" height="1.8"/>
+<rect class="shelf" x="195" y="59.2" width="37.2" height="1.8"/>
+<rect class="shelf" x="195" y="37.2" width="37.2" height="1.8"/>
+<rect class="shelf" x="195" y="19.2" width="37.2" height="1.8"/>
+<rect class="box" x="196" y="87" width="16" height="16"/>
+<rect class="box" x="214" y="87" width="16" height="16"/>
+<rect class="box" x="196" y="63.2" width="16" height="16"/>
+<rect class="box" x="214" y="63.2" width="16" height="16"/>
+<rect class="box" x="196" y="41.2" width="16" height="16"/>
+<rect class="box" x="214" y="41.2" width="16" height="16"/>
+<rect class="box" x="196" y="22" width="16" height="13.2"/>
+<rect class="box" x="214" y="22" width="16" height="13.2"/>
+<rect class="box" x="196" y="5" width="16" height="12.2"/>
+<rect class="box" x="214" y="5" width="16" height="12.2"/>
+<text class="lblx" x="186" y="35" text-anchor="end">pharmacie et</text>
+<text class="lblx" x="186" y="40" text-anchor="end">produits divers</text>
+<text class="lblx muted" x="186" y="45" text-anchor="end">bacs à tirer</text>
+<rect class="top" x="168" y="160" width="66" height="3"/>
+<rect class="plinth" x="170" y="240" width="64" height="10"/>
+<rect class="bask" x="168" y="180" width="2" height="60"/>
+<rect class="bask" x="168" y="163" width="2" height="5"/>
+<path class="app" d="M170 180 L181 191" style="stroke-width:.9"/>
+<path class="app" d="M168 180 L161 173" style="stroke-dasharray:1.5 1"/>
+<path class="swing" d="M150 172 L178 172 Q186 172 188 188 M185 185 L188 189 L191 185"/>
+<path class="lead" d="M169 174 L196 142"/>
+<text class="lblx" x="212" y="137" text-anchor="middle">fente en façade 19 × 12</text>
+<text class="lblx muted" x="212" y="142" text-anchor="middle">volet basculant, goulotte</text>
+<rect class="binl" x="172" y="193" width="50" height="45"/>
+<rect class="cab" x="170" y="238" width="62" height="2"/>
+<text class="lbls" x="197" y="214" text-anchor="middle">bac 20 × 50 × 45</text>
+<text class="lblx" x="197" y="220" text-anchor="middle">= 45 L</text>
+<rect class="swing" x="116" y="163" width="54" height="77"/>
+<text class="lblx muted" x="135" y="204" text-anchor="middle">tiré 52</text>
+<rect class="conf" x="153" y="163" width="4" height="77"/>
+<line class="dim" x1="248" y1="168" x2="248" y2="180"/><line class="dim" x1="245" y1="168" x2="251" y2="168"/><line class="dim" x1="245" y1="180" x2="251" y2="180"/><text class="dimt" x="246" y="174" text-anchor="middle" transform="rotate(-90 246 174)">12</text>
+<line class="dim" x1="168" y1="262" x2="234" y2="262" marker-start="url(#tk)" marker-end="url(#tk)"/><line class="dim" x1="168" y1="259" x2="168" y2="265"/><line class="dim" x1="234" y1="259" x2="234" y2="265"/><text class="dimt" x="201" y="260.6" text-anchor="middle">66</text>
+<line class="dim" x1="157" y1="262" x2="168" y2="262" marker-start="url(#tk)" marker-end="url(#tk)"/><line class="dim" x1="157" y1="259" x2="157" y2="265"/><line class="dim" x1="168" y1="259" x2="168" y2="265"/><text class="dimt" x="162.5" y="260.6" text-anchor="middle">11</text>
+<line class="dim" x1="189" y1="-6" x2="234" y2="-6" marker-start="url(#tk)" marker-end="url(#tk)"/><line class="dim" x1="189" y1="-9" x2="189" y2="-3"/><line class="dim" x1="234" y1="-9" x2="234" y2="-3"/><text class="dimt" x="211.5" y="-7.4" text-anchor="middle">45</text>
+<line class="dim" x1="248" y1="105" x2="248" y2="160"/><line class="dim" x1="245" y1="105" x2="251" y2="105"/><line class="dim" x1="245" y1="160" x2="251" y2="160"/><text class="dimt" x="246" y="132.5" text-anchor="middle" transform="rotate(-90 246 132.5)">55</text>
+<text class="lblx muted" x="120" y="-4" text-anchor="middle">ouest ←   → est</text>
+</svg></div></div>
+</div><div class="grid2">
+<div class="card"><h3 class="okh">Points forts</h3><ul><li>Panier 2 libre du vantail ouvert (fente et tiroir) ; le panier 1 ne le recouvre que sur 14 cm, sa fente reste à moitié dégagée.</li><li>Paniers et niche regroupés côté lavabo et miroir.</li><li>Plan libre côté lavabo pour plier, la machine ne tourne pas sous les mains.</li></ul></div>
+<div class="card"><h3 class="warnh">Points faibles</h3><ul><li>Machine entièrement dans la zone du vantail : on charge porte d&#x27;entrée fermée, et le hublot (charnière à gauche, contre le mur nord) ne s&#x27;ouvre qu&#x27;à 90°.</li><li>Évacuation et arrivée d&#x27;eau environ 50 cm plus loin du lavabo.</li><li>Trappe du robinet près de l&#x27;angle nord : un peu plus loin de la main.</li></ul></div>
+</div></div>
+
+<section id="cmp">
+<h2>Droite ou gauche</h2>
+<div class="scroll-t"><table>
+<thead><tr><th>Critère</th><th>Machine à droite</th><th>Machine à gauche</th></tr></thead>
+<tbody>
+<tr><td>Jeter le linge porte d&#x27;entrée ouverte</td><td class="warnc">non</td><td>panier 2 oui, panier 1 à moitié</td></tr>
+<tr><td>Vider les paniers porte ouverte</td><td class="warnc">non</td><td>panier 2 oui, panier 1 presque (14 cm)</td></tr>
+<tr><td>Charger la machine porte ouverte</td><td class="warnc">non</td><td class="warnc">non</td></tr>
+<tr><td>Hublot ouvert</td><td class="okc">180°, rabattu contre les paniers</td><td>90° (mur nord)</td></tr>
+<tr><td>Distance de l&#x27;évacuation</td><td class="okc">courte</td><td>+50 cm</td></tr>
+<tr><td>Hauts, niche, plan, trappe</td><td colspan="2">identiques</td></tr>
+</tbody></table></div>
+</section>
+<section id="hauts">
+<h2>Profondeur des placards du haut</h2>
+<p class="pitch">Non, ce n&#x27;est pas obligatoire, mais au-delà de 45 cm ils gênent. Avec des hauts de 60, il ne reste que 6 cm de plan devant : la tête touche le caisson quand on se penche sur la niche, on n&#x27;atteint plus les prises du fond et la LED éclaire le dessous du caisson plutôt que le plan. Je propose <b>45</b> (au lieu de 35), avec 21 cm de plan dégagé devant, et surtout des hauts qui montent jusqu&#x27;au plafond, sans bandeau, car c&#x27;est la hauteur qui donne la capacité :
+<br>— <b>serviettes</b> : le compartiment fait 54 de large et 37 de profondeur utile (les rails coulissants prennent 6 cm). Avec 3 étagères d&#x27;environ 31 cm, il prend deux piles de 6 serviettes de bain par étagère (pliées 25 × 35, 5 cm d&#x27;épaisseur), soit 36 places. Les 20 serviettes tiennent sur les deux étagères basses ; la case du haut (215 → 246) sert de réserve. Avec des hauts de 35, la serviette pliée en 35 ne tiendrait plus ;
+<br>— <b>pharmacie et produits divers</b> : avec 37 cm de profondeur, des bacs à tirer évitent que les petits flacons se perdent au fond.
+<br>Les portes sont <b>coulissantes</b> : elles ne heurtent jamais le vantail de la porte d&#x27;entrée, et chaque porte découvre un côté, serviettes ou pharmacie et produits divers.</p>
+</section>
+<section id="verif">
+<h2>À vérifier sur place</h2>
+<p class="pitch">Paumelles de la porte à x ≈ 157, vantail de 76. LL 60 × 60 × 85, hublot de ~47 à charnière à gauche, ouvrant à 180° pour la variante droite. Robinet d&#x27;arrêt quart de tour dans un boîtier encastré à 80 cm (saillie ≤ 3 cm), dans le jeu de 6 cm derrière la machine, sous la trappe (y 57) : dans les deux versions, il se trouve derrière le bord de la machine côté paniers. D&#x27;après la NF C 15-100 (de mémoire, non vérifié ; à valider par l&#x27;électricien), il faut un circuit 20 A spécialisé pour la LL et des prises hors des volumes 1 et 2. Caissons en panneaux hydrofuges.</p>
+</section>
+<p class="note" style="margin-top:20px">Repère : origine à l&#x27;angle nord-ouest intérieur, x vers l&#x27;est, y vers le sud, cotes en cm. L&#x27;élévation A regarde vers l&#x27;est : le nord (porte) est à gauche, le sud (lavabo) à droite. « Droite » et « gauche » s&#x27;entendent face au meuble.</p>
+<section id="changements">
+<h2>Changements</h2>
+<div class="scroll-t"><table>
+<thead><tr><th>Version</th><th>Date</th><th>Changements</th></tr></thead>
+<tbody>
+<tr><td><b>V2.2</b></td><td>01/10/2026</td><td>Mise en page : les notes de début de document passent dans cette section ; profondeur des hauts et points à vérifier en fin de document.</td></tr>
+<tr><td><b>V2.1</b></td><td>01/10/2026</td><td><ul class="changes" style="margin:0">
+  <li>Fentes à linge déplacées du plan de travail vers les façades des tiroirs-paniers : 19 × 12, à 70–82 cm, volet basculant et goulotte. Plus aucun trou dans le plan pour le linge.</li>
+  <li>Trappe du robinet centrée sur le meuble (y 42 → 72) au lieu de la machine : même emplacement de plomberie dans les deux versions.</li>
+  <li>« Pharmacie » renommé « Pharmacie et produits divers ».</li>
+  <li>Conséquence : une fente en façade est masquée par la porte d&#x27;entrée ouverte ; le comparatif droite / gauche est mis à jour.</li></ul></td></tr>
+<tr><td><b>V2</b></td><td>01/10/2026</td><td><ul class="changes" style="margin:0">
+  <li>Base : proposition 1 de la V1 (« Plan de pliage »).</li>
+  <li>Deux versions systématiques : machine à droite (côté lavabo) et machine à gauche (côté porte), sur le plan, l&#x27;élévation et les coupes.</li>
+  <li>Plan de travail filant au-dessus de la machine et des meubles bas.</li>
+  <li>Deux paniers de 45 L conservés, dans deux coulissants de 25, avec ouverture pour jeter le linge.</li>
+  <li>Trappe au fond du plan pour accéder au robinet de la machine.</li>
+  <li>Hauts de 35 → 45 de profondeur, jusqu&#x27;au plafond, portes coulissantes ; bandeau supprimé.</li>
+  <li>Plafond confirmé à 250.</li></ul></td></tr>
+<tr><td><b>V1</b></td><td>30/09/2026</td><td>Trois propositions : P1 « Plan de pliage », P2 « Machine à hauteur », P3 « Quotidien côté lavabo » (<a href="sdb-meuble.html">sdb-meuble.html</a>).</td></tr>
+</tbody></table></div>
+</section>
+
+</div>
+<script>
+(function(){
+  var bs=document.querySelectorAll('.switch button');
+  function show(v){
+    bs.forEach(function(b){b.setAttribute('aria-selected',b.getAttribute('data-v')===v?'true':'false')});
+    document.querySelectorAll('[data-panel]').forEach(function(p){p.hidden=p.getAttribute('data-panel')!==v});
+    try{localStorage.setItem('sdb-v2',v)}catch(e){}
+  }
+  bs.forEach(function(b){b.addEventListener('click',function(){show(b.getAttribute('data-v'))})});
+  var v=null;try{v=localStorage.getItem('sdb-v2')}catch(e){}
+  if(/^#[dg]$/.test(location.hash))v=location.hash.slice(1);
+  if(v==='g')show(v);
+})();
+</script>
+</body>
+</html>

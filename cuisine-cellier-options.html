@@ -1,0 +1,1168 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Cellier : options d'aménagement</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wght@400;500;700;800&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+<style>
+:root{
+  --paper:#F7F8F6; --ink:#1D2A33; --muted:#5E6B73; --line:#C9D0D4; --wood:#B07A45;
+  --water:#2F7FB5; --tri:#C8412C; --flow:#2E8B57; --cook2:#7B5EA7;
+  --panel:#FFFFFF; --cab:#ECE6DA; --tall:#D8CFBD; --tech:#E1E6E9; --glass:#CFE4F2;
+  color-scheme:light;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --paper:#141A1F; --ink:#E4EAED; --muted:#9AA7AE; --line:#34414A; --wood:#C9925A;
+    --water:#5AA8DE; --tri:#E8664F; --flow:#4CB97A; --cook2:#A68BD2;
+    --panel:#1B2329; --cab:#2A3338; --tall:#394449; --tech:#26303A; --glass:#1F3A4E;
+    color-scheme:dark;
+  }
+}
+:root[data-theme="dark"]{
+  --paper:#141A1F; --ink:#E4EAED; --muted:#9AA7AE; --line:#34414A; --wood:#C9925A;
+  --water:#5AA8DE; --tri:#E8664F; --flow:#4CB97A; --cook2:#A68BD2;
+  --panel:#1B2329; --cab:#2A3338; --tall:#394449; --tech:#26303A; --glass:#1F3A4E;
+  color-scheme:dark;
+}
+*{box-sizing:border-box}
+html,body{margin:0}
+body{background:var(--paper);color:var(--ink);font-family:Archivo,system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;line-height:1.55;font-size:16px}
+.wrap{max-width:1120px;margin:0 auto;padding:28px 16px 64px}
+.kicker{font-family:"JetBrains Mono",ui-monospace,Menlo,monospace;font-size:12px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted)}
+h1{font-size:clamp(28px,5vw,44px);line-height:1.08;margin:6px 0 12px;font-weight:800;letter-spacing:-.01em}
+h2{font-size:22px;margin:44px 0 10px;font-weight:700}
+h3{font-size:17px;margin:22px 0 6px}
+p{margin:8px 0}
+.pitch{font-size:18px;max-width:780px;color:var(--ink)}
+.stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:12px;margin:22px 0 8px}
+.stat{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:12px 14px}
+.stat b{display:block;font-family:"JetBrains Mono",ui-monospace,monospace;font-size:24px;font-weight:600}
+.stat span{font-size:13px;color:var(--muted)}
+.fig{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:12px;margin:14px 0}
+.scroll{overflow-x:auto;-webkit-overflow-scrolling:touch}
+.scroll svg{display:block;width:100%;min-width:720px;height:auto}
+.scroll svg.small{min-width:340px;max-width:600px;margin:0 auto}
+.cap{font-size:13px;color:var(--muted);margin:8px 4px 2px}
+.legend{display:flex;flex-wrap:wrap;gap:8px 18px;font-size:13px;margin:10px 4px}
+.legend span{display:inline-flex;align-items:center;gap:6px}
+.legend svg{width:26px;height:14px;flex:none}
+.grid2{display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:16px}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:14px 16px}
+.card h3{margin-top:0}
+ul{padding-left:20px;margin:6px 0}
+li{margin:3px 0}
+table{border-collapse:collapse;width:100%;font-size:14px}
+th,td{text-align:left;padding:7px 8px;border-bottom:1px solid var(--line);vertical-align:top}
+td.num,th.num{text-align:right;font-family:"JetBrains Mono",ui-monospace,monospace;white-space:nowrap}
+td.st{text-align:center;font-size:17px;white-space:nowrap}
+tfoot td{font-weight:700}
+.mono{font-family:"JetBrains Mono",ui-monospace,monospace}
+.note{font-size:13px;color:var(--muted)}
+.ok{color:var(--flow);font-weight:700}
+.warn{color:var(--wood);font-weight:700}
+.hyp{border-left:3px solid var(--wood);padding:6px 12px;background:var(--panel);font-size:14px;margin:12px 0}
+@media (max-width:480px){ body{font-size:15px} .stat b{font-size:21px} th,td{padding:6px 5px} }
+
+/* SVG */
+svg text{font-family:Archivo,system-ui,sans-serif;fill:var(--ink)}
+.w{fill:var(--ink)}
+.wcut{fill:var(--ink)}
+.nw{fill:url(#hn);stroke:var(--ink);stroke-width:.8}
+.ghost{fill:none;stroke:var(--muted);stroke-width:1;stroke-dasharray:4 3}
+.floorbg{fill:var(--wood);fill-opacity:.13}
+.pq{fill:none;stroke:var(--wood);stroke-width:.6;stroke-opacity:.45}
+.cellf{fill:var(--tech)}
+.tl{fill:none;stroke:var(--line);stroke-width:.6}
+.wc{fill:var(--line);fill-opacity:.55}
+.cab{fill:var(--cab);stroke:var(--ink);stroke-width:.7}
+.cabcut{fill:var(--tall);stroke:var(--ink);stroke-width:1.4}
+.tall{fill:var(--tall);stroke:var(--ink);stroke-width:.8}
+.pf{fill:var(--tall);stroke:var(--wood);stroke-width:1.8}
+.tech{fill:var(--tech);stroke:var(--ink);stroke-width:.7;stroke-dasharray:3 2}
+.wt{fill:none;stroke:var(--ink);stroke-width:1.6}
+.app{fill:none;stroke:var(--ink);stroke-width:.8}
+.appf{fill:var(--panel);stroke:var(--ink);stroke-width:.8}
+.dark{fill:var(--ink)}
+.upper{fill:none;stroke:var(--muted);stroke-width:.8;stroke-dasharray:3 2}
+.win{fill:var(--glass);stroke:var(--ink);stroke-width:.7}
+.glass{stroke:var(--water);stroke-width:1.2}
+.winleaf{fill:none;stroke:var(--muted);stroke-width:.6;stroke-dasharray:2 2}
+.doorzone{fill:var(--tri);fill-opacity:.06;stroke:none}
+.doorarc{fill:none;stroke:var(--ink);stroke-width:.8}
+.doorleaf{stroke:var(--ink);stroke-width:3}
+.door100{stroke:var(--tri);stroke-width:1.2;stroke-dasharray:3 2}
+.swing{fill:none;stroke:var(--muted);stroke-width:.6;stroke-dasharray:2 2}
+.dim{stroke:var(--muted);stroke-width:.6;fill:none}
+.dimt{fill:var(--muted);font-family:"JetBrains Mono",ui-monospace,monospace !important;font-size:8px}
+.lbl{font-size:7.5px}
+.lbls{font-size:6.5px}
+.lblx{font-size:5px}
+.lblb{font-size:9px;font-weight:700}
+.muted{fill:var(--muted)}
+.woodt{fill:var(--wood);font-weight:700}
+.tri{fill:var(--tri);fill-opacity:.07;stroke:var(--tri);stroke-width:1.6}
+.triv{fill:var(--tri)}
+.trit{fill:var(--tri);font-family:"JetBrains Mono",monospace !important;font-size:8px;font-weight:600}
+.tribg{fill:var(--panel);stroke:var(--tri);stroke-width:.6}
+.flow{fill:none;stroke:var(--flow);stroke-width:2.2;marker-end:url(#af)}
+.mf{fill:var(--flow)}
+.badge{fill:var(--flow)}
+.badget{fill:#fff;font-size:8px;font-weight:700}
+.z1{fill:url(#h1);stroke:var(--water);stroke-width:.8}
+.z2{fill:url(#h2);stroke:var(--cook2);stroke-width:.8}
+.h1l{stroke:var(--water);stroke-width:1;stroke-opacity:.45}
+.h2l{stroke:var(--cook2);stroke-width:1;stroke-opacity:.45}
+.z1t{fill:var(--water);font-size:8px;font-weight:700}
+.z2t{fill:var(--cook2);font-size:8px;font-weight:700}
+.pin{fill:none;stroke:var(--water);stroke-width:1.6}
+.pout{fill:none;stroke:var(--water);stroke-width:1.6;stroke-dasharray:5 3}
+.wt2{fill:var(--water);font-size:7px}
+.duct{fill:none;stroke:var(--muted);stroke-width:1.2;stroke-dasharray:6 3}
+.air{fill:none;stroke:var(--cook2);stroke-width:1.1;marker-end:url(#aa)}
+.airt{fill:var(--cook2);font-size:6px}
+.sec{stroke:var(--tri);stroke-width:.9;stroke-dasharray:10 3 2 3;fill:none}
+.secm{fill:var(--tri)}
+.sect{fill:var(--tri);font-weight:800;font-size:11px}
+.plinth{fill:var(--tall);stroke:var(--ink);stroke-width:.6}
+.cred{fill:var(--wood);fill-opacity:.12;stroke:none}
+.bgwall{fill:var(--line);fill-opacity:.35;stroke:none}
+.person1{fill:var(--water);fill-opacity:.35;stroke:var(--water);stroke-width:1}
+.person2{fill:var(--cook2);fill-opacity:.35;stroke:var(--cook2);stroke-width:1}
+.person3{fill:var(--wood);fill-opacity:.3;stroke:var(--wood);stroke-width:1}
+.floorl{stroke:var(--ink);stroke-width:2}
+.ceil{stroke:var(--muted);stroke-width:1;stroke-dasharray:6 4}
+.tbl{fill:var(--wood);fill-opacity:.5;stroke:var(--ink);stroke-width:.9}
+.stool{fill:var(--wood);fill-opacity:.28;stroke:var(--ink);stroke-width:.7}
+.stoolp{fill:none;stroke:var(--wood);stroke-width:.8;stroke-dasharray:2 1.5}
+.dine{fill:var(--wood);fill-opacity:.07;stroke:var(--wood);stroke-width:.8;stroke-dasharray:4 2}
+.dinet{fill:var(--wood);font-size:8px;font-weight:700}
+.rack{fill:var(--wood);fill-opacity:.22;stroke:var(--wood);stroke-width:.8}
+.park{fill:none;stroke:var(--wood);stroke-width:1;stroke-dasharray:3 2}
+.rail{stroke:var(--ink);stroke-width:1.1}
+.vent{fill:var(--ink);fill-opacity:.8}
+.broom{fill:var(--flow);fill-opacity:.1;stroke:var(--flow);stroke-width:.9;stroke-dasharray:3 2}
+.broomt{fill:var(--flow);font-weight:700}
+.conf{fill:url(#hx);stroke:var(--tri);stroke-width:1}
+.hxl{stroke:var(--tri);stroke-width:1.1}
+.ecs{fill:var(--glass);stroke:var(--water);stroke-width:1.3}
+.conft{fill:var(--tri);font-weight:800}
+.sleaf{fill:var(--ink)}
+.sleafc{fill:none;stroke:var(--ink);stroke-width:.8;stroke-dasharray:3 2}
+.srail{stroke:var(--tri);stroke-width:1.4}
+.slide{stroke:var(--tri);stroke-width:1;fill:none}
+.okt{fill:var(--flow);font-weight:700}
+.changes{max-width:860px;font-size:15px;margin:6px 0 4px;padding-left:20px}
+section{margin-top:52px;padding-top:8px;border-top:2px solid var(--line)}
+.scroll-t{overflow-x:auto}
+#changements table{min-width:620px}
+.vant{fill:var(--wood);fill-opacity:.3;stroke:var(--ink);stroke-width:.8}
+.slot{fill:var(--tri);fill-opacity:.1;stroke:var(--tri);stroke-width:.6;stroke-dasharray:2 1.5}
+.bgf{opacity:.5}
+.egout{fill:var(--glass);fill-opacity:.6;stroke:var(--water);stroke-width:.7}
+.egl{stroke:var(--water);stroke-width:.6}
+.ll{fill:var(--panel);stroke:var(--ink);stroke-width:1.2}
+.hid{fill:none;stroke:var(--muted);stroke-width:1;stroke-dasharray:4 3}
+.free{fill:var(--flow);fill-opacity:.08;stroke:var(--flow);stroke-width:.6;stroke-dasharray:2 1.5}
+.cfl{fill:var(--tri);fill-opacity:.16;stroke:var(--tri);stroke-width:.6;stroke-dasharray:2 1.5}
+.ve{font-size:7px}.ves{font-size:6px}.veb{font-size:8px;font-weight:700}
+.vc{font-size:4.2px}.vcb{font-size:4.8px;font-weight:700}
+.vlab{fill:var(--wood);font-size:7px;font-weight:700;letter-spacing:.04em}
+.card .scroll svg.small{max-width:100%}
+.gridv{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,500px),1fr));gap:16px}
+.claus{fill:var(--wood);fill-opacity:.45;stroke:var(--ink);stroke-width:.9}
+.clausc{fill:none;stroke:var(--wood);stroke-width:.9;stroke-dasharray:3 2}
+.switch{display:flex;flex-wrap:wrap;gap:8px;margin:10px 0 6px}
+.switch button{font:inherit;font-size:14px;padding:8px 14px;border-radius:999px;border:1px solid var(--line);background:var(--panel);color:var(--ink);cursor:pointer}
+.switch button[aria-selected="true"]{background:var(--ink);color:var(--paper);border-color:var(--ink)}
+.switch button:focus-visible{outline:2px solid var(--wood);outline-offset:2px}
+.opts{display:flex;flex-wrap:wrap;align-items:center;gap:6px 14px;margin:4px 0 10px;font-size:13px}
+.opts .optl{font-family:"JetBrains Mono",ui-monospace,Menlo,monospace;font-size:11px;letter-spacing:.06em;text-transform:uppercase;color:var(--muted)}
+.opts .seg{display:inline-flex;border:1px solid var(--line);border-radius:8px;overflow:hidden}
+.opts .seg button{font:inherit;font-size:13px;padding:5px 10px;border:0;background:var(--panel);color:var(--ink);cursor:pointer}
+.opts .seg button+button{border-left:1px solid var(--line)}
+.opts .seg button[aria-pressed="true"]{background:var(--wood);color:var(--paper)}
+.opts .seg button:focus-visible{outline:2px solid var(--wood);outline-offset:-2px}
+/* options : chaque élément dépendant porte la classe de sa valeur */
+:root[data-door="w"] .door-e,:root[data-door="e"] .door-w,:root[data-tbl="sq"] .tbl-rd,:root[data-tbl="rd"] .tbl-sq{display:none}
+[hidden]{display:none!important}
+.tag{display:inline-block;font-family:"JetBrains Mono",ui-monospace,monospace;font-size:12px;padding:1px 7px;border-radius:5px;background:var(--tech);margin-right:6px}
+
+/* ===== ajouts propres à ce document ===== */
+.scroll svg.cel{min-width:640px;max-width:900px;margin:0 auto}
+svg.cel .dim{stroke-width:.35}
+svg.cel .dimt{font-size:3.1px}
+svg.cel .cab,svg.cel .tall,svg.cel .ll{stroke-width:.5}
+svg.cel .broom,svg.cel .upper,svg.cel .tech{stroke-width:.45}
+svg.cel .pin,svg.cel .pout{stroke-width:1}
+svg.cel .ecs{stroke-width:.8}
+svg.cel .doorarc{stroke-width:.5}
+svg.cel .swing{stroke-width:.45}
+.t{font-size:3.4px}.ts{font-size:2.9px}.tx{font-size:2.5px}.tb{font-size:3.9px;font-weight:700}
+.halo{paint-order:stroke;stroke:var(--tall);stroke-width:.8px;stroke-linejoin:round}
+.haloc{paint-order:stroke;stroke:var(--tech);stroke-width:.8px;stroke-linejoin:round}
+.tz{fill:var(--water);fill-opacity:.08;stroke:var(--water);stroke-width:.45;stroke-dasharray:2 1.5}
+.tzt{fill:var(--water);font-weight:700}
+.aghost{fill:none;stroke:var(--tri);stroke-width:.6;stroke-dasharray:2.5 1.5}
+.ring{fill:var(--tri);fill-opacity:.18;stroke:var(--tri);stroke-width:.6}
+.redt{fill:var(--tri);font-weight:700}
+.flowt{fill:var(--flow);font-weight:700}
+.plug{fill:var(--panel);stroke:var(--ink);stroke-width:.4}
+.cap b{color:var(--ink)}
+.pcc{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,230px),1fr));gap:10px;margin:10px 4px 2px;font-size:14px}
+.pcc div{background:var(--paper);border:1px solid var(--line);border-radius:8px;padding:8px 10px}
+.pcc h4{margin:0 0 4px;font-size:12px;font-family:"JetBrains Mono",ui-monospace,monospace;letter-spacing:.06em;text-transform:uppercase}
+.pcc .p h4{color:var(--flow)}.pcc .c h4{color:var(--tri)}.pcc .s h4{color:var(--wood)}
+.pcc ul{margin:0;padding-left:18px}
+.reco{border:2px solid var(--flow);border-radius:12px;padding:12px 16px;background:var(--panel);margin:14px 0}
+.reco h3{margin:0 0 6px;color:var(--flow)}
+.tree{display:grid;gap:10px;margin:12px 0}
+.step{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:10px 14px}
+.step .q{font-weight:700}
+.step .n{display:inline-block;min-width:22px;height:22px;border-radius:11px;background:var(--ink);color:var(--paper);text-align:center;font-family:"JetBrains Mono",monospace;font-size:13px;line-height:22px;margin-right:8px}
+.branches{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,250px),1fr));gap:8px;margin-top:8px}
+.br{border-left:3px solid var(--line);padding:4px 10px;font-size:14px}
+.br.go{border-color:var(--flow)}
+.br .to{font-family:"JetBrains Mono",monospace;font-weight:600}
+#cmp table{min-width:1040px;font-size:13px}
+#cmp td,#cmp th{padding:6px 6px}
+#cmp tr.rec td{background:color-mix(in srgb,var(--flow) 9%,transparent)}
+.yes{color:var(--flow);font-weight:700}.no{color:var(--tri);font-weight:700}.mid{color:var(--wood);font-weight:700}
+.toc{display:flex;flex-wrap:wrap;gap:6px;margin:10px 0}
+.toc a{font-size:13px;padding:3px 9px;border:1px solid var(--line);border-radius:999px;color:var(--ink);text-decoration:none;background:var(--panel)}
+.toc a:hover{border-color:var(--wood)}
+a{color:var(--water)}
+.figt{display:flex;flex-wrap:wrap;align-items:baseline;gap:4px 10px;margin:0 4px 6px}
+.figt h3{margin:0}
+.chip{font-family:"JetBrains Mono",monospace;font-size:11px;padding:1px 7px;border-radius:5px;border:1px solid var(--line)}
+.chip.ok{border-color:var(--flow)}.chip.ko{border-color:var(--tri);color:var(--tri)}
+.hyp table{min-width:860px}
+.hyp td:nth-child(2){white-space:nowrap}
+#cmp td:nth-child(8){white-space:nowrap}
+</style>
+</head>
+<body>
+<div class="wrap">
+<svg width="0" height="0" style="position:absolute" aria-hidden="true" focusable="false">
+<defs>
+  <pattern id="pq" width="20" height="20" patternUnits="userSpaceOnUse"><path class="pq" d="M0 10 L10 0 L20 10 M0 20 L10 10 L20 20"/></pattern>
+  <pattern id="tl" width="12" height="12" patternUnits="userSpaceOnUse"><path class="tl" d="M12 0 L0 0 L0 12"/></pattern>
+  <pattern id="hn" width="4" height="4" patternUnits="userSpaceOnUse" patternTransform="rotate(45)"><line x1="0" y1="0" x2="0" y2="4" style="stroke:var(--ink);stroke-width:1.1"/></pattern>
+  <pattern id="lames" width="10" height="9" patternUnits="userSpaceOnUse"><line x1="0" y1="4" x2="10" y2="4" style="stroke:var(--ink);stroke-width:1.4"/></pattern>
+  <pattern id="cannele" width="4" height="10" patternUnits="userSpaceOnUse"><line x1="2" y1="0" x2="2" y2="10" style="stroke:var(--water);stroke-width:.9"/></pattern>
+  <marker id="tk" viewBox="0 0 10 10" refX="5" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M2 8 L8 2" style="stroke:var(--muted)" stroke-width="1.4"/></marker>
+  <marker id="as" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto"><path d="M0 0 L10 5 L0 10z" style="fill:var(--tri)"/></marker>
+  <marker id="aa" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="5" markerHeight="5" orient="auto"><path d="M0 0 L10 5 L0 10z" style="fill:var(--cook2)"/></marker>
+  <pattern id="claustra" width="8" height="8" patternUnits="userSpaceOnUse"><circle cx="4" cy="4" r="2.9" style="fill:var(--paper);fill-opacity:.85;stroke:var(--ink);stroke-width:.5"/></pattern>
+</defs>
+</svg>
+
+<div class="kicker">Cellier · options d'aménagement · V1</div>
+<h1>Cellier-buanderie : six façons de l'aménager</h1>
+<p class="pitch">Le cellier (117 × 100, plus la niche du ballon) est aujourd'hui dessiné avec un lave-linge devant le ballon, qui cache le groupe de sécurité et met la moitié des balais en second rang. Trois décisions, dans cet ordre : <b>1)</b> garder ou non un lave-linge au cellier, alors que le meuble de la salle de bain en prévoit déjà un ; <b>2)</b> la porte du cellier (A battante, B claustra, C pivotante-coulissante), car deux propositions ne vont pas avec A ; <b>3)</b> vos priorités entre rangement, accès au ballon et confort. Les plans sont tous en vue de dessus, à la même échelle (1 unité = 1 cm), sur le cellier et la bande de cuisine voisine.</p>
+<div class="toc"><a href="#guide">Guide de choix</a><a href="#comparatif">Comparatif</a><a href="#fig-existant">Existant</a><a href="#fig-L1">L1</a><a href="#fig-L2">L2</a><a href="#fig-L3">L3</a><a href="#fig-S1">S1</a><a href="#fig-S2">S2</a><a href="#fig-S3">S3</a><a href="#reseaux">Plomberie, électricité</a><a href="#doore">Porte d'entrée</a><a href="#changements">Changements</a></div>
+
+<h2 id="guide">1. Guide de choix</h2>
+<div class="tree">
+  <div class="step"><span class="n">1</span><span class="q">Garde-t-on un lave-linge (LL) au cellier ?</span>
+    <p class="note" style="margin:4px 0 0">Le meuble de la salle de bain (<a href="sdb-meuble-v2.html">sdb-meuble-v2.html</a>) prévoit déjà un LL 60 × 60 dans ses quatre versions : deux machines sont dessinées. Il n'y a pas de place pour un sèche-linge en SdB.</p>
+    <div class="branches">
+      <div class="br go"><b>Non</b>, le LL va dans la SdB (cas du dessin actuel de la SdB) → <span class="to">S1, S2 ou S3</span></div>
+      <div class="br"><b>Oui</b>, LL au cellier (il faut alors redessiner la SdB sans machine) → <span class="to">L1, L2</span> ; <span class="to">L3</span> si l'on veut aussi un sèche-linge</div>
+    </div></div>
+  <div class="step"><span class="n">2</span><span class="q">Quelle porte du cellier ?</span>
+    <div class="branches">
+      <div class="br"><b>A battante</b> (vantail 60 qui se range dans le sas) → <span class="to">L1, L3, S1, S2</span> ; pas L2 ni S3 (le vantail heurterait le LL ou la colonne)</div>
+      <div class="br"><b>B claustra</b> ou <b>C pivotante-coulissante</b> → toutes ; avec LL, <span class="to">L2</span> est plus confortable que L1 ; sans LL, <span class="to">S3</span> devient possible</div>
+    </div></div>
+  <div class="step"><span class="n">3</span><span class="q">Quelle priorité ?</span>
+    <div class="branches">
+      <div class="br"><b>Rangement</b> : S3 (≈ 700 cm) &gt; S2 (656, étroit) &gt; S1 (533, profond) &gt; L2 &gt; L1 &gt; L3 ≈ existant</div>
+      <div class="br"><b>Accès au ballon</b> : S1 = S3 (77 × 60, debout) &gt; L2 (54 × 70) &gt; S2 (50 × 45) &gt; L1 = L3 (couloir 32) &gt; existant (masqué)</div>
+      <div class="br"><b>Confort</b> : balais en premier rang partout sauf l'existant ; S2 les met au fond ; S1 et L1 les mettent à l'entrée</div>
+    </div></div>
+</div>
+<div class="reco"><h3>Recommandation : S1</h3>
+<p style="margin:0">Le LL étant déjà prévu dans la salle de bain, <b>S1</b> (garde-manger P40, balais à l'entrée, zone technique dégagée) donne le plus de rangement utile sans angle mort (533 cm de tablettes au lieu de 281), un accès direct et debout au ballon, au GS et à la chute, et va avec les trois portes. Elle est réversible : la place d'un LL ou d'un sèche-linge reste réservée (= L1). <b>Si vous gardez le LL au cellier</b> : L2 avec la porte B ou C ; avec la porte A, L1, de préférence avec un LL à chargement par le dessus, car le hublot d'un LL frontal y bute sur l'angle du mur du WC.</p></div>
+
+<h2 id="comparatif">Comparatif</h2>
+<div class="scroll-t" id="cmp"><table>
+<thead><tr><th>Option</th><th>LL au cellier</th><th class="num">Tablettes</th><th>Balais</th><th>GS, nourrice, vannes</th><th>Chute</th><th class="num">Devant ballon</th><th>Porte A / B / C</th><th>Ce qu'on perd</th><th>Travaux</th><th>Avis</th></tr></thead>
+<tbody>
+<tr><td><a href="#fig-existant">Existant</a></td><td>oui, devant le ballon</td><td class="num">281 cm<br>0,89 m²</td><td>17 directs + 36 derrière le LL</td><td class="no">masqués : tirer le LL</td><td>bras tendu derrière le râtelier</td><td class="num">0</td><td><span class="mid">A (jeu 3)</span> · <span class="yes">B</span> · <span class="yes">C</span></td><td>—</td><td>référence</td><td>à revoir</td></tr>
+<tr><td><a href="#fig-L1">L1</a></td><td>oui, au nord</td><td class="num">407 cm<br>1,61 m²</td><td>39 + station, 1<sup>er</sup> rang</td><td class="mid">sans bouger le LL, couloir 32</td><td>par la poche de 16 (face sud du coffrage)</td><td class="num">32</td><td><span class="yes">A (jeu 11)</span> · <span class="yes">B</span> · <span class="yes">C</span></td><td>hublot bloqué vers 42° (mur du WC) ; accès GS étroit ; recoin balais 28</td><td>moyens (robinet, prise 20 A, évac. déplacés)</td><td><b>avec LL et porte A</b> (LL à chargement par le dessus de préférence)</td></tr>
+<tr><td><a href="#fig-L2">L2</a></td><td>oui, au nord-ouest</td><td class="num">416 cm<br>1,63 m²</td><td>38 + 24 crochets, 1<sup>er</sup> rang</td><td class="yes">direct, zone 54 × 70</td><td>direct (décrocher 1 ou 2 outils)</td><td class="num">54</td><td><span class="no">A (57 &lt; 60)</span> · <span class="yes">B</span> · <span class="yes">C</span></td><td>la porte A ; évac. de 1 m</td><td>moyens +</td><td><b>avec LL et porte B ou C</b></td></tr>
+<tr><td><a href="#fig-L3">L3</a></td><td>LL + sèche-linge</td><td class="num">287 cm<br>1,07 m²</td><td>comme L1</td><td class="mid">comme L1 (32)</td><td>comme L1</td><td class="num">32</td><td><span class="yes">A</span> · <span class="yes">B</span> · <span class="yes">C</span></td><td>rangement (≈ existant) ; hublots bloqués comme L1 ; LL de la SdB en double</td><td>élevés (2<sup>e</sup> machine, circuit SL)</td><td>seulement si séchage voulu</td></tr>
+<tr class="rec"><td><a href="#fig-S1"><b>S1</b></a></td><td>non (LL en SdB)</td><td class="num"><b>533 cm<br>2,09 m²</b></td><td>39 + station, 1<sup>er</sup> rang</td><td class="yes">direct, debout, 77 × 60</td><td>direct (décrocher les cabas)</td><td class="num">77</td><td><span class="yes">A</span> · <span class="yes">B</span> · <span class="yes">C</span></td><td>la buanderie ; 0,46 m² de sol vide (voulu)</td><td>faibles (bouchons, prise 16 A, tasseaux)</td><td><b>recommandée</b></td></tr>
+<tr><td><a href="#fig-S2">S2</a></td><td>non</td><td class="num">656 cm<br>2,10 m²</td><td>50 au fond, contre le mur du WC</td><td class="mid">direct, zone 50 × 45</td><td>direct</td><td class="num">50</td><td><span class="yes">A</span> · <span class="yes">B</span> · <span class="yes">C</span></td><td>tablettes profondes ; balais devant le ballon</td><td>faibles (+ prise sur le mur du WC)</td><td>si surtout petits objets</td></tr>
+<tr><td><a href="#fig-S3">S3</a></td><td>non</td><td class="num">≈ 700 cm<br>≈ 2,5 m²</td><td>comme S1</td><td class="yes">direct, 77 × 60 (sous l'étendoir)</td><td>direct</td><td class="num">77</td><td><span class="no">A (41 &lt; 60)</span> · <span class="yes">B</span> · <span class="yes">C</span></td><td>la porte A ; sas 40 ; humidité du séchage</td><td>moyens (colonne, étendoir, VMC à vérifier)</td><td>si B ou C et séchage voulu</td></tr>
+</tbody></table></div>
+<p class="note">Tablettes : linéaire total et surface (rail à balais et plans de dépose non comptés). « Devant le ballon » : largeur libre la plus étroite entre le mobilier et la niche du ballon. Travaux : ordre de grandeur relatif, sans chiffrage. Les distances au gond portent sur la porte A battante (vantail 60, gond x 316, y 125 ; il faut au moins 60,2 avec l'épaisseur du vantail).</p>
+
+<div class="fig">
+<div class="legend">
+  <span><svg viewBox="0 0 26 14"><rect x="0" y="3" width="26" height="8" fill="var(--ink)"/></svg>Mur conservé</span>
+  <span><svg viewBox="0 0 26 14"><rect x="1" y="3" width="24" height="8" class="nw"/></svg>Cloison neuve 5 cm</span>
+  <span><svg viewBox="0 0 26 14"><rect x="0" y="0" width="26" height="14" class="tall"/></svg>Colonne, étagères (sol → plafond)</span>
+  <span><svg viewBox="0 0 26 14"><rect x="1" y="1" width="24" height="12" class="upper"/></svg>Étagère haute (projection)</span>
+  <span><svg viewBox="0 0 26 14"><rect x="1" y="1" width="24" height="12" class="ll"/></svg>Lave-linge (LL), sèche-linge (SL)</span>
+  <span><svg viewBox="0 0 26 14"><rect x="1" y="1" width="24" height="12" class="broom"/></svg>Balais, aspirateur</span>
+  <span><svg viewBox="0 0 26 14"><rect x="1" y="1" width="24" height="12" class="tech"/></svg>Gaine, coffrage de chute</span>
+  <span><svg viewBox="0 0 26 14"><circle cx="13" cy="7" r="6" class="ecs"/></svg>Ballon d'eau chaude</span>
+  <span><svg viewBox="0 0 26 14"><line x1="1" y1="4" x2="25" y2="4" class="pin"/><line x1="1" y1="11" x2="25" y2="11" class="pout"/></svg>Alimentation / évacuation</span>
+  <span><svg viewBox="0 0 26 14"><rect x="1" y="5" width="24" height="4" class="pf"/></svg>Porte du cellier ouverte</span>
+  <span><svg viewBox="0 0 26 14"><rect x="1" y="5" width="24" height="4" class="park"/></svg>… fermée</span>
+  <span><svg viewBox="0 0 26 14"><path d="M1 13 L1 1 A12 12 0 0 1 13 13 Z" class="doorzone"/><path d="M1 1 A12 12 0 0 1 13 13" class="doorarc"/></svg>Balayage de la porte A</span>
+  <span><svg viewBox="0 0 26 14"><path d="M1 13 L1 1 A12 12 0 0 1 13 13" class="aghost"/></svg>Porte A si on la choisissait (conflit)</span>
+  <span><svg viewBox="0 0 26 14"><rect x="1" y="1" width="24" height="12" class="swing"/></svg>Débattement (hublot, porte)</span>
+  <span><svg viewBox="0 0 26 14"><rect x="1" y="1" width="24" height="12" class="free"/></svg>Circulation libre</span>
+  <span><svg viewBox="0 0 26 14"><rect x="1" y="1" width="24" height="12" class="tz"/></svg>Zone technique libre (ballon, GS, chute)</span>
+  <span><svg viewBox="0 0 26 14"><rect x="1" y="1" width="24" height="12" class="cfl"/></svg>Angle mort, conflit</span>
+  <span><svg viewBox="0 0 26 14"><rect x="1" y="2" width="24" height="10" style="fill:var(--wood);fill-opacity:.13"/><rect x="1" y="2" width="24" height="10" fill="url(#pq)"/></svg>Parquet de la cuisine</span>
+</div>
+<p class="note" style="margin:4px">« P » = profondeur, « h » = hauteur au-dessus du sol (cm). GS = groupe de sécurité du ballon. Les prises sont figurées par un petit rectangle blanc.</p>
+</div>
+
+<h2>2. L'existant (référence)</h2>
+<div class="fig" id="fig-existant">
+<div class="figt"><h3>L'existant (variante A du plan, porte battante)</h3></div>
+<div class="scroll">
+<svg class="cel" viewBox="262 -50 256 210" role="img" aria-label="Plan de l'existant du cellier : étagères P30, râtelier à balais en partie derrière le lave-linge, lave-linge devant le ballon, porte battante A">
+<polygon class="floorbg" points="270,0 312,0 312,160 270,160"/>
+<polygon fill="url(#pq)" points="270,0 312,0 312,160 270,160"/>
+<polygon class="cellf" points="317,0 434,0 434,44 484,44 484,100 382,100 382,129 312,129 312,62 317,62"/>
+<polygon fill="url(#tl)" points="317,0 434,0 434,44 484,44 484,100 382,100 382,129 312,129 312,62 317,62"/>
+<rect class="wc" x="392" y="110" width="92" height="50"/>
+<text class="tb muted" x="438" y="132" text-anchor="middle">WC</text>
+<text class="ts muted" x="438" y="137" text-anchor="middle">(conservé)</text>
+<rect class="w" x="262" y="-20" width="172" height="20"/>
+<rect class="w" x="434" y="-20" width="60" height="64"/>
+<rect class="w" x="484" y="44" width="10" height="120"/>
+<rect class="w" x="382" y="100" width="102" height="10"/>
+<rect class="w" x="382" y="110" width="10" height="50"/>
+<text class="ts" x="464" y="16" text-anchor="middle" style="fill:var(--paper)">maçonnerie</text>
+<text class="ts" x="464" y="20" text-anchor="middle" style="fill:var(--paper)">/ gaine (hyp.)</text>
+<rect class="nw" x="312" y="0" width="5" height="62"/>
+<rect class="nw" x="312" y="127" width="5" height="2"/>
+<rect class="tall" x="249" y="0" width="60" height="60"/>
+<rect class="cab" x="309" y="0" width="3" height="60"/>
+<text class="ts" x="294" y="24" text-anchor="middle" style="font-weight:700">Colonne LV</text>
+<text class="tx" x="294" y="28.5" text-anchor="middle">P60 · h 238</text>
+<text class="ts muted" x="280" y="108" text-anchor="middle" transform="rotate(-90 280 108)">cuisine</text>
+<rect class="tall" x="312" y="129" width="59" height="59"/>
+<rect class="tech" x="371" y="129" width="11" height="40"/>
+<text class="t" x="341" y="140" text-anchor="middle" style="font-weight:700">Frigo</text>
+<text class="tx" x="341" y="144.5" text-anchor="middle">colonne P59 · h 238</text>
+<text class="tx" x="341" y="148.5" text-anchor="middle">◂ façade ouest</text>
+<text class="tx" x="376.5" y="145" text-anchor="middle" transform="rotate(-90 376.5 145)">gaine 11</text>
+<path class="swing" d="M312 130 A56 56 0 0 0 268 156"/>
+<text class="tx muted" x="298" y="140" text-anchor="middle">porte frigo</text>
+<rect class="tech" x="418" y="0" width="16" height="18"/>
+<circle cx="426" cy="10" r="4.5" style="fill:var(--panel);stroke:var(--water);stroke-width:1"/>
+<text class="tx" x="426" y="11" text-anchor="middle">chute</text>
+<circle class="ecs" cx="459" cy="72" r="25"/>
+<text class="ts" x="459" y="62" text-anchor="middle" style="font-weight:700">Ballon ECS Ø 50</text>
+<text class="tx" x="459" y="66" text-anchor="middle">suspendu h 70 → 200</text>
+<text class="tx" x="459" y="74" text-anchor="middle">dessous h 0 → 70 :</text>
+<text class="tx" x="459" y="78" text-anchor="middle">nourrice, vannes,</text>
+<text class="tx" x="459" y="82" text-anchor="middle">groupe de sécurité</text>
+<path class="pin" d="M470 52 L432 52 L432 4 L270 4"/>
+<line class="pin" x1="440" y1="52" x2="434" y2="52"/>
+<path class="pout" d="M270 10 L421 10"/>
+<path class="pout" d="M446 94 L429 94 L429 15"/>
+<circle cx="446" cy="94" r="1.6" style="fill:var(--panel);stroke:var(--water);stroke-width:.6"/>
+<text class="tx" x="450" y="95" text-anchor="start" style="fill:var(--water);font-weight:700">GS</text>
+<line class="dim" x1="434" y1="-28" x2="484" y2="-28" marker-start="url(#tk)" marker-end="url(#tk)"/><text class="dimt" x="459" y="-29.2" text-anchor="middle">niche 50</text>
+<line class="dim" x1="317" y1="-40" x2="434" y2="-40" marker-start="url(#tk)" marker-end="url(#tk)"/><text class="dimt" x="375.5" y="-41.2" text-anchor="middle">cellier 117</text>
+<line class="dim" x1="312" y1="-40" x2="317" y2="-40" marker-start="url(#tk)" marker-end="url(#tk)"/><text class="dimt" x="314.5" y="-41.2" text-anchor="middle" style="font-size:2.2px">5</text>
+<line class="dim" x1="504" y1="44" x2="504" y2="100" marker-start="url(#tk)" marker-end="url(#tk)"/><text class="dimt" x="502.8" y="72" text-anchor="middle" transform="rotate(-90 502.8 72)">niche 56</text>
+<line class="dim" x1="511" y1="0" x2="511" y2="100" marker-start="url(#tk)" marker-end="url(#tk)"/><text class="dimt" x="509.8" y="50" text-anchor="middle" transform="rotate(-90 509.8 50)">cellier 100</text>
+<line class="dim" x1="317" y1="-43" x2="317" y2="-1"/><line class="dim" x1="434" y1="-43" x2="434" y2="-21"/>
+<line class="dim" x1="485" y1="44" x2="514" y2="44"/><line class="dim" x1="435" y1="0" x2="514" y2="0"/><line class="dim" x1="495" y1="100" x2="514" y2="100"/>
+<polygon class="free" points="317,30 357,30 357,38 374,38 374,100 382,100 382,121 317,121"/>
+<rect class="tall" x="317" y="0" width="38" height="30" style="fill-opacity:.7"/>
+<text class="ts" x="336" y="15" text-anchor="middle" style="font-weight:700">Étagères P30</text>
+<text class="tx" x="336" y="19.5" text-anchor="middle">6 niveaux</text>
+<text class="tx" x="336" y="23.5" text-anchor="middle">h 22 → 212</text>
+<rect class="broom" x="357" y="0" width="53" height="38"/>
+<rect class="cfl" x="374" y="0" width="36" height="38"/>
+<text class="ts broomt" x="365.5" y="15" text-anchor="middle">Râtelier</text>
+<text class="tx" x="365.5" y="19" text-anchor="middle">P38</text>
+<text class="tx" x="365.5" y="23" text-anchor="middle">h 0 → 210</text>
+<text class="ts broomt" x="392" y="15" text-anchor="middle">à balais</text>
+<text class="tx" x="392" y="19" text-anchor="middle">lessive h 150</text>
+<text class="tx redt" x="392" y="27" text-anchor="middle">36 en 2ᵉ rang</text>
+<text class="tx redt" x="392" y="31" text-anchor="middle">derrière le LL</text>
+<circle class="app" cx="365.5" cy="31" r="5"/>
+<text class="tx" x="365.5" y="32" text-anchor="middle">aspi</text>
+<rect class="cfl" x="410" y="18" width="24" height="22"/>
+<text class="tx redt" x="422" y="27" text-anchor="middle">poche</text>
+<text class="tx redt" x="422" y="31" text-anchor="middle">morte</text>
+<path class="pout" d="M430 42 L430 16"/>
+<rect class="ll" x="374" y="40" width="60" height="60"/>
+<circle class="app" cx="404" cy="70" r="15"/>
+<text class="tb" x="404" y="68" text-anchor="middle">LL</text>
+<text class="tx" x="404" y="73" text-anchor="middle">60 × 60</text>
+<text class="tx" x="404" y="77" text-anchor="middle">P60 · h 85</text>
+<text class="tx" x="378.5" y="70" text-anchor="middle" transform="rotate(-90 378.5 70)">◂ façade ouest</text>
+<text class="tx redt" x="404" y="95" text-anchor="middle">masque GS et ballon</text>
+<path class="swing" d="M374 48 A48 48 0 0 0 326 96 L374 96"/>
+<text class="tx muted" x="350" y="90" text-anchor="middle">hublot ouvert</text>
+<path class="doorzone" d="M316 125 L316 65 A60 60 0 0 1 376 125 Z"/>
+<path class="doorarc" d="M316 65 A60 60 0 0 1 376 125"/>
+<rect class="dark" x="312" y="62" width="5" height="3"/>
+<rect class="dark" x="312" y="125" width="5" height="2"/>
+<rect class="park" x="312" y="65" width="4" height="60"/>
+<rect class="pf" x="316" y="121" width="60" height="4"/>
+<circle cx="316" cy="125" r="1.2" class="dark"/>
+<text class="tx" x="346" y="119.6" text-anchor="middle">porte A ouverte · vantail 60</text>
+<line class="dim" x1="300" y1="62" x2="300" y2="127" marker-start="url(#tk)" marker-end="url(#tk)"/><text class="dimt" x="298.8" y="94.5" text-anchor="middle" transform="rotate(-90 298.8 94.5)">baie 65</text>
+<line class="dim" x1="306" y1="65" x2="306" y2="121" marker-start="url(#tk)" marker-end="url(#tk)" style="stroke:var(--flow)"/><text class="dimt" x="304.8" y="93" text-anchor="middle" transform="rotate(-90 304.8 93)" style="fill:var(--flow)">passage ≈ 56</text>
+<circle class="ring" cx="374" cy="100" r="2.2"/>
+<line class="dim" x1="316" y1="125" x2="374" y2="100" marker-start="url(#tk)" marker-end="url(#tk)" style="stroke:var(--tri)"/><text class="dimt" x="344.4" y="111.2" text-anchor="middle" transform="rotate(-23.3 344.4 111.2)" style="fill:var(--tri);font-size:2.4px">63,2 → jeu 3</text>
+<line class="dim" x1="317" y1="106" x2="374" y2="106" marker-start="url(#tk)" marker-end="url(#tk)"/><text class="dimt" x="345.5" y="104.8" text-anchor="middle">sas 57</text>
+<text class="tx flowt" x="344" y="42" text-anchor="middle">circulation</text>
+<line class="dim" x1="317" y1="-28" x2="355" y2="-28" marker-start="url(#tk)" marker-end="url(#tk)"/><text class="dimt" x="336" y="-29.2" text-anchor="middle">38</text>
+<line class="dim" x1="357" y1="-28" x2="410" y2="-28" marker-start="url(#tk)" marker-end="url(#tk)"/><text class="dimt" x="383.5" y="-29.2" text-anchor="middle">râtelier 53</text>
+<line class="dim" x1="410" y1="-28" x2="434" y2="-28" marker-start="url(#tk)" marker-end="url(#tk)"/><text class="dimt" x="422" y="-29.2" text-anchor="middle">24</text>
+</svg>
+</div>
+<p class="cap">Situation dessinée aujourd'hui dans cuisine-plan.html (variante A ; B et C ne diffèrent que par la porte). Le LL (60 × 60, façade ouest) masque entièrement le groupe de sécurité (GS), les vannes et la nourrice sous le ballon ; 36 des 53 cm du râtelier et la moitié de la tablette lessive sont en second rang, derrière lui ; la poche entre le coffrage, le mur est et le dos du LL est morte. Le battant de la porte A passe à 3 cm du coin du LL ; pour rentrer le LL, il faut le passer de profil (55 de profondeur au plus) ou dégonder le vantail. Tablettes : 281 cm, 0,89 m².</p>
+</div>
+
+<h2>3. Avec lave-linge au cellier</h2>
+<div class="fig" id="fig-L1">
+<div class="figt"><h3>L1 · LL au nord, au centre ; balais à l'entrée</h3><span class="chip ok">portes A · B · C</span></div>
+<div class="scroll">
+<svg class="cel" viewBox="262 -50 256 210" role="img" aria-label="Plan de la proposition L1 : lave-linge façade sud au nord du cellier, balais et station aspirateur à l'entrée, zone technique devant le ballon, porte battante A">
+<polygon class="floorbg" points="270,0 312,0 312,160 270,160"/>
+<polygon fill="url(#pq)" points="270,0 312,0 312,160 270,160"/>
+<polygon class="cellf" points="317,0 434,0 434,44 484,44 484,100 382,100 382,129 312,129 312,62 317,62"/>
+<polygon fill="url(#tl)" points="317,0 434,0 434,44 484,44 484,100 382,100 382,129 312,129 312,62 317,62"/>
+<rect class="wc" x="392" y="110" width="92" height="50"/>
+<text class="tb muted" x="438" y="132" text-anchor="middle">WC</text>
+<text class="ts muted" x="438" y="137" text-anchor="middle">(conservé)</text>
+<rect class="w" x="262" y="-20" width="172" height="20"/>
+<rect class="w" x="434" y="-20" width="60" height="64"/>
+<rect class="w" x="484" y="44" width="10" height="120"/>
+<rect class="w" x="382" y="100" width="102" height="10"/>
+<rect class="w" x="382" y="110" width="10" height="50"/>
+<text class="ts" x="464" y="16" text-anchor="middle" style="fill:var(--paper)">maçonnerie</text>
+<text class="ts" x="464" y="20" text-anchor="middle" style="fill:var(--paper)">/ gaine (hyp.)</text>
+<rect class="nw" x="312" y="0" width="5" height="62"/>
+<rect class="nw" x="312" y="127" width="5" height="2"/>
+<rect class="tall" x="249" y="0" width="60" height="60"/>
+<rect class="cab" x="309" y="0" width="3" height="60"/>
+<text class="ts" x="294" y="24" text-anchor="middle" style="font-weight:700">Colonne LV</text>
+<text class="tx" x="294" y="28.5" text-anchor="middle">P60 · h 238</text>
+<text class="ts muted" x="280" y="108" text-anchor="middle" transform="rotate(-90 280 108)">cuisine</text>
+<rect class="tall" x="312" y="129" width="59" height="59"/>
+<rect class="tech" x="371" y="129" width="11" height="40"/>
+<text class="t" x="341" y="140" text-anchor="middle" style="font-weight:700">Frigo</text>
+<text class="tx" x="341" y="144.5" text-anchor="middle">colonne P59 · h 238</text>
+<text class="tx" x="341" y="148.5" text-anchor="middle">◂ façade ouest</text>
+<text class="tx" x="376.5" y="145" text-anchor="middle" transform="rotate(-90 376.5 145)">gaine 11</text>
+<path class="swing" d="M312 130 A56 56 0 0 0 268 156"/>
+<text class="tx muted" x="298" y="140" text-anchor="middle">porte frigo</text>
+<rect class="tech" x="418" y="0" width="16" height="18"/>
+<circle cx="426" cy="10" r="4.5" style="fill:var(--panel);stroke:var(--water);stroke-width:1"/>
+<text class="tx" x="426" y="11" text-anchor="middle">chute</text>
+<circle class="ecs" cx="459" cy="72" r="25"/>
+<text class="ts" x="459" y="62" text-anchor="middle" style="font-weight:700">Ballon ECS Ø 50</text>
+<text class="tx" x="459" y="66" text-anchor="middle">suspendu h 70 → 200</text>
+<text class="tx" x="459" y="74" text-anchor="middle">dessous h 0 → 70 :</text>
+<text class="tx" x="459" y="78" text-anchor="middle">nourrice, vannes,</text>
+<text class="tx" x="459" y="82" text-anchor="middle">groupe de sécurité</text>
+<path class="pin" d="M470 52 L432 52 L432 4 L270 4"/>
+<line class="pin" x1="440" y1="52" x2="434" y2="52"/>
+<path class="pout" d="M270 10 L421 10"/>
+<path class="pout" d="M446 94 L429 94 L429 15"/>
+<circle cx="446" cy="94" r="1.6" style="fill:var(--panel);stroke:var(--water);stroke-width:.6"/>
+<text class="tx" x="450" y="95" text-anchor="start" style="fill:var(--water);font-weight:700">GS</text>
+<line class="dim" x1="434" y1="-28" x2="484" y2="-28" marker-start="url(#tk)" marker-end="url(#tk)"/><text class="dimt" x="459" y="-29.2" text-anchor="middle">niche 50</text>
+<line class="dim" x1="317" y1="-40" x2="434" y2="-40" marker-start="url(#tk)" marker-end="url(#tk)"/><text class="dimt" x="375.5" y="-41.2" text-anchor="middle">cellier 117</text>
+<line class="dim" x1="312" y1="-40" x2="317" y2="-40" marker-start="url(#tk)" marker-end="url(#tk)"/><text class="dimt" x="314.5" y="-41.2" text-anchor="middle" style="font-size:2.2px">5</text>
+<line class="dim" x1="504" y1="44" x2="504" y2="100" marker-start="url(#tk)" marker-end="url(#tk)"/><text class="dimt" x="502.8" y="72" text-anchor="middle" transform="rotate(-90 502.8 72)">niche 56</text>
+<line class="dim" x1="511" y1="0" x2="511" y2="100" marker-start="url(#tk)" marker-end="url(#tk)"/><text class="dimt" x="509.8" y="50" text-anchor="middle" transform="rotate(-90 509.8 50)">cellier 100</text>
+<line class="dim" x1="317" y1="-43" x2="317" y2="-1"/><line class="dim" x1="434" y1="-43" x2="434" y2="-21"/>
+<line class="dim" x1="485" y1="44" x2="514" y2="44"/><line class="dim" x1="435" y1="0" x2="514" y2="0"/><line class="dim" x1="495" y1="100" x2="514" y2="100"/>
+<polygon class="free" points="317,58 330,58 330,30 358,30 358,68 374,68 374,100 382,100 382,121 317,121"/>
+<polygon class="tz" points="374,68 418,68 418,18 434,18 434,100 374,100"/>
+<rect class="broom" x="317" y="0" width="39" height="30"/>
+<rect class="upper" x="318" y="1" width="37" height="28"/>
+<text class="ts broomt" x="336.5" y="15" text-anchor="middle">Balais (rail)</text>
+<text class="tx" x="336.5" y="19" text-anchor="middle">P30 · h 0 → 150</text>
+<text class="tx" x="336.5" y="24" text-anchor="middle" style="fill:var(--muted)">P30 au-dessus</text>
+<text class="tx" x="336.5" y="28" text-anchor="middle" style="fill:var(--muted)">h 165 · 200 · 235</text>
+<rect class="broom" x="317" y="32" width="13" height="26"/>
+<circle class="app" cx="323.5" cy="45" r="4.5"/>
+<rect class="plug" x="317" y="37" width="2" height="3"/>
+<text class="tx broomt" x="332" y="40" text-anchor="start">Station aspi</text>
+<text class="tx" x="332" y="44" text-anchor="start">P13 · h 0 → 130</text>
+<text class="tx" x="332" y="48" text-anchor="start">prise 16 A h 110</text>
+<rect class="tech" x="358" y="0" width="60" height="8"/>
+<text class="tx" x="388" y="5.6" text-anchor="middle">gaine 8 : alim. h 28, évac. h 41-45</text>
+<rect class="ll" x="358" y="8" width="60" height="60"/>
+<rect class="upper" x="359" y="1" width="58" height="39"/>
+<text class="tx" x="388" y="13.5" text-anchor="middle" style="fill:var(--muted)">4 étagères P40</text>
+<text class="tx" x="388" y="17.5" text-anchor="middle" style="fill:var(--muted)">h 125 · 160 · 195 · 230</text>
+<circle class="app" cx="388" cy="47" r="11"/>
+<text class="tb" x="388" y="46" text-anchor="middle">LL</text>
+<text class="tx" x="388" y="50.5" text-anchor="middle">60 × 60</text>
+<text class="tx" x="388" y="54.5" text-anchor="middle">P60 · h 85</text>
+<text class="tx" x="388" y="62" text-anchor="middle">plan de dépose h 88</text>
+<text class="tx" x="388" y="66" text-anchor="middle">façade sud ▾</text>
+<path class="pout" d="M414 12 L421 12"/>
+<path class="swing" d="M408 68 A48 48 0 0 1 395.8 100 L360 68 Z"/>
+<path class="aghost" d="M395.8 100 A48 48 0 0 1 360 116"/>
+<circle class="ring" cx="395.8" cy="100" r="2"/>
+<text class="tx redt" x="398" y="77" text-anchor="middle">hublot : butée à ≈ 42°</text>
+<text class="tx redt" x="398" y="80.5" text-anchor="middle">sur l'angle du mur du WC</text>
+<text class="ts tzt" x="400" y="88" text-anchor="middle">accès GS</text>
+<text class="tx tzt" x="400" y="92" text-anchor="middle">sans bouger le LL</text>
+<line class="dim" x1="426" y1="68" x2="426" y2="100" marker-start="url(#tk)" marker-end="url(#tk)" style="stroke:var(--water)"/><text class="dimt" x="424.8" y="84" text-anchor="middle" transform="rotate(-90 424.8 84)" style="fill:var(--water)">32</text>
+<rect class="upper" x="435" y="45" width="48" height="54"/>
+<text class="tx muted" x="459" y="56.5" text-anchor="middle">tablette h 215 au-dessus</text>
+<path class="doorzone" d="M316 125 L316 65 A60 60 0 0 1 376 125 Z"/>
+<path class="doorarc" d="M316 65 A60 60 0 0 1 376 125"/>
+<rect class="dark" x="312" y="62" width="5" height="3"/>
+<rect class="dark" x="312" y="125" width="5" height="2"/>
+<rect class="park" x="312" y="65" width="4" height="60"/>
+<rect class="pf" x="316" y="121" width="60" height="4"/>
+<circle cx="316" cy="125" r="1.2" class="dark"/>
+<text class="tx" x="346" y="119.6" text-anchor="middle">porte A ouverte · vantail 60</text>
+<line class="dim" x1="300" y1="62" x2="300" y2="127" marker-start="url(#tk)" marker-end="url(#tk)"/><text class="dimt" x="298.8" y="94.5" text-anchor="middle" transform="rotate(-90 298.8 94.5)">baie 65</text>
+<line class="dim" x1="306" y1="65" x2="306" y2="121" marker-start="url(#tk)" marker-end="url(#tk)" style="stroke:var(--flow)"/><text class="dimt" x="304.8" y="93" text-anchor="middle" transform="rotate(-90 304.8 93)" style="fill:var(--flow)">passage ≈ 56</text>
+<line class="dim" x1="316" y1="125" x2="358" y2="68" marker-start="url(#tk)" marker-end="url(#tk)" style="stroke:var(--flow)"/><text class="dimt" x="335.9" y="95.7" text-anchor="middle" transform="rotate(-53.6 335.9 95.7)" style="fill:var(--flow);font-size:2.4px">70,8 → jeu 11</text>
+<line class="dim" x1="330" y1="52" x2="358" y2="52" marker-start="url(#tk)" marker-end="url(#tk)"/><text class="dimt" x="344" y="50.8" text-anchor="middle">28</text>
+<line class="dim" x1="366" y1="68" x2="366" y2="121" marker-start="url(#tk)" marker-end="url(#tk)"/><text class="dimt" x="364.8" y="94.5" text-anchor="middle" transform="rotate(-90 364.8 94.5)" style="font-size:2.4px">53 porte ouverte</text>
+<line class="dim" x1="378" y1="68" x2="378" y2="129" marker-start="url(#tk)" marker-end="url(#tk)"/><text class="dimt" x="376.8" y="98.5" text-anchor="middle" transform="rotate(-90 376.8 98.5)">61</text>
+<text class="tx flowt" x="344" y="98" text-anchor="middle">circulation</text>
+<line class="dim" x1="317" y1="-28" x2="356" y2="-28" marker-start="url(#tk)" marker-end="url(#tk)"/><text class="dimt" x="336.5" y="-29.2" text-anchor="middle">balais 39</text>
+<line class="dim" x1="358" y1="-28" x2="418" y2="-28" marker-start="url(#tk)" marker-end="url(#tk)"/><text class="dimt" x="388" y="-29.2" text-anchor="middle">LL 60</text>
+<line class="dim" x1="418" y1="-28" x2="434" y2="-28" marker-start="url(#tk)" marker-end="url(#tk)"/><text class="dimt" x="426" y="-29.2" text-anchor="middle">16</text>
+</svg>
+</div>
+<p class="cap">LL façade sud, x 358 → 418, y 8 → 68, contre le coffrage de la chute ; gaine de 8 derrière pour l'alimentation (h ≈ 28) et l'évacuation (h 41-45) ; robinet sur l'eau froide du mur nord remonté à h 95 et prise 20 A à h 100, au-dessus du plan ; évacuation à travers la face ouest du coffrage (h ≈ 65). Au-dessus, plan de dépose h 88 et 4 étagères P40. À l'entrée : rail à balais 39 avec 3 étagères P30 au-dessus, station d'aspirateur-balai sur le dos de la cloison (prise 16 A à h 110). <b>Hublot</b> : charnière à gauche (ouest), Ø ≈ 47 (de mémoire, non vérifié) : en s'ouvrant, son bord libre rencontre l'angle du mur du WC (x 382, y 100), à 39 de la charnière ; il s'arrête vers 42°, au lieu de 90° (arc rouge). On charge par un hublot entrouvert : c'est faisable mais malcommode. Parades : un LL à chargement par le dessus (≈ 40 × 60, de mémoire, non vérifié), sans hublot, qui passe aussi toutes les baies ; ou L2 si la porte est B ou C. Avec un LL de 55 de profondeur et une gaine de 6, la façade passe à y 63 et l'accès au GS à 37 (le hublot bute toujours). Pour remplacer le ballon, il faut toujours sortir le LL. En B, le sas s'arrête à y 122 : 54 devant le LL. En C, la demi-feuille ouverte (y 123 → 127) laisse 55 devant le LL.</p>
+<div class="pcc"><div class="p"><h4>Pour</h4><ul><li>Seul agencement avec LL qui va avec les trois portes, sans changer de machine.</li><li>LL collé à la chute, robinet et prise au-dessus du plan : accessibles sans bouger la machine.</li><li>Tous les balais en premier rang ; 407 cm de tablettes (au lieu de 281).</li></ul></div><div class="c"><h4>Contre</h4><ul><li>Le hublot (charnière à gauche) bute sur l'angle du mur du WC vers 42° : chargement malaisé (voir la légende).</li><li>Accès au GS par un couloir de 32 seulement (accroupi de biais).</li><li>Recoin balais de 28 entre la station aspi et le LL ; 53 devant le LL porte A ouverte.</li></ul></div><div class="s"><h4>À choisir si…</h4><ul><li>Vous gardez un LL au cellier (donc pas en SdB) avec la porte A battante, idéalement un LL à chargement par le dessus.</li><li>Vous voulez un dessin valable quelle que soit la porte.</li></ul></div></div>
+</div>
+<div class="fig" id="fig-L2">
+<div class="figt"><h3>L2 · LL au nord-ouest ; balais devant la zone technique</h3><span class="chip ko">portes B · C (A : LL slim)</span></div>
+<div class="scroll">
+<svg class="cel" viewBox="262 -50 256 210" role="img" aria-label="Plan de la proposition L2 : lave-linge façade sud au nord-ouest, rail à balais et station aspirateur au nord-est, grande zone technique devant le ballon, porte pivotante-coulissante C ; la porte battante A heurterait le lave-linge">
+<polygon class="floorbg" points="270,0 312,0 312,160 270,160"/>
+<polygon fill="url(#pq)" points="270,0 312,0 312,160 270,160"/>
+<polygon class="cellf" points="317,0 434,0 434,44 484,44 484,100 382,100 382,129 312,129 312,62 317,62"/>
+<polygon fill="url(#tl)" points="317,0 434,0 434,44 484,44 484,100 382,100 382,129 312,129 312,62 317,62"/>
+<rect class="wc" x="392" y="110" width="92" height="50"/>
+<text class="tb muted" x="438" y="132" text-anchor="middle">WC</text>
+<text class="ts muted" x="438" y="137" text-anchor="middle">(conservé)</text>
+<rect class="w" x="262" y="-20" width="172" height="20"/>
+<rect class="w" x="434" y="-20" width="60" height="64"/>
+<rect class="w" x="484" y="44" width="10" height="120"/>
+<rect class="w" x="382" y="100" width="102" height="10"/>
+<rect class="w" x="382" y="110" width="10" height="50"/>
+<text class="ts" x="464" y="16" text-anchor="middle" style="fill:var(--paper)">maçonnerie</text>
+<text class="ts" x="464" y="20" text-anchor="middle" style="fill:var(--paper)">/ gaine (hyp.)</text>
+<rect class="nw" x="312" y="0" width="5" height="62"/>
+<rect class="nw" x="312" y="127" width="5" height="2"/>
+<rect class="tall" x="249" y="0" width="60" height="60"/>
+<rect class="cab" x="309" y="0" width="3" height="60"/>
+<text class="ts" x="294" y="24" text-anchor="middle" style="font-weight:700">Colonne LV</text>
+<text class="tx" x="294" y="28.5" text-anchor="middle">P60 · h 238</text>
+<text class="ts muted" x="280" y="108" text-anchor="middle" transform="rotate(-90 280 108)">cuisine</text>
+<rect class="tall" x="312" y="129" width="59" height="59"/>
+<rect class="tech" x="371" y="129" width="11" height="40"/>
+<text class="t" x="341" y="140" text-anchor="middle" style="font-weight:700">Frigo</text>
+<text class="tx" x="341" y="144.5" text-anchor="middle">colonne P59 · h 238</text>
+<text class="tx" x="341" y="148.5" text-anchor="middle">◂ façade ouest</text>
+<text class="tx" x="376.5" y="145" text-anchor="middle" transform="rotate(-90 376.5 145)">gaine 11</text>
+<path class="swing" d="M312 130 A56 56 0 0 0 268 156"/>
+<text class="tx muted" x="298" y="140" text-anchor="middle">porte frigo</text>
+<rect class="tech" x="418" y="0" width="16" height="18"/>
+<circle cx="426" cy="10" r="4.5" style="fill:var(--panel);stroke:var(--water);stroke-width:1"/>
+<text class="tx" x="426" y="11" text-anchor="middle">chute</text>
+<circle class="ecs" cx="459" cy="72" r="25"/>
+<text class="ts" x="459" y="62" text-anchor="middle" style="font-weight:700">Ballon ECS Ø 50</text>
+<text class="tx" x="459" y="66" text-anchor="middle">suspendu h 70 → 200</text>
+<text class="tx" x="459" y="74" text-anchor="middle">dessous h 0 → 70 :</text>
+<text class="tx" x="459" y="78" text-anchor="middle">nourrice, vannes,</text>
+<text class="tx" x="459" y="82" text-anchor="middle">groupe de sécurité</text>
+<path class="pin" d="M470 52 L432 52 L432 4 L270 4"/>
+<line class="pin" x1="440" y1="52" x2="434" y2="52"/>
+<path class="pout" d="M270 10 L421 10"/>
+<path class="pout" d="M446 94 L429 94 L429 15"/>
+<circle cx="446" cy="94" r="1.6" style="fill:var(--panel);stroke:var(--water);stroke-width:.6"/>
+<text class="tx" x="450" y="95" text-anchor="start" style="fill:var(--water);font-weight:700">GS</text>
+<line class="dim" x1="434" y1="-28" x2="484" y2="-28" marker-start="url(#tk)" marker-end="url(#tk)"/><text class="dimt" x="459" y="-29.2" text-anchor="middle">niche 50</text>
+<line class="dim" x1="317" y1="-40" x2="434" y2="-40" marker-start="url(#tk)" marker-end="url(#tk)"/><text class="dimt" x="375.5" y="-41.2" text-anchor="middle">cellier 117</text>
+<line class="dim" x1="312" y1="-40" x2="317" y2="-40" marker-start="url(#tk)" marker-end="url(#tk)"/><text class="dimt" x="314.5" y="-41.2" text-anchor="middle" style="font-size:2.2px">5</text>
+<line class="dim" x1="504" y1="44" x2="504" y2="100" marker-start="url(#tk)" marker-end="url(#tk)"/><text class="dimt" x="502.8" y="72" text-anchor="middle" transform="rotate(-90 502.8 72)">niche 56</text>
+<line class="dim" x1="511" y1="0" x2="511" y2="100" marker-start="url(#tk)" marker-end="url(#tk)"/><text class="dimt" x="509.8" y="50" text-anchor="middle" transform="rotate(-90 509.8 50)">cellier 100</text>
+<line class="dim" x1="317" y1="-43" x2="317" y2="-1"/><line class="dim" x1="434" y1="-43" x2="434" y2="-21"/>
+<line class="dim" x1="485" y1="44" x2="514" y2="44"/><line class="dim" x1="435" y1="0" x2="514" y2="0"/><line class="dim" x1="495" y1="100" x2="514" y2="100"/>
+<polygon class="free" points="317,68 380,68 380,100 382,100 382,129 347,129 347,119 317,119"/>
+<rect class="tz" x="380" y="30" width="54" height="70"/>
+<rect class="tech" x="317" y="0" width="63" height="8"/>
+<text class="tx" x="348.5" y="5.6" text-anchor="middle">gaine 8 · évac. LL ≈ 1 m</text>
+<rect class="ll" x="318" y="8" width="60" height="60"/>
+<rect class="upper" x="318" y="1" width="61" height="39"/>
+<text class="tx" x="348" y="13.5" text-anchor="middle" style="fill:var(--muted)">4 étagères P40</text>
+<text class="tx" x="348" y="17.5" text-anchor="middle" style="fill:var(--muted)">h 125 · 160 · 195 · 230</text>
+<circle class="app" cx="348" cy="40" r="15"/>
+<text class="tb" x="348" y="38" text-anchor="middle">LL</text>
+<text class="tx" x="348" y="43" text-anchor="middle">60 × 60</text>
+<text class="tx" x="348" y="47" text-anchor="middle">P60 · h 85</text>
+<text class="tx" x="348" y="61" text-anchor="middle">plan de dépose h 88</text>
+<text class="tx" x="348" y="65.5" text-anchor="middle">façade sud ▾</text>
+<path class="swing" d="M368 68 A48 48 0 0 1 320 116 L320 68 Z"/>
+<text class="tx muted" x="332" y="110" text-anchor="middle">hublot 90°</text>
+<rect class="broom" x="380" y="0" width="38" height="30"/>
+<rect class="upper" x="381" y="1" width="36" height="28"/>
+<rect class="broom" x="392" y="14" width="26" height="16"/>
+<circle class="app" cx="405" cy="22" r="4.5"/>
+<text class="tx" x="405" y="23" text-anchor="middle">aspi</text>
+<rect class="plug" x="416" y="15" width="2" height="3"/>
+<text class="ts broomt" x="381.5" y="35" text-anchor="start">Balais (rail) P30 · h 0 → 150</text>
+<text class="tx" x="381.5" y="39" text-anchor="start">station aspi P16, prise h 110</text>
+<text class="tx" x="381.5" y="43" text-anchor="start" style="fill:var(--muted)">P30 au-dessus h 175 · 210 · 240</text>
+<rect class="cab" x="424" y="18" width="10" height="26"/>
+<text class="tx" x="429.8" y="31" text-anchor="middle" transform="rotate(-90 429.8 31)">crochets h 100 → 180</text>
+<text class="ts tzt" x="407" y="58" text-anchor="middle">zone technique</text>
+<text class="tx tzt" x="407" y="62" text-anchor="middle">et balais : libre</text>
+<line class="dim" x1="380" y1="72" x2="434" y2="72" marker-start="url(#tk)" marker-end="url(#tk)" style="stroke:var(--water)"/><text class="dimt" x="407" y="70.8" text-anchor="middle" style="fill:var(--water)">54</text>
+<line class="dim" x1="388" y1="30" x2="388" y2="100" marker-start="url(#tk)" marker-end="url(#tk)" style="stroke:var(--water)"/><text class="dimt" x="386.8" y="65" text-anchor="middle" transform="rotate(-90 386.8 65)" style="fill:var(--water)">70</text>
+<rect class="upper" x="435" y="45" width="48" height="54"/>
+<text class="tx muted" x="459" y="56.5" text-anchor="middle">tablette h 215 au-dessus</text>
+<line class="srail" x1="314" y1="62" x2="314" y2="127" style="stroke-dasharray:2 1.5;stroke-width:.8"/>
+<rect class="pf" x="312" y="62" width="4" height="65" style="stroke-width:1"/>
+<circle cx="314" cy="94.5" r="1" style="fill:var(--wood)"/>
+<rect x="281.5" y="123" width="65" height="4" style="fill:var(--tall);fill-opacity:.35;stroke:var(--wood);stroke-width:.6;stroke-dasharray:3 1.5"/>
+<circle cx="314" cy="125" r="1" style="fill:var(--wood)"/>
+<path class="swing" d="M314 62 Q284 76 281.5 123"/>
+<path class="swing" d="M314 127 Q342 130 346.5 127"/>
+<text class="ts" x="296" y="112" text-anchor="middle" style="fill:var(--wood);font-weight:700">porte C 65</text>
+<text class="tx" x="296" y="116" text-anchor="middle" style="fill:var(--wood)">ouverte ½ - ½</text>
+<line class="dim" x1="300" y1="62" x2="300" y2="127" marker-start="url(#tk)" marker-end="url(#tk)"/><text class="dimt" x="298.8" y="94.5" text-anchor="middle" transform="rotate(-90 298.8 94.5)" style="font-size:2.6px">baie 65</text>
+<line class="dim" x1="306" y1="62" x2="306" y2="123" marker-start="url(#tk)" marker-end="url(#tk)" style="stroke:var(--flow)"/><text class="dimt" x="304.8" y="92.5" text-anchor="middle" transform="rotate(-90 304.8 92.5)" style="fill:var(--flow)">passage ≈ 61</text>
+<path class="aghost" d="M316 125 L316 65 A60 60 0 0 1 376 125"/>
+<text class="tx redt" x="374" y="119.5" text-anchor="end">arc de la porte A (r 60)</text>
+<circle class="ring" cx="318" cy="68" r="2.5"/>
+<line class="dim" x1="316" y1="125" x2="318" y2="68" marker-start="url(#tk)" marker-end="url(#tk)" style="stroke:var(--tri)"/><text class="dimt" x="322" y="87" text-anchor="start" style="fill:var(--tri);font-size:2.6px">57 &lt; 60</text>
+<text class="tx redt" x="322" y="79" text-anchor="start">conflit si porte A</text>
+<line class="dim" x1="372" y1="68" x2="372" y2="129" marker-start="url(#tk)" marker-end="url(#tk)"/><text class="dimt" x="370.8" y="98.5" text-anchor="middle" transform="rotate(-90 370.8 98.5)">61</text>
+<text class="tx flowt" x="352" y="100" text-anchor="middle">circulation</text>
+<line class="dim" x1="317" y1="-28" x2="380" y2="-28" marker-start="url(#tk)" marker-end="url(#tk)"/><text class="dimt" x="348.5" y="-29.2" text-anchor="middle">plan 63</text>
+<line class="dim" x1="380" y1="-28" x2="418" y2="-28" marker-start="url(#tk)" marker-end="url(#tk)"/><text class="dimt" x="399" y="-29.2" text-anchor="middle">balais 38</text>
+<line class="dim" x1="418" y1="-28" x2="434" y2="-28" marker-start="url(#tk)" marker-end="url(#tk)"/><text class="dimt" x="426" y="-29.2" text-anchor="middle">16</text>
+</svg>
+</div>
+<p class="cap">Dessinée avec la porte C (pivotante-coulissante, demi-feuille de 32,5 dans le sas) ; l'arc rouge est celui qu'aurait la porte A. LL façade sud x 318 → 378, y 8 → 68, plan de dépose x 317 → 380 et 4 étagères P40 au-dessus. Rail à balais x 380 → 418 avec la station aspi à l'est (prise h 110) et 3 étagères P30 h 175, 210, 240 ; crochets (pelle, raclette, seau) sur le mur est au-dessus des tuyaux. En B (claustra côté cuisine), rien ne débat dans le cellier, passage franc 60, et le sas s'arrête à y 122 (54 devant le LL). En A, il faudrait un LL « slim » de 40 à 47 de profondeur (coin à 63 du gond).</p>
+<div class="pcc"><div class="p"><h4>Pour</h4><ul><li>Meilleur accès au ballon avec LL : zone libre 54 × 70, chemin de 70 pour sortir le ballon.</li><li>Balais (38) et crochets (24) tous en premier rang ; 416 cm de tablettes.</li><li>LL chargé directement depuis la baie.</li></ul></div><div class="c"><h4>Contre</h4><ul><li>Incompatible avec la porte A : coin du LL à 57 du gond (il faut ≥ 60). En A : LL « slim » (façade y ≤ 61) seulement.</li><li>Flexible d'évacuation d'environ 1 m dans la gaine jusqu'à la chute.</li><li>Le hublot ouvert barre la baie.</li></ul></div><div class="s"><h4>À choisir si…</h4><ul><li>Vous gardez un LL au cellier et choisissez la porte B (claustra) ou C (pivotante-coulissante).</li></ul></div></div>
+</div>
+<div class="fig" id="fig-L3">
+<div class="figt"><h3>L3 · colonne LL + sèche-linge à la place de L1</h3><span class="chip ok">portes A · B · C</span></div>
+<div class="scroll">
+<svg class="cel" viewBox="262 -50 256 210" role="img" aria-label="Plan de la proposition L3 : colonne lave-linge et sèche-linge superposés à la place du lave-linge de L1, porte battante A">
+<polygon class="floorbg" points="270,0 312,0 312,160 270,160"/>
+<polygon fill="url(#pq)" points="270,0 312,0 312,160 270,160"/>
+<polygon class="cellf" points="317,0 434,0 434,44 484,44 484,100 382,100 382,129 312,129 312,62 317,62"/>
+<polygon fill="url(#tl)" points="317,0 434,0 434,44 484,44 484,100 382,100 382,129 312,129 312,62 317,62"/>
+<rect class="wc" x="392" y="110" width="92" height="50"/>
+<text class="tb muted" x="438" y="132" text-anchor="middle">WC</text>
+<text class="ts muted" x="438" y="137" text-anchor="middle">(conservé)</text>
+<rect class="w" x="262" y="-20" width="172" height="20"/>
+<rect class="w" x="434" y="-20" width="60" height="64"/>
+<rect class="w" x="484" y="44" width="10" height="120"/>
+<rect class="w" x="382" y="100" width="102" height="10"/>
+<rect class="w" x="382" y="110" width="10" height="50"/>
+<text class="ts" x="464" y="16" text-anchor="middle" style="fill:var(--paper)">maçonnerie</text>
+<text class="ts" x="464" y="20" text-anchor="middle" style="fill:var(--paper)">/ gaine (hyp.)</text>
+<rect class="nw" x="312" y="0" width="5" height="62"/>
+<rect class="nw" x="312" y="127" width="5" height="2"/>
+<rect class="tall" x="249" y="0" width="60" height="60"/>
+<rect class="cab" x="309" y="0" width="3" height="60"/>
+<text class="ts" x="294" y="24" text-anchor="middle" style="font-weight:700">Colonne LV</text>
+<text class="tx" x="294" y="28.5" text-anchor="middle">P60 · h 238</text>
+<text class="ts muted" x="280" y="108" text-anchor="middle" transform="rotate(-90 280 108)">cuisine</text>
+<rect class="tall" x="312" y="129" width="59" height="59"/>
+<rect class="tech" x="371" y="129" width="11" height="40"/>
+<text class="t" x="341" y="140" text-anchor="middle" style="font-weight:700">Frigo</text>
+<text class="tx" x="341" y="144.5" text-anchor="middle">colonne P59 · h 238</text>
+<text class="tx" x="341" y="148.5" text-anchor="middle">◂ façade ouest</text>
+<text class="tx" x="376.5" y="145" text-anchor="middle" transform="rotate(-90 376.5 145)">gaine 11</text>
+<path class="swing" d="M312 130 A56 56 0 0 0 268 156"/>
+<text class="tx muted" x="298" y="140" text-anchor="middle">porte frigo</text>
+<rect class="tech" x="418" y="0" width="16" height="18"/>
+<circle cx="426" cy="10" r="4.5" style="fill:var(--panel);stroke:var(--water);stroke-width:1"/>
+<text class="tx" x="426" y="11" text-anchor="middle">chute</text>
+<circle class="ecs" cx="459" cy="72" r="25"/>
+<text class="ts" x="459" y="62" text-anchor="middle" style="font-weight:700">Ballon ECS Ø 50</text>
+<text class="tx" x="459" y="66" text-anchor="middle">suspendu h 70 → 200</text>
+<text class="tx" x="459" y="74" text-anchor="middle">dessous h 0 → 70 :</text>
+<text class="tx" x="459" y="78" text-anchor="middle">nourrice, vannes,</text>
+<text class="tx" x="459" y="82" text-anchor="middle">groupe de sécurité</text>
+<path class="pin" d="M470 52 L432 52 L432 4 L270 4"/>
+<line class="pin" x1="440" y1="52" x2="434" y2="52"/>
+<path class="pout" d="M270 10 L421 10"/>
+<path class="pout" d="M446 94 L429 94 L429 15"/>
+<circle cx="446" cy="94" r="1.6" style="fill:var(--panel);stroke:var(--water);stroke-width:.6"/>
+<text class="tx" x="450" y="95" text-anchor="start" style="fill:var(--water);font-weight:700">GS</text>
+<line class="dim" x1="434" y1="-28" x2="484" y2="-28" marker-start="url(#tk)" marker-end="url(#tk)"/><text class="dimt" x="459" y="-29.2" text-anchor="middle">niche 50</text>
+<line class="dim" x1="317" y1="-40" x2="434" y2="-40" marker-start="url(#tk)" marker-end="url(#tk)"/><text class="dimt" x="375.5" y="-41.2" text-anchor="middle">cellier 117</text>
+<line class="dim" x1="312" y1="-40" x2="317" y2="-40" marker-start="url(#tk)" marker-end="url(#tk)"/><text class="dimt" x="314.5" y="-41.2" text-anchor="middle" style="font-size:2.2px">5</text>
+<line class="dim" x1="504" y1="44" x2="504" y2="100" marker-start="url(#tk)" marker-end="url(#tk)"/><text class="dimt" x="502.8" y="72" text-anchor="middle" transform="rotate(-90 502.8 72)">niche 56</text>
+<line class="dim" x1="511" y1="0" x2="511" y2="100" marker-start="url(#tk)" marker-end="url(#tk)"/><text class="dimt" x="509.8" y="50" text-anchor="middle" transform="rotate(-90 509.8 50)">cellier 100</text>
+<line class="dim" x1="317" y1="-43" x2="317" y2="-1"/><line class="dim" x1="434" y1="-43" x2="434" y2="-21"/>
+<line class="dim" x1="485" y1="44" x2="514" y2="44"/><line class="dim" x1="435" y1="0" x2="514" y2="0"/><line class="dim" x1="495" y1="100" x2="514" y2="100"/>
+<polygon class="free" points="317,58 330,58 330,30 358,30 358,68 374,68 374,100 382,100 382,121 317,121"/>
+<polygon class="tz" points="374,68 418,68 418,18 434,18 434,100 374,100"/>
+<rect class="broom" x="317" y="0" width="39" height="30"/>
+<rect class="upper" x="318" y="1" width="37" height="28"/>
+<text class="ts broomt" x="336.5" y="15" text-anchor="middle">Balais (rail)</text>
+<text class="tx" x="336.5" y="19" text-anchor="middle">P30 · h 0 → 150</text>
+<text class="tx" x="336.5" y="24" text-anchor="middle" style="fill:var(--muted)">P30 au-dessus</text>
+<text class="tx" x="336.5" y="28" text-anchor="middle" style="fill:var(--muted)">h 165 · 200 · 235</text>
+<rect class="broom" x="317" y="32" width="13" height="26"/>
+<circle class="app" cx="323.5" cy="45" r="4.5"/>
+<rect class="plug" x="317" y="37" width="2" height="3"/>
+<text class="tx broomt" x="332" y="40" text-anchor="start">Station aspi</text>
+<text class="tx" x="332" y="44" text-anchor="start">P13 · h 0 → 130</text>
+<text class="tx" x="332" y="48" text-anchor="start">prise 16 A h 110</text>
+<rect class="tech" x="358" y="0" width="60" height="8"/>
+<text class="tx" x="388" y="5.6" text-anchor="middle">gaine 8 : alim. h 28, évac. h 41-45</text>
+<rect class="ll" x="358" y="8" width="60" height="60"/>
+<rect class="upper" x="359" y="1" width="58" height="39"/>
+<text class="tx" x="388" y="13.5" text-anchor="middle" style="fill:var(--muted)">2 étagères P40</text>
+<text class="tx" x="388" y="17.5" text-anchor="middle" style="fill:var(--muted)">h 195 · 230</text>
+<circle class="app" cx="388" cy="47" r="11"/>
+<text class="tb" x="388" y="46" text-anchor="middle">LL + SL</text>
+<text class="tx" x="388" y="50.5" text-anchor="middle">superposés</text>
+<text class="tx" x="388" y="54.5" text-anchor="middle">P60 · h 173</text>
+<text class="tx" x="388" y="62" text-anchor="middle">SL : hublot h 110 → 165</text>
+<text class="tx" x="388" y="66" text-anchor="middle">façade sud ▾</text>
+<path class="pout" d="M414 12 L421 12"/>
+<path class="swing" d="M408 68 A48 48 0 0 1 395.8 100 L360 68 Z"/>
+<path class="aghost" d="M395.8 100 A48 48 0 0 1 360 116"/>
+<circle class="ring" cx="395.8" cy="100" r="2"/>
+<text class="tx redt" x="398" y="77" text-anchor="middle">hublots : butée à ≈ 42°</text>
+<text class="tx redt" x="398" y="80.5" text-anchor="middle">sur l'angle du mur du WC</text>
+<text class="ts tzt" x="400" y="88" text-anchor="middle">accès GS</text>
+<text class="tx tzt" x="400" y="92" text-anchor="middle">sans bouger la colonne</text>
+<line class="dim" x1="426" y1="68" x2="426" y2="100" marker-start="url(#tk)" marker-end="url(#tk)" style="stroke:var(--water)"/><text class="dimt" x="424.8" y="84" text-anchor="middle" transform="rotate(-90 424.8 84)" style="fill:var(--water)">32</text>
+<rect class="upper" x="435" y="45" width="48" height="54"/>
+<text class="tx muted" x="459" y="56.5" text-anchor="middle">tablette h 215 au-dessus</text>
+<path class="doorzone" d="M316 125 L316 65 A60 60 0 0 1 376 125 Z"/>
+<path class="doorarc" d="M316 65 A60 60 0 0 1 376 125"/>
+<rect class="dark" x="312" y="62" width="5" height="3"/>
+<rect class="dark" x="312" y="125" width="5" height="2"/>
+<rect class="park" x="312" y="65" width="4" height="60"/>
+<rect class="pf" x="316" y="121" width="60" height="4"/>
+<circle cx="316" cy="125" r="1.2" class="dark"/>
+<text class="tx" x="346" y="119.6" text-anchor="middle">porte A ouverte · vantail 60</text>
+<line class="dim" x1="300" y1="62" x2="300" y2="127" marker-start="url(#tk)" marker-end="url(#tk)"/><text class="dimt" x="298.8" y="94.5" text-anchor="middle" transform="rotate(-90 298.8 94.5)">baie 65</text>
+<line class="dim" x1="306" y1="65" x2="306" y2="121" marker-start="url(#tk)" marker-end="url(#tk)" style="stroke:var(--flow)"/><text class="dimt" x="304.8" y="93" text-anchor="middle" transform="rotate(-90 304.8 93)" style="fill:var(--flow)">passage ≈ 56</text>
+<line class="dim" x1="316" y1="125" x2="358" y2="68" marker-start="url(#tk)" marker-end="url(#tk)" style="stroke:var(--flow)"/><text class="dimt" x="335.9" y="95.7" text-anchor="middle" transform="rotate(-53.6 335.9 95.7)" style="fill:var(--flow);font-size:2.4px">70,8 → jeu 11</text>
+<line class="dim" x1="330" y1="52" x2="358" y2="52" marker-start="url(#tk)" marker-end="url(#tk)"/><text class="dimt" x="344" y="50.8" text-anchor="middle">28</text>
+<line class="dim" x1="366" y1="68" x2="366" y2="121" marker-start="url(#tk)" marker-end="url(#tk)"/><text class="dimt" x="364.8" y="94.5" text-anchor="middle" transform="rotate(-90 364.8 94.5)" style="font-size:2.4px">53 porte ouverte</text>
+<line class="dim" x1="378" y1="68" x2="378" y2="129" marker-start="url(#tk)" marker-end="url(#tk)"/><text class="dimt" x="376.8" y="98.5" text-anchor="middle" transform="rotate(-90 376.8 98.5)">61</text>
+<text class="tx flowt" x="344" y="98" text-anchor="middle">circulation</text>
+<line class="dim" x1="317" y1="-28" x2="356" y2="-28" marker-start="url(#tk)" marker-end="url(#tk)"/><text class="dimt" x="336.5" y="-29.2" text-anchor="middle">balais 39</text>
+<line class="dim" x1="358" y1="-28" x2="418" y2="-28" marker-start="url(#tk)" marker-end="url(#tk)"/><text class="dimt" x="388" y="-29.2" text-anchor="middle">LL + SL 60</text>
+<line class="dim" x1="418" y1="-28" x2="434" y2="-28" marker-start="url(#tk)" marker-end="url(#tk)"/><text class="dimt" x="426" y="-29.2" text-anchor="middle">16</text>
+</svg>
+</div>
+<p class="cap">Même emprise que L1 (x 358 → 418, y 8 → 68). Colonne d'environ 173 de haut (85 + 85 + kit de superposition, de mémoire, non vérifié) ; hublot du sèche-linge à h ≈ 110 → 165. Au-dessus, seulement 2 étagères P40 (h 195 et 230). Sèche-linge pompe à chaleur : prise 16 A sur circuit spécialisé (de mémoire, non vérifié) ; condensats dans le bac ou sur le siphon du LL. Balais, station aspi et tablette de niche comme L1.</p>
+<div class="pcc"><div class="p"><h4>Pour</h4><ul><li>Buanderie complète : laver et sécher au même endroit, contre la chute.</li><li>Même emprise et mêmes vérifications que L1 (A, B, C).</li></ul></div><div class="c"><h4>Contre</h4><ul><li>Rangement ramené au niveau de l'existant : 287 cm de tablettes ; hublots bloqués vers 42° comme en L1.</li><li>Une 2ᵉ machine, un circuit de plus pour le sèche-linge, colonne de 173.</li><li>Fait double emploi avec le LL déjà dessiné dans la SdB.</li></ul></div><div class="s"><h4>À choisir si…</h4><ul><li>Vous renoncez au LL de la SdB, ou vous tenez à sécher au cellier.</li></ul></div></div>
+</div>
+
+<h2>4. Sans lave-linge (le LL va dans la salle de bain)</h2>
+<div class="fig" id="fig-S1">
+<div class="figt"><h3>S1 · garde-manger P40 au nord, balais à l'entrée, zone technique dégagée</h3><span class="chip ok">portes A · B · C</span></div>
+<div class="scroll">
+<svg class="cel" viewBox="262 -50 256 210" role="img" aria-label="Plan de la proposition S1 sans lave-linge : garde-manger profond 40 au nord, balais et station aspirateur à l'entrée, zone technique de 77 par 60 libre devant le ballon, porte battante A">
+<polygon class="floorbg" points="270,0 312,0 312,160 270,160"/>
+<polygon fill="url(#pq)" points="270,0 312,0 312,160 270,160"/>
+<polygon class="cellf" points="317,0 434,0 434,44 484,44 484,100 382,100 382,129 312,129 312,62 317,62"/>
+<polygon fill="url(#tl)" points="317,0 434,0 434,44 484,44 484,100 382,100 382,129 312,129 312,62 317,62"/>
+<rect class="wc" x="392" y="110" width="92" height="50"/>
+<text class="tb muted" x="438" y="132" text-anchor="middle">WC</text>
+<text class="ts muted" x="438" y="137" text-anchor="middle">(conservé)</text>
+<rect class="w" x="262" y="-20" width="172" height="20"/>
+<rect class="w" x="434" y="-20" width="60" height="64"/>
+<rect class="w" x="484" y="44" width="10" height="120"/>
+<rect class="w" x="382" y="100" width="102" height="10"/>
+<rect class="w" x="382" y="110" width="10" height="50"/>
+<text class="ts" x="464" y="16" text-anchor="middle" style="fill:var(--paper)">maçonnerie</text>
+<text class="ts" x="464" y="20" text-anchor="middle" style="fill:var(--paper)">/ gaine (hyp.)</text>
+<rect class="nw" x="312" y="0" width="5" height="62"/>
+<rect class="nw" x="312" y="127" width="5" height="2"/>
+<rect class="tall" x="249" y="0" width="60" height="60"/>
+<rect class="cab" x="309" y="0" width="3" height="60"/>
+<text class="ts" x="294" y="24" text-anchor="middle" style="font-weight:700">Colonne LV</text>
+<text class="tx" x="294" y="28.5" text-anchor="middle">P60 · h 238</text>
+<text class="ts muted" x="280" y="108" text-anchor="middle" transform="rotate(-90 280 108)">cuisine</text>
+<rect class="tall" x="312" y="129" width="59" height="59"/>
+<rect class="tech" x="371" y="129" width="11" height="40"/>
+<text class="t" x="341" y="140" text-anchor="middle" style="font-weight:700">Frigo</text>
+<text class="tx" x="341" y="144.5" text-anchor="middle">colonne P59 · h 238</text>
+<text class="tx" x="341" y="148.5" text-anchor="middle">◂ façade ouest</text>
+<text class="tx" x="376.5" y="145" text-anchor="middle" transform="rotate(-90 376.5 145)">gaine 11</text>
+<path class="swing" d="M312 130 A56 56 0 0 0 268 156"/>
+<text class="tx muted" x="298" y="140" text-anchor="middle">porte frigo</text>
+<rect class="tech" x="418" y="0" width="16" height="18"/>
+<circle cx="426" cy="10" r="4.5" style="fill:var(--panel);stroke:var(--water);stroke-width:1"/>
+<text class="tx" x="426" y="11" text-anchor="middle">chute</text>
+<circle class="ecs" cx="459" cy="72" r="25"/>
+<text class="ts" x="459" y="62" text-anchor="middle" style="font-weight:700">Ballon ECS Ø 50</text>
+<text class="tx" x="459" y="66" text-anchor="middle">suspendu h 70 → 200</text>
+<text class="tx" x="459" y="74" text-anchor="middle">dessous h 0 → 70 :</text>
+<text class="tx" x="459" y="78" text-anchor="middle">nourrice, vannes,</text>
+<text class="tx" x="459" y="82" text-anchor="middle">groupe de sécurité</text>
+<path class="pin" d="M470 52 L432 52 L432 4 L270 4"/>
+<line class="pin" x1="440" y1="52" x2="434" y2="52"/>
+<path class="pout" d="M270 10 L421 10"/>
+<path class="pout" d="M446 94 L429 94 L429 15"/>
+<circle cx="446" cy="94" r="1.6" style="fill:var(--panel);stroke:var(--water);stroke-width:.6"/>
+<text class="tx" x="450" y="95" text-anchor="start" style="fill:var(--water);font-weight:700">GS</text>
+<line class="dim" x1="434" y1="-28" x2="484" y2="-28" marker-start="url(#tk)" marker-end="url(#tk)"/><text class="dimt" x="459" y="-29.2" text-anchor="middle">niche 50</text>
+<line class="dim" x1="317" y1="-40" x2="434" y2="-40" marker-start="url(#tk)" marker-end="url(#tk)"/><text class="dimt" x="375.5" y="-41.2" text-anchor="middle">cellier 117</text>
+<line class="dim" x1="312" y1="-40" x2="317" y2="-40" marker-start="url(#tk)" marker-end="url(#tk)"/><text class="dimt" x="314.5" y="-41.2" text-anchor="middle" style="font-size:2.2px">5</text>
+<line class="dim" x1="504" y1="44" x2="504" y2="100" marker-start="url(#tk)" marker-end="url(#tk)"/><text class="dimt" x="502.8" y="72" text-anchor="middle" transform="rotate(-90 502.8 72)">niche 56</text>
+<line class="dim" x1="511" y1="0" x2="511" y2="100" marker-start="url(#tk)" marker-end="url(#tk)"/><text class="dimt" x="509.8" y="50" text-anchor="middle" transform="rotate(-90 509.8 50)">cellier 100</text>
+<line class="dim" x1="317" y1="-43" x2="317" y2="-1"/><line class="dim" x1="434" y1="-43" x2="434" y2="-21"/>
+<line class="dim" x1="485" y1="44" x2="514" y2="44"/><line class="dim" x1="435" y1="0" x2="514" y2="0"/><line class="dim" x1="495" y1="100" x2="514" y2="100"/>
+<polygon class="free" points="317,58 330,58 330,30 357,30 357,100 382,100 382,121 317,121"/>
+<rect class="tz" x="357" y="40" width="77" height="60"/>
+<rect class="broom" x="317" y="0" width="39" height="30"/>
+<rect class="upper" x="318" y="1" width="37" height="28"/>
+<text class="ts broomt" x="336.5" y="15" text-anchor="middle">Balais (rail)</text>
+<text class="tx" x="336.5" y="19" text-anchor="middle">P30 · h 0 → 150</text>
+<text class="tx" x="336.5" y="24" text-anchor="middle" style="fill:var(--muted)">P30 au-dessus</text>
+<text class="tx" x="336.5" y="28" text-anchor="middle" style="fill:var(--muted)">h 165 · 200 · 235</text>
+<rect class="broom" x="317" y="32" width="13" height="26"/>
+<circle class="app" cx="323.5" cy="45" r="4.5"/>
+<rect class="plug" x="317" y="37" width="2" height="3"/>
+<text class="tx broomt" x="332" y="40" text-anchor="start">Station aspi</text>
+<text class="tx" x="332" y="44" text-anchor="start">P13 · h 0 → 130</text>
+<text class="tx" x="332" y="48" text-anchor="start">prise 16 A h 110</text>
+<rect class="tall" x="357" y="0" width="61" height="40" style="fill-opacity:.7"/>
+<rect x="359" y="4" width="28" height="34" style="fill:none;stroke:var(--ink);stroke-width:.35;stroke-dasharray:1.5 1"/>
+<rect x="389" y="4" width="28" height="34" style="fill:none;stroke:var(--ink);stroke-width:.35;stroke-dasharray:1.5 1"/>
+<text class="ts halo" x="387.5" y="15" text-anchor="middle" style="font-weight:700">Garde-manger P40</text>
+<text class="tx halo" x="387.5" y="19.5" text-anchor="middle">sol + 6 niveaux</text>
+<text class="tx halo" x="387.5" y="23.5" text-anchor="middle">h 40 · 75 · 110 · 145 · 180 · 215</text>
+<text class="tx muted" x="373" y="30" text-anchor="middle">bac tri 30 L</text>
+<text class="tx muted" x="403" y="30" text-anchor="middle">bac tri 30 L</text>
+<text class="tx muted" x="373" y="34" text-anchor="middle">au sol</text>
+<text class="tx muted" x="403" y="34" text-anchor="middle">au sol</text>
+<rect class="cab" x="424" y="18" width="10" height="26"/>
+<text class="tx" x="429.8" y="31" text-anchor="middle" transform="rotate(-90 429.8 31)">crochets h 100 → 180</text>
+<rect class="cab" x="384" y="92" width="42" height="8"/>
+<text class="tx" x="405" y="95.3" text-anchor="middle">planche + escabeau</text>
+<text class="tx" x="405" y="98.6" text-anchor="middle">à plat · P8 · h 20 → 160</text>
+<path d="M424.5 14.5 L427.5 17.5 M427.5 14.5 L424.5 17.5" style="stroke:var(--tri);stroke-width:.6"/>
+<text class="tx redt" x="396" y="49" text-anchor="middle">× piquage du LL obturé sur la chute</text>
+<text class="ts tzt" x="395" y="58" text-anchor="middle">zone technique libre</text>
+<text class="tx tzt" x="395" y="62" text-anchor="middle">ballon, GS, chute en direct</text>
+<line class="dim" x1="357" y1="70" x2="434" y2="70" marker-start="url(#tk)" marker-end="url(#tk)" style="stroke:var(--water)"/><text class="dimt" x="395.5" y="68.8" text-anchor="middle" style="fill:var(--water)">77</text>
+<line class="dim" x1="366" y1="40" x2="366" y2="100" marker-start="url(#tk)" marker-end="url(#tk)" style="stroke:var(--water)"/><text class="dimt" x="364.8" y="70" text-anchor="middle" transform="rotate(-90 364.8 70)" style="fill:var(--water)">60</text>
+<line class="dim" x1="420" y1="40" x2="420" y2="92" marker-start="url(#tk)" marker-end="url(#tk)" style="stroke:var(--water)"/><text class="dimt" x="418.8" y="66" text-anchor="middle" transform="rotate(-90 418.8 66)" style="fill:var(--water);font-size:2.4px">52</text>
+<rect class="upper" x="435" y="45" width="48" height="54"/>
+<text class="tx muted" x="459" y="56.5" text-anchor="middle">tablette h 215 au-dessus</text>
+<line class="dim" x1="330" y1="52" x2="357" y2="52" marker-start="url(#tk)" marker-end="url(#tk)"/><text class="dimt" x="343.5" y="50.8" text-anchor="middle">27</text>
+<line class="dim" x1="317" y1="-28" x2="356" y2="-28" marker-start="url(#tk)" marker-end="url(#tk)"/><text class="dimt" x="336.5" y="-29.2" text-anchor="middle">balais 39</text>
+<line class="dim" x1="357" y1="-28" x2="418" y2="-28" marker-start="url(#tk)" marker-end="url(#tk)"/><text class="dimt" x="387.5" y="-29.2" text-anchor="middle">garde-manger 61</text>
+<line class="dim" x1="418" y1="-28" x2="434" y2="-28" marker-start="url(#tk)" marker-end="url(#tk)"/><text class="dimt" x="426" y="-29.2" text-anchor="middle">16</text>
+<path class="doorzone" d="M316 125 L316 65 A60 60 0 0 1 376 125 Z"/>
+<path class="doorarc" d="M316 65 A60 60 0 0 1 376 125"/>
+<rect class="dark" x="312" y="62" width="5" height="3"/>
+<rect class="dark" x="312" y="125" width="5" height="2"/>
+<rect class="park" x="312" y="65" width="4" height="60"/>
+<rect class="pf" x="316" y="121" width="60" height="4"/>
+<circle cx="316" cy="125" r="1.2" class="dark"/>
+<text class="tx" x="346" y="119.6" text-anchor="middle">porte A ouverte · vantail 60</text>
+<line class="dim" x1="300" y1="62" x2="300" y2="127" marker-start="url(#tk)" marker-end="url(#tk)"/><text class="dimt" x="298.8" y="94.5" text-anchor="middle" transform="rotate(-90 298.8 94.5)">baie 65</text>
+<line class="dim" x1="306" y1="65" x2="306" y2="121" marker-start="url(#tk)" marker-end="url(#tk)" style="stroke:var(--flow)"/><text class="dimt" x="304.8" y="93" text-anchor="middle" transform="rotate(-90 304.8 93)" style="fill:var(--flow)">passage ≈ 56</text>
+<line class="dim" x1="316" y1="125" x2="317" y2="58" marker-start="url(#tk)" marker-end="url(#tk)" style="stroke:var(--flow)"/><text class="dimt" x="319" y="82" text-anchor="start" style="fill:var(--flow);font-size:2.6px">67</text>
+<text class="tx flowt" x="320" y="108" text-anchor="start">circulation</text>
+<line class="dim" x1="347" y1="30" x2="347" y2="121" marker-start="url(#tk)" marker-end="url(#tk)"/><text class="dimt" x="345.8" y="75.5" text-anchor="middle" transform="rotate(-90 345.8 75.5)" style="font-size:2.4px">91 porte ouverte</text>
+</svg>
+</div>
+<p class="cap">Le LL part dans la SdB. Garde-manger P40 sur tasseaux (tuyaux derrière), x 357 → 418 : sol + 6 tablettes de 61, deux bacs de tri de 30 L (ou des packs d'eau) au sol. Rail à balais, 3 étagères P30 au-dessus et station aspi à l'entrée, comme L1. Zone technique de 77 × 60 libre devant la niche : on se tient debout devant le GS ; le chemin pour sortir le ballon fait 60 (52 avec la planche et l'escabeau accrochés à plat contre le mur du WC). Crochets à cabas sur le mur est. Réversible : en gardant l'alimentation bouchonnée, le piquage obturé et le circuit 20 A en attente, un LL ou un sèche-linge pourra reprendre la place x 358 → 418, y 8 → 68 (= L1) en retirant les 3 tablettes basses.</p>
+<div class="pcc"><div class="p"><h4>Pour</h4><ul><li>Le plus de rangement utile sans angle mort : 533 cm de tablettes, × 2,3 par rapport à l'existant.</li><li>Ballon, GS, nourrice et chute en accès direct et debout ; chemin de 60 pour sortir le ballon.</li><li>Un seul dessin pour A, B et C ; travaux légers ; réversible (place du LL réservée).</li></ul></div><div class="c"><h4>Contre</h4><ul><li>Plus de buanderie au cellier.</li><li>0,46 m² de sol laissés vides (voulu : maintenance et circulation).</li><li>Tablettes à h 215 : escabeau.</li></ul></div><div class="s"><h4>À choisir si…</h4><ul><li>Le LL va dans la SdB (meuble V2), quelle que soit la porte. C'est la recommandation.</li></ul></div></div>
+</div>
+<div class="fig" id="fig-S2">
+<div class="figt"><h3>S2 · étagères P30 sur tout le mur nord, balais au mur sud</h3><span class="chip ok">portes A · B · C</span></div>
+<div class="scroll">
+<svg class="cel" viewBox="262 -50 256 210" role="img" aria-label="Plan de la proposition S2 sans lave-linge : étagères profondes 30 sur toute la longueur du mur nord, balais contre le mur du WC, zone technique de 50 par 45, porte battante A">
+<polygon class="floorbg" points="270,0 312,0 312,160 270,160"/>
+<polygon fill="url(#pq)" points="270,0 312,0 312,160 270,160"/>
+<polygon class="cellf" points="317,0 434,0 434,44 484,44 484,100 382,100 382,129 312,129 312,62 317,62"/>
+<polygon fill="url(#tl)" points="317,0 434,0 434,44 484,44 484,100 382,100 382,129 312,129 312,62 317,62"/>
+<rect class="wc" x="392" y="110" width="92" height="50"/>
+<text class="tb muted" x="438" y="132" text-anchor="middle">WC</text>
+<text class="ts muted" x="438" y="137" text-anchor="middle">(conservé)</text>
+<rect class="w" x="262" y="-20" width="172" height="20"/>
+<rect class="w" x="434" y="-20" width="60" height="64"/>
+<rect class="w" x="484" y="44" width="10" height="120"/>
+<rect class="w" x="382" y="100" width="102" height="10"/>
+<rect class="w" x="382" y="110" width="10" height="50"/>
+<text class="ts" x="464" y="16" text-anchor="middle" style="fill:var(--paper)">maçonnerie</text>
+<text class="ts" x="464" y="20" text-anchor="middle" style="fill:var(--paper)">/ gaine (hyp.)</text>
+<rect class="nw" x="312" y="0" width="5" height="62"/>
+<rect class="nw" x="312" y="127" width="5" height="2"/>
+<rect class="tall" x="249" y="0" width="60" height="60"/>
+<rect class="cab" x="309" y="0" width="3" height="60"/>
+<text class="ts" x="294" y="24" text-anchor="middle" style="font-weight:700">Colonne LV</text>
+<text class="tx" x="294" y="28.5" text-anchor="middle">P60 · h 238</text>
+<text class="ts muted" x="280" y="108" text-anchor="middle" transform="rotate(-90 280 108)">cuisine</text>
+<rect class="tall" x="312" y="129" width="59" height="59"/>
+<rect class="tech" x="371" y="129" width="11" height="40"/>
+<text class="t" x="341" y="140" text-anchor="middle" style="font-weight:700">Frigo</text>
+<text class="tx" x="341" y="144.5" text-anchor="middle">colonne P59 · h 238</text>
+<text class="tx" x="341" y="148.5" text-anchor="middle">◂ façade ouest</text>
+<text class="tx" x="376.5" y="145" text-anchor="middle" transform="rotate(-90 376.5 145)">gaine 11</text>
+<path class="swing" d="M312 130 A56 56 0 0 0 268 156"/>
+<text class="tx muted" x="298" y="140" text-anchor="middle">porte frigo</text>
+<rect class="tech" x="418" y="0" width="16" height="18"/>
+<circle cx="426" cy="10" r="4.5" style="fill:var(--panel);stroke:var(--water);stroke-width:1"/>
+<text class="tx" x="426" y="11" text-anchor="middle">chute</text>
+<circle class="ecs" cx="459" cy="72" r="25"/>
+<text class="ts" x="459" y="62" text-anchor="middle" style="font-weight:700">Ballon ECS Ø 50</text>
+<text class="tx" x="459" y="66" text-anchor="middle">suspendu h 70 → 200</text>
+<text class="tx" x="459" y="74" text-anchor="middle">dessous h 0 → 70 :</text>
+<text class="tx" x="459" y="78" text-anchor="middle">nourrice, vannes,</text>
+<text class="tx" x="459" y="82" text-anchor="middle">groupe de sécurité</text>
+<path class="pin" d="M470 52 L432 52 L432 4 L270 4"/>
+<line class="pin" x1="440" y1="52" x2="434" y2="52"/>
+<path class="pout" d="M270 10 L421 10"/>
+<path class="pout" d="M446 94 L429 94 L429 15"/>
+<circle cx="446" cy="94" r="1.6" style="fill:var(--panel);stroke:var(--water);stroke-width:.6"/>
+<text class="tx" x="450" y="95" text-anchor="start" style="fill:var(--water);font-weight:700">GS</text>
+<line class="dim" x1="434" y1="-28" x2="484" y2="-28" marker-start="url(#tk)" marker-end="url(#tk)"/><text class="dimt" x="459" y="-29.2" text-anchor="middle">niche 50</text>
+<line class="dim" x1="317" y1="-40" x2="434" y2="-40" marker-start="url(#tk)" marker-end="url(#tk)"/><text class="dimt" x="375.5" y="-41.2" text-anchor="middle">cellier 117</text>
+<line class="dim" x1="312" y1="-40" x2="317" y2="-40" marker-start="url(#tk)" marker-end="url(#tk)"/><text class="dimt" x="314.5" y="-41.2" text-anchor="middle" style="font-size:2.2px">5</text>
+<line class="dim" x1="504" y1="44" x2="504" y2="100" marker-start="url(#tk)" marker-end="url(#tk)"/><text class="dimt" x="502.8" y="72" text-anchor="middle" transform="rotate(-90 502.8 72)">niche 56</text>
+<line class="dim" x1="511" y1="0" x2="511" y2="100" marker-start="url(#tk)" marker-end="url(#tk)"/><text class="dimt" x="509.8" y="50" text-anchor="middle" transform="rotate(-90 509.8 50)">cellier 100</text>
+<line class="dim" x1="317" y1="-43" x2="317" y2="-1"/><line class="dim" x1="434" y1="-43" x2="434" y2="-21"/>
+<line class="dim" x1="485" y1="44" x2="514" y2="44"/><line class="dim" x1="435" y1="0" x2="514" y2="0"/><line class="dim" x1="495" y1="100" x2="514" y2="100"/>
+<polygon class="free" points="317,30 384,30 384,100 382,100 382,121 317,121"/>
+<rect class="tz" x="384" y="30" width="50" height="45"/>
+<rect class="tall" x="317" y="0" width="101" height="30" style="fill-opacity:.7"/>
+<text class="ts" x="367.5" y="16" text-anchor="middle" style="font-weight:700">Étagères P30 sur toute la longueur</text>
+<text class="tx" x="367.5" y="20.5" text-anchor="middle">6 niveaux h 22 · 60 · 98 · 136 · 174 · 212</text>
+<text class="tx" x="367.5" y="25" text-anchor="middle">6 × 101 = 606 cm</text>
+<rect class="broom" x="384" y="75" width="50" height="25"/>
+<circle class="app" cx="397" cy="88" r="5"/>
+<text class="tx" x="397" y="89" text-anchor="middle">aspi</text>
+<rect class="plug" x="384" y="76" width="3" height="2"/>
+<text class="ts broomt" x="416" y="82" text-anchor="middle">Balais</text>
+<text class="tx" x="416" y="86" text-anchor="middle">P25 · h 0 → 150</text>
+<text class="tx" x="416" y="90" text-anchor="middle">sur le mur du WC</text>
+<text class="tx" x="416" y="94" text-anchor="middle">prise h 110</text>
+<text class="ts tzt" x="409" y="50" text-anchor="middle">zone technique</text>
+<text class="tx tzt" x="409" y="54" text-anchor="middle">libre 50 × 45</text>
+<line class="dim" x1="384" y1="64" x2="434" y2="64" marker-start="url(#tk)" marker-end="url(#tk)" style="stroke:var(--water)"/><text class="dimt" x="409" y="62.8" text-anchor="middle" style="fill:var(--water)">50</text>
+<line class="dim" x1="390" y1="30" x2="390" y2="75" marker-start="url(#tk)" marker-end="url(#tk)" style="stroke:var(--water)"/><text class="dimt" x="388.8" y="52.5" text-anchor="middle" transform="rotate(-90 388.8 52.5)" style="fill:var(--water);font-size:2.6px">45</text>
+<rect class="upper" x="435" y="45" width="48" height="54"/>
+<text class="tx muted" x="459" y="56.5" text-anchor="middle">tablette h 215 au-dessus</text>
+<path class="doorzone" d="M316 125 L316 65 A60 60 0 0 1 376 125 Z"/>
+<path class="doorarc" d="M316 65 A60 60 0 0 1 376 125"/>
+<rect class="dark" x="312" y="62" width="5" height="3"/>
+<rect class="dark" x="312" y="125" width="5" height="2"/>
+<rect class="park" x="312" y="65" width="4" height="60"/>
+<rect class="pf" x="316" y="121" width="60" height="4"/>
+<circle cx="316" cy="125" r="1.2" class="dark"/>
+<text class="tx" x="346" y="119.6" text-anchor="middle">porte A ouverte · vantail 60</text>
+<line class="dim" x1="300" y1="62" x2="300" y2="127" marker-start="url(#tk)" marker-end="url(#tk)"/><text class="dimt" x="298.8" y="94.5" text-anchor="middle" transform="rotate(-90 298.8 94.5)">baie 65</text>
+<line class="dim" x1="306" y1="65" x2="306" y2="121" marker-start="url(#tk)" marker-end="url(#tk)" style="stroke:var(--flow)"/><text class="dimt" x="304.8" y="93" text-anchor="middle" transform="rotate(-90 304.8 93)" style="fill:var(--flow)">passage ≈ 56</text>
+<line class="dim" x1="316" y1="125" x2="384" y2="100" marker-start="url(#tk)" marker-end="url(#tk)" style="stroke:var(--flow)"/><text class="dimt" x="349.5" y="111.2" text-anchor="middle" transform="rotate(-20.2 349.5 111.2)" style="fill:var(--flow);font-size:2.4px">72,4</text>
+<line class="dim" x1="347" y1="30" x2="347" y2="121" marker-start="url(#tk)" marker-end="url(#tk)"/><text class="dimt" x="345.8" y="75.5" text-anchor="middle" transform="rotate(-90 345.8 75.5)" style="font-size:2.4px">91 porte ouverte</text>
+<text class="tx flowt" x="330" y="100" text-anchor="middle">circulation</text>
+<line class="dim" x1="317" y1="-28" x2="418" y2="-28" marker-start="url(#tk)" marker-end="url(#tk)"/><text class="dimt" x="367.5" y="-29.2" text-anchor="middle">étagères 101</text>
+<line class="dim" x1="418" y1="-28" x2="434" y2="-28" marker-start="url(#tk)" marker-end="url(#tk)"/><text class="dimt" x="426" y="-29.2" text-anchor="middle">16</text>
+</svg>
+</div>
+<p class="cap">Étagères P30 x 317 → 418 sur 6 niveaux (606 cm), en face d'un dégagement de 91 porte A ouverte. Balais et aspirateur contre la face nord du mur du WC (x 384 → 434, y 75 → 100), avec une prise à h 110 sur ce mur. Zone technique de 50 × 45 devant la niche ; pour sortir le ballon, on décroche un ou deux balais (on retrouve 70).</p>
+<div class="pcc"><div class="p"><h4>Pour</h4><ul><li>Le plus grand linéaire : 656 cm de tablettes P30, rien ne se perd au fond.</li><li>Compatible A, B, C ; travaux légers.</li></ul></div><div class="c"><h4>Contre</h4><ul><li>Balais au fond, devant le ballon : on les décroche pour sortir le ballon (zone 50 × 45 seulement).</li><li>Pas de tablette profonde pour les packs et le petit électroménager.</li><li>Prise à poser sur le mur du WC (nature du mur à vérifier).</li></ul></div><div class="s"><h4>À choisir si…</h4><ul><li>Vous stockez surtout des petits objets (bocaux, conserves, produits) et peu de volumineux.</li></ul></div></div>
+</div>
+<div class="fig" id="fig-S3">
+<div class="figt"><h3>S3 · « office » : S1 + colonne dans le sas + étendoir</h3><span class="chip ko">portes B · C</span></div>
+<div class="scroll">
+<svg class="cel" viewBox="262 -50 256 210" role="img" aria-label="Plan de la proposition S3 sans lave-linge : S1 plus une colonne de rangement profonde 25 contre le mur du WC dans le sas et un étendoir de plafond, porte pivotante-coulissante C ; la porte battante A heurterait la colonne">
+<polygon class="floorbg" points="270,0 312,0 312,160 270,160"/>
+<polygon fill="url(#pq)" points="270,0 312,0 312,160 270,160"/>
+<polygon class="cellf" points="317,0 434,0 434,44 484,44 484,100 382,100 382,129 312,129 312,62 317,62"/>
+<polygon fill="url(#tl)" points="317,0 434,0 434,44 484,44 484,100 382,100 382,129 312,129 312,62 317,62"/>
+<rect class="wc" x="392" y="110" width="92" height="50"/>
+<text class="tb muted" x="438" y="132" text-anchor="middle">WC</text>
+<text class="ts muted" x="438" y="137" text-anchor="middle">(conservé)</text>
+<rect class="w" x="262" y="-20" width="172" height="20"/>
+<rect class="w" x="434" y="-20" width="60" height="64"/>
+<rect class="w" x="484" y="44" width="10" height="120"/>
+<rect class="w" x="382" y="100" width="102" height="10"/>
+<rect class="w" x="382" y="110" width="10" height="50"/>
+<text class="ts" x="464" y="16" text-anchor="middle" style="fill:var(--paper)">maçonnerie</text>
+<text class="ts" x="464" y="20" text-anchor="middle" style="fill:var(--paper)">/ gaine (hyp.)</text>
+<rect class="nw" x="312" y="0" width="5" height="62"/>
+<rect class="nw" x="312" y="127" width="5" height="2"/>
+<rect class="tall" x="249" y="0" width="60" height="60"/>
+<rect class="cab" x="309" y="0" width="3" height="60"/>
+<text class="ts" x="294" y="24" text-anchor="middle" style="font-weight:700">Colonne LV</text>
+<text class="tx" x="294" y="28.5" text-anchor="middle">P60 · h 238</text>
+<text class="ts muted" x="280" y="108" text-anchor="middle" transform="rotate(-90 280 108)">cuisine</text>
+<rect class="tall" x="312" y="129" width="59" height="59"/>
+<rect class="tech" x="371" y="129" width="11" height="40"/>
+<text class="t" x="341" y="140" text-anchor="middle" style="font-weight:700">Frigo</text>
+<text class="tx" x="341" y="144.5" text-anchor="middle">colonne P59 · h 238</text>
+<text class="tx" x="341" y="148.5" text-anchor="middle">◂ façade ouest</text>
+<text class="tx" x="376.5" y="145" text-anchor="middle" transform="rotate(-90 376.5 145)">gaine 11</text>
+<path class="swing" d="M312 130 A56 56 0 0 0 268 156"/>
+<text class="tx muted" x="298" y="140" text-anchor="middle">porte frigo</text>
+<rect class="tech" x="418" y="0" width="16" height="18"/>
+<circle cx="426" cy="10" r="4.5" style="fill:var(--panel);stroke:var(--water);stroke-width:1"/>
+<text class="tx" x="426" y="11" text-anchor="middle">chute</text>
+<circle class="ecs" cx="459" cy="72" r="25"/>
+<text class="ts" x="459" y="62" text-anchor="middle" style="font-weight:700">Ballon ECS Ø 50</text>
+<text class="tx" x="459" y="66" text-anchor="middle">suspendu h 70 → 200</text>
+<text class="tx" x="459" y="74" text-anchor="middle">dessous h 0 → 70 :</text>
+<text class="tx" x="459" y="78" text-anchor="middle">nourrice, vannes,</text>
+<text class="tx" x="459" y="82" text-anchor="middle">groupe de sécurité</text>
+<path class="pin" d="M470 52 L432 52 L432 4 L270 4"/>
+<line class="pin" x1="440" y1="52" x2="434" y2="52"/>
+<path class="pout" d="M270 10 L421 10"/>
+<path class="pout" d="M446 94 L429 94 L429 15"/>
+<circle cx="446" cy="94" r="1.6" style="fill:var(--panel);stroke:var(--water);stroke-width:.6"/>
+<text class="tx" x="450" y="95" text-anchor="start" style="fill:var(--water);font-weight:700">GS</text>
+<line class="dim" x1="434" y1="-28" x2="484" y2="-28" marker-start="url(#tk)" marker-end="url(#tk)"/><text class="dimt" x="459" y="-29.2" text-anchor="middle">niche 50</text>
+<line class="dim" x1="317" y1="-40" x2="434" y2="-40" marker-start="url(#tk)" marker-end="url(#tk)"/><text class="dimt" x="375.5" y="-41.2" text-anchor="middle">cellier 117</text>
+<line class="dim" x1="312" y1="-40" x2="317" y2="-40" marker-start="url(#tk)" marker-end="url(#tk)"/><text class="dimt" x="314.5" y="-41.2" text-anchor="middle" style="font-size:2.2px">5</text>
+<line class="dim" x1="504" y1="44" x2="504" y2="100" marker-start="url(#tk)" marker-end="url(#tk)"/><text class="dimt" x="502.8" y="72" text-anchor="middle" transform="rotate(-90 502.8 72)">niche 56</text>
+<line class="dim" x1="511" y1="0" x2="511" y2="100" marker-start="url(#tk)" marker-end="url(#tk)"/><text class="dimt" x="509.8" y="50" text-anchor="middle" transform="rotate(-90 509.8 50)">cellier 100</text>
+<line class="dim" x1="317" y1="-43" x2="317" y2="-1"/><line class="dim" x1="434" y1="-43" x2="434" y2="-21"/>
+<line class="dim" x1="485" y1="44" x2="514" y2="44"/><line class="dim" x1="435" y1="0" x2="514" y2="0"/><line class="dim" x1="495" y1="100" x2="514" y2="100"/>
+<polygon class="free" points="317,58 330,58 330,30 357,30 357,129 347,129 347,119 317,119"/>
+<rect class="tz" x="357" y="40" width="77" height="60"/>
+<rect class="broom" x="317" y="0" width="39" height="30"/>
+<rect class="upper" x="318" y="1" width="37" height="28"/>
+<text class="ts broomt" x="336.5" y="15" text-anchor="middle">Balais (rail)</text>
+<text class="tx" x="336.5" y="19" text-anchor="middle">P30 · h 0 → 150</text>
+<text class="tx" x="336.5" y="24" text-anchor="middle" style="fill:var(--muted)">P30 au-dessus</text>
+<text class="tx" x="336.5" y="28" text-anchor="middle" style="fill:var(--muted)">h 165 · 200 · 235</text>
+<rect class="broom" x="317" y="32" width="13" height="26"/>
+<circle class="app" cx="323.5" cy="45" r="4.5"/>
+<rect class="plug" x="317" y="37" width="2" height="3"/>
+<text class="tx broomt" x="332" y="40" text-anchor="start">Station aspi</text>
+<text class="tx" x="332" y="44" text-anchor="start">P13 · h 0 → 130</text>
+<text class="tx" x="332" y="48" text-anchor="start">prise 16 A h 110</text>
+<rect class="tall" x="357" y="0" width="61" height="40" style="fill-opacity:.7"/>
+<rect x="359" y="4" width="28" height="34" style="fill:none;stroke:var(--ink);stroke-width:.35;stroke-dasharray:1.5 1"/>
+<rect x="389" y="4" width="28" height="34" style="fill:none;stroke:var(--ink);stroke-width:.35;stroke-dasharray:1.5 1"/>
+<text class="ts halo" x="387.5" y="15" text-anchor="middle" style="font-weight:700">Garde-manger P40</text>
+<text class="tx halo" x="387.5" y="19.5" text-anchor="middle">sol + 6 niveaux</text>
+<text class="tx halo" x="387.5" y="23.5" text-anchor="middle">h 40 · 75 · 110 · 145 · 180 · 215</text>
+<text class="tx muted" x="373" y="30" text-anchor="middle">bac tri 30 L</text>
+<text class="tx muted" x="403" y="30" text-anchor="middle">bac tri 30 L</text>
+<text class="tx muted" x="373" y="34" text-anchor="middle">au sol</text>
+<text class="tx muted" x="403" y="34" text-anchor="middle">au sol</text>
+<rect class="cab" x="424" y="18" width="10" height="26"/>
+<text class="tx" x="429.8" y="31" text-anchor="middle" transform="rotate(-90 429.8 31)">crochets h 100 → 180</text>
+<rect class="cab" x="384" y="92" width="42" height="8"/>
+<text class="tx" x="405" y="95.3" text-anchor="middle">planche + escabeau</text>
+<text class="tx" x="405" y="98.6" text-anchor="middle">à plat · P8 · h 20 → 160</text>
+<path d="M424.5 14.5 L427.5 17.5 M427.5 14.5 L424.5 17.5" style="stroke:var(--tri);stroke-width:.6"/>
+<text class="tx redt" x="396" y="49" text-anchor="middle">× piquage du LL obturé sur la chute</text>
+<text class="ts tzt" x="395" y="58" text-anchor="middle">zone technique libre</text>
+<text class="tx tzt" x="395" y="62" text-anchor="middle">ballon, GS, chute en direct</text>
+<line class="dim" x1="357" y1="70" x2="434" y2="70" marker-start="url(#tk)" marker-end="url(#tk)" style="stroke:var(--water)"/><text class="dimt" x="395.5" y="68.8" text-anchor="middle" style="fill:var(--water)">77</text>
+<line class="dim" x1="366" y1="40" x2="366" y2="100" marker-start="url(#tk)" marker-end="url(#tk)" style="stroke:var(--water)"/><text class="dimt" x="364.8" y="70" text-anchor="middle" transform="rotate(-90 364.8 70)" style="fill:var(--water)">60</text>
+<line class="dim" x1="420" y1="40" x2="420" y2="92" marker-start="url(#tk)" marker-end="url(#tk)" style="stroke:var(--water)"/><text class="dimt" x="418.8" y="66" text-anchor="middle" transform="rotate(-90 418.8 66)" style="fill:var(--water);font-size:2.4px">52</text>
+<rect class="upper" x="435" y="45" width="48" height="54"/>
+<text class="tx muted" x="459" y="56.5" text-anchor="middle">tablette h 215 au-dessus</text>
+<line class="dim" x1="330" y1="52" x2="357" y2="52" marker-start="url(#tk)" marker-end="url(#tk)"/><text class="dimt" x="343.5" y="50.8" text-anchor="middle">27</text>
+<line class="dim" x1="317" y1="-28" x2="356" y2="-28" marker-start="url(#tk)" marker-end="url(#tk)"/><text class="dimt" x="336.5" y="-29.2" text-anchor="middle">balais 39</text>
+<line class="dim" x1="357" y1="-28" x2="418" y2="-28" marker-start="url(#tk)" marker-end="url(#tk)"/><text class="dimt" x="387.5" y="-29.2" text-anchor="middle">garde-manger 61</text>
+<line class="dim" x1="418" y1="-28" x2="434" y2="-28" marker-start="url(#tk)" marker-end="url(#tk)"/><text class="dimt" x="426" y="-29.2" text-anchor="middle">16</text>
+<rect class="upper" x="385" y="41" width="48" height="50" style="stroke:var(--water)"/>
+<text class="tx" x="409" y="80" text-anchor="middle" style="fill:var(--water)">étendoir de plafond</text>
+<text class="tx" x="409" y="84" text-anchor="middle" style="fill:var(--water)">à poulie · h ≥ 205</text>
+<rect class="tall" x="357" y="100" width="25" height="29"/>
+<text class="ts halo" x="369.5" y="108" text-anchor="middle" style="font-weight:700">Colonne</text>
+<text class="tx halo" x="369.5" y="112" text-anchor="middle">P25 · h 0 → 210</text>
+<text class="tx halo" x="369.5" y="116" text-anchor="middle">6 tablettes</text>
+<text class="tx halo" x="369.5" y="120" text-anchor="middle">entretien, vin</text>
+<line class="srail" x1="314" y1="62" x2="314" y2="127" style="stroke-dasharray:2 1.5;stroke-width:.8"/>
+<rect class="pf" x="312" y="62" width="4" height="65" style="stroke-width:1"/>
+<circle cx="314" cy="94.5" r="1" style="fill:var(--wood)"/>
+<rect x="281.5" y="123" width="65" height="4" style="fill:var(--tall);fill-opacity:.35;stroke:var(--wood);stroke-width:.6;stroke-dasharray:3 1.5"/>
+<circle cx="314" cy="125" r="1" style="fill:var(--wood)"/>
+<path class="swing" d="M314 62 Q284 76 281.5 123"/>
+<path class="swing" d="M314 127 Q342 130 346.5 127"/>
+<text class="ts" x="296" y="112" text-anchor="middle" style="fill:var(--wood);font-weight:700">porte C 65</text>
+<text class="tx" x="296" y="116" text-anchor="middle" style="fill:var(--wood)">ouverte ½ - ½</text>
+<line class="dim" x1="300" y1="62" x2="300" y2="127" marker-start="url(#tk)" marker-end="url(#tk)"/><text class="dimt" x="298.8" y="94.5" text-anchor="middle" transform="rotate(-90 298.8 94.5)" style="font-size:2.6px">baie 65</text>
+<line class="dim" x1="306" y1="62" x2="306" y2="123" marker-start="url(#tk)" marker-end="url(#tk)" style="stroke:var(--flow)"/><text class="dimt" x="304.8" y="92.5" text-anchor="middle" transform="rotate(-90 304.8 92.5)" style="fill:var(--flow)">passage ≈ 61</text>
+<path class="aghost" d="M316 125 L316 65 A60 60 0 0 1 376 125"/>
+<text class="tx redt" x="321" y="64" text-anchor="start">arc de la porte A (r 60)</text>
+<circle class="ring" cx="357" cy="125" r="2.5"/>
+<line class="dim" x1="316" y1="125.6" x2="357" y2="125.6" marker-start="url(#tk)" marker-end="url(#tk)" style="stroke:var(--tri)"/><text class="dimt" x="347" y="133.5" text-anchor="middle" style="fill:var(--tri);font-size:2.6px">41 &lt; 60</text>
+<line class="dim" x1="317" y1="110" x2="357" y2="110" marker-start="url(#tk)" marker-end="url(#tk)"/><text class="dimt" x="337" y="108.8" text-anchor="middle">40</text>
+<text class="tx flowt" x="320" y="104" text-anchor="start">circulation</text>
+</svg>
+</div>
+<p class="cap">S1, plus une colonne P25 contre le mur du WC (face ouest), x 357 → 382 : y 100 → 129 en C (6 tablettes de 29 ≈ 170 cm), y 100 → 122 en B (≈ 130 cm). Étendoir de plafond à poulie au-dessus de la zone technique, remonté à h ≥ 205 (le linge pend jusqu'à h ≈ 140, au-dessus d'une personne accroupie devant le GS), à condition que le cellier soit ventilé. Casier à vin plutôt que cave : le ballon chauffe la pièce (de mémoire, non vérifié : environ 1 à 2 kWh/j de pertes). Dessinée avec la porte C ; l'arc rouge est celui qu'aurait la porte A.</p>
+<div class="pcc"><div class="p"><h4>Pour</h4><ul><li>Maximum de rangement (≈ 700 cm) et séchage du linge au cellier.</li><li>Colonne d'entretien ou casier à vin juste à l'entrée.</li></ul></div><div class="c"><h4>Contre</h4><ul><li>Incompatible avec la porte A : la colonne est à 41 du gond, sur la place du vantail ouvert.</li><li>Sas réduit à 40 entre la baie et la colonne ; séchage = humidité (VMC à vérifier).</li><li>Pas de cave de garde : le ballon chauffe la pièce.</li></ul></div><div class="s"><h4>À choisir si…</h4><ul><li>Vous choisissez la porte B ou C, sans LL au cellier, et voulez étendre le linge sans le salon.</li></ul></div></div>
+</div>
+
+
+<h2 id="reseaux">5. Si l'on supprime le LL du cellier : plomberie et électricité</h2>
+<div class="grid2">
+<div class="card"><h3>Plomberie</h3><ul>
+<li><b>Alimentation</b> : la sortie du LL sur la nourrice est fermée par sa vanne et bouchonnée (bouchon laiton) ; la réservation reste. L'alimentation de la cuisine (eau froide et chaude le long du mur nord) ne change pas.</li>
+<li><b>Évacuation</b> : on supprime le flexible et le siphon du LL et on <b>obture le piquage</b> sur la chute (bouchon à visser ou obturateur) ; un siphon laissé sans usage se dessèche et laisse remonter les odeurs.</li>
+<li>L'évacuation du <b>groupe de sécurité</b> (entonnoir siphonné) <b>reste</b> : vérifier sur place qu'elle ne partageait pas le siphon du LL. L'évacuation de l'évier ne change pas.</li>
+<li>Côté SdB, la machine a déjà sa propre alimentation (robinet encastré h 80) et sa propre évacuation, prévues dans <a href="sdb-meuble-v2.html">sdb-meuble-v2.html</a>.</li></ul></div>
+<div class="card"><h3>Électricité <span class="note">(de mémoire, NF C 15-100, non vérifié : à valider par l'électricien)</span></h3><ul>
+<li>Un LL demande un circuit spécialisé 20 A en 2,5 mm² sous différentiel 30 mA. Celui de la SdB est déjà prévu ; celui du cellier devient libre.</li>
+<li>Trois possibilités : (a) le laisser en attente, étiqueté « LL / sèche-linge » (réversible) ; (b) le requalifier en circuit de prises pour la station d'aspirateur, si le tableau le permet ; (c) le récupérer pour la SdB si le cheminement est plus court.</li>
+<li>Ajouter une prise 16 A à h 110 près de la station aspi (S1, S3 : mur nord vers x 322 ou en saillie sur la cloison).</li></ul></div>
+</div>
+<p class="note">Gains : 0,36 m² de sol et 0,59 m³ de volume rendus ; GS, vannes et nourrice en accès direct ; plus de LL à faire passer par la baie de la porte A (il fallait dégonder) ; plus de bruit d'essorage ni de risque de fuite contre le parquet de la cuisine. Pertes : la buanderie et le séchage au cellier (compensés par l'étendoir de S3 ou un futur sèche-linge si l'on garde les réservations). Dimensions des appareils (LL 59,5 × 55-60 × 85, hublot Ø ≈ 47, station d'aspirateur ≈ 25 × 20-25, h 110-130, bac 30 L ≈ 30 × 40 × 35) : de mémoire, non vérifiées.</p>
+
+<h2 id="doore">6. La baie du cellier dépend aussi de la porte d'entrée</h2>
+<div class="hyp">
+<p style="margin-top:0"><b>Option « la porte d'entrée coulisse vers le WC, côté cuisine ».</b> Le vantail ouvert se range dans un couloir de 12 au sud de la colonne du four : <b>le frigo et le four remontent de 7 cm</b> (frigo y 122 → 181, four y 181 → 240). La baie du cellier passe alors <b>de 65 à 58 en A et en C</b> (y 62 → 120) : en A, vantail battant de 53 (gond x 316, y 118), passage ≈ 49 (53 dégondé) ; en C, demi-feuille de 29 de chaque côté, passage ≈ 54 (déduit, à confirmer avec le fabricant). <b>En B, rien ne change</b> : la baie reste à 60, le frigo y étant déjà à y 122. Les plans ci-dessus sont dessinés avec la porte d'entrée qui coulisse vers la table (baie de 65).</p>
+<div class="scroll-t"><table>
+<thead><tr><th>Option</th><th>Bilan</th><th>Porte A battante (vantail 53, gond x 316, y 118)</th><th>Passage du LL et du ballon (A : 49 ; C : ≈ 54)</th></tr></thead>
+<tbody><tr><td><a href="#fig-existant">Existant</a></td><td class="no">change</td><td>coin du LL à 60,7 du gond (≥ 53,2) : le battant passe</td><td>le LL (55 à 60 de profondeur) ne passe plus : 49, 53 dégondé</td></tr><tr><td><a href="#fig-L1">L1</a></td><td class="no">change</td><td>coin du LL à 65,3 : le battant passe ; le hublot, bloqué vers 42°, reste hors du vantail rangé (y 114) ; devant le LL : 54, 46 porte ouverte</td><td>le LL ne passe plus en A (49, 53 dégondé) ni en C (≈ 54) : LL slim ou à chargement par le dessus, ou livré avant la pose de l'huisserie</td></tr><tr><td><a href="#fig-L2">L2</a></td><td class="no">change en C</td><td>déjà incompatible avec A (coin du LL à 50 du gond)</td><td>C : ≈ 54, trop juste pour un LL de 55 à 60 ; B : 60, rien ne change</td></tr><tr><td><a href="#fig-L3">L3</a></td><td class="no">change</td><td>comme L1</td><td>aucune des deux machines ne passe en A ni en C : à rentrer avant la pose de l'huisserie</td></tr><tr><td><a href="#fig-S1">S1</a></td><td class="yes">rien ne change</td><td>station aspi à 60,0 du gond (≥ 53,2) : rien ne touche ; dégagement 84 au lieu de 91</td><td>pas de LL à passer ; seul le ballon (Ø 50) demande de dégonder le vantail (53)</td></tr><tr><td><a href="#fig-S2">S2</a></td><td class="yes">rien ne change</td><td>balais du mur sud à 70,3 : rien ne touche</td><td>pas de LL ; ballon : dégonder le vantail</td></tr><tr><td><a href="#fig-S3">S3</a></td><td class="mid">léger</td><td>toujours incompatible avec A</td><td>C : demi-feuille de 29 rangée x 314 → 343 ; la colonne (x 357) se raccourcit à y 100 → 122, comme en B</td></tr></tbody></table></div>
+<p class="note" style="margin-bottom:0">Conséquence pratique : avec cette porte d'entrée, un LL standard n'entre plus dans le cellier en A ni en C (sauf LL « slim » ou livraison avant la pose de l'huisserie) ; cela pousse encore vers S1, ou vers la porte B si l'on tient au LL au cellier.</p>
+</div>
+
+<h2>7. À vérifier sur place</h2>
+<ul>
+<li>Position exacte du GS et de son entonnoir sous le ballon ; siphon commun ou non avec le LL.</li>
+<li>Nature de la cloison de 5 (charge des tablettes, boîte de prise) et du mur du WC (S2 : prise et rail de balais).</li>
+<li>Trappe de visite de la chute dans le coffrage.</li>
+<li>Profondeur réelle du LL du client (≤ 57 pour une façade à y ≤ 65 en L1).</li>
+<li>VMC du cellier (avant tout étendoir, S3).</li>
+<li>Tableau électrique : réaffectation possible du circuit 20 A.</li>
+</ul>
+<p class="note" style="margin-top:20px">Repère : origine à l'angle nord-ouest intérieur de l'ancienne chambre, x vers l'est, y vers le sud, cotes en cm. Les géométries reprennent <a href="cuisine-plan.html">cuisine-plan.html</a> (variantes A et C) et le rapport de recherche sur le cellier.</p>
+
+<section id="changements">
+<h2>Changements</h2>
+<div class="scroll-t"><table>
+<thead><tr><th>Version</th><th>Date</th><th>Changements</th></tr></thead>
+<tbody>
+<tr><td><b>V1</b></td><td>01/10/2026</td><td><ul class="changes" style="margin:0">
+  <li>Premier document : guide de choix, comparatif, plan de l'existant et six propositions en plan (L1, L2, L3 avec lave-linge ; S1, S2, S3 sans lave-linge), à la même échelle.</li>
+  <li>Note plomberie et électricité en cas de suppression du LL ; effet de la porte d'entrée coulissant vers le WC sur la baie du cellier.</li></ul></td></tr>
+</tbody></table></div>
+</section>
+</div>
+</body>
+</html>

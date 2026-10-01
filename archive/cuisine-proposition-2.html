@@ -1,0 +1,960 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Proposition 2 – L &amp; mur de colonnes</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wght@400;500;700;800&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+<style>
+:root{
+  --paper:#F7F8F6; --ink:#1D2A33; --muted:#5E6B73; --line:#C9D0D4; --wood:#B07A45;
+  --water:#2F7FB5; --tri:#C8412C; --flow:#2E8B57; --cook2:#7B5EA7;
+  --panel:#FFFFFF; --cab:#ECE6DA; --tall:#D8CFBD; --tech:#E1E6E9; --glass:#CFE4F2;
+  color-scheme:light;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --paper:#141A1F; --ink:#E4EAED; --muted:#9AA7AE; --line:#34414A; --wood:#C9925A;
+    --water:#5AA8DE; --tri:#E8664F; --flow:#4CB97A; --cook2:#A68BD2;
+    --panel:#1B2329; --cab:#2A3338; --tall:#394449; --tech:#26303A; --glass:#1F3A4E;
+    color-scheme:dark;
+  }
+}
+:root[data-theme="dark"]{
+  --paper:#141A1F; --ink:#E4EAED; --muted:#9AA7AE; --line:#34414A; --wood:#C9925A;
+  --water:#5AA8DE; --tri:#E8664F; --flow:#4CB97A; --cook2:#A68BD2;
+  --panel:#1B2329; --cab:#2A3338; --tall:#394449; --tech:#26303A; --glass:#1F3A4E;
+  color-scheme:dark;
+}
+*{box-sizing:border-box}
+html,body{margin:0}
+body{background:var(--paper);color:var(--ink);font-family:Archivo,system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;line-height:1.55;font-size:16px}
+.wrap{max-width:1120px;margin:0 auto;padding:28px 16px 64px}
+.kicker{font-family:"JetBrains Mono",ui-monospace,Menlo,monospace;font-size:12px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted)}
+h1{font-size:clamp(28px,5vw,44px);line-height:1.08;margin:6px 0 12px;font-weight:800;letter-spacing:-.01em}
+h2{font-size:22px;margin:44px 0 10px;font-weight:700}
+h3{font-size:17px;margin:22px 0 6px}
+p{margin:8px 0}
+.pitch{font-size:18px;max-width:780px;color:var(--ink)}
+.stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:12px;margin:22px 0 8px}
+.stat{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:12px 14px}
+.stat b{display:block;font-family:"JetBrains Mono",ui-monospace,monospace;font-size:24px;font-weight:600}
+.stat span{font-size:13px;color:var(--muted)}
+.fig{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:12px;margin:14px 0}
+.scroll{overflow-x:auto;-webkit-overflow-scrolling:touch}
+.scroll svg{display:block;width:100%;min-width:720px;height:auto}
+.scroll svg.small{min-width:420px;max-width:620px;margin:0 auto}
+.cap{font-size:13px;color:var(--muted);margin:8px 4px 2px}
+.legend{display:flex;flex-wrap:wrap;gap:8px 18px;font-size:13px;margin:10px 4px}
+.legend span{display:inline-flex;align-items:center;gap:6px}
+.legend svg{width:26px;height:14px;flex:none}
+.grid2{display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:16px}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:14px 16px}
+.card h3{margin-top:0}
+ul{padding-left:20px;margin:6px 0}
+li{margin:3px 0}
+table{border-collapse:collapse;width:100%;font-size:14px}
+th,td{text-align:left;padding:7px 8px;border-bottom:1px solid var(--line);vertical-align:top}
+td.num,th.num{text-align:right;font-family:"JetBrains Mono",ui-monospace,monospace;white-space:nowrap}
+tfoot td{font-weight:700}
+.mono{font-family:"JetBrains Mono",ui-monospace,monospace}
+.note{font-size:13px;color:var(--muted)}
+.ok{color:var(--flow);font-weight:700}
+.warn{color:var(--tri);font-weight:700}
+.hyp{border-left:3px solid var(--wood);padding:6px 12px;background:var(--panel);font-size:14px;margin:12px 0}
+.tbl{min-width:760px}
+
+/* SVG */
+svg text{font-family:Archivo,system-ui,sans-serif;fill:var(--ink)}
+.w{fill:var(--ink)}
+.wcut{fill:var(--ink)}
+.ghost{fill:none;stroke:var(--muted);stroke-width:1;stroke-dasharray:4 3}
+.newc{fill:url(#hn);stroke:var(--ink);stroke-width:.8}
+.hnl{stroke:var(--ink);stroke-width:1}
+.floorbg{fill:var(--wood);fill-opacity:.13}
+.pq{fill:none;stroke:var(--wood);stroke-width:.6;stroke-opacity:.45}
+.cel{fill:var(--tech);fill-opacity:.8}
+.wc{fill:var(--line);fill-opacity:.55}
+.cab{fill:var(--cab);stroke:var(--ink);stroke-width:.7}
+.cabcut{fill:var(--cab);stroke:var(--ink);stroke-width:1.5}
+.tall{fill:var(--tall);stroke:var(--ink);stroke-width:.8}
+.tech{fill:var(--tech);stroke:var(--ink);stroke-width:.7;stroke-dasharray:3 2}
+.wt{fill:none;stroke:var(--ink);stroke-width:1.6}
+.app{fill:none;stroke:var(--ink);stroke-width:.8}
+.appf{fill:var(--panel);stroke:var(--ink);stroke-width:.8}
+.dark{fill:var(--ink)}
+.upper{fill:none;stroke:var(--muted);stroke-width:.8;stroke-dasharray:3 2}
+.win{fill:var(--glass);stroke:var(--ink);stroke-width:.7}
+.glass{stroke:var(--water);stroke-width:1.2}
+.winleaf{fill:none;stroke:var(--muted);stroke-width:.6;stroke-dasharray:2 2}
+.doorzone{fill:var(--tri);fill-opacity:.06;stroke:none}
+.doorarc{fill:none;stroke:var(--ink);stroke-width:.8}
+.swing{fill:none;stroke:var(--muted);stroke-width:.6;stroke-dasharray:2 2}
+.opn{fill:var(--tri);fill-opacity:.05;stroke:var(--muted);stroke-width:.5;stroke-dasharray:2 2}
+.cdoor{fill:var(--wood);stroke:var(--ink);stroke-width:.6}
+.cdoorE{fill:var(--cab);stroke:var(--wood);stroke-width:1.6}
+.cdarc{fill:var(--wood);fill-opacity:.08;stroke:var(--wood);stroke-width:.9;stroke-dasharray:3 2}
+.woodt{fill:var(--wood);font-weight:700}
+.dim{stroke:var(--muted);stroke-width:.6;fill:none}
+.dimt{fill:var(--muted);font-family:"JetBrains Mono",ui-monospace,monospace !important;font-size:8px}
+.lbl{font-size:7.5px}
+.lbls{font-size:6.5px}
+.lblb{font-size:9px;font-weight:700}
+.muted{fill:var(--muted)}
+.tri{fill:var(--tri);fill-opacity:.07;stroke:var(--tri);stroke-width:1.6}
+.triv{fill:var(--tri)}
+.trit{fill:var(--tri);font-family:"JetBrains Mono",monospace !important;font-size:8px;font-weight:600}
+.tribg{fill:var(--panel);stroke:var(--tri);stroke-width:.6}
+.flow{fill:none;stroke:var(--flow);stroke-width:2.2;marker-end:url(#af)}
+.mf{fill:var(--flow)}
+.badge{fill:var(--flow)}
+.badget{fill:#fff;font-size:8px;font-weight:700}
+.z1{fill:url(#h1);stroke:var(--water);stroke-width:.8}
+.z2{fill:url(#h2);stroke:var(--cook2);stroke-width:.8}
+.h1l{stroke:var(--water);stroke-width:1;stroke-opacity:.45}
+.h2l{stroke:var(--cook2);stroke-width:1;stroke-opacity:.45}
+.z1t{fill:var(--water);font-size:8px;font-weight:700}
+.z2t{fill:var(--cook2);font-size:8px;font-weight:700}
+.pin{fill:none;stroke:var(--water);stroke-width:1.6}
+.pout{fill:none;stroke:var(--water);stroke-width:1.6;stroke-dasharray:5 3}
+.wt2{fill:var(--water);font-size:7px}
+.duct{fill:none;stroke:var(--muted);stroke-width:1.2;stroke-dasharray:6 3}
+.sec{stroke:var(--tri);stroke-width:.9;stroke-dasharray:10 3 2 3;fill:none}
+.secm{fill:var(--tri)}
+.sect{fill:var(--tri);font-weight:800;font-size:11px}
+.plinth{fill:var(--tall);stroke:var(--ink);stroke-width:.6}
+.cred{fill:var(--wood);fill-opacity:.12;stroke:none}
+.floorl{stroke:var(--ink);stroke-width:2}
+.ceil{stroke:var(--muted);stroke-width:1;stroke-dasharray:6 4}
+.d3{font-size:3.2px}
+.d4{font-size:4px}
+.dimz{stroke:var(--muted);stroke-width:.25;fill:none}
+.dimzt{fill:var(--muted);font-family:"JetBrains Mono",ui-monospace,monospace !important;font-size:3.4px}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<div class="kicker">Proposition 2 / 5 · Cuisine en L + mur de colonnes</div>
+<h1>L « mur de colonnes »</h1>
+<p class="pitch">Un L classique (eau et lavage sur le mur haut, cuisson sous la fenêtre avec une induction à hotte intégrée) se termine par un mur de trois colonnes identiques : four + micro-ondes, réfrigérateur intégré, puis la porte du cellier, habillée comme une troisième colonne. En face de l'entrée, ce mur regroupe tout le « stockage » : les courses vont au frigo ou au cellier en quatre pas, et le centre de la pièce reste libre pour deux cuisiniers.</p>
+
+<div class="stats">
+  <div class="stat"><b>461 cm</b><span>linéaire de plan (191 mur haut + 190 mur gauche + 80 meuble de service), dont ≈ 321 cm utiles hors évier et plaque</span></div>
+  <div class="stat"><b>≈ 4 m³</b><span>rangement brut : bas, hauts, colonnes, étagères du cellier, placard à balais (hors frigo)</span></div>
+  <div class="stat"><b>510 cm</b><span>périmètre du triangle : 134 + 132 + 244 cm (chaque côté entre 120 et 270, somme entre 400 et 790)</span></div>
+  <div class="stat"><b>96 cm</b><span>passage le plus étroit : entre le meuble de service et la poignée de la porte d'entrée ouverte à 90° (103 cm au vantail)</span></div>
+  <div class="stat"><b>8,8 + 1,2 m²</b><span>cuisine (chambre + bande de l'ancien placard) + cellier conservé et réagencé</span></div>
+</div>
+
+<div class="grid2" style="margin-top:14px">
+  <div class="card">
+    <h3>Électroménager et niches</h3>
+    <table>
+      <tbody>
+        <tr><td><b>Induction à hotte intégrée</b> 80 cm (aspiration centrale), mur gauche sous la fenêtre</td><td class="num">découpe ≈ 76 × 50<br>caisson 80 sans tiroir</td></tr>
+        <tr><td><b>Four</b> multifonction encastrable 60, en colonne, bas du four à 88 cm</td><td class="num">niche H 60 × L 56 × P 55</td></tr>
+        <tr><td><b>Micro-ondes</b> combiné compact 45, au-dessus du four</td><td class="num">niche H 45 × L 56 × P 55</td></tr>
+        <tr><td><b>Réfrigérateur-congélateur intégrable</b>, porte sur porte ou glissières, posé sur le socle</td><td class="num">niche H 178 × L 56 × P 55</td></tr>
+        <tr><td><b>Lave-vaisselle 60</b> tout intégrable, grande hauteur 86,5, avec aquastop</td><td class="num">niche H 87,5–92,5 × L 60</td></tr>
+      </tbody>
+    </table>
+    <p class="note">Four en colonne plutôt que sous la plaque : le caisson sous une induction aspirante est occupé par le moteur et la gaine, et un four à 88 cm se charge sans se baisser. La niche de 178 aligne le haut du frigo (193 cm) sur celui du micro-ondes. La variante en niche 194 est décrite en fin de page.</p>
+  </div>
+  <div class="card">
+    <h3>Le cellier, derrière une « colonne »</h3>
+    <ul>
+      <li>La porte actuelle (sur la cloison x = 325) disparaît. On entre désormais par une <b>porte-façade toute hauteur</b>, en dernière position du mur de colonnes et dans le même plan (façade à y = 62).</li>
+      <li>Passage libre de <b>61 cm</b> (module 68, vantail 65 × 235). Le vantail s'ouvre vers la cuisine, sur 3 charnières invisibles réglables 3D côté WC, et vient se ranger à 90° contre la cloison neuve.</li>
+      <li>Fermée, elle ne se distingue pas du frigo : même façade, même fausse coupe à 193 cm, même profil de prise de main, et un bandeau de socle collé en pied.</li>
+      <li>À l'intérieur (≈ 1,2 m²) : étagères de réserve P30 sur 5 niveaux, et un local technique avec la nourrice, les vannes, le réducteur de pression et un détecteur de fuite. Balais et aspirateur vont dans le reliquat de l'ancien placard, ouvert au nord.</li>
+    </ul>
+  </div>
+</div>
+
+<div class="hyp"><b>Hypothèses de relevé</b> (communes aux 5 propositions, à confirmer sur place) : plafond à 250 cm ; allège à 100 cm (l'énoncé dit « plus de 90 ») ; cloisons à déposer non porteuses ; chute et piquage d'évacuation dans l'angle nord-est du cellier (x ≈ 426, y ≈ 10), piquage à h ≤ 39 cm ; arrivée d'eau dans la niche du cellier ; pas de radiateur sous la fenêtre. Cotes relevées sur plan à ±2 cm.</div>
+
+<h2>1. Plan à l'échelle</h2>
+<div class="fig">
+<div class="scroll">
+<svg viewBox="-115 -100 680 470" role="img" aria-label="Plan à l'échelle de la cuisine en L avec mur de colonnes">
+<defs>
+  <pattern id="pq" width="20" height="20" patternUnits="userSpaceOnUse"><path class="pq" d="M0 10 L10 0 L20 10 M0 20 L10 10 L20 20"/></pattern>
+  <pattern id="h1" width="6" height="6" patternUnits="userSpaceOnUse" patternTransform="rotate(45)"><line class="h1l" x1="0" y1="0" x2="0" y2="6"/></pattern>
+  <pattern id="h2" width="6" height="6" patternUnits="userSpaceOnUse" patternTransform="rotate(-45)"><line class="h2l" x1="0" y1="0" x2="0" y2="6"/></pattern>
+  <pattern id="hn" width="3" height="3" patternUnits="userSpaceOnUse" patternTransform="rotate(45)"><line class="hnl" x1="0" y1="0" x2="0" y2="3"/></pattern>
+  <marker id="af" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="5" markerHeight="5" orient="auto-start-reverse"><path class="mf" d="M0 0 L10 5 L0 10z"/></marker>
+  <marker id="tk" viewBox="0 0 10 10" refX="5" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M2 8 L8 2" style="stroke:var(--muted)" stroke-width="1.4"/></marker>
+</defs>
+
+<!-- sol parquet (cuisine) -->
+<polygon class="floorbg" points="0,0 314,0 314,62 382,62 382,172 325,172 325,252 0,252"/>
+<polygon fill="url(#pq)" points="0,0 314,0 314,62 382,62 382,172 325,172 325,252 0,252"/>
+<!-- sol cellier -->
+<polygon class="cel" points="314,0 434,0 434,44 484,44 484,100 389,100 389,62 314,62"/>
+
+<!-- WC -->
+<rect class="wc" x="392" y="110" width="92" height="142"/>
+<text class="lbl muted" x="438" y="176" text-anchor="middle">WC</text>
+<text class="lbls muted" x="438" y="187" text-anchor="middle">(conservé)</text>
+
+<!-- murs conservés -->
+<rect class="w" x="-20" y="-20" width="454" height="20"/>
+<rect class="w" x="434" y="-20" width="60" height="64"/>
+<rect class="w" x="484" y="44" width="10" height="218"/>
+<rect class="w" x="382" y="100" width="102" height="10"/>
+<rect class="w" x="382" y="110" width="10" height="152"/>
+<rect class="w" x="-20" y="-20" width="20" height="78"/>
+<rect class="w" x="-20" y="200" width="20" height="62"/>
+<rect class="w" x="-20" y="252" width="248" height="10"/>
+<rect class="w" x="306" y="252" width="188" height="10"/>
+<text class="lbls" x="464" y="18" text-anchor="middle" style="fill:var(--paper)">maçonnerie</text>
+<text class="lbls" x="464" y="27" text-anchor="middle" style="fill:var(--paper)">/ gaine (hyp.)</text>
+
+<!-- cloisons supprimées -->
+<rect class="ghost" x="325" y="0" width="10" height="172"/>
+<rect class="ghost" x="335" y="100" width="47" height="10"/>
+<text class="lbls muted" x="330" y="142" text-anchor="middle" transform="rotate(-90 330 142)">cloison déposée</text>
+
+<!-- cloisons neuves -->
+<rect class="newc" x="382" y="62" width="7" height="38"/>
+<rect class="newc" x="325" y="172" width="10" height="80"/>
+
+<!-- fenêtre -->
+<rect class="win" x="-20" y="58" width="20" height="142"/>
+<line class="glass" x1="-10" y1="58" x2="-10" y2="200"/>
+<path class="winleaf" d="M0 129 A71 71 0 0 0 71 58 L0 58"/>
+<path class="winleaf" d="M0 129 A71 71 0 0 1 71 200 L0 200"/>
+
+<!-- porte d'entrée -->
+<path class="doorzone" d="M306 252 L228 252 A78 78 0 0 1 306 174 Z"/>
+<path class="doorarc" d="M228 252 A78 78 0 0 1 306 174"/>
+<rect class="dark" x="303" y="174" width="4" height="78"/>
+<line x1="306" y1="252" x2="319.5" y2="175.2" style="stroke:var(--tri);stroke-width:.8;stroke-dasharray:3 2"/>
+<text class="lbls" x="265" y="240" text-anchor="middle">Porte existante</text>
+<text class="lbls" x="265" y="248" text-anchor="middle">non modifiable</text>
+<text class="lbls" x="309" y="196" style="fill:var(--tri)">100°</text>
+
+<!-- zones cuisiniers -->
+<rect class="z1" x="124" y="66" width="124" height="48" rx="4"/>
+<path class="z2" d="M66 126 L118 126 L118 160 L214 160 L214 199 L66 199 Z"/>
+<text class="z1t" x="128" y="111">Cuisinier 1 · eau, froid, four</text>
+<text class="z2t" x="124" y="171">Cuisinier 2</text>
+<text class="z2t" x="124" y="180">feu &amp; dressage</text>
+
+<!-- ouvertures (portes ouvertes, pointillés) -->
+<rect class="opn" x="62.3" y="62" width="59.4" height="70"/>
+<rect class="opn" x="191.3" y="62" width="59.4" height="45"/>
+<path class="swing" d="M314 62 A60 60 0 0 1 254 122 L254 62"/>
+
+<!-- L : mur haut + mur gauche -->
+<g>
+  <rect class="cab" x="0" y="0" width="62" height="62"/>
+  <rect class="appf" x="62" y="0" width="60" height="62"/>
+  <rect class="cab" x="122" y="0" width="60" height="62"/>
+  <rect class="cab" x="182" y="0" width="9" height="62"/>
+  <rect class="cab" x="0" y="62" width="62" height="60"/>
+  <rect class="cab" x="0" y="122" width="62" height="80"/>
+  <rect class="cab" x="0" y="202" width="62" height="50"/>
+  <rect class="upper" x="0" y="0" width="191" height="35"/>
+  <path class="wt" d="M0 0 L191 0 L191 62 L62 62 L62 252 L0 252 Z"/>
+  <!-- évier -->
+  <rect class="appf" x="130" y="12" width="44" height="36" rx="5"/>
+  <circle class="app" cx="152" cy="30" r="3"/>
+  <circle class="dark" cx="152" cy="7" r="2"/>
+  <!-- plaque aspirante -->
+  <rect class="appf" x="6" y="128" width="50" height="68" rx="3"/>
+  <circle class="app" cx="20" cy="140" r="7"/><circle class="app" cx="42" cy="140" r="7"/>
+  <circle class="app" cx="20" cy="184" r="7"/><circle class="app" cx="42" cy="184" r="7"/>
+  <rect class="dark" x="9" y="160" width="44" height="3"/>
+  <text class="lbls" x="31" y="36" text-anchor="middle">Angle</text>
+  <text class="lbls" x="31" y="44" text-anchor="middle">(coin mort,</text>
+  <text class="lbls" x="31" y="52" text-anchor="middle">réseaux)</text>
+  <text class="lbl" x="92" y="22" text-anchor="middle" font-weight="700">LV 60</text>
+  <text class="lbls" x="92" y="31" text-anchor="middle">intégrable</text>
+  <text class="lbls" x="92" y="39" text-anchor="middle">aquastop</text>
+  <text class="lbl" x="152" y="58" text-anchor="middle" font-weight="700">Évier</text>
+  <text class="lbls" x="187" y="40" text-anchor="middle" transform="rotate(-90 187 40)">plateaux 9</text>
+  <text class="lbls" x="31" y="86" text-anchor="middle">Niche</text>
+  <text class="lbls" x="31" y="94" text-anchor="middle">ouverte 60</text>
+  <text class="lbls" x="31" y="102" text-anchor="middle">(sans porte)</text>
+  <text class="lbls" x="31" y="156" text-anchor="middle" font-weight="700">induction</text>
+  <text class="lbls" x="31" y="171" text-anchor="middle">+ hotte intégrée</text>
+  <text class="lbls" x="31" y="224" text-anchor="middle">Tiroirs 50</text>
+  <text class="lbls" x="31" y="232" text-anchor="middle">casseroles</text>
+  <path class="duct" d="M31 192 L-26 192"/>
+</g>
+
+<!-- meuble de service -->
+<rect class="cab" x="120" y="202" width="80" height="50"/>
+<rect class="wt" x="120" y="202" width="80" height="50"/>
+<text class="lbls" x="160" y="222" text-anchor="middle" font-weight="700">Service / dressage</text>
+<text class="lbls" x="160" y="230" text-anchor="middle">80 × 50, tiroirs</text>
+<text class="lbls" x="160" y="238" text-anchor="middle">+ dépose courses</text>
+
+<!-- mur de colonnes -->
+<g>
+  <rect class="tall" x="191" y="0" width="60" height="62"/>
+  <rect class="tall" x="251" y="0" width="3" height="62"/>
+  <rect class="tall" x="254" y="0" width="60" height="62"/>
+  <text class="lbl" x="221" y="22" text-anchor="middle" font-weight="700">Four 60</text>
+  <text class="lbls" x="221" y="31" text-anchor="middle">+ micro-ondes</text>
+  <text class="lbls" x="221" y="40" text-anchor="middle">colonne</text>
+  <text class="lbls" x="221" y="49" text-anchor="middle">(four h 88→148)</text>
+  <text class="lbl" x="284" y="22" text-anchor="middle" font-weight="700">Frigo</text>
+  <text class="lbls" x="284" y="31" text-anchor="middle">intégrable</text>
+  <text class="lbls" x="284" y="40" text-anchor="middle">niche 178</text>
+  <text class="lbls" x="284" y="49" text-anchor="middle">charn. gauche</text>
+  <!-- porte-façade cellier -->
+  <path class="cdarc" d="M315.5 62 A65 65 0 0 0 380.5 127 L380.5 62 Z"/>
+  <rect class="dark" x="314" y="56" width="1.5" height="6"/>
+  <rect class="dark" x="380.5" y="56" width="1.5" height="6"/>
+  <rect class="cdoor" x="315.5" y="58" width="65" height="4"/>
+  <line x1="378.5" y1="62" x2="378.5" y2="127" style="stroke:var(--wood);stroke-width:3;stroke-opacity:.55"/>
+  <text class="lbls woodt" x="356" y="42" text-anchor="middle">Porte-façade</text>
+  <text class="lbls woodt" x="356" y="50" text-anchor="middle">cellier 65 × 235</text>
+  <text class="lbls" x="350" y="86" text-anchor="middle" style="fill:var(--wood)">passage 61</text>
+</g>
+
+<!-- cellier : aménagement -->
+<rect class="tall" x="314" y="0" width="100" height="30" style="fill-opacity:.7"/>
+<line class="app" x1="314" y1="30" x2="414" y2="30"/>
+<text class="lbls" x="364" y="13" text-anchor="middle">étagères réserve</text>
+<text class="lbls" x="364" y="22" text-anchor="middle">P30, 5 niveaux</text>
+<rect class="tech" x="389" y="62" width="95" height="38"/>
+<rect class="tech" x="434" y="44" width="50" height="18"/>
+<text class="lbls" x="457" y="72" text-anchor="middle">local technique</text>
+<text class="lbls" x="457" y="80" text-anchor="middle">nourrice, vannes</text>
+<text class="lbls" x="457" y="88" text-anchor="middle">détecteur fuite</text>
+<text class="lbls muted" x="410" y="46" text-anchor="middle">cellier</text>
+<text class="lbls muted" x="410" y="54" text-anchor="middle">≈ 1,2 m²</text>
+
+<!-- placard à balais -->
+<rect class="tall" x="335" y="174" width="47" height="78" style="fill-opacity:.5"/>
+<rect class="tall" x="335" y="172" width="47" height="2"/>
+<path class="swing" d="M382 172 A47 47 0 0 0 335 125 L335 172"/>
+<text class="lbls" x="358" y="202" text-anchor="middle">Placard</text>
+<text class="lbls" x="358" y="210" text-anchor="middle">à balais</text>
+<text class="lbls" x="358" y="218" text-anchor="middle">47 × 78</text>
+<text class="lbls muted" x="358" y="228" text-anchor="middle">(ex-placard)</text>
+
+<!-- réseaux eau -->
+<path class="pin" d="M474 96 L428 96 L428 3 L150 3 L150 20"/>
+<path class="pout" d="M160 30 L160 8 L421 8"/>
+<path class="pout" d="M104 50 L140 50 L140 36"/>
+<circle cx="426" cy="10" r="5" style="fill:var(--panel);stroke:var(--water);stroke-width:1.6"/>
+<circle cx="474" cy="96" r="3" style="fill:var(--water)"/>
+<text class="wt2" x="150" y="-26">Évac. Ø40 : L ≈ 2,7 m · pente 2 cm/m → ≈ 5,5 cm · LV raccordé au siphon · alim. PER depuis la nourrice ≈ 3,8 m</text>
+<line x1="300" y1="-24" x2="300" y2="7" style="stroke:var(--water);stroke-width:.5"/>
+
+<!-- triangle -->
+<polygon class="tri" points="152,62 284,62 62,162"/>
+<circle class="triv" cx="152" cy="62" r="3.5"/><circle class="triv" cx="284" cy="62" r="3.5"/><circle class="triv" cx="62" cy="162" r="3.5"/>
+<rect class="tribg" x="201" y="65" width="34" height="12" rx="3"/><text class="trit" x="218" y="74" text-anchor="middle">132</text>
+<rect class="tribg" x="84" y="100" width="34" height="12" rx="3"/><text class="trit" x="101" y="109" text-anchor="middle">134</text>
+<rect class="tribg" x="162" y="118" width="34" height="12" rx="3"/><text class="trit" x="179" y="127" text-anchor="middle">244</text>
+
+<!-- circulation -->
+<path class="flow" d="M292 335 L292 160 Q292 124 304 104"/>
+<path class="flow" d="M292 92 L180 92"/>
+<path class="flow" d="M140 100 Q96 104 92 146"/>
+<path class="flow" d="M88 176 Q96 196 136 194"/>
+<path class="flow" d="M178 194 Q234 194 238 236 L238 335"/>
+<g>
+  <circle class="badge" cx="292" cy="300" r="7"/><text class="badget" x="292" y="303" text-anchor="middle">1</text>
+  <circle class="badge" cx="262" cy="92" r="7"/><text class="badget" x="262" y="95" text-anchor="middle">2</text>
+  <circle class="badge" cx="118" cy="101" r="7"/><text class="badget" x="118" y="104" text-anchor="middle">3</text>
+  <circle class="badge" cx="100" cy="190" r="7"/><text class="badget" x="100" y="193" text-anchor="middle">4</text>
+  <circle class="badge" cx="238" cy="300" r="7"/><text class="badget" x="238" y="303" text-anchor="middle">5</text>
+</g>
+
+<!-- passages -->
+<line class="dim" x1="200" y1="214" x2="303" y2="214" marker-start="url(#tk)" marker-end="url(#tk)"/>
+<text class="dimt" x="214" y="211" text-anchor="middle">103</text>
+<line class="dim" x1="312" y1="62" x2="312" y2="174" marker-start="url(#tk)" marker-end="url(#tk)"/>
+<text class="dimt" x="315" y="100" transform="rotate(-90 315 100)">112</text>
+<line class="dim" x1="372" y1="130" x2="372" y2="172" marker-start="url(#tk)" marker-end="url(#tk)"/>
+<text class="dimt" x="369" y="160" text-anchor="middle" transform="rotate(-90 369 160)">110</text>
+
+<!-- lignes de coupe -->
+<line class="sec" x1="-30" y1="96" x2="505" y2="96"/>
+<path class="secm" d="M-34 96 L-26 96 L-30 87 Z"/><text class="sect" x="-40" y="93" text-anchor="end">A</text>
+<path class="secm" d="M501 96 L509 96 L505 87 Z"/><text class="sect" x="512" y="93">A</text>
+<line class="sec" x1="100" y1="-32" x2="100" y2="274"/>
+<path class="secm" d="M100 -36 L100 -28 L91 -32 Z"/><text class="sect" x="104" y="-30">B</text>
+<path class="secm" d="M100 270 L100 278 L91 274 Z"/><text class="sect" x="104" y="282">B</text>
+<line class="sec" x1="350" y1="-32" x2="350" y2="274"/>
+<path class="secm" d="M350 -36 L350 -28 L359 -32 Z"/><text class="sect" x="340" y="-30" text-anchor="end">C</text>
+<path class="secm" d="M350 270 L350 278 L359 274 Z"/><text class="sect" x="340" y="282" text-anchor="end">C</text>
+<line class="sec" x1="-30" y1="150" x2="400" y2="150"/>
+<path class="secm" d="M-34 150 L-26 150 L-30 159 Z"/><text class="sect" x="-40" y="162" text-anchor="end">D</text>
+<path class="secm" d="M396 150 L404 150 L400 159 Z"/><text class="sect" x="407" y="162">D</text>
+
+<!-- cotes -->
+<g>
+  <line class="dim" x1="0" y1="-62" x2="62" y2="-62" marker-start="url(#tk)" marker-end="url(#tk)"/><text class="dimt" x="31" y="-65" text-anchor="middle">62</text>
+  <line class="dim" x1="62" y1="-62" x2="122" y2="-62" marker-start="url(#tk)" marker-end="url(#tk)"/><text class="dimt" x="92" y="-65" text-anchor="middle">60</text>
+  <line class="dim" x1="122" y1="-62" x2="182" y2="-62" marker-start="url(#tk)" marker-end="url(#tk)"/><text class="dimt" x="152" y="-65" text-anchor="middle">60</text>
+  <line class="dim" x1="182" y1="-62" x2="191" y2="-62" marker-start="url(#tk)" marker-end="url(#tk)"/><text class="dimt" x="186.5" y="-65" text-anchor="middle">9</text>
+  <line class="dim" x1="191" y1="-62" x2="251" y2="-62" marker-start="url(#tk)" marker-end="url(#tk)"/><text class="dimt" x="221" y="-65" text-anchor="middle">60</text>
+  <line class="dim" x1="251" y1="-62" x2="254" y2="-62"/><text class="dimt" x="252.5" y="-65" text-anchor="middle">3</text>
+  <line class="dim" x1="254" y1="-62" x2="314" y2="-62" marker-start="url(#tk)" marker-end="url(#tk)"/><text class="dimt" x="284" y="-65" text-anchor="middle">60</text>
+  <line class="dim" x1="314" y1="-62" x2="382" y2="-62" marker-start="url(#tk)" marker-end="url(#tk)"/><text class="dimt" x="348" y="-65" text-anchor="middle">68</text>
+  <line class="dim" x1="0" y1="-84" x2="191" y2="-84" marker-start="url(#tk)" marker-end="url(#tk)"/><text class="dimt" x="95" y="-87" text-anchor="middle">plan mur haut 191</text>
+  <line class="dim" x1="191" y1="-84" x2="382" y2="-84" marker-start="url(#tk)" marker-end="url(#tk)"/><text class="dimt" x="286" y="-87" text-anchor="middle">mur de colonnes 191</text>
+  <line class="dim" x1="0" y1="-58" x2="0" y2="-88"/><line class="dim" x1="382" y1="-58" x2="382" y2="-88"/>
+  <line class="dim" x1="314" y1="-40" x2="434" y2="-40" marker-start="url(#tk)" marker-end="url(#tk)"/><text class="dimt" x="400" y="-43" text-anchor="middle">cellier 120</text>
+  <line class="dim" x1="434" y1="-40" x2="484" y2="-40" marker-start="url(#tk)" marker-end="url(#tk)"/><text class="dimt" x="459" y="-43" text-anchor="middle">niche 50</text>
+
+  <line class="dim" x1="-52" y1="0" x2="-52" y2="62" marker-start="url(#tk)" marker-end="url(#tk)"/>
+  <text class="dimt" x="-55" y="31" text-anchor="middle" transform="rotate(-90 -55 31)">62</text>
+  <line class="dim" x1="-52" y1="62" x2="-52" y2="122" marker-start="url(#tk)" marker-end="url(#tk)"/>
+  <text class="dimt" x="-55" y="92" text-anchor="middle" transform="rotate(-90 -55 92)">60</text>
+  <line class="dim" x1="-52" y1="122" x2="-52" y2="202" marker-start="url(#tk)" marker-end="url(#tk)"/>
+  <text class="dimt" x="-55" y="162" text-anchor="middle" transform="rotate(-90 -55 162)">plaque 80</text>
+  <line class="dim" x1="-52" y1="202" x2="-52" y2="252" marker-start="url(#tk)" marker-end="url(#tk)"/>
+  <text class="dimt" x="-55" y="227" text-anchor="middle" transform="rotate(-90 -55 227)">50</text>
+  <line class="dim" x1="-78" y1="58" x2="-78" y2="200" marker-start="url(#tk)" marker-end="url(#tk)"/>
+  <text class="dimt" x="-81" y="129" text-anchor="middle" transform="rotate(-90 -81 129)">fenêtre 142</text>
+  <line class="dim" x1="-100" y1="0" x2="-100" y2="252" marker-start="url(#tk)" marker-end="url(#tk)"/>
+  <text class="dimt" x="-103" y="126" text-anchor="middle" transform="rotate(-90 -103 126)">252</text>
+
+  <line class="dim" x1="0" y1="296" x2="62" y2="296" marker-start="url(#tk)" marker-end="url(#tk)"/><text class="dimt" x="31" y="293" text-anchor="middle">62</text>
+  <line class="dim" x1="62" y1="296" x2="120" y2="296" marker-start="url(#tk)" marker-end="url(#tk)"/><text class="dimt" x="91" y="293" text-anchor="middle">58</text>
+  <line class="dim" x1="120" y1="296" x2="200" y2="296" marker-start="url(#tk)" marker-end="url(#tk)"/><text class="dimt" x="160" y="293" text-anchor="middle">80</text>
+  <line class="dim" x1="200" y1="296" x2="228" y2="296" marker-start="url(#tk)" marker-end="url(#tk)"/><text class="dimt" x="214" y="293" text-anchor="middle">28</text>
+  <line class="dim" x1="228" y1="312" x2="306" y2="312" marker-start="url(#tk)" marker-end="url(#tk)"/><text class="dimt" x="267" y="322" text-anchor="middle">porte 78</text>
+  <line class="dim" x1="335" y1="296" x2="382" y2="296" marker-start="url(#tk)" marker-end="url(#tk)"/><text class="dimt" x="358" y="293" text-anchor="middle">47</text>
+</g>
+
+<text class="lblb muted" x="330" y="345">Couloir 8,1 m²</text>
+<text class="lbl muted" x="-100" y="345">Ancienne cuisine → chambre (hyp.)</text>
+</svg>
+</div>
+<div class="legend">
+  <span><svg viewBox="0 0 26 14"><rect x="0" y="3" width="26" height="8" fill="var(--ink)"/></svg>Mur conservé</span>
+  <span><svg viewBox="0 0 26 14"><rect x="1" y="3" width="24" height="8" class="ghost"/></svg>Cloison supprimée</span>
+  <span><svg viewBox="0 0 26 14"><rect x="1" y="3" width="24" height="8" class="newc"/></svg>Cloison neuve</span>
+  <span><svg viewBox="0 0 26 14"><rect x="0" y="0" width="26" height="14" class="cab"/></svg>Meuble bas (P62)</span>
+  <span><svg viewBox="0 0 26 14"><rect x="0" y="0" width="26" height="14" class="tall"/></svg>Colonne / placard</span>
+  <span><svg viewBox="0 0 26 14"><rect x="0" y="5" width="26" height="4" class="cdoor"/></svg>Porte-façade du cellier</span>
+  <span><svg viewBox="0 0 26 14"><rect x="1" y="1" width="24" height="12" class="upper"/></svg>Meuble haut (projection)</span>
+  <span><svg viewBox="0 0 26 14"><rect x="1" y="1" width="24" height="12" class="opn"/></svg>Porte d'appareil ouverte</span>
+  <span><svg viewBox="0 0 26 14"><path d="M1 13 L13 2 L25 13" class="tri"/></svg>Triangle d'activité (cm)</span>
+  <span><svg viewBox="0 0 26 14"><line x1="1" y1="7" x2="22" y2="7" class="flow"/></svg>Circulation 1→5</span>
+  <span><svg viewBox="0 0 26 14"><line x1="1" y1="4" x2="25" y2="4" class="pin"/><line x1="1" y1="11" x2="25" y2="11" class="pout"/></svg>Alimentation / évacuation</span>
+  <span><svg viewBox="0 0 26 14"><rect x="0" y="0" width="26" height="14" class="z1"/></svg>Zone cuisinier 1</span>
+  <span><svg viewBox="0 0 26 14"><rect x="0" y="0" width="26" height="14" class="z2"/></svg>Zone cuisinier 2</span>
+  <span><svg viewBox="0 0 26 14"><line x1="1" y1="7" x2="25" y2="7" class="sec"/></svg>Ligne de coupe</span>
+</div>
+<p class="cap">Échelle : 1 unité = 1 cm. Circulation : ① entrée, dépose des courses sur le meuble de service puis vers le frigo et le cellier, droit devant · ② stockage → évier · ③ lavage → préparation dans l'angle → plaque · ④ cuisson → dressage sur le meuble de service · ⑤ sortie vers le couloir. Le triangle relie les faces avant de l'évier (152 ; 62), du frigo (284 ; 62) et de la plaque (62 ; 162). En rouge pointillé : le vantail d'entrée ouvert à 100°.</p>
+</div>
+
+<div class="hyp"><b>Pourquoi les colonnes regardent le sud et non l'ouest (sur x = 325).</b> Un mur de colonnes tourné vers l'ouest, adossé à l'ancienne cloison, ne dispose que de 110 cm utiles, entre la fin du plan du mur haut (y = 62) et la limite de sécurité de la porte d'entrée. Au-delà de y ≈ 115, une porte de 60 charnière au nord balaie le vantail d'entrée ouvert à 90° (distance charnière → point (306 ; 174) &lt; 60 cm). Or trois modules demandent 188 cm (60 + 60 + 68). En alignant les trois colonnes au fond, face au sud (façades à y = 62), l'ancienne cloison x = 325 est franchie, et la dernière « colonne » débouche directement dans le cellier.</div>
+
+<h2>2. Coupes et élévations</h2>
+
+<div class="fig">
+<h3>Coupe A-A : mur haut et mur de colonnes, vue vers le nord (coupe à y = 96)</h3>
+<div class="scroll">
+<svg viewBox="-80 -30 730 345" role="img" aria-label="Coupe A-A, élévation du mur haut avec la porte-façade du cellier alignée sur les colonnes">
+<defs><pattern id="hnA" width="3" height="3" patternUnits="userSpaceOnUse" patternTransform="rotate(45)"><line class="hnl" x1="0" y1="0" x2="0" y2="3"/></pattern></defs>
+<line class="ceil" x1="-20" y1="0" x2="494" y2="0"/>
+<text class="lbls muted" x="-18" y="-5">plafond 250 (hyp.)</text>
+<!-- mur gauche coupé (fenêtre) -->
+<rect class="wcut" x="-20" y="150" width="20" height="100"/>
+<rect class="wcut" x="-20" y="0" width="20" height="35"/>
+<rect class="win" x="-20" y="35" width="20" height="115"/>
+<!-- socle -->
+<rect class="plinth" x="0" y="235" width="191" height="15"/>
+<rect class="plinth" x="191" y="235" width="123" height="15"/>
+<!-- niche coupée (mur gauche) -->
+<rect class="cabcut" x="0" y="162" width="62" height="73"/>
+<rect class="ghost" x="4" y="166" width="54" height="65"/>
+<line class="app" x1="4" y1="198" x2="58" y2="198"/>
+<text class="lbls" x="31" y="192" text-anchor="middle">niche</text>
+<!-- bas mur haut -->
+<rect class="appf" x="62" y="162" width="60" height="73"/>
+<text class="lbl" x="92" y="202" text-anchor="middle" font-weight="700">LV 60</text>
+<rect class="cab" x="122" y="162" width="60" height="73"/>
+<line class="app" x1="152" y1="162" x2="152" y2="235"/>
+<text class="lbls" x="152" y="222" text-anchor="middle">sous-évier</text>
+<text class="lbls" x="152" y="229" text-anchor="middle">+ bac rétention</text>
+<rect class="cab" x="182" y="162" width="9" height="73"/>
+<rect class="dark" x="0" y="159" width="191" height="3"/>
+<rect class="ghost" x="132" y="162" width="40" height="18"/>
+<path class="app" d="M152 159 L152 132 Q152 126 160 126 L166 126" style="stroke-width:1.6"/>
+<!-- crédence + hauts -->
+<rect class="cred" x="0" y="102" width="191" height="57"/>
+<text class="lbls muted" x="62" y="133" text-anchor="middle">crédence 91→148</text>
+<rect class="cab" x="0" y="12" width="62" height="90"/>
+<rect class="cab" x="62" y="12" width="60" height="90"/>
+<rect class="cab" x="122" y="12" width="69" height="90"/>
+<text class="lbls" x="156" y="60" text-anchor="middle">égouttoir</text>
+<!-- colonne four -->
+<rect class="cab" x="191" y="199" width="60" height="36"/>
+<rect class="cab" x="191" y="162" width="60" height="37"/>
+<rect class="appf" x="191" y="102" width="60" height="60"/>
+<rect class="ghost" x="199" y="116" width="44" height="30"/>
+<text class="lbls" x="221" y="112" text-anchor="middle">four</text>
+<rect class="appf" x="191" y="57" width="60" height="45"/>
+<rect class="ghost" x="197" y="64" width="34" height="30"/>
+<text class="lbls" x="241" y="82" text-anchor="middle" transform="rotate(-90 241 82)">MO</text>
+<rect class="cab" x="191" y="12" width="60" height="45"/>
+<text class="lbls" x="221" y="183" text-anchor="middle">tiroirs</text>
+<rect class="tall" x="251" y="12" width="3" height="223"/>
+<!-- colonne frigo -->
+<rect class="cab" x="254" y="57" width="60" height="178"/>
+<line x1="311" y1="70" x2="311" y2="222" style="stroke:var(--muted);stroke-width:1.4"/>
+<text class="lbl" x="282" y="140" text-anchor="middle" font-weight="700">frigo</text>
+<text class="lbls" x="282" y="150" text-anchor="middle">intégré</text>
+<text class="lbls" x="282" y="159" text-anchor="middle">niche 178</text>
+<rect class="cab" x="254" y="12" width="60" height="45"/>
+<!-- porte-façade cellier -->
+<rect class="dark" x="314" y="12" width="68" height="2"/>
+<rect class="dark" x="314" y="14" width="1.5" height="236"/>
+<rect class="dark" x="380.5" y="14" width="1.5" height="236"/>
+<rect class="cdoorE" x="315.5" y="14" width="65" height="235"/>
+<line x1="315.5" y1="57" x2="380.5" y2="57" style="stroke:var(--ink);stroke-width:.9"/>
+<rect class="plinth" x="315.5" y="235" width="65" height="14"/>
+<line x1="318" y1="70" x2="318" y2="222" style="stroke:var(--muted);stroke-width:1.4"/>
+<rect class="dark" x="377" y="36" width="3" height="8"/>
+<rect class="dark" x="377" y="126" width="3" height="8"/>
+<rect class="dark" x="377" y="212" width="3" height="8"/>
+<text class="lbl woodt" x="348" y="130" text-anchor="middle">porte-façade</text>
+<text class="lbl woodt" x="348" y="140" text-anchor="middle">cellier</text>
+<text class="lbls" x="348" y="152" text-anchor="middle">vantail 65 × 235</text>
+<text class="lbls" x="348" y="161" text-anchor="middle">passage 61</text>
+<text class="lbls" x="348" y="52" text-anchor="middle">fausse coupe 193</text>
+<text class="lbls muted" x="348" y="28" text-anchor="middle">charnières</text>
+<text class="lbls muted" x="348" y="36" text-anchor="middle">invisibles (côté WC)</text>
+<text class="lbls" x="348" y="245" text-anchor="middle">bandeau socle</text>
+<!-- fileur -->
+<rect class="upper" x="0" y="0" width="382" height="12"/>
+<text class="lbls muted" x="221" y="9" text-anchor="middle">fileur 12 continu</text>
+<!-- cloison neuve coupée -->
+<rect x="382" y="0" width="7" height="250" style="fill:url(#hnA);stroke:var(--ink);stroke-width:.8"/>
+<!-- cellier / local technique -->
+<rect class="tech" x="389" y="0" width="95" height="250" style="fill-opacity:.5"/>
+<rect class="tall" x="389" y="30" width="25" height="190" style="fill-opacity:.7"/>
+<line class="app" x1="389" y1="70" x2="414" y2="70"/><line class="app" x1="389" y1="110" x2="414" y2="110"/><line class="app" x1="389" y1="150" x2="414" y2="150"/><line class="app" x1="389" y1="190" x2="414" y2="190"/>
+<text class="lbls" x="401" y="130" text-anchor="middle" transform="rotate(-90 401 130)">étagères P30 (au fond)</text>
+<rect x="421" y="0" width="10" height="250" style="fill:none;stroke:var(--water);stroke-width:.8;stroke-dasharray:4 2"/>
+<text class="lbls" x="426" y="130" text-anchor="middle" transform="rotate(-90 426 130)" style="fill:var(--water)">chute (hyp.)</text>
+<rect class="appf" x="446" y="182" width="30" height="10"/>
+<circle class="app" cx="452" cy="187" r="2.5"/><circle class="app" cx="461" cy="187" r="2.5"/><circle class="app" cx="470" cy="187" r="2.5"/>
+<text class="lbls" x="461" y="176" text-anchor="middle">nourrice</text>
+<text class="lbls" x="461" y="120" text-anchor="middle" transform="rotate(-90 461 120)">local technique (niche)</text>
+<rect class="wcut" x="484" y="0" width="10" height="250"/>
+<!-- réseaux -->
+<path class="pin" d="M446 190 L150 190 L150 172"/>
+<path class="pout" d="M160 205 L421 211"/>
+<text class="wt2" x="0" y="302">- - - évac. Ø40 : sortie siphon h 45 → piquage h ≈ 39,5 (2 cm/m sur 2,7 m), dans le vide arrière de 5 cm des colonnes</text>
+<text class="wt2" x="0" y="292">—— alim. EF / EC depuis la nourrice (h ≈ 60)</text>
+<line class="floorl" x1="-20" y1="250" x2="494" y2="250"/>
+<!-- cotes -->
+<g>
+  <line class="dim" x1="512" y1="250" x2="512" y2="0"/>
+  <line class="dim" x1="508" y1="235" x2="516" y2="235"/><text class="dimt" x="520" y="238">15 socle</text>
+  <line class="dim" x1="508" y1="162" x2="516" y2="162"/><text class="dimt" x="520" y="172">88 bas four</text>
+  <line class="dim" x1="508" y1="159" x2="516" y2="159"/><text class="dimt" x="520" y="157">91 plan</text>
+  <line class="dim" x1="508" y1="102" x2="516" y2="102"/><text class="dimt" x="520" y="105">148 bas hauts / haut four</text>
+  <line class="dim" x1="508" y1="57" x2="516" y2="57"/><text class="dimt" x="520" y="60">193 ligne des colonnes</text>
+  <line class="dim" x1="508" y1="14" x2="516" y2="14"/><text class="dimt" x="520" y="22">236 haut vantail</text>
+  <line class="dim" x1="508" y1="12" x2="516" y2="12"/><text class="dimt" x="520" y="11">238 haut</text>
+  <line class="dim" x1="508" y1="0" x2="516" y2="0"/><text class="dimt" x="520" y="-2">250</text>
+  <line class="dim" x1="-45" y1="250" x2="-45" y2="150" marker-start="url(#tk)" marker-end="url(#tk)"/>
+  <text class="dimt" x="-48" y="200" text-anchor="middle" transform="rotate(-90 -48 200)">allège 100</text>
+  <line class="dim" x1="-45" y1="150" x2="-45" y2="35" marker-start="url(#tk)" marker-end="url(#tk)"/>
+  <text class="dimt" x="-48" y="92" text-anchor="middle" transform="rotate(-90 -48 92)">fenêtre</text>
+  <line class="dim" x1="0" y1="272" x2="62" y2="272" marker-start="url(#tk)" marker-end="url(#tk)"/><text class="dimt" x="31" y="269" text-anchor="middle">62</text>
+  <line class="dim" x1="62" y1="272" x2="122" y2="272" marker-start="url(#tk)" marker-end="url(#tk)"/><text class="dimt" x="92" y="269" text-anchor="middle">60</text>
+  <line class="dim" x1="122" y1="272" x2="182" y2="272" marker-start="url(#tk)" marker-end="url(#tk)"/><text class="dimt" x="152" y="269" text-anchor="middle">60</text>
+  <line class="dim" x1="182" y1="272" x2="191" y2="272"/><text class="dimt" x="186.5" y="282" text-anchor="middle">9</text>
+  <line class="dim" x1="191" y1="272" x2="251" y2="272" marker-start="url(#tk)" marker-end="url(#tk)"/><text class="dimt" x="221" y="269" text-anchor="middle">60</text>
+  <line class="dim" x1="251" y1="272" x2="254" y2="272"/><text class="dimt" x="252.5" y="282" text-anchor="middle">3</text>
+  <line class="dim" x1="254" y1="272" x2="314" y2="272" marker-start="url(#tk)" marker-end="url(#tk)"/><text class="dimt" x="284" y="269" text-anchor="middle">60</text>
+  <line class="dim" x1="314" y1="272" x2="382" y2="272" marker-start="url(#tk)" marker-end="url(#tk)"/><text class="dimt" x="348" y="269" text-anchor="middle">68</text>
+  <line class="dim" x1="389" y1="272" x2="434" y2="272" marker-start="url(#tk)" marker-end="url(#tk)"/><text class="dimt" x="411" y="269" text-anchor="middle">45</text>
+  <line class="dim" x1="434" y1="272" x2="484" y2="272" marker-start="url(#tk)" marker-end="url(#tk)"/><text class="dimt" x="459" y="269" text-anchor="middle">50</text>
+</g>
+</svg>
+</div>
+<p class="cap">Les trois façades (four, frigo et porte du cellier) partagent la même hauteur (15 → 238), la même ligne horizontale à 193 cm et le même profil de prise de main. Le vantail du cellier descend jusqu'à 1 cm du sol : son bandeau de socle collé prolonge la ligne des plinthes, et le jour de 1 cm ventile le cellier. Le fileur de 12 cm court jusqu'au plafond sur tout le linéaire.</p>
+</div>
+
+<div class="fig">
+<h3>Coupe B-B : mur gauche (cuisson sous la fenêtre), vue vers l'ouest (coupe à x = 100)</h3>
+<div class="scroll">
+<svg viewBox="-80 -30 400 330" role="img" aria-label="Coupe B-B, élévation du mur gauche sous la fenêtre">
+<line class="ceil" x1="-10" y1="0" x2="272" y2="0"/>
+<text class="lbls muted" x="40" y="-5">plafond 250 (hyp.)</text>
+<rect class="wcut" x="252" y="0" width="20" height="250"/>
+<rect class="wcut" x="-10" y="0" width="10" height="250"/>
+<text class="lbls" x="262" y="-5" text-anchor="middle">mur haut</text>
+<text class="lbls" x="-5" y="-5" text-anchor="middle">mur bas</text>
+<!-- fenêtre au fond -->
+<rect x="52" y="35" width="142" height="115" style="fill:var(--glass);fill-opacity:.6;stroke:var(--muted);stroke-width:.7;stroke-dasharray:3 2"/>
+<line x1="123" y1="35" x2="123" y2="150" style="stroke:var(--muted);stroke-width:.6"/>
+<text class="lbls muted" x="123" y="30" text-anchor="middle">fenêtre (au fond) · allège 100 · linteau 215</text>
+<text class="lbls muted" x="123" y="95" text-anchor="middle">vantaux ouvrant vers l'intérieur,</text>
+<text class="lbls muted" x="123" y="103" text-anchor="middle">au-dessus de h 100 : aucun meuble haut</text>
+<!-- mur haut coupé : LV -->
+<rect class="plinth" x="190" y="235" width="57" height="15"/>
+<rect class="cabcut" x="190" y="162" width="57" height="73"/>
+<text class="lbls" x="218" y="200" text-anchor="middle">LV (coupe)</text>
+<rect class="dark" x="190" y="159" width="62" height="3"/>
+<rect class="cabcut" x="217" y="12" width="35" height="90"/>
+<text class="lbls" x="234" y="60" text-anchor="middle" transform="rotate(-90 234 60)">haut P35</text>
+<rect class="upper" x="217" y="0" width="35" height="12"/>
+<!-- mur gauche : élévation -->
+<rect class="plinth" x="0" y="235" width="190" height="15"/>
+<rect class="cab" x="130" y="162" width="60" height="73"/>
+<rect class="ghost" x="134" y="166" width="52" height="65"/>
+<line class="app" x1="134" y1="198" x2="186" y2="198"/>
+<text class="lbls" x="160" y="190" text-anchor="middle">niche ouverte</text>
+<rect class="cab" x="50" y="162" width="80" height="73"/>
+<text class="lbls" x="90" y="190" text-anchor="middle">façade fixe</text>
+<text class="lbls" x="90" y="198" text-anchor="middle">(moteur + gaine)</text>
+<rect class="ghost" x="62" y="206" width="56" height="26"/>
+<rect class="cab" x="0" y="162" width="50" height="24"/>
+<rect class="cab" x="0" y="186" width="50" height="24"/>
+<rect class="cab" x="0" y="210" width="50" height="25"/>
+<text class="lbls" x="25" y="200" text-anchor="middle">tiroirs</text>
+<rect class="dark" x="0" y="159" width="190" height="3"/>
+<rect class="dark" x="54" y="156.5" width="72" height="2.5"/>
+<text class="lbls" x="90" y="172" text-anchor="middle" font-weight="700">induction aspirante 80</text>
+<!-- gaine -->
+<path class="duct" d="M90 206 L90 243"/>
+<circle cx="90" cy="243" r="4.5" style="fill:none;stroke:var(--muted);stroke-width:1"/>
+<text class="lbls muted" x="98" y="245">gaine plate dans le socle → carottage Ø150</text>
+<line class="floorl" x1="-10" y1="250" x2="272" y2="250"/>
+<g>
+  <line class="dim" x1="-25" y1="250" x2="-25" y2="0"/>
+  <line class="dim" x1="-29" y1="235" x2="-21" y2="235"/><text class="dimt" x="-32" y="238" text-anchor="end">15</text>
+  <line class="dim" x1="-29" y1="159" x2="-21" y2="159"/><text class="dimt" x="-32" y="163" text-anchor="end">91</text>
+  <line class="dim" x1="-29" y1="150" x2="-21" y2="150"/><text class="dimt" x="-32" y="151" text-anchor="end">100</text>
+  <line class="dim" x1="-29" y1="102" x2="-21" y2="102"/><text class="dimt" x="-32" y="105" text-anchor="end">148</text>
+  <line class="dim" x1="-29" y1="35" x2="-21" y2="35"/><text class="dimt" x="-32" y="38" text-anchor="end">215</text>
+  <line class="dim" x1="-29" y1="12" x2="-21" y2="12"/><text class="dimt" x="-32" y="15" text-anchor="end">238</text>
+  <line class="dim" x1="-29" y1="0" x2="-21" y2="0"/><text class="dimt" x="-32" y="3" text-anchor="end">250</text>
+  <line class="dim" x1="0" y1="272" x2="50" y2="272" marker-start="url(#tk)" marker-end="url(#tk)"/><text class="dimt" x="25" y="269" text-anchor="middle">50</text>
+  <line class="dim" x1="50" y1="272" x2="130" y2="272" marker-start="url(#tk)" marker-end="url(#tk)"/><text class="dimt" x="90" y="269" text-anchor="middle">plaque 80</text>
+  <line class="dim" x1="130" y1="272" x2="190" y2="272" marker-start="url(#tk)" marker-end="url(#tk)"/><text class="dimt" x="160" y="269" text-anchor="middle">60</text>
+  <line class="dim" x1="190" y1="272" x2="252" y2="272" marker-start="url(#tk)" marker-end="url(#tk)"/><text class="dimt" x="221" y="269" text-anchor="middle">62</text>
+  <line class="dim" x1="52" y1="288" x2="194" y2="288" marker-start="url(#tk)" marker-end="url(#tk)"/><text class="dimt" x="123" y="298" text-anchor="middle">fenêtre 142 (y 58 → 200)</text>
+</g>
+</svg>
+</div>
+<p class="cap">Vue vers l'ouest : le nord est à droite. Le plan (91) reste 9 cm sous l'allège, sans meuble haut ni robinet devant la baie. L'induction à hotte intégrée aspire les buées au niveau des casseroles. Le moteur et la gaine plate occupent le caisson de 80 (façade fixe démontable) et sortent en façade dans le socle, sous l'allège.</p>
+</div>
+
+<div class="fig">
+<h3>Coupe C-C : au droit de la porte-façade du cellier (x = 350), vue vers l'est</h3>
+<div class="scroll">
+<svg viewBox="-70 -30 440 345" role="img" aria-label="Coupe C-C à travers la porte-façade du cellier">
+<line class="ceil" x1="-20" y1="0" x2="262" y2="0"/>
+<text class="lbls muted" x="70" y="-5">plafond 250 (hyp.)</text>
+<rect class="wcut" x="-20" y="0" width="20" height="250"/>
+<rect class="wcut" x="252" y="0" width="10" height="250"/>
+<text class="lbls" x="-10" y="-5" text-anchor="middle">mur haut</text>
+<text class="lbls" x="257" y="-5" text-anchor="middle">mur bas</text>
+<!-- cellier : étagères coupées -->
+<rect class="cel" x="0" y="0" width="58" height="250" style="fill-opacity:.5"/>
+<rect class="tall" x="0" y="30" width="30" height="190"/>
+<line class="app" x1="0" y1="70" x2="30" y2="70"/><line class="app" x1="0" y1="110" x2="30" y2="110"/><line class="app" x1="0" y1="150" x2="30" y2="150"/><line class="app" x1="0" y1="190" x2="30" y2="190"/>
+<text class="lbls" x="15" y="125" text-anchor="middle" transform="rotate(-90 15 125)">étagères P30</text>
+<text class="lbls" x="44" y="100" text-anchor="middle" transform="rotate(-90 44 100)">CELLIER (sas 62)</text>
+<rect x="40" y="236" width="14" height="12" style="fill:var(--water);fill-opacity:.25;stroke:var(--water);stroke-width:.6"/>
+<text class="lbls" x="47" y="232" text-anchor="middle" style="fill:var(--water)">LED</text>
+<!-- vantail coupé -->
+<rect class="upper" x="58" y="0" width="4" height="12"/>
+<rect class="dark" x="56" y="12" width="6" height="2"/>
+<rect class="cdoor" x="58" y="14" width="4" height="235"/>
+<!-- vantail ouvert vu au fond -->
+<rect class="cdarc" x="62" y="14" width="65" height="235"/>
+<text class="lbls" x="94" y="36" text-anchor="middle" style="fill:var(--wood)">vantail ouvert à 90°</text>
+<text class="lbls" x="94" y="44" text-anchor="middle" style="fill:var(--wood)">(au fond, contre</text>
+<text class="lbls" x="94" y="52" text-anchor="middle" style="fill:var(--wood)">la cloison neuve)</text>
+<line class="dim" x1="80" y1="249" x2="80" y2="14" marker-start="url(#tk)" marker-end="url(#tk)"/>
+<text class="dimt" x="77" y="160" text-anchor="middle" transform="rotate(-90 77 160)">passage h ≈ 234</text>
+<!-- fond : mur WC -->
+<text class="lbls muted" x="150" y="190" text-anchor="middle">au fond :</text>
+<text class="lbls muted" x="150" y="198" text-anchor="middle">cloison neuve</text>
+<text class="lbls muted" x="150" y="206" text-anchor="middle">puis mur WC</text>
+<!-- placard à balais coupé -->
+<rect class="upper" x="172" y="0" width="80" height="12"/>
+<rect class="plinth" x="172" y="235" width="2" height="15"/>
+<rect class="tall" x="172" y="12" width="2" height="223"/>
+<rect class="tall" x="174" y="12" width="78" height="238" style="fill-opacity:.35"/>
+<line class="app" x1="174" y1="50" x2="252" y2="50"/>
+<path class="app" d="M200 60 L208 240 M204 240 L212 240" style="stroke-width:1.2"/>
+<rect class="appf" x="222" y="200" width="22" height="40" rx="4"/>
+<text class="lbls" x="226" y="120" text-anchor="middle">placard</text>
+<text class="lbls" x="226" y="128" text-anchor="middle">à balais</text>
+<text class="lbls" x="233" y="196" text-anchor="middle">aspi.</text>
+<line class="floorl" x1="-20" y1="250" x2="262" y2="250"/>
+<text class="lbls muted" x="62" y="262" text-anchor="middle">seuil à fleur</text>
+<g>
+  <line class="dim" x1="290" y1="250" x2="290" y2="0"/>
+  <line class="dim" x1="286" y1="249" x2="294" y2="249"/><text class="dimt" x="297" y="253">1 bas vantail</text>
+  <line class="dim" x1="286" y1="235" x2="294" y2="235"/><text class="dimt" x="297" y="238">15 socle</text>
+  <line class="dim" x1="286" y1="57" x2="294" y2="57"/><text class="dimt" x="297" y="60">193 fausse coupe</text>
+  <line class="dim" x1="286" y1="14" x2="294" y2="14"/><text class="dimt" x="297" y="22">236</text>
+  <line class="dim" x1="286" y1="12" x2="294" y2="12"/><text class="dimt" x="297" y="10">238</text>
+  <line class="dim" x1="286" y1="0" x2="294" y2="0"/><text class="dimt" x="297" y="-2">250</text>
+  <line class="dim" x1="0" y1="280" x2="62" y2="280" marker-start="url(#tk)" marker-end="url(#tk)"/><text class="dimt" x="31" y="277" text-anchor="middle">62</text>
+  <line class="dim" x1="62" y1="280" x2="172" y2="280" marker-start="url(#tk)" marker-end="url(#tk)"/><text class="dimt" x="117" y="277" text-anchor="middle">dégagement 110</text>
+  <line class="dim" x1="172" y1="280" x2="252" y2="280" marker-start="url(#tk)" marker-end="url(#tk)"/><text class="dimt" x="212" y="277" text-anchor="middle">80</text>
+  <line class="dim" x1="0" y1="296" x2="30" y2="296" marker-start="url(#tk)" marker-end="url(#tk)"/><text class="dimt" x="15" y="306" text-anchor="middle">30</text>
+</g>
+</svg>
+</div>
+<p class="cap">Vue vers l'est : le nord est à gauche. Le vantail (4 cm, âme alvéolaire raidie, parement identique aux colonnes) se tire vers la cuisine et se range à 90° contre la cloison neuve, sans empiéter sur le passage. Il n'y a pas de seuil : le parquet se prolonge jusqu'au nu du vantail, et un éclairage LED à contact de feuillure s'allume à l'ouverture.</p>
+</div>
+
+<div class="fig">
+<h3>Détail en plan de la porte-façade (agrandi ≈ × 4)</h3>
+<div class="scroll">
+<svg class="small" viewBox="288 28 122 108" role="img" aria-label="Détail en plan de la porte-façade du cellier">
+<defs><pattern id="hnD" width="1.5" height="1.5" patternUnits="userSpaceOnUse" patternTransform="rotate(45)"><line x1="0" y1="0" x2="0" y2="1.5" style="stroke:var(--ink);stroke-width:.4"/></pattern></defs>
+<rect x="290" y="30" width="24" height="32" class="tall" style="stroke-width:.25"/>
+<rect x="290" y="60" width="24" height="2" class="cab" style="stroke-width:.25"/>
+<text class="d4" x="302" y="44" text-anchor="middle">colonne</text>
+<text class="d4" x="302" y="49" text-anchor="middle">frigo</text>
+<path d="M314 62 A60 60 0 0 1 290 117" style="fill:none;stroke:var(--muted);stroke-width:.3;stroke-dasharray:1 1"/>
+<text class="d3 muted" x="292" y="126">limite battant frigo</text>
+<rect x="314" y="42" width="5" height="14" style="fill:var(--line);stroke:var(--ink);stroke-width:.25"/>
+<text class="d3" x="321" y="48">montant 48</text>
+<text class="d3" x="321" y="52">(fixation gâche)</text>
+<rect class="cel" x="319" y="30" width="63" height="26" style="fill-opacity:.4"/>
+<text class="d4 muted" x="352" y="38" text-anchor="middle">cellier</text>
+<rect x="314" y="56" width="1.5" height="6" class="dark"/>
+<rect x="380.5" y="56" width="1.5" height="6" class="dark"/>
+<rect x="315.5" y="58" width="65" height="4" class="cdoor" style="stroke-width:.25"/>
+<rect x="315.5" y="58" width="1.5" height="4" class="dark"/>
+<rect x="377.5" y="58.5" width="2.5" height="3" style="fill:var(--ink);fill-opacity:.6"/>
+<path d="M315.5 62 A65 65 0 0 0 380.5 127" style="fill:none;stroke:var(--wood);stroke-width:.4;stroke-dasharray:1.2 .8"/>
+<rect x="376.5" y="62" width="4" height="65" style="fill:var(--wood);fill-opacity:.35;stroke:var(--wood);stroke-width:.3;stroke-dasharray:1 .6"/>
+<rect x="382" y="30" width="7" height="70" style="fill:url(#hnD);stroke:var(--ink);stroke-width:.3"/>
+<rect x="382" y="100" width="23" height="10" class="w"/>
+<rect x="382" y="110" width="10" height="24" class="w"/>
+<text class="d3" x="394" y="66" text-anchor="middle" transform="rotate(-90 394 66)">cloison neuve 7</text>
+<text class="d3" x="398" y="124" text-anchor="middle">WC</text>
+<line class="dimz" x1="314" y1="34" x2="382" y2="34"/>
+<line class="dimz" x1="314" y1="32" x2="314" y2="36"/><line class="dimz" x1="382" y1="32" x2="382" y2="36"/>
+<text class="dimzt" x="348" y="33" text-anchor="middle">module 68</text>
+<line class="dimz" x1="315.5" y1="72" x2="376.5" y2="72"/>
+<line class="dimz" x1="315.5" y1="70" x2="315.5" y2="74"/><line class="dimz" x1="376.5" y1="70" x2="376.5" y2="74"/>
+<text class="dimzt" x="346" y="70.5" text-anchor="middle">passage libre 61</text>
+<text class="d3" x="340" y="66.5" text-anchor="middle" style="fill:var(--wood);font-weight:700">vantail 65 × 4 (fermé, façade à y 62)</text>
+<text class="d3" x="316" y="80">profil gorge + loqueteau</text>
+<text class="d3" x="316" y="84">magnétique côté frigo</text>
+<text class="d3" x="373" y="90" text-anchor="end">3 charnières invisibles 3D</text>
+<text class="d3" x="373" y="94" text-anchor="end">côté WC, butée à 90°</text>
+<text class="d3" x="373" y="112" text-anchor="end" style="fill:var(--wood)">vantail ouvert</text>
+<text class="d3 muted" x="330" y="104" text-anchor="middle">cuisine</text>
+</svg>
+</div>
+<p class="cap">Le bâti invisible (1,5 cm par côté) est fixé d'un côté sur la cloison neuve en carreaux de plâtre hydrofuges (côté charnières), de l'autre sur un montant métallique de 48 dressé du sol au plafond derrière la joue du frigo (côté gâche). Ouvert à 90°, le vantail de 4 cm laisse 61 cm libres. Il ne croise ni le battant du frigo (charnières à gauche, jamais au-delà de x = 314) ni celui du placard à balais (7 cm d'écart).</p>
+</div>
+
+<div class="fig">
+<h3>Coupe D-D : mur bas et porte d'entrée, vue vers le sud (coupe à y = 150)</h3>
+<div class="scroll">
+<svg viewBox="-65 -30 520 335" role="img" aria-label="Coupe D-D, élévation du mur bas avec la porte d'entrée et le meuble de service">
+<defs><pattern id="hnB" width="3" height="3" patternUnits="userSpaceOnUse" patternTransform="rotate(45)"><line class="hnl" x1="0" y1="0" x2="0" y2="3"/></pattern></defs>
+<line class="ceil" x1="-10" y1="0" x2="402" y2="0"/>
+<text class="lbls muted" x="160" y="-5">plafond 250 (hyp.)</text>
+<rect class="wcut" x="-10" y="0" width="10" height="250"/>
+<text class="lbls" x="-5" y="-5" text-anchor="middle">WC</text>
+<!-- placard à balais -->
+<rect class="upper" x="0" y="0" width="47" height="12"/>
+<rect class="plinth" x="0" y="235" width="47" height="15"/>
+<rect class="tall" x="0" y="12" width="47" height="223"/>
+<line x1="44" y1="70" x2="44" y2="222" style="stroke:var(--muted);stroke-width:1.2"/>
+<text class="lbls" x="23" y="126" text-anchor="middle" transform="rotate(-90 23 126)">placard à balais (façade)</text>
+<!-- cloison neuve -->
+<rect x="47" y="0" width="10" height="250" style="fill:url(#hnB);stroke:var(--ink);stroke-width:.8"/>
+<!-- baie + vantail -->
+<rect x="76" y="46" width="78" height="204" style="fill:var(--paper);stroke:var(--ink);stroke-width:.8;stroke-dasharray:4 2"/>
+<rect class="dark" x="75" y="46" width="4" height="204"/>
+<text class="lbl" x="116" y="130" text-anchor="middle" font-weight="700">porte existante</text>
+<text class="lbls" x="116" y="140" text-anchor="middle">78 × 204</text>
+<text class="lbls" x="116" y="149" text-anchor="middle">vantail ouvert à 90°</text>
+<text class="lbls" x="116" y="157" text-anchor="middle">(vu de chant, à gauche)</text>
+<!-- meuble de service -->
+<rect class="plinth" x="182" y="235" width="80" height="15"/>
+<rect class="cab" x="182" y="198" width="80" height="37"/>
+<rect class="cab" x="182" y="162" width="80" height="36"/>
+<rect class="dark" x="182" y="159" width="80" height="3"/>
+<text class="lbls" x="222" y="183" text-anchor="middle">service / dressage</text>
+<text class="lbls" x="222" y="220" text-anchor="middle">tiroirs</text>
+<circle class="app" cx="222" cy="140" r="4"/>
+<text class="lbls muted" x="222" y="130" text-anchor="middle">prise h 105</text>
+<!-- mur gauche coupé : plaque -->
+<rect class="plinth" x="320" y="235" width="62" height="15"/>
+<rect class="cabcut" x="320" y="162" width="62" height="73"/>
+<rect class="ghost" x="330" y="196" width="40" height="30"/>
+<text class="lbls" x="350" y="214" text-anchor="middle">moteur</text>
+<rect class="dark" x="320" y="159" width="62" height="3"/>
+<rect class="dark" x="326" y="156.5" width="50" height="2.5"/>
+<text class="lbls" x="351" y="152" text-anchor="middle">induction aspirante</text>
+<path class="duct" d="M350 226 L350 243 L400 243"/>
+<rect class="wcut" x="382" y="150" width="20" height="100"/>
+<rect class="wcut" x="382" y="0" width="20" height="35"/>
+<rect class="win" x="382" y="35" width="20" height="115"/>
+<text class="lbls" x="408" y="96">fenêtre</text>
+<text class="lbls" x="408" y="104">(coupe)</text>
+<text class="lbls" x="408" y="240">sortie Ø150</text>
+<line class="floorl" x1="-10" y1="250" x2="402" y2="250"/>
+<!-- passage -->
+<line class="dim" x1="79" y1="190" x2="182" y2="190" marker-start="url(#tk)" marker-end="url(#tk)"/>
+<text class="dimt" x="130" y="186" text-anchor="middle">103 (96 à la poignée)</text>
+<g>
+  <line class="dim" x1="-35" y1="250" x2="-35" y2="0"/>
+  <line class="dim" x1="-39" y1="235" x2="-31" y2="235"/><text class="dimt" x="-42" y="238" text-anchor="end">15</text>
+  <line class="dim" x1="-39" y1="159" x2="-31" y2="159"/><text class="dimt" x="-42" y="162" text-anchor="end">91</text>
+  <line class="dim" x1="-39" y1="46" x2="-31" y2="46"/><text class="dimt" x="-42" y="49" text-anchor="end">204</text>
+  <line class="dim" x1="-39" y1="12" x2="-31" y2="12"/><text class="dimt" x="-42" y="15" text-anchor="end">238</text>
+  <line class="dim" x1="-39" y1="0" x2="-31" y2="0"/><text class="dimt" x="-42" y="3" text-anchor="end">250</text>
+  <line class="dim" x1="0" y1="272" x2="47" y2="272" marker-start="url(#tk)" marker-end="url(#tk)"/><text class="dimt" x="23" y="269" text-anchor="middle">47</text>
+  <line class="dim" x1="47" y1="272" x2="57" y2="272"/><text class="dimt" x="52" y="284" text-anchor="middle">10</text>
+  <line class="dim" x1="57" y1="272" x2="76" y2="272"/><text class="dimt" x="66" y="269" text-anchor="middle">19</text>
+  <line class="dim" x1="76" y1="272" x2="154" y2="272" marker-start="url(#tk)" marker-end="url(#tk)"/><text class="dimt" x="115" y="269" text-anchor="middle">porte 78</text>
+  <line class="dim" x1="154" y1="272" x2="182" y2="272" marker-start="url(#tk)" marker-end="url(#tk)"/><text class="dimt" x="168" y="269" text-anchor="middle">28</text>
+  <line class="dim" x1="182" y1="272" x2="262" y2="272" marker-start="url(#tk)" marker-end="url(#tk)"/><text class="dimt" x="222" y="269" text-anchor="middle">80</text>
+  <line class="dim" x1="262" y1="272" x2="320" y2="272" marker-start="url(#tk)" marker-end="url(#tk)"/><text class="dimt" x="291" y="269" text-anchor="middle">58</text>
+  <line class="dim" x1="320" y1="272" x2="382" y2="272" marker-start="url(#tk)" marker-end="url(#tk)"/><text class="dimt" x="351" y="269" text-anchor="middle">62</text>
+</g>
+</svg>
+</div>
+<p class="cap">Vue vers le sud : l'est est à gauche. Le meuble de service (plan à 91) sert à poser les courses en entrant et à dresser les assiettes avant de sortir. Il s'arrête 28 cm avant la baie, si bien que le vantail ouvert laisse 103 cm de passage (96 cm à hauteur de poignée). La cloison neuve ferme l'ancien placard et sert de butée à la porte ouverte à 100°, avec 1,6 cm de jeu.</p>
+</div>
+
+<h2>3. Vérifications des ouvrants</h2>
+<p class="note">Porte d'entrée : charnières en (306 ; 252), vantail de 78. À 90°, il occupe x 303 → 307, y 174 → 252. À 100°, son extrémité est en (319,5 ; 175,2) et sa face arrière à x ≈ 323,4. Distances mesurées entre la zone balayée par chaque ouvrant et le vantail d'entrée.</p>
+<div class="card scroll" style="padding:4px 8px">
+<table class="tbl">
+<thead><tr><th>Ouvrant</th><th>Zone balayée (cm)</th><th class="num">Entrée à 90°</th><th class="num">Entrée à 100°</th><th>Voisins</th><th>Verdict</th></tr></thead>
+<tbody>
+<tr><td><b>Réfrigérateur</b> (colonne, charnières à gauche x = 254)</td><td>quart de disque R 60 centré (254 ; 62) → x 254→314, y 62→122</td><td class="num">62</td><td class="num">71</td><td>four : fileur 3 cm ; porte-cellier : 1,5 cm (bâti), le battant ne dépasse jamais x = 314</td><td class="ok">✓</td></tr>
+<tr><td><b>Four</b> (colonne, porte abattante à h 88)</td><td>x 191→251, y 62→107</td><td class="num">85</td><td class="num">97</td><td>frigo : 3,3 cm ; LV : 70 cm</td><td class="ok">✓</td></tr>
+<tr><td><b>Micro-ondes</b> (h 148→193, charnière à gauche)</td><td>x 191→251, y 62→122</td><td class="num">98</td><td class="num">111</td><td>meubles hauts à y ≤ 35 : non touchés</td><td class="ok">✓</td></tr>
+<tr><td><b>Lave-vaisselle</b> (porte abattante h 15)</td><td>x 62→122, y 62→132</td><td class="num">186</td><td class="num">203</td><td>la niche ouverte (sans porte) et la façade fixe de la plaque ne s'ouvrent pas, et les tiroirs du mur gauche commencent à y = 202</td><td class="ok">✓</td></tr>
+<tr><td><b>Porte-cellier</b> (vantail 65, charnières côté WC, butée à 90°)</td><td>quart de disque R 65 centré (380,5 ; 62) → x 315,5→380,5, y 62→127</td><td class="num">69</td><td class="num">63</td><td>frigo : 1,5 cm ; placard à balais : 7 cm (entre arcs)</td><td class="ok">✓</td></tr>
+<tr><td><b>Placard à balais</b> (porte 47, charnières à l'ouest, ouvre au nord)</td><td>x 335→382, y 125→172</td><td class="num">28</td><td class="num">12</td><td>la cloison neuve (x 325→335) sépare physiquement les deux battants</td><td class="ok">✓</td></tr>
+<tr><td><b>Tiroirs du meuble de service</b> (sortie 45)</td><td>x 120→200, y 157→202</td><td class="num">103 (96 poignée)</td><td class="num">106</td><td>tiroirs casseroles : 8 cm</td><td class="ok">✓</td></tr>
+<tr><td><b>Tiroirs casseroles</b> (mur gauche)</td><td>x 62→112, y 202→252</td><td class="num">191</td><td class="num">194</td><td>meuble de service : 8 cm</td><td class="ok">✓</td></tr>
+<tr><td><b>Vantaux de la fenêtre</b> (ouvrants intérieurs, h ≥ 100)</td><td>deux quarts de disque R 71 : x 0→71, y 58→200</td><td class="num">—</td><td class="num">—</td><td>ils passent au-dessus de la plaque : ouverture impossible avec une grande casserole sur le feu</td><td class="warn">vigilance</td></tr>
+</tbody>
+</table>
+</div>
+<p class="note">Aucun ouvrant ne pénètre dans la zone x 225→330, y 150→252 : le premier à s'en approcher est la porte-cellier, dont le balayage s'arrête à y = 127. Méthode : distance entre le point le plus proche du vantail d'entrée et le cercle balayé par chaque porte (distance au centre moins le rayon), vérifiée dans le bon quadrant.</p>
+
+<h2>4. Justification</h2>
+<div class="grid2">
+  <div class="card">
+    <h3>Circulation</h3>
+    <ul>
+      <li>La porte d'entrée n'est pas modifiée, et son débattement (quart de disque de 78) reste vide jusqu'à 100°.</li>
+      <li><b>Courses</b> : on pose les sacs sur le meuble de service à gauche de l'entrée, puis on les range droit devant, dans le frigo ou le cellier, à 1,9 m de la porte.</li>
+      <li><b>Boucle</b> dans le sens inverse des aiguilles d'une montre : stockage → évier → préparation dans l'angle → plaque → dressage → sortie. Elle tourne autour d'un centre libre d'environ 1,5 × 1,2 m, où personne ne se croise.</li>
+      <li>Passages : 112 cm entre les colonnes et le vantail d'entrée ouvert, 110 cm devant la porte du cellier, et 103 cm entre le meuble de service et le vantail (96 cm à la poignée). Tous dépassent 90 <span class="ok">✓</span>.</li>
+    </ul>
+  </div>
+  <div class="card">
+    <h3>Cuisiner à deux</h3>
+    <ul>
+      <li><b>Cuisinier 1</b> (mur haut) : évier, lave-vaisselle, four, frigo. Il travaille de face, dos au centre de la pièce.</li>
+      <li><b>Cuisinier 2</b> (mur gauche) : plaque sous la fenêtre avec 60 cm de dépose à gauche et 50 à droite, puis le meuble de service pour dresser.</li>
+      <li>Les deux cuisiniers ne sont jamais dos à dos : ils se tiennent à 90°, à environ 95 cm de distance (de l'évier au milieu de la plaque). La règle des 120 cm dos à dos ne s'applique donc pas. L'espace central fait 263 × 190 cm, moins le débattement de la porte.</li>
+      <li>Le lave-vaisselle ouvert empiète d'au plus 10 cm sur l'avant de la plaque (y 122→132) : on le charge après le repas.</li>
+    </ul>
+  </div>
+  <div class="card">
+    <h3>Triangle d'activité</h3>
+    <ul>
+      <li>Évier (152 ; 62) → plaque (62 ; 162) : √(90² + 100²) = <b>134 cm</b>.</li>
+      <li>Évier → frigo (284 ; 62) : <b>132 cm</b>. Frigo → plaque : √(222² + 100²) = <b>244 cm</b>.</li>
+      <li>Somme : <b>510 cm</b> (entre 400 et 790 <span class="ok">✓</span>). Chaque côté est entre 120 et 270 <span class="ok">✓</span>.</li>
+      <li>Plaque : 60 cm de plan côté angle (plus l'angle de 62), 50 cm côté mur bas (≥ 40 <span class="ok">✓</span>). Entre l'évier et la plaque, 182 cm de plan continu : dessus du LV, angle, dessus de la niche (≥ 60 <span class="ok">✓</span>).</li>
+    </ul>
+  </div>
+  <div class="card">
+    <h3>Eau et sol bois</h3>
+    <ul>
+      <li><b>Évacuation</b> : l'évier est à 2,7 m de la chute supposée. Un PVC Ø40 court dans le vide technique de 5 cm à l'arrière du plan, puis des colonnes (caisson P55 + vide 5 + façade 2 = 62). À 2 cm/m, la pente est de ≈ 5,5 cm : le siphon sort à h 45 et arrive à h ≈ 39,5. On reste dans la plage de 1 à 3 cm/m, sans rehausse de socle, si le piquage est à h ≤ 39.</li>
+      <li>Clapet aérateur Ø40 sous l'évier, conseillé vu la longueur. Lave-vaisselle branché sur l'embout du siphon (tuyau de 0,6 m). Sur une longueur supérieure à ≈ 3 m, le Ø50 est la bonne pratique (de mémoire, DTU 60.11 à vérifier).</li>
+      <li><b>Alimentation</b> : PER ou multicouche Ø16 eau froide / eau chaude, depuis la nourrice dans la niche du cellier (≈ 3,8 m), avec vannes ¼ de tour sous l'évier.</li>
+      <li><b>Sol bois</b> : bacs de rétention sous l'évier et le LV, aquastop, deux détecteurs de fuite (sous-évier et nourrice), plinthes de socle alu avec joint, et une vitrification renforcée devant l'évier et le LV. Le parquet chevron est repris sur l'emprise des cloisons déposées, sans seuil devant le cellier.</li>
+    </ul>
+  </div>
+  <div class="card">
+    <h3>Hotte et électricité</h3>
+    <ul>
+      <li><b>Hotte</b> : induction à hotte intégrée, car aucune hotte murale n'est possible devant la fenêtre. La gaine plate de 222 × 89 passe dans le socle (15 cm), et un carottage Ø150 traverse le mur gauche sous l'allège, avec clapet anti-retour et grille extérieure. En repli : recyclage (filtre céramique régénérable).</li>
+      <li><b>Électricité</b> (réf. NF C 15-100, de mémoire, à valider par l'électricien) : induction 32 A / 6 mm², moteur alimenté par la plaque selon le modèle ; four 16 A dédié (20 A / 2,5 mm² conseillé) ; LV 16 A dédié ; frigo sur circuit dédié 16 A ; micro-ondes sur prise dédiée.</li>
+      <li>Prises : 3 sur la crédence du mur haut, 2 escamotables dans le plan du mur gauche (l'allège ne laisse pas de crédence), 1 au-dessus du meuble de service. Éclairage LED sous les meubles hauts, et LED du cellier sur contact de porte.</li>
+    </ul>
+  </div>
+  <div class="card">
+    <h3>Pourquoi ce L</h3>
+    <ul>
+      <li>L'eau reste sur le mur haut, le plus proche du cellier : un seul tracé rectiligne le long du mur.</li>
+      <li>La fenêtre éclaire directement la zone de cuisson, et le seul meuble placé dessous est un plan bas, sans robinet.</li>
+      <li>Les appareils hauts (four, frigo) sont regroupés dans un bloc unique qui cache aussi l'accès au cellier. On voit un mur net de trois colonnes, et aucune porte de service.</li>
+      <li>Rien d'ouvrant dans la zone de la porte d'entrée, ce qui corrige le défaut qui avait éliminé les propositions du premier tour.</li>
+    </ul>
+  </div>
+</div>
+
+<h3>Points de vigilance travaux</h3>
+<ul>
+  <li>Faire confirmer que la cloison chambre/cellier (déposée de y 0 à 172) et la cloison cellier/placard ne sont <b>pas porteuses</b>, et repérer les gaines qu'elles contiennent.</li>
+  <li>Localiser la chute et relever la <b>hauteur du piquage</b> avant de commander les meubles. S'il est à plus de 39 cm, il faut soit remonter l'évier de quelques centimètres dans le caisson, soit passer en Ø50 avec une pente de 1 cm/m (en repli : pompe de relevage d'évier).</li>
+  <li><b>Fenêtre</b> : ses vantaux balaient la plaque. Les passer en oscillo-battant, s'ils ne le sont pas, permet d'aérer sans débarrasser le feu. Vérifier aussi qu'aucun radiateur n'occupe l'allège (sinon, le déplacer sur le mur bas).</li>
+  <li><b>Porte-façade</b> : un vantail de 235 cm de haut vrille facilement. Choisir une âme alvéolaire de 40 mm ou un panneau raidi par un profil alu, avec 3 charnières invisibles réglables 3D, et le faire fabriquer par le même atelier que les façades pour que teinte et joints correspondent.</li>
+  <li>Accord de la copropriété pour le <b>carottage en façade</b>, et bouche VMC cuisine à conserver ou à recréer.</li>
+  <li>Four et frigo côte à côte : prévoir les joues de séparation et la ventilation de niche (entrée par le socle, sortie par la cheminée arrière de 5 cm), selon les notices.</li>
+  <li>Parquet à reprendre sur ≈ 1,3 m² : emprise des cloisons, bande de l'ancien placard, sas du cellier. Meubles sur pieds réglables, jamais vissés dans le parquet.</li>
+  <li>Construire les deux cloisons neuves en carreaux de plâtre hydrofuges : x 382→389 (y 62→100) et fermeture de l'ancien placard x 325→335 (y 172→252).</li>
+</ul>
+
+<h3>Budget indicatif (TTC, fourchette de marché, à valider par devis)</h3>
+<div class="card scroll" style="padding:4px 8px">
+<table>
+<thead><tr><th>Poste</th><th class="num">Fourchette</th></tr></thead>
+<tbody>
+<tr><td>Dépose de cloisons (chambre/cellier sur 1,7 m, cellier/placard) et gravats</td><td class="num">600 – 1 200 €</td></tr>
+<tr><td>Deux cloisons neuves en carreaux de plâtre hydrofuges, enduits, peinture</td><td class="num">1 300 – 2 700 €</td></tr>
+<tr><td>Porte-façade du cellier : bâti invisible, charnières 3D, vantail assorti, montant</td><td class="num">900 – 1 800 €</td></tr>
+<tr><td>Raccord parquet chevron et vitrification</td><td class="num">800 – 1 600 €</td></tr>
+<tr><td>Plomberie (alim. ≈ 3,8 m, évac. Ø40 ≈ 2,7 m, clapet, nourrice, vannes)</td><td class="num">800 – 1 600 €</td></tr>
+<tr><td>Électricité (circuits spécialisés, 6 prises, éclairage, LED du cellier)</td><td class="num">1 500 – 2 700 €</td></tr>
+<tr><td>Extraction : carottage Ø150, gaine plate, clapet</td><td class="num">300 – 800 €</td></tr>
+<tr><td>Mobilier : 4,6 m de bas, 1,9 m de hauts, 2 colonnes, meuble de service, étagères du cellier, placard à balais, plan de travail</td><td class="num">4 500 – 9 000 €</td></tr>
+<tr><td>Électroménager : induction à hotte intégrée 80, four, micro-ondes, combiné intégrable 178, LV intégrable</td><td class="num">3 400 – 7 400 €</td></tr>
+<tr><td>Pose de la cuisine</td><td class="num">1 000 – 2 000 €</td></tr>
+</tbody>
+<tfoot><tr><td>Total estimé</td><td class="num">≈ 15 000 – 31 000 €</td></tr></tfoot>
+</table>
+</div>
+<p class="note">Ordres de grandeur de mémoire, non vérifiés : ils varient selon la région, la gamme et la copropriété. L'induction à hotte intégrée représente à elle seule ≈ 1 500 – 3 000 €.</p>
+
+<h3>Variantes possibles</h3>
+<ul>
+  <li><b>Frigo en niche 194</b> : environ 30 L de plus. La ligne des colonnes monte alors à 209 cm, et la fausse coupe de la porte du cellier suit. On perd le caisson haut du frigo.</li>
+  <li><b>Recyclage</b> au lieu de l'extraction, si la copropriété refuse le carottage : même plaque, filtre céramique, et plus aucune gaine dans le socle.</li>
+  <li><b>Porte du cellier en poussoir</b> (push-to-open), sans profil de prise de main, si les autres façades sont aussi sans poignée.</li>
+  <li><b>Placard à balais transformé en épicerie</b> (tiroirs à l'anglaise), si les balais trouvent place dans le cellier sur un rail mural au-dessus de la nourrice.</li>
+  <li><b>Tablette rabattable</b> de 80 × 40 au-dessus du meuble de service, pour un petit-déjeuner à deux, repliée quand on entre.</li>
+  <li><b>Mur de colonnes sur x = 325, tourné vers l'ouest</b> : écarté, faute de place (voir l'encadré sous le plan). Ne resteraient que 110 cm, soit deux modules sans la porte du cellier.</li>
+</ul>
+
+<p class="note" style="margin-top:28px">Repère : origine à l'angle haut-gauche de l'ancienne chambre, x vers la droite, y vers le bas, cotes en cm. Plan redessiné d'après le relevé fourni (±2 cm).</p>
+</div>
+</body>
+</html>
