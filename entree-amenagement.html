@@ -1,0 +1,460 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Aménagement de l'entrée</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wght@400;500;700;800&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+<style>
+:root{
+  --paper:#F7F8F6; --ink:#1D2A33; --muted:#5E6B73; --line:#C9D0D4; --wood:#B07A45;
+  --water:#2F7FB5; --tri:#C8412C; --flow:#2E8B57; --cook2:#7B5EA7;
+  --panel:#FFFFFF; --cab:#ECE6DA; --tall:#D8CFBD; --tech:#E1E6E9; --glass:#CFE4F2;
+  color-scheme:light;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --paper:#141A1F; --ink:#E4EAED; --muted:#9AA7AE; --line:#34414A; --wood:#C9925A;
+    --water:#5AA8DE; --tri:#E8664F; --flow:#4CB97A; --cook2:#A68BD2;
+    --panel:#1B2329; --cab:#2A3338; --tall:#394449; --tech:#26303A; --glass:#1F3A4E;
+    color-scheme:dark;
+  }
+}
+:root[data-theme="dark"]{
+  --paper:#141A1F; --ink:#E4EAED; --muted:#9AA7AE; --line:#34414A; --wood:#C9925A;
+  --water:#5AA8DE; --tri:#E8664F; --flow:#4CB97A; --cook2:#A68BD2;
+  --panel:#1B2329; --cab:#2A3338; --tall:#394449; --tech:#26303A; --glass:#1F3A4E;
+  color-scheme:dark;
+}
+*{box-sizing:border-box}
+html,body{margin:0}
+body{background:var(--paper);color:var(--ink);font-family:Archivo,system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;line-height:1.55;font-size:16px}
+.wrap{max-width:1120px;margin:0 auto;padding:28px 16px 64px}
+.kicker{font-family:"JetBrains Mono",ui-monospace,Menlo,monospace;font-size:12px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted)}
+h1{font-size:clamp(28px,5vw,44px);line-height:1.08;margin:6px 0 12px;font-weight:800;letter-spacing:-.01em}
+h2{font-size:22px;margin:44px 0 10px;font-weight:700}
+h3{font-size:17px;margin:22px 0 6px}
+p{margin:8px 0}
+.pitch{font-size:18px;max-width:780px;color:var(--ink)}
+.stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:12px;margin:22px 0 8px}
+.stat{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:12px 14px}
+.stat b{display:block;font-family:"JetBrains Mono",ui-monospace,monospace;font-size:24px;font-weight:600}
+.stat span{font-size:13px;color:var(--muted)}
+.fig{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:12px;margin:14px 0}
+.scroll{overflow-x:auto;-webkit-overflow-scrolling:touch}
+.scroll svg{display:block;width:100%;min-width:720px;height:auto}
+.scroll svg.small{min-width:340px;max-width:600px;margin:0 auto}
+.cap{font-size:13px;color:var(--muted);margin:8px 4px 2px}
+.legend{display:flex;flex-wrap:wrap;gap:8px 18px;font-size:13px;margin:10px 4px}
+.legend span{display:inline-flex;align-items:center;gap:6px}
+.legend svg{width:26px;height:14px;flex:none}
+.grid2{display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:16px}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:14px 16px}
+.card h3{margin-top:0}
+ul{padding-left:20px;margin:6px 0}
+li{margin:3px 0}
+table{border-collapse:collapse;width:100%;font-size:14px}
+th,td{text-align:left;padding:7px 8px;border-bottom:1px solid var(--line);vertical-align:top}
+td.num,th.num{text-align:right;font-family:"JetBrains Mono",ui-monospace,monospace;white-space:nowrap}
+td.st{text-align:center;font-size:17px;white-space:nowrap}
+tfoot td{font-weight:700}
+.mono{font-family:"JetBrains Mono",ui-monospace,monospace}
+.note{font-size:13px;color:var(--muted)}
+.ok{color:var(--flow);font-weight:700}
+.warn{color:var(--wood);font-weight:700}
+.hyp{border-left:3px solid var(--wood);padding:6px 12px;background:var(--panel);font-size:14px;margin:12px 0}
+@media (max-width:480px){ body{font-size:15px} .stat b{font-size:21px} th,td{padding:6px 5px} }
+
+/* SVG */
+svg text{font-family:Archivo,system-ui,sans-serif;fill:var(--ink)}
+.w{fill:var(--ink)}
+.wcut{fill:var(--ink)}
+.nw{fill:url(#hn);stroke:var(--ink);stroke-width:.8}
+.ghost{fill:none;stroke:var(--muted);stroke-width:1;stroke-dasharray:4 3}
+.floorbg{fill:var(--wood);fill-opacity:.13}
+.pq{fill:none;stroke:var(--wood);stroke-width:.6;stroke-opacity:.45}
+.cellf{fill:var(--tech)}
+.tl{fill:none;stroke:var(--line);stroke-width:.6}
+.wc{fill:var(--line);fill-opacity:.55}
+.cab{fill:var(--cab);stroke:var(--ink);stroke-width:.7}
+.cabcut{fill:var(--tall);stroke:var(--ink);stroke-width:1.4}
+.tall{fill:var(--tall);stroke:var(--ink);stroke-width:.8}
+.pf{fill:var(--tall);stroke:var(--wood);stroke-width:1.8}
+.tech{fill:var(--tech);stroke:var(--ink);stroke-width:.7;stroke-dasharray:3 2}
+.wt{fill:none;stroke:var(--ink);stroke-width:1.6}
+.app{fill:none;stroke:var(--ink);stroke-width:.8}
+.appf{fill:var(--panel);stroke:var(--ink);stroke-width:.8}
+.dark{fill:var(--ink)}
+.upper{fill:none;stroke:var(--muted);stroke-width:.8;stroke-dasharray:3 2}
+.win{fill:var(--glass);stroke:var(--ink);stroke-width:.7}
+.glass{stroke:var(--water);stroke-width:1.2}
+.winleaf{fill:none;stroke:var(--muted);stroke-width:.6;stroke-dasharray:2 2}
+.doorzone{fill:var(--tri);fill-opacity:.06;stroke:none}
+.doorarc{fill:none;stroke:var(--ink);stroke-width:.8}
+.doorleaf{stroke:var(--ink);stroke-width:3}
+.door100{stroke:var(--tri);stroke-width:1.2;stroke-dasharray:3 2}
+.swing{fill:none;stroke:var(--muted);stroke-width:.6;stroke-dasharray:2 2}
+.dim{stroke:var(--muted);stroke-width:.6;fill:none}
+.dimt{fill:var(--muted);font-family:"JetBrains Mono",ui-monospace,monospace !important;font-size:8px}
+.lbl{font-size:7.5px}
+.lbls{font-size:6.5px}
+.lblx{font-size:5px}
+.lblb{font-size:9px;font-weight:700}
+.muted{fill:var(--muted)}
+.woodt{fill:var(--wood);font-weight:700}
+.tri{fill:var(--tri);fill-opacity:.07;stroke:var(--tri);stroke-width:1.6}
+.triv{fill:var(--tri)}
+.trit{fill:var(--tri);font-family:"JetBrains Mono",monospace !important;font-size:8px;font-weight:600}
+.tribg{fill:var(--panel);stroke:var(--tri);stroke-width:.6}
+.flow{fill:none;stroke:var(--flow);stroke-width:2.2;marker-end:url(#af)}
+.mf{fill:var(--flow)}
+.badge{fill:var(--flow)}
+.badget{fill:#fff;font-size:8px;font-weight:700}
+.z1{fill:url(#h1);stroke:var(--water);stroke-width:.8}
+.z2{fill:url(#h2);stroke:var(--cook2);stroke-width:.8}
+.h1l{stroke:var(--water);stroke-width:1;stroke-opacity:.45}
+.h2l{stroke:var(--cook2);stroke-width:1;stroke-opacity:.45}
+.z1t{fill:var(--water);font-size:8px;font-weight:700}
+.z2t{fill:var(--cook2);font-size:8px;font-weight:700}
+.pin{fill:none;stroke:var(--water);stroke-width:1.6}
+.pout{fill:none;stroke:var(--water);stroke-width:1.6;stroke-dasharray:5 3}
+.wt2{fill:var(--water);font-size:7px}
+.duct{fill:none;stroke:var(--muted);stroke-width:1.2;stroke-dasharray:6 3}
+.air{fill:none;stroke:var(--cook2);stroke-width:1.1;marker-end:url(#aa)}
+.airt{fill:var(--cook2);font-size:6px}
+.sec{stroke:var(--tri);stroke-width:.9;stroke-dasharray:10 3 2 3;fill:none}
+.secm{fill:var(--tri)}
+.sect{fill:var(--tri);font-weight:800;font-size:11px}
+.plinth{fill:var(--tall);stroke:var(--ink);stroke-width:.6}
+.cred{fill:var(--wood);fill-opacity:.12;stroke:none}
+.bgwall{fill:var(--line);fill-opacity:.35;stroke:none}
+.person1{fill:var(--water);fill-opacity:.35;stroke:var(--water);stroke-width:1}
+.person2{fill:var(--cook2);fill-opacity:.35;stroke:var(--cook2);stroke-width:1}
+.person3{fill:var(--wood);fill-opacity:.3;stroke:var(--wood);stroke-width:1}
+.floorl{stroke:var(--ink);stroke-width:2}
+.ceil{stroke:var(--muted);stroke-width:1;stroke-dasharray:6 4}
+.tbl{fill:var(--wood);fill-opacity:.5;stroke:var(--ink);stroke-width:.9}
+.stool{fill:var(--wood);fill-opacity:.28;stroke:var(--ink);stroke-width:.7}
+.stoolp{fill:none;stroke:var(--wood);stroke-width:.8;stroke-dasharray:2 1.5}
+.dine{fill:var(--wood);fill-opacity:.07;stroke:var(--wood);stroke-width:.8;stroke-dasharray:4 2}
+.dinet{fill:var(--wood);font-size:8px;font-weight:700}
+.rack{fill:var(--wood);fill-opacity:.22;stroke:var(--wood);stroke-width:.8}
+.park{fill:none;stroke:var(--wood);stroke-width:1;stroke-dasharray:3 2}
+.rail{stroke:var(--ink);stroke-width:1.1}
+.vent{fill:var(--ink);fill-opacity:.8}
+.broom{fill:var(--flow);fill-opacity:.1;stroke:var(--flow);stroke-width:.9;stroke-dasharray:3 2}
+.broomt{fill:var(--flow);font-weight:700}
+.conf{fill:url(#hx);stroke:var(--tri);stroke-width:1}
+.hxl{stroke:var(--tri);stroke-width:1.1}
+.ecs{fill:var(--glass);stroke:var(--water);stroke-width:1.3}
+.conft{fill:var(--tri);font-weight:800}
+.sleaf{fill:var(--ink)}
+.sleafc{fill:none;stroke:var(--ink);stroke-width:.8;stroke-dasharray:3 2}
+.srail{stroke:var(--tri);stroke-width:1.4}
+.slide{stroke:var(--tri);stroke-width:1;fill:none}
+.okt{fill:var(--flow);font-weight:700}
+.changes{max-width:860px;font-size:15px;margin:6px 0 4px;padding-left:20px}
+section{margin-top:52px;padding-top:8px;border-top:2px solid var(--line)}
+.scroll-t{overflow-x:auto}
+#changements table{min-width:620px}
+.vant{fill:var(--wood);fill-opacity:.3;stroke:var(--ink);stroke-width:.8}
+.slot{fill:var(--tri);fill-opacity:.1;stroke:var(--tri);stroke-width:.6;stroke-dasharray:2 1.5}
+.bgf{opacity:.5}
+.egout{fill:var(--glass);fill-opacity:.6;stroke:var(--water);stroke-width:.7}
+.egl{stroke:var(--water);stroke-width:.6}
+.ll{fill:var(--panel);stroke:var(--ink);stroke-width:1.2}
+.hid{fill:none;stroke:var(--muted);stroke-width:1;stroke-dasharray:4 3}
+.free{fill:var(--flow);fill-opacity:.08;stroke:var(--flow);stroke-width:.6;stroke-dasharray:2 1.5}
+.cfl{fill:var(--tri);fill-opacity:.16;stroke:var(--tri);stroke-width:.6;stroke-dasharray:2 1.5}
+.ve{font-size:7px}.ves{font-size:6px}.veb{font-size:8px;font-weight:700}
+.vc{font-size:4.2px}.vcb{font-size:4.8px;font-weight:700}
+.vlab{fill:var(--wood);font-size:7px;font-weight:700;letter-spacing:.04em}
+.card .scroll svg.small{max-width:100%}
+.gridv{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,500px),1fr));gap:16px}
+.claus{fill:var(--wood);fill-opacity:.45;stroke:var(--ink);stroke-width:.9}
+.clausc{fill:none;stroke:var(--wood);stroke-width:.9;stroke-dasharray:3 2}
+.switch{display:flex;flex-wrap:wrap;gap:8px;margin:10px 0 6px}
+.switch button{font:inherit;font-size:14px;padding:8px 14px;border-radius:999px;border:1px solid var(--line);background:var(--panel);color:var(--ink);cursor:pointer}
+.switch button[aria-selected="true"]{background:var(--ink);color:var(--paper);border-color:var(--ink)}
+.switch button:focus-visible{outline:2px solid var(--wood);outline-offset:2px}
+.opts{display:flex;flex-wrap:wrap;align-items:center;gap:6px 14px;margin:4px 0 10px;font-size:13px}
+.opts .optl{font-family:"JetBrains Mono",ui-monospace,Menlo,monospace;font-size:11px;letter-spacing:.06em;text-transform:uppercase;color:var(--muted)}
+.opts .seg{display:inline-flex;border:1px solid var(--line);border-radius:8px;overflow:hidden}
+.opts .seg button{font:inherit;font-size:13px;padding:5px 10px;border:0;background:var(--panel);color:var(--ink);cursor:pointer}
+.opts .seg button+button{border-left:1px solid var(--line)}
+.opts .seg button[aria-pressed="true"]{background:var(--wood);color:var(--paper)}
+.opts .seg button:focus-visible{outline:2px solid var(--wood);outline-offset:-2px}
+/* options : chaque élément dépendant porte la classe de sa valeur */
+:root[data-door="w"] .door-e,:root[data-door="e"] .door-w,:root[data-tbl="sq"] .tbl-rd,:root[data-tbl="sq"] .tbl-bq,:root[data-tbl="rd"] .tbl-sq,:root[data-tbl="rd"] .tbl-bq,:root[data-tbl="bq"] .tbl-sq,:root[data-tbl="bq"] .tbl-rd{display:none}
+[hidden]{display:none!important}
+.tag{display:inline-block;font-family:"JetBrains Mono",ui-monospace,monospace;font-size:12px;padding:1px 7px;border-radius:5px;background:var(--tech);margin-right:6px}
+
+
+.tile{fill:url(#tl)}
+.room{fill:var(--line);fill-opacity:.18}
+.roomt{fill:var(--muted);font-size:9px;font-weight:600}
+.sofa{fill:var(--cook2);fill-opacity:.18;stroke:var(--ink);stroke-width:.8}
+.sofac{fill:var(--cook2);fill-opacity:.12;stroke:var(--ink);stroke-width:.5}
+.rug{fill:var(--wood);fill-opacity:.08;stroke:var(--wood);stroke-width:.7;stroke-dasharray:5 3}
+.plant{fill:var(--flow);fill-opacity:.25;stroke:var(--flow);stroke-width:.8}
+.mirror{fill:var(--glass);stroke:var(--ink);stroke-width:.7}
+.tv{fill:var(--ink);fill-opacity:.85}
+.lamp{fill:#E8B44A;fill-opacity:.55;stroke:var(--ink);stroke-width:.6}
+.pass{fill:none;stroke:var(--flow);stroke-width:.9}
+.passt{fill:var(--flow);font-family:"JetBrains Mono",monospace !important;font-size:7px;font-weight:600}
+.hook{fill:var(--ink)}
+.book{fill:var(--wood);fill-opacity:.35;stroke:none}
+.inner{fill:none;stroke:var(--muted);stroke-width:.6;stroke-dasharray:3 2}
+.el-ceil{stroke:var(--muted);stroke-width:.8;stroke-dasharray:6 4}
+</style>
+</head>
+<body>
+<div class="wrap">
+<svg width="0" height="0" style="position:absolute" aria-hidden="true" focusable="false"><defs>
+<pattern id="tl" width="30" height="30" patternUnits="userSpaceOnUse"><path class="tl" d="M30 0 L0 0 L0 30"/></pattern>
+<marker id="tk" viewBox="0 0 10 10" refX="5" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M2 8 L8 2" style="stroke:var(--muted)" stroke-width="1.4"/></marker>
+</defs></svg>
+<div class="kicker">Entrée · V3.1 · plan et élévations</div>
+<h1>Aménagement de l'entrée</h1>
+<p class="pitch">Le couloir (8,1 m²) dessert cinq portes et le passage du salon : il faut ranger sans gêner. Un banc sous le tableau électrique, un meuble à chaussures étroit avec miroir dans la branche d'entrée, relié par un angle arrondi à une penderie face à la salle de bain. L'historique est en fin de document (<a href="#changements">Changements</a>).</p>
+<div class="stats"><div class="stat"><b>84 × 60</b><span>penderie toute hauteur</span></div><div class="stat"><b>≈ 24 paires</b><span>meuble à chaussures</span></div><div class="stat"><b>85 cm</b><span>passage le plus étroit</span></div><div class="stat"><b>8,1 m²</b><span>surface du couloir</span></div></div>
+
+<h2>Plan à l'échelle</h2>
+<div class="fig"><div class="scroll"><svg viewBox="-150 -130 595 560" class="" role="img" aria-label="Plan de l'entrée aménagée"><rect x="-140" y="-120" width="230" height="110" class="room" />
+<text x="-25" y="-60" class="roomt" text-anchor="middle">Cuisine</text>
+<rect x="150" y="-120" width="124" height="110" class="room" />
+<text x="212" y="-60" class="roomt" text-anchor="middle">WC</text>
+<rect x="274" y="-120" width="160" height="214" class="room" />
+<text x="354" y="-40" class="roomt" text-anchor="middle">Salon</text>
+<rect x="364" y="104" width="70" height="160" class="room" />
+<text x="399" y="240" class="roomt" text-anchor="middle">Chambre</text>
+<rect x="120" y="218" width="244" height="166" class="room" />
+<text x="242" y="300" class="roomt" text-anchor="middle">Salle de bain</text>
+<rect x="-140" y="-10" width="130" height="394" class="room" />
+<text x="-75" y="230" class="roomt" text-anchor="middle">Pièce ouest</text>
+<text x="40" y="410" class="roomt" text-anchor="middle">Palier</text>
+<polygon points="0,0 264,0 264,104 354,104 354,208 110,208 110,374 0,374" class="appf" style="stroke:none"/>
+<polygon points="0,0 264,0 264,104 354,104 354,208 110,208 110,374 0,374" class="tile"/>
+<rect x="-10" y="-10" width="18" height="10" class="w" />
+<rect x="87" y="-10" width="104" height="10" class="w" />
+<rect x="264" y="-10" width="10" height="10" class="w" />
+<rect x="264" y="0" width="10" height="2" class="w" />
+<rect x="264" y="80" width="10" height="24" class="w" />
+<rect x="264" y="94" width="100" height="10" class="w" />
+<rect x="354" y="104" width="10" height="11" class="w" />
+<rect x="354" y="186" width="10" height="32" class="w" />
+<rect x="110" y="208" width="90" height="10" class="w" />
+<rect x="276" y="208" width="88" height="10" class="w" />
+<rect x="110" y="208" width="10" height="176" class="w" />
+<rect x="-10" y="374" width="12" height="10" class="w" />
+<rect x="77" y="374" width="43" height="10" class="w" />
+<rect x="-10" y="-10" width="10" height="93" class="w" />
+<rect x="-10" y="160" width="10" height="224" class="w" />
+<line x1="8" y1="-10" x2="8" y2="0" class="app"/>
+<line x1="87" y1="-10" x2="87" y2="0" class="app"/>
+<line x1="191" y1="-10" x2="191" y2="0" class="app"/>
+<line x1="264" y1="-10" x2="264" y2="0" class="app"/>
+<line x1="264" y1="2" x2="274" y2="2" class="app"/>
+<line x1="264" y1="80" x2="274" y2="80" class="app"/>
+<line x1="354" y1="115" x2="364" y2="115" class="app"/>
+<line x1="354" y1="186" x2="364" y2="186" class="app"/>
+<line x1="200" y1="208" x2="200" y2="218" class="app"/>
+<line x1="276" y1="208" x2="276" y2="218" class="app"/>
+<line x1="2" y1="374" x2="2" y2="384" class="app"/>
+<line x1="77" y1="374" x2="77" y2="384" class="app"/>
+<line x1="-10" y1="83" x2="0" y2="83" class="app"/>
+<line x1="-10" y1="160" x2="0" y2="160" class="app"/>
+<path d="M77 374 L2 374 A75 75 0 0 1 77 299 Z" class="doorzone"/>
+<path d="M2 374 A75 75 0 0 1 77 299" class="doorarc"/>
+<line x1="77" y1="374" x2="77" y2="299" class="doorleaf"/>
+<path d="M0 160 L0 83 A77 77 0 0 1 77 160 Z" class="doorzone"/>
+<path d="M0 83 A77 77 0 0 1 77 160" class="doorarc"/>
+<line x1="0" y1="160" x2="77" y2="160" class="doorleaf"/>
+<text x="285" y="41" class="lblx muted" text-anchor="middle" transform="rotate(-90 285 41)">passage sans porte</text>
+<path d="M276 218 L200 218 A76 76 0 0 0 276 294 Z" class="doorzone"/>
+<path d="M200 218 A76 76 0 0 0 276 294" class="doorarc"/>
+<line x1="276" y1="218" x2="276" y2="294" class="doorleaf"/>
+<path d="M364 186 L364 115 A71 71 0 0 1 435 186 Z" class="doorzone"/>
+<path d="M364 115 A71 71 0 0 1 435 186" class="doorarc"/>
+<line x1="364" y1="186" x2="435" y2="186" class="doorleaf"/>
+<path d="M191 -10 L264 -10 A73 73 0 0 0 191 -83 Z" class="doorzone"/>
+<path d="M264 -10 A73 73 0 0 0 191 -83" class="doorarc"/>
+<line x1="191" y1="-10" x2="191" y2="-83" class="doorleaf"/>
+<rect x="8" y="-14" width="79" height="4" class="sleafc" />
+<text x="47" y="-18" class="lblx muted" text-anchor="middle">porte coulissante côté cuisine</text>
+<text x="39" y="392" class="lbls muted" text-anchor="middle">porte d’entrée</text>
+<rect x="110" y="-6" width="60" height="6" class="tech" />
+<rect x="92" y="0" width="95" height="38" class="cab" />
+<text x="139.5" y="18.5" class="lbls" text-anchor="middle"><tspan class="lblb">①</tspan> Banc 95 × 38 · h 45</text>
+<text x="139.5" y="26.5" class="lbls" text-anchor="middle">sous le tableau électrique</text>
+<rect x="85" y="208" width="25" height="166" class="cab" />
+<line x1="85" y1="291" x2="110" y2="291" class="app"/>
+<rect x="82" y="251" width="3" height="80" class="mirror" />
+<text x="97.5" y="291" class="lbls" text-anchor="middle" transform="rotate(-90 97.5 291)"><tspan class="lblb">②</tspan> Chaussures 166 × 25 · h 95</text>
+<text x="76" y="291" class="lblx muted" text-anchor="middle" transform="rotate(-90 76 291)">miroir</text>
+<circle cx="108" cy="216" r="1.6" class="hook"/>
+<circle cx="108" cy="232" r="1.6" class="hook"/>
+<path d="M110 208 L85 208 A25 25 0 0 1 110 183 Z" class="cab"/>
+<line x1="85" y1="208" x2="110" y2="208" class="app"/>
+<text x="79" y="186" class="lblx muted" text-anchor="end">angle arrondi</text>
+<text x="79" y="193" class="lblx muted" text-anchor="end">étagères h 95</text>
+<rect x="110" y="148" width="84" height="60" class="tall" />
+<line x1="152" y1="148" x2="152" y2="208" class="app"/>
+<line x1="114" y1="178" x2="190" y2="178" class="inner"/>
+<path d="M110 148 A42 42 0 0 1 152 106" class="swing"/>
+<path d="M194 148 A42 42 0 0 0 152 106" class="swing"/>
+<text x="152" y="190.5" class="lbls" text-anchor="middle"><tspan class="lblb">③</tspan> Penderie</text>
+<text x="152" y="198.5" class="lbls" text-anchor="middle">84 × 60 · h 250</text>
+<line x1="2" y1="160" x2="2" y2="237" class="sleafc"/>
+<text x="8" y="228" class="lblx muted" text-anchor="start">ouverte à 180°</text>
+<path d="M0 270 L85 270" class="pass"/>
+<circle cx="0" cy="270" r="1.3" class="mf"/>
+<circle cx="85" cy="270" r="1.3" class="mf"/>
+<text x="42" y="267" class="passt" text-anchor="middle">85</text>
+<path d="M150 38 L150 106" class="pass"/>
+<circle cx="150" cy="38" r="1.3" class="mf"/>
+<circle cx="150" cy="106" r="1.3" class="mf"/>
+<text x="147" y="72" class="passt" text-anchor="middle" transform="rotate(-90 147 72)">110</text>
+<path d="M230 104 L230 208" class="pass"/>
+<circle cx="230" cy="104" r="1.3" class="mf"/>
+<circle cx="230" cy="208" r="1.3" class="mf"/>
+<text x="227" y="160" class="passt" text-anchor="middle" transform="rotate(-90 227 160)">104</text>
+<path d="M2 150 L98 150" class="pass"/>
+<circle cx="2" cy="150" r="1.3" class="mf"/>
+<circle cx="98" cy="150" r="1.3" class="mf"/>
+<text x="50" y="147" class="passt" text-anchor="middle">96</text>
+<path d="M0 -28 L264 -28" class="dim" marker-start="url(#tk)" marker-end="url(#tk)"/>
+<text x="132" y="-30.5" class="dimt" text-anchor="middle">264</text>
+<path d="M0 410 L110 410" class="dim" marker-start="url(#tk)" marker-end="url(#tk)"/>
+<text x="55" y="418" class="dimt" text-anchor="middle">110</text>
+<path d="M-48 0 L-48 374" class="dim" marker-start="url(#tk)" marker-end="url(#tk)"/>
+<text x="-50.5" y="187" class="dimt" text-anchor="middle" transform="rotate(-90 -50.5 187)">374</text>
+<path d="M110 232 L354 232" class="dim" marker-start="url(#tk)" marker-end="url(#tk)"/>
+<text x="232" y="229.5" class="dimt" text-anchor="middle">244</text></svg></div><p class="cap">Plan vu de dessus, 1 unité = 1 cm. Le vantail de la porte d'entrée ouvert à 90° vient en butée contre le meuble à chaussures (②) : prévoir un butoir de sol. La porte de la pièce ouest s'ouvre à 180° contre le mur pour ne pas fermer le passage devant la penderie.</p></div>
+<div class="legend"><span><svg viewBox="0 0 26 14"><rect x="0" y="0" width="26" height="14" class="tall"/></svg>Meuble toute hauteur</span><span><svg viewBox="0 0 26 14"><rect x="0" y="0" width="26" height="14" class="cab"/></svg>Meuble bas, banc</span><span><svg viewBox="0 0 26 14"><rect x="1" y="1" width="24" height="12" class="tech"/></svg>Tableau électrique encastré</span><span><svg viewBox="0 0 26 14"><rect x="1" y="5" width="24" height="4" class="mirror"/></svg>Miroir</span><span><svg viewBox="0 0 26 14"><path d="M1 13 L1 1 A12 12 0 0 1 13 13Z" class="doorzone"/><path d="M1 1 A12 12 0 0 1 13 13" class="doorarc"/></svg>Débattement des portes</span><span><svg viewBox="0 0 26 14"><line x1="1" y1="7" x2="25" y2="7" class="pass"/></svg>Passage libre (cm)</span><span><svg viewBox="0 0 26 14"><rect x="0" y="0" width="26" height="14" class="room"/></svg>Pièce voisine</span></div>
+<h2>Élévations</h2>
+<div class="grid2">
+<div class="fig"><div class="scroll"><svg viewBox="-30 -12 330 300" class="small" role="img" aria-label="Élévation du mur nord"><line x1="-10" y1="250" x2="274" y2="250" class="floorl"/>
+<line x1="-10" y1="0" x2="274" y2="0" class="el-ceil"/>
+<text x="2" y="-3" class="lblx muted" text-anchor="start">plafond 250</text>
+<rect x="-10" y="0" width="10" height="250" class="w" />
+<rect x="264" y="0" width="10" height="250" class="w" />
+<rect x="8" y="46" width="79" height="204" class="appf" />
+<rect x="12" y="50" width="71" height="200" class="inner" />
+<text x="47.5" y="148" class="lbls muted" text-anchor="middle">cuisine</text>
+<rect x="191" y="46" width="73" height="204" class="appf" />
+<rect x="195" y="50" width="65" height="200" class="inner" />
+<text x="227.5" y="148" class="lbls muted" text-anchor="middle">WC</text>
+<rect x="110" y="75" width="60" height="80" class="tech" />
+<text x="140" y="103.5" class="lblx" text-anchor="middle">tableau</text>
+<text x="140" y="110.5" class="lblx" text-anchor="middle">électrique</text>
+<text x="140" y="117.5" class="lblx" text-anchor="middle">encastré</text>
+<text x="140" y="175" class="lblx muted" text-anchor="middle">position et taille à relever</text>
+<rect x="92" y="205" width="95" height="45" class="cab" />
+<rect x="92" y="202" width="95" height="4" class="tbl" />
+<line x1="96" y1="228" x2="183" y2="228" class="inner"/>
+<text x="139.5" y="222" class="lblx" text-anchor="middle">① banc h 45, dessous ouvert</text>
+<path d="M92 262 L187 262" class="dim" marker-start="url(#tk)" marker-end="url(#tk)"/>
+<text x="139.5" y="270" class="dimt" text-anchor="middle">95</text>
+<path d="M87 278 L191 278" class="dim" marker-start="url(#tk)" marker-end="url(#tk)"/>
+<text x="139" y="286" class="dimt" text-anchor="middle">trumeau 104</text>
+<path d="M200 0 L200 250" class="dim" marker-start="url(#tk)" marker-end="url(#tk)"/>
+<text x="208" y="125" class="dimt" text-anchor="middle" transform="rotate(-90 208 125)">250</text></svg></div><p class="cap">A · Mur nord, vu depuis l'entrée : banc posé sous le tableau électrique encastré, entre les portes de la cuisine et du WC. Tableau dessiné au centre, position et taille à relever.</p></div>
+<div class="fig"><div class="scroll"><svg viewBox="130 -12 300 300" class="small" role="img" aria-label="Élévation du mur de la salle de bain côté entrée"><line x1="138" y1="250" x2="384" y2="250" class="floorl"/>
+<line x1="138" y1="0" x2="384" y2="0" class="el-ceil"/>
+<text x="150" y="-3" class="lblx muted" text-anchor="start">plafond 250</text>
+<rect x="374" y="0" width="10" height="250" class="w" />
+<rect x="148" y="0" width="60" height="250" class="tall" />
+<text x="178" y="60" class="lblx" text-anchor="middle">③ penderie</text>
+<text x="178" y="68" class="lblx muted" text-anchor="middle">(côté)</text>
+<rect x="183" y="155" width="25" height="95" class="cab" />
+<line x1="183" y1="187" x2="208" y2="187" class="app"/>
+<line x1="183" y1="219" x2="208" y2="219" class="app"/>
+<text x="195.5" y="182" class="lblx" text-anchor="middle">arrondi</text>
+<text x="195.5" y="214" class="lblx muted" text-anchor="middle">R 25</text>
+<rect x="208" y="155" width="166" height="95" class="cab" />
+<line x1="291" y1="155" x2="291" y2="250" class="app"/>
+<line x1="208" y1="202" x2="291" y2="202" class="app"/>
+<rect x="243.5" y="160" width="12" height="2" class="dark" />
+<rect x="243.5" y="207" width="12" height="2" class="dark" />
+<line x1="291" y1="202" x2="374" y2="202" class="app"/>
+<rect x="326.5" y="160" width="12" height="2" class="dark" />
+<rect x="326.5" y="207" width="12" height="2" class="dark" />
+<rect x="183" y="152" width="191" height="3" class="dark" />
+<circle cx="216" cy="85" r="2.2" class="hook"/>
+<circle cx="232" cy="85" r="2.2" class="hook"/>
+<text x="224" y="78" class="lblx muted" text-anchor="middle">patères</text>
+<rect x="251" y="40" width="80" height="100" class="mirror" />
+<text x="291" y="92" class="lbls" text-anchor="middle">miroir 80 × 100</text>
+<circle cx="291" cy="30" r="4" class="lamp"/>
+<text x="302" y="32" class="lblx muted" text-anchor="start">applique</text>
+<text x="291" y="230" class="lbls" text-anchor="middle">② 4 abattants · 2 rangs</text>
+<text x="297" y="148" class="lblx muted" text-anchor="middle">plateau vide-poche h 98</text>
+<text x="148" y="262" class="lblx muted" text-anchor="start">nord</text>
+<text x="374" y="262" class="lblx muted" text-anchor="end">porte d’entrée →</text>
+<path d="M148 272 L183 272" class="dim" marker-start="url(#tk)" marker-end="url(#tk)"/>
+<text x="165.5" y="280" class="dimt" text-anchor="middle">35</text>
+<path d="M183 272 L208 272" class="dim" marker-start="url(#tk)" marker-end="url(#tk)"/>
+<text x="195.5" y="280" class="dimt" text-anchor="middle">25</text>
+<path d="M208 272 L374 272" class="dim" marker-start="url(#tk)" marker-end="url(#tk)"/>
+<text x="291" y="280" class="dimt" text-anchor="middle">166</text>
+<path d="M386 152 L386 250" class="dim" marker-start="url(#tk)" marker-end="url(#tk)"/>
+<text x="394" y="201" class="dimt" text-anchor="middle" transform="rotate(-90 394 201)">98</text></svg></div><p class="cap">B · Mur de la salle de bain, vu depuis l'ouest : flanc de la penderie, angle arrondi à étagères, meuble à chaussures, deux patères, miroir et applique.</p></div>
+<div class="fig"><div class="scroll"><svg viewBox="90 -12 330 300" class="small" role="img" aria-label="Élévation du mur nord de la salle de bain"><line x1="75" y1="250" x2="374" y2="250" class="floorl"/>
+<line x1="75" y1="0" x2="374" y2="0" class="el-ceil"/>
+<text x="87" y="-3" class="lblx muted" text-anchor="start">plafond 250</text>
+<rect x="100" y="0" width="10" height="250" class="w" />
+<rect x="198" y="46" width="76" height="204" class="appf" />
+<rect x="202" y="50" width="68" height="200" class="inner" />
+<text x="236" y="148" class="lbls muted" text-anchor="middle">salle de bain</text>
+<rect x="280" y="0" width="84" height="242" class="tall" />
+<rect x="280" y="242" width="84" height="8" class="plinth" />
+<line x1="322" y1="0" x2="322" y2="242" class="app"/>
+<rect x="316" y="110" width="2" height="24" class="dark" />
+<rect x="326" y="110" width="2" height="24" class="dark" />
+<line x1="284" y1="48" x2="360" y2="48" class="inner"/>
+<text x="322" y="44" class="lblx muted" text-anchor="middle">étagère h 202</text>
+<line x1="284" y1="62" x2="360" y2="62" class="inner"/>
+<text x="322" y="72" class="lblx muted" text-anchor="middle">tringle h 188</text>
+<text x="322" y="160" class="lblb" text-anchor="middle">③ Penderie</text>
+<path d="M364 250 L364 155 L381 155 Q389 155 389 163 L389 250 Z" class="cab"/>
+<line x1="364" y1="187" x2="389" y2="187" class="app"/>
+<line x1="364" y1="219" x2="389" y2="219" class="app"/>
+<text x="377" y="148" class="lblx muted" text-anchor="middle">angle</text>
+<text x="120" y="262" class="lblx muted" text-anchor="start">est (chambre)</text>
+<text x="389" y="262" class="lblx muted" text-anchor="end">ouest</text>
+<path d="M280 272 L364 272" class="dim" marker-start="url(#tk)" marker-end="url(#tk)"/>
+<text x="322" y="280" class="dimt" text-anchor="middle">84</text>
+<path d="M364 272 L389 272" class="dim" marker-start="url(#tk)" marker-end="url(#tk)"/>
+<text x="376.5" y="280" class="dimt" text-anchor="middle">25</text></svg></div><p class="cap">C · Mur nord de la salle de bain, vu depuis le nord : penderie 84 × 60 toute hauteur et angle arrondi.</p></div>
+</div>
+
+<h2>Principe</h2>
+<div class="grid2">
+<div class="card"><h3>① Banc sous le tableau électrique</h3><p>Un banc de 95 × 38 à 45 de haut, posé (pas fixé dans la zone du tableau), dessous ouvert. Le tableau reste visible et à portée de main au-dessus : rien n'est rangé devant, ce que la NF C 15-100 interdit. On s'y assoit pour se chausser, face au meuble à chaussures.</p></div>
+<div class="card"><h3>② Meuble à chaussures dans la branche d'entrée</h3><p>Le long de la cloison de la salle de bain, 166 cm de long et 25 de profondeur seulement pour garder 85 cm de passage. Quatre abattants (environ 24 paires), plateau vide-poche pour les clés, deux patères, miroir 80 × 100 et applique au-dessus. Il sert aussi de butée à la porte d'entrée ouverte.</p></div>
+<div class="card"><h3>③ Penderie et angle arrondi</h3><p>À l'ancienne place du banc, contre la face nord de la salle de bain : une penderie de 84 × 60 toute hauteur, deux portes de 42, tringle à 188 et étagère à 202. Le meuble à chaussures se termine contre le flanc de la penderie par un quart de cercle ouvert de rayon 25, à 95 de haut (étagères pour les clés et le courrier) : pas d'arête dans le passage. 110 cm restent entre le banc et la penderie fermée.</p></div>
+<div class="card"><h3>Porte de la pièce ouest</h3><p>Ouverte à 90°, son vantail ne laisserait que 33 cm devant la penderie. En l'ouvrant à 180° contre le mur ouest (butée murale), il reste 96 cm. Le mur est libre à cet endroit.</p></div>
+</div>
+
+<h2>Points à vérifier</h2>
+<div class="hyp"><ul>
+<li><b>Tableau électrique</b> : encastré entre la cuisine et le WC (indiqué par le client) ; sa position et sa hauteur sont à relever. Si ses commandes les plus basses sont sous 1 m, le banc gêne l'accès : le raccourcir ou le décaler.</li>
+<li><b>Porte de la pièce ouest</b> : les paumelles doivent permettre une ouverture à 180°.</li>
+<li><b>Sens de la porte d'entrée</b> : sur le relevé, les paumelles sont à droite (côté salle de bain) et la porte ouvre vers l'intérieur. Si elles sont à gauche, le vantail se range contre le mur ouest.</li>
+<li><b>Portes du mur nord</b> : la gauche est celle de la cuisine (coulissante côté cuisine), la droite celle du WC, d'après le plan du salon.</li>
+<li><b>Hauteur sous plafond</b> : 250, reprise de la salle de bain.</li>
+</ul></div>
+
+<section id="changements">
+<h2>Changements</h2>
+<div class="scroll-t"><table>
+<thead><tr><th>Version</th><th>Date</th><th>Changements</th></tr></thead>
+<tbody><tr><td><b>V3.1</b></td><td>01/10/2026</td><td>Angle arrondi redessiné : quart de cercle de rayon 25 au bout du meuble à chaussures, contre le flanc de la penderie (au lieu d'un quart d'ellipse 25 × 60).</td></tr><tr><td><b>V3</b></td><td>01/10/2026</td><td>Banc et penderie échangés (demande du client) : banc 95 × 38 posé sous le tableau électrique, entre la cuisine et le WC ; penderie 84 × 60 toute hauteur contre la face nord de la salle de bain ; angle arrondi agrandi à 25 × 60, ouvert, à 95 de haut ; patères du mur nord de la SDB supprimées (2 restent au-dessus du meuble à chaussures). Porte de la pièce ouest à ouvrir à 180°. La V2.1 est archivée (archive/entree-amenagement-v2.html).</td></tr><tr><td><b>V2.1</b></td><td>01/10/2026</td><td>Porte du salon supprimée : l'ouverture du couloir vers le salon est un passage libre.</td></tr><tr><td><b>V2</b></td><td>01/10/2026</td><td>Penderie supprimée : le tableau électrique est encastré dans le trumeau entre la cuisine et le WC, et la NF C 15-100 interdit d'y ranger quoi que ce soit devant. Les manteaux passent sur 8 patères (6 au-dessus du banc, 2 au-dessus du meuble à chaussures). Angle arrondi en quart de rond 25 × 38 entre le meuble à chaussures (166 × 25) et le banc (84 × 38). La V1 est archivée (archive/entree-amenagement-v1.html).</td></tr><tr><td><b>V1</b></td><td>01/10/2026</td><td>Première proposition à partir du relevé : penderie 95 × 60 entre la cuisine et le WC, meuble à chaussures 160 × 25 avec miroir le long de la salle de bain, banc 82 × 38 avec patères face au nord. Plan et trois élévations.</td></tr></tbody>
+</table></div>
+</section>
+</div>
+</body>
+</html>

@@ -1,0 +1,446 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Aménagement du salon</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wght@400;500;700;800&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+<style>
+:root{
+  --paper:#F7F8F6; --ink:#1D2A33; --muted:#5E6B73; --line:#C9D0D4; --wood:#B07A45;
+  --water:#2F7FB5; --tri:#C8412C; --flow:#2E8B57; --cook2:#7B5EA7;
+  --panel:#FFFFFF; --cab:#ECE6DA; --tall:#D8CFBD; --tech:#E1E6E9; --glass:#CFE4F2;
+  color-scheme:light;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --paper:#141A1F; --ink:#E4EAED; --muted:#9AA7AE; --line:#34414A; --wood:#C9925A;
+    --water:#5AA8DE; --tri:#E8664F; --flow:#4CB97A; --cook2:#A68BD2;
+    --panel:#1B2329; --cab:#2A3338; --tall:#394449; --tech:#26303A; --glass:#1F3A4E;
+    color-scheme:dark;
+  }
+}
+:root[data-theme="dark"]{
+  --paper:#141A1F; --ink:#E4EAED; --muted:#9AA7AE; --line:#34414A; --wood:#C9925A;
+  --water:#5AA8DE; --tri:#E8664F; --flow:#4CB97A; --cook2:#A68BD2;
+  --panel:#1B2329; --cab:#2A3338; --tall:#394449; --tech:#26303A; --glass:#1F3A4E;
+  color-scheme:dark;
+}
+*{box-sizing:border-box}
+html,body{margin:0}
+body{background:var(--paper);color:var(--ink);font-family:Archivo,system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;line-height:1.55;font-size:16px}
+.wrap{max-width:1120px;margin:0 auto;padding:28px 16px 64px}
+.kicker{font-family:"JetBrains Mono",ui-monospace,Menlo,monospace;font-size:12px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted)}
+h1{font-size:clamp(28px,5vw,44px);line-height:1.08;margin:6px 0 12px;font-weight:800;letter-spacing:-.01em}
+h2{font-size:22px;margin:44px 0 10px;font-weight:700}
+h3{font-size:17px;margin:22px 0 6px}
+p{margin:8px 0}
+.pitch{font-size:18px;max-width:780px;color:var(--ink)}
+.stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:12px;margin:22px 0 8px}
+.stat{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:12px 14px}
+.stat b{display:block;font-family:"JetBrains Mono",ui-monospace,monospace;font-size:24px;font-weight:600}
+.stat span{font-size:13px;color:var(--muted)}
+.fig{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:12px;margin:14px 0}
+.scroll{overflow-x:auto;-webkit-overflow-scrolling:touch}
+.scroll svg{display:block;width:100%;min-width:720px;height:auto}
+.scroll svg.small{min-width:340px;max-width:600px;margin:0 auto}
+.cap{font-size:13px;color:var(--muted);margin:8px 4px 2px}
+.legend{display:flex;flex-wrap:wrap;gap:8px 18px;font-size:13px;margin:10px 4px}
+.legend span{display:inline-flex;align-items:center;gap:6px}
+.legend svg{width:26px;height:14px;flex:none}
+.grid2{display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:16px}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:14px 16px}
+.card h3{margin-top:0}
+ul{padding-left:20px;margin:6px 0}
+li{margin:3px 0}
+table{border-collapse:collapse;width:100%;font-size:14px}
+th,td{text-align:left;padding:7px 8px;border-bottom:1px solid var(--line);vertical-align:top}
+td.num,th.num{text-align:right;font-family:"JetBrains Mono",ui-monospace,monospace;white-space:nowrap}
+td.st{text-align:center;font-size:17px;white-space:nowrap}
+tfoot td{font-weight:700}
+.mono{font-family:"JetBrains Mono",ui-monospace,monospace}
+.note{font-size:13px;color:var(--muted)}
+.ok{color:var(--flow);font-weight:700}
+.warn{color:var(--wood);font-weight:700}
+.hyp{border-left:3px solid var(--wood);padding:6px 12px;background:var(--panel);font-size:14px;margin:12px 0}
+@media (max-width:480px){ body{font-size:15px} .stat b{font-size:21px} th,td{padding:6px 5px} }
+
+/* SVG */
+svg text{font-family:Archivo,system-ui,sans-serif;fill:var(--ink)}
+.w{fill:var(--ink)}
+.wcut{fill:var(--ink)}
+.nw{fill:url(#hn);stroke:var(--ink);stroke-width:.8}
+.ghost{fill:none;stroke:var(--muted);stroke-width:1;stroke-dasharray:4 3}
+.floorbg{fill:var(--wood);fill-opacity:.13}
+.pq{fill:none;stroke:var(--wood);stroke-width:.6;stroke-opacity:.45}
+.cellf{fill:var(--tech)}
+.tl{fill:none;stroke:var(--line);stroke-width:.6}
+.wc{fill:var(--line);fill-opacity:.55}
+.cab{fill:var(--cab);stroke:var(--ink);stroke-width:.7}
+.cabcut{fill:var(--tall);stroke:var(--ink);stroke-width:1.4}
+.tall{fill:var(--tall);stroke:var(--ink);stroke-width:.8}
+.pf{fill:var(--tall);stroke:var(--wood);stroke-width:1.8}
+.tech{fill:var(--tech);stroke:var(--ink);stroke-width:.7;stroke-dasharray:3 2}
+.wt{fill:none;stroke:var(--ink);stroke-width:1.6}
+.app{fill:none;stroke:var(--ink);stroke-width:.8}
+.appf{fill:var(--panel);stroke:var(--ink);stroke-width:.8}
+.dark{fill:var(--ink)}
+.upper{fill:none;stroke:var(--muted);stroke-width:.8;stroke-dasharray:3 2}
+.win{fill:var(--glass);stroke:var(--ink);stroke-width:.7}
+.glass{stroke:var(--water);stroke-width:1.2}
+.winleaf{fill:none;stroke:var(--muted);stroke-width:.6;stroke-dasharray:2 2}
+.doorzone{fill:var(--tri);fill-opacity:.06;stroke:none}
+.doorarc{fill:none;stroke:var(--ink);stroke-width:.8}
+.doorleaf{stroke:var(--ink);stroke-width:3}
+.door100{stroke:var(--tri);stroke-width:1.2;stroke-dasharray:3 2}
+.swing{fill:none;stroke:var(--muted);stroke-width:.6;stroke-dasharray:2 2}
+.dim{stroke:var(--muted);stroke-width:.6;fill:none}
+.dimt{fill:var(--muted);font-family:"JetBrains Mono",ui-monospace,monospace !important;font-size:8px}
+.lbl{font-size:7.5px}
+.lbls{font-size:6.5px}
+.lblx{font-size:5px}
+.lblb{font-size:9px;font-weight:700}
+.muted{fill:var(--muted)}
+.woodt{fill:var(--wood);font-weight:700}
+.tri{fill:var(--tri);fill-opacity:.07;stroke:var(--tri);stroke-width:1.6}
+.triv{fill:var(--tri)}
+.trit{fill:var(--tri);font-family:"JetBrains Mono",monospace !important;font-size:8px;font-weight:600}
+.tribg{fill:var(--panel);stroke:var(--tri);stroke-width:.6}
+.flow{fill:none;stroke:var(--flow);stroke-width:2.2;marker-end:url(#af)}
+.mf{fill:var(--flow)}
+.badge{fill:var(--flow)}
+.badget{fill:#fff;font-size:8px;font-weight:700}
+.z1{fill:url(#h1);stroke:var(--water);stroke-width:.8}
+.z2{fill:url(#h2);stroke:var(--cook2);stroke-width:.8}
+.h1l{stroke:var(--water);stroke-width:1;stroke-opacity:.45}
+.h2l{stroke:var(--cook2);stroke-width:1;stroke-opacity:.45}
+.z1t{fill:var(--water);font-size:8px;font-weight:700}
+.z2t{fill:var(--cook2);font-size:8px;font-weight:700}
+.pin{fill:none;stroke:var(--water);stroke-width:1.6}
+.pout{fill:none;stroke:var(--water);stroke-width:1.6;stroke-dasharray:5 3}
+.wt2{fill:var(--water);font-size:7px}
+.duct{fill:none;stroke:var(--muted);stroke-width:1.2;stroke-dasharray:6 3}
+.air{fill:none;stroke:var(--cook2);stroke-width:1.1;marker-end:url(#aa)}
+.airt{fill:var(--cook2);font-size:6px}
+.sec{stroke:var(--tri);stroke-width:.9;stroke-dasharray:10 3 2 3;fill:none}
+.secm{fill:var(--tri)}
+.sect{fill:var(--tri);font-weight:800;font-size:11px}
+.plinth{fill:var(--tall);stroke:var(--ink);stroke-width:.6}
+.cred{fill:var(--wood);fill-opacity:.12;stroke:none}
+.bgwall{fill:var(--line);fill-opacity:.35;stroke:none}
+.person1{fill:var(--water);fill-opacity:.35;stroke:var(--water);stroke-width:1}
+.person2{fill:var(--cook2);fill-opacity:.35;stroke:var(--cook2);stroke-width:1}
+.person3{fill:var(--wood);fill-opacity:.3;stroke:var(--wood);stroke-width:1}
+.floorl{stroke:var(--ink);stroke-width:2}
+.ceil{stroke:var(--muted);stroke-width:1;stroke-dasharray:6 4}
+.tbl{fill:var(--wood);fill-opacity:.5;stroke:var(--ink);stroke-width:.9}
+.stool{fill:var(--wood);fill-opacity:.28;stroke:var(--ink);stroke-width:.7}
+.stoolp{fill:none;stroke:var(--wood);stroke-width:.8;stroke-dasharray:2 1.5}
+.dine{fill:var(--wood);fill-opacity:.07;stroke:var(--wood);stroke-width:.8;stroke-dasharray:4 2}
+.dinet{fill:var(--wood);font-size:8px;font-weight:700}
+.rack{fill:var(--wood);fill-opacity:.22;stroke:var(--wood);stroke-width:.8}
+.park{fill:none;stroke:var(--wood);stroke-width:1;stroke-dasharray:3 2}
+.rail{stroke:var(--ink);stroke-width:1.1}
+.vent{fill:var(--ink);fill-opacity:.8}
+.broom{fill:var(--flow);fill-opacity:.1;stroke:var(--flow);stroke-width:.9;stroke-dasharray:3 2}
+.broomt{fill:var(--flow);font-weight:700}
+.conf{fill:url(#hx);stroke:var(--tri);stroke-width:1}
+.hxl{stroke:var(--tri);stroke-width:1.1}
+.ecs{fill:var(--glass);stroke:var(--water);stroke-width:1.3}
+.conft{fill:var(--tri);font-weight:800}
+.sleaf{fill:var(--ink)}
+.sleafc{fill:none;stroke:var(--ink);stroke-width:.8;stroke-dasharray:3 2}
+.srail{stroke:var(--tri);stroke-width:1.4}
+.slide{stroke:var(--tri);stroke-width:1;fill:none}
+.okt{fill:var(--flow);font-weight:700}
+.changes{max-width:860px;font-size:15px;margin:6px 0 4px;padding-left:20px}
+section{margin-top:52px;padding-top:8px;border-top:2px solid var(--line)}
+.scroll-t{overflow-x:auto}
+#changements table{min-width:620px}
+.vant{fill:var(--wood);fill-opacity:.3;stroke:var(--ink);stroke-width:.8}
+.slot{fill:var(--tri);fill-opacity:.1;stroke:var(--tri);stroke-width:.6;stroke-dasharray:2 1.5}
+.bgf{opacity:.5}
+.egout{fill:var(--glass);fill-opacity:.6;stroke:var(--water);stroke-width:.7}
+.egl{stroke:var(--water);stroke-width:.6}
+.ll{fill:var(--panel);stroke:var(--ink);stroke-width:1.2}
+.hid{fill:none;stroke:var(--muted);stroke-width:1;stroke-dasharray:4 3}
+.free{fill:var(--flow);fill-opacity:.08;stroke:var(--flow);stroke-width:.6;stroke-dasharray:2 1.5}
+.cfl{fill:var(--tri);fill-opacity:.16;stroke:var(--tri);stroke-width:.6;stroke-dasharray:2 1.5}
+.ve{font-size:7px}.ves{font-size:6px}.veb{font-size:8px;font-weight:700}
+.vc{font-size:4.2px}.vcb{font-size:4.8px;font-weight:700}
+.vlab{fill:var(--wood);font-size:7px;font-weight:700;letter-spacing:.04em}
+.card .scroll svg.small{max-width:100%}
+.gridv{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,500px),1fr));gap:16px}
+.claus{fill:var(--wood);fill-opacity:.45;stroke:var(--ink);stroke-width:.9}
+.clausc{fill:none;stroke:var(--wood);stroke-width:.9;stroke-dasharray:3 2}
+.switch{display:flex;flex-wrap:wrap;gap:8px;margin:10px 0 6px}
+.switch button{font:inherit;font-size:14px;padding:8px 14px;border-radius:999px;border:1px solid var(--line);background:var(--panel);color:var(--ink);cursor:pointer}
+.switch button[aria-selected="true"]{background:var(--ink);color:var(--paper);border-color:var(--ink)}
+.switch button:focus-visible{outline:2px solid var(--wood);outline-offset:2px}
+.opts{display:flex;flex-wrap:wrap;align-items:center;gap:6px 14px;margin:4px 0 10px;font-size:13px}
+.opts .optl{font-family:"JetBrains Mono",ui-monospace,Menlo,monospace;font-size:11px;letter-spacing:.06em;text-transform:uppercase;color:var(--muted)}
+.opts .seg{display:inline-flex;border:1px solid var(--line);border-radius:8px;overflow:hidden}
+.opts .seg button{font:inherit;font-size:13px;padding:5px 10px;border:0;background:var(--panel);color:var(--ink);cursor:pointer}
+.opts .seg button+button{border-left:1px solid var(--line)}
+.opts .seg button[aria-pressed="true"]{background:var(--wood);color:var(--paper)}
+.opts .seg button:focus-visible{outline:2px solid var(--wood);outline-offset:-2px}
+/* options : chaque élément dépendant porte la classe de sa valeur */
+:root[data-door="w"] .door-e,:root[data-door="e"] .door-w,:root[data-tbl="sq"] .tbl-rd,:root[data-tbl="sq"] .tbl-bq,:root[data-tbl="rd"] .tbl-sq,:root[data-tbl="rd"] .tbl-bq,:root[data-tbl="bq"] .tbl-sq,:root[data-tbl="bq"] .tbl-rd{display:none}
+[hidden]{display:none!important}
+.tag{display:inline-block;font-family:"JetBrains Mono",ui-monospace,monospace;font-size:12px;padding:1px 7px;border-radius:5px;background:var(--tech);margin-right:6px}
+
+
+.tile{fill:url(#tl)}
+.room{fill:var(--line);fill-opacity:.18}
+.roomt{fill:var(--muted);font-size:9px;font-weight:600}
+.sofa{fill:var(--cook2);fill-opacity:.18;stroke:var(--ink);stroke-width:.8}
+.sofac{fill:var(--cook2);fill-opacity:.12;stroke:var(--ink);stroke-width:.5}
+.rug{fill:var(--wood);fill-opacity:.08;stroke:var(--wood);stroke-width:.7;stroke-dasharray:5 3}
+.plant{fill:var(--flow);fill-opacity:.25;stroke:var(--flow);stroke-width:.8}
+.mirror{fill:var(--glass);stroke:var(--ink);stroke-width:.7}
+.tv{fill:var(--ink);fill-opacity:.85}
+.lamp{fill:#E8B44A;fill-opacity:.55;stroke:var(--ink);stroke-width:.6}
+.pass{fill:none;stroke:var(--flow);stroke-width:.9}
+.passt{fill:var(--flow);font-family:"JetBrains Mono",monospace !important;font-size:7px;font-weight:600}
+.hook{fill:var(--ink)}
+.book{fill:var(--wood);fill-opacity:.35;stroke:none}
+.inner{fill:none;stroke:var(--muted);stroke-width:.6;stroke-dasharray:3 2}
+.el-ceil{stroke:var(--muted);stroke-width:.8;stroke-dasharray:6 4}
+</style>
+</head>
+<body>
+<div class="wrap">
+<svg width="0" height="0" style="position:absolute" aria-hidden="true" focusable="false"><defs>
+<pattern id="tl" width="30" height="30" patternUnits="userSpaceOnUse"><path class="tl" d="M30 0 L0 0 L0 30"/></pattern>
+<marker id="tk" viewBox="0 0 10 10" refX="5" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M2 8 L8 2" style="stroke:var(--muted)" stroke-width="1.4"/></marker>
+</defs></svg>
+<div class="kicker">Salon · V1 · plan et élévations</div>
+<h1>Aménagement du salon</h1>
+<p class="pitch">Un coin télé centré sur la pièce, la lumière de la baie prise de côté, et les deux extrémités utilisées : buffet à l'ouest, bureau et fauteuil de lecture près de la baie. L'historique est en fin de document (<a href="#changements">Changements</a>).</p>
+<div class="stats"><div class="stat"><b>3 m</b><span>recul télé</span></div><div class="stat"><b>82 cm</b><span>passage en entrant</span></div><div class="stat"><b>284 cm</b><span>bibliothèque</span></div><div class="stat"><b>19,7 m²</b><span>surface du salon</span></div></div>
+
+<h2>Plan à l'échelle</h2>
+<div class="fig"><div class="scroll"><svg viewBox="-140 -45 820 490" class="" role="img" aria-label="Plan du salon aménagé"><rect x="-130" y="-10" width="120" height="278" class="room" />
+<text x="-70" y="60" class="roomt" text-anchor="middle">Cellier</text>
+<text x="-70" y="180" class="roomt" text-anchor="middle">WC</text>
+<rect x="-130" y="268" width="120" height="102" class="room" />
+<text x="-70" y="330" class="roomt" text-anchor="middle">Couloir</text>
+<rect x="556" y="-10" width="110" height="380" class="room" />
+<text x="611" y="330" class="roomt" text-anchor="middle">Pièce 1</text>
+<rect x="0" y="370" width="556" height="50" class="room" />
+<text x="278" y="400" class="roomt" text-anchor="middle">Chambre</text>
+<polygon points="0,0 414,0 414,3 544,3 544,358 0,358" class="appf" style="stroke:none"/>
+<polygon points="0,0 414,0 414,3 544,3 544,358 0,358" class="tile"/>
+<rect x="-10" y="-12" width="424" height="12" class="w" />
+<rect x="414" y="-12" width="142" height="15" class="w" />
+<rect x="-10" y="0" width="10" height="268" class="w" />
+<rect x="-10" y="343" width="10" height="27" class="w" />
+<rect x="-10" y="358" width="566" height="12" class="w" />
+<rect x="544" y="3" width="12" height="69" class="w" />
+<rect x="544" y="274" width="12" height="96" class="w" />
+<rect x="544" y="72" width="12" height="202" class="win" />
+<line x1="550" y1="72" x2="550" y2="274" class="glass"/>
+<text x="568" y="173" class="lbls muted" text-anchor="middle" transform="rotate(-90 568 173)">baie 202</text>
+<line x1="-10" y1="268" x2="0" y2="268" class="app"/>
+<line x1="-10" y1="343" x2="0" y2="343" class="app"/>
+<path d="M0 268 L0 343 A75 75 0 0 0 75 268 Z" class="doorzone"/>
+<path d="M0 343 A75 75 0 0 0 75 268" class="doorarc"/>
+<line x1="0" y1="268" x2="75" y2="268" class="doorleaf"/>
+<rect x="122" y="140" width="300" height="200" class="rug" />
+<rect x="130" y="0" width="284" height="35" class="tall" />
+<line x1="192" y1="0" x2="192" y2="35" class="app"/>
+<line x1="352" y1="0" x2="352" y2="35" class="app"/>
+<rect x="199" y="2" width="146" height="5" class="tv" />
+<text x="272" y="22" class="lbls" text-anchor="middle"><tspan class="lblb">①</tspan> Bibliothèque et TV · 284 × 35 · h 250</text>
+<rect x="157" y="263" width="230" height="95" class="sofa" rx="6" />
+<rect x="165" y="263" width="214" height="20" class="sofac" rx="3" />
+<rect x="165" y="285" width="71.3" height="60" class="sofac" rx="3" />
+<rect x="236.3" y="285" width="71.3" height="60" class="sofac" rx="3" />
+<rect x="307.6" y="285" width="71.3" height="60" class="sofac" rx="3" />
+<rect x="157" y="263" width="10" height="95" class="sofac" />
+<rect x="377" y="263" width="10" height="95" class="sofac" />
+<text x="272" y="320" class="lbls" text-anchor="middle"><tspan class="lblb">②</tspan> Canapé 3 places 230 × 95</text>
+<rect x="212" y="160" width="120" height="60" class="tbl" rx="4" />
+<text x="272" y="193" class="lbls" text-anchor="middle">Table basse 120 × 60</text>
+<rect x="0" y="40" width="45" height="160" class="cab" />
+<text x="22.5" y="120" class="lbls" text-anchor="middle" transform="rotate(-90 22.5 120)"><tspan class="lblb">④</tspan> Buffet 160 × 45 · h 85</text>
+<circle cx="22" cy="60" r="7" class="lamp"/>
+<rect x="420" y="3" width="120" height="60" class="tbl" />
+<text x="480" y="30" class="lbls" text-anchor="middle"><tspan class="lblb">⑤</tspan> Bureau 120 × 60</text>
+<rect x="463" y="70" width="40" height="40" class="stool" rx="6" />
+<rect x="420" y="3" width="120" height="25" class="upper" />
+<g transform="rotate(-30 480 305)">
+<rect x="440" y="265" width="80" height="80" class="sofa" rx="8" />
+<rect x="440" y="265" width="80" height="18" class="sofac" rx="4" />
+</g>
+<text x="480" y="312" class="lbls" text-anchor="middle"><tspan class="lblb">⑥</tspan> Fauteuil</text>
+<circle cx="412" cy="318" r="20" class="tbl"/>
+<circle cx="412" cy="318" r="6" class="lamp"/>
+<circle cx="523" cy="245" r="12" class="plant"/>
+<circle cx="140" cy="330" r="9" class="lamp"/>
+<path d="M272 40 L272 255" class="ghost"/>
+<text x="276" y="120" class="lblx muted" text-anchor="start">recul 3 m</text>
+<path d="M75 300 L157 300" class="pass"/>
+<circle cx="75" cy="300" r="1.3" class="mf"/>
+<circle cx="157" cy="300" r="1.3" class="mf"/>
+<text x="116" y="297" class="passt" text-anchor="middle">82</text>
+<path d="M300 35 L300 160" class="pass"/>
+<circle cx="300" cy="35" r="1.3" class="mf"/>
+<circle cx="300" cy="160" r="1.3" class="mf"/>
+<text x="297" y="100" class="passt" text-anchor="middle" transform="rotate(-90 297 100)">125</text>
+<path d="M332 240 L332 263" class="pass"/>
+<circle cx="332" cy="240" r="1.3" class="mf"/>
+<circle cx="332" cy="263" r="1.3" class="mf"/>
+<text x="336" y="254" class="passt" text-anchor="start">43</text>
+<path d="M45 120 L212 120" class="pass"/>
+<circle cx="45" cy="120" r="1.3" class="mf"/>
+<circle cx="212" cy="120" r="1.3" class="mf"/>
+<text x="128" y="117" class="passt" text-anchor="middle">167</text>
+<path d="M503 110 L544 170" class="pass"/>
+<circle cx="503" cy="110" r="1.3" class="mf"/>
+<circle cx="544" cy="170" r="1.3" class="mf"/>
+<text x="520" y="150" class="passt" text-anchor="end">accès baie</text>
+<path d="M0 -30 L544 -30" class="dim" marker-start="url(#tk)" marker-end="url(#tk)"/>
+<text x="272" y="-32.5" class="dimt" text-anchor="middle">544</text>
+<path d="M-18 0 L-18 358" class="dim" marker-start="url(#tk)" marker-end="url(#tk)"/>
+<text x="-20.5" y="179" class="dimt" text-anchor="middle" transform="rotate(-90 -20.5 179)">358</text>
+<path d="M130 426 L414 426" class="dim" marker-start="url(#tk)" marker-end="url(#tk)"/>
+<text x="272" y="434" class="dimt" text-anchor="middle">284 (bibliothèque)</text></svg></div><p class="cap">Plan vu de dessus, 1 unité = 1 cm. On entre par le couloir en bas à gauche ; la baie est à droite. L'axe du coin télé est celui de la pièce (x = 272).</p></div>
+<div class="legend"><span><svg viewBox="0 0 26 14"><rect x="0" y="0" width="26" height="14" class="tall"/></svg>Meuble toute hauteur</span><span><svg viewBox="0 0 26 14"><rect x="0" y="0" width="26" height="14" class="cab"/></svg>Meuble bas</span><span><svg viewBox="0 0 26 14"><rect x="0" y="0" width="26" height="14" class="sofa"/></svg>Assises</span><span><svg viewBox="0 0 26 14"><rect x="0" y="0" width="26" height="14" class="tbl"/></svg>Tables, bureau</span><span><svg viewBox="0 0 26 14"><rect x="1" y="1" width="24" height="12" class="rug"/></svg>Tapis 300 × 200</span><span><svg viewBox="0 0 26 14"><circle cx="13" cy="7" r="6" class="lamp"/></svg>Lampe</span><span><svg viewBox="0 0 26 14"><line x1="1" y1="7" x2="25" y2="7" class="pass"/></svg>Passage libre (cm)</span></div>
+<h2>Élévations</h2>
+<div class="fig"><div class="scroll"><svg viewBox="-25 -12 610 305" class="" role="img" aria-label="Élévation du mur nord du salon"><line x1="-10" y1="250" x2="554" y2="250" class="floorl"/>
+<line x1="-10" y1="0" x2="554" y2="0" class="el-ceil"/>
+<text x="2" y="-3" class="lblx muted" text-anchor="start">plafond 250</text>
+<rect x="-10" y="0" width="10" height="250" class="w" />
+<rect x="544" y="0" width="12" height="250" class="w" />
+<rect x="130" y="0" width="284" height="250" class="tall" />
+<rect x="130" y="200" width="284" height="50" class="cab" />
+<line x1="201" y1="200" x2="201" y2="250" class="app"/>
+<line x1="272" y1="200" x2="272" y2="250" class="app"/>
+<line x1="343" y1="200" x2="343" y2="250" class="app"/>
+<rect x="192" y="50" width="160" height="150" class="appf" />
+<rect x="199.5" y="87" width="145" height="83" class="tv" />
+<text x="272" y="132" class="lbls" text-anchor="middle">TV 65″</text>
+
+<line x1="130" y1="40" x2="192" y2="40" class="app"/>
+<line x1="130" y1="80" x2="192" y2="80" class="app"/>
+<line x1="130" y1="120" x2="192" y2="120" class="app"/>
+<line x1="130" y1="160" x2="192" y2="160" class="app"/>
+<rect x="136" y="12" width="7" height="28" class="book" />
+<rect x="145" y="16" width="7" height="24" class="book" />
+<rect x="154" y="12" width="7" height="28" class="book" />
+<rect x="163" y="16" width="7" height="24" class="book" />
+<rect x="172" y="12" width="7" height="28" class="book" />
+<rect x="136" y="52" width="7" height="28" class="book" />
+<rect x="145" y="56" width="7" height="24" class="book" />
+<rect x="154" y="52" width="7" height="28" class="book" />
+<rect x="163" y="56" width="7" height="24" class="book" />
+<rect x="172" y="52" width="7" height="28" class="book" />
+<rect x="136" y="92" width="7" height="28" class="book" />
+<rect x="145" y="96" width="7" height="24" class="book" />
+<rect x="154" y="92" width="7" height="28" class="book" />
+<rect x="163" y="96" width="7" height="24" class="book" />
+<rect x="172" y="92" width="7" height="28" class="book" />
+<rect x="136" y="132" width="7" height="28" class="book" />
+<rect x="145" y="136" width="7" height="24" class="book" />
+<rect x="154" y="132" width="7" height="28" class="book" />
+<rect x="163" y="136" width="7" height="24" class="book" />
+<rect x="172" y="132" width="7" height="28" class="book" />
+<rect x="136" y="172" width="7" height="28" class="book" />
+<rect x="145" y="176" width="7" height="24" class="book" />
+<rect x="154" y="172" width="7" height="28" class="book" />
+<rect x="163" y="176" width="7" height="24" class="book" />
+<rect x="172" y="172" width="7" height="28" class="book" />
+<line x1="352" y1="40" x2="414" y2="40" class="app"/>
+<line x1="352" y1="80" x2="414" y2="80" class="app"/>
+<line x1="352" y1="120" x2="414" y2="120" class="app"/>
+<line x1="352" y1="160" x2="414" y2="160" class="app"/>
+<rect x="358" y="12" width="7" height="28" class="book" />
+<rect x="367" y="16" width="7" height="24" class="book" />
+<rect x="376" y="12" width="7" height="28" class="book" />
+<rect x="385" y="16" width="7" height="24" class="book" />
+<rect x="394" y="12" width="7" height="28" class="book" />
+<rect x="358" y="52" width="7" height="28" class="book" />
+<rect x="367" y="56" width="7" height="24" class="book" />
+<rect x="376" y="52" width="7" height="28" class="book" />
+<rect x="385" y="56" width="7" height="24" class="book" />
+<rect x="394" y="52" width="7" height="28" class="book" />
+<rect x="358" y="92" width="7" height="28" class="book" />
+<rect x="367" y="96" width="7" height="24" class="book" />
+<rect x="376" y="92" width="7" height="28" class="book" />
+<rect x="385" y="96" width="7" height="24" class="book" />
+<rect x="394" y="92" width="7" height="28" class="book" />
+<rect x="358" y="132" width="7" height="28" class="book" />
+<rect x="367" y="136" width="7" height="24" class="book" />
+<rect x="376" y="132" width="7" height="28" class="book" />
+<rect x="385" y="136" width="7" height="24" class="book" />
+<rect x="394" y="132" width="7" height="28" class="book" />
+<rect x="358" y="172" width="7" height="28" class="book" />
+<rect x="367" y="176" width="7" height="24" class="book" />
+<rect x="376" y="172" width="7" height="28" class="book" />
+<rect x="385" y="176" width="7" height="24" class="book" />
+<rect x="394" y="172" width="7" height="28" class="book" />
+<line x1="192" y1="25" x2="352" y2="25" class="app"/>
+<text x="272" y="228" class="lbls" text-anchor="middle">① caissons bas à portes, h 50</text>
+<text x="272" y="18" class="lblx muted" text-anchor="middle">niches hautes</text>
+<rect x="0" y="165" width="45" height="85" class="cab" />
+<text x="22.5" y="210" class="lblb" text-anchor="middle">④</text>
+<rect x="420" y="175" width="120" height="4" class="tbl" />
+<line x1="424" y1="179" x2="424" y2="250" class="app"/>
+<line x1="536" y1="179" x2="536" y2="250" class="app"/>
+<rect x="420" y="125" width="120" height="3" class="dark" />
+<rect x="420" y="90" width="120" height="3" class="dark" />
+<text x="480" y="120" class="lblx muted" text-anchor="middle">étagères P 25</text>
+<text x="480" y="195" class="lbls" text-anchor="middle">⑤ bureau h 75</text>
+<path d="M130 262 L414 262" class="dim" marker-start="url(#tk)" marker-end="url(#tk)"/>
+<text x="272" y="270" class="dimt" text-anchor="middle">284</text>
+<path d="M192 278 L352 278" class="dim" marker-start="url(#tk)" marker-end="url(#tk)"/>
+<text x="272" y="286" class="dimt" text-anchor="middle">niche TV 160</text>
+<path d="M560 0 L560 250" class="dim" marker-start="url(#tk)" marker-end="url(#tk)"/>
+<text x="568" y="125" class="dimt" text-anchor="middle" transform="rotate(-90 568 125)">250</text></svg></div><p class="cap">A · Mur nord, vu depuis le canapé : bibliothèque toute hauteur avec niche TV centrée, bureau et étagères dans le décroché près de la baie, buffet en retour à gauche.</p></div>
+<div class="fig"><div class="scroll"><svg viewBox="-20 -12 420 300" class="small" role="img" aria-label="Élévation du mur ouest du salon"><line x1="-10" y1="250" x2="368" y2="250" class="floorl"/>
+<line x1="-10" y1="0" x2="368" y2="0" class="el-ceil"/>
+<text x="2" y="-3" class="lblx muted" text-anchor="start">plafond 250</text>
+<rect x="15" y="46" width="75" height="204" class="appf" />
+<rect x="19" y="50" width="67" height="200" class="inner" />
+<text x="52.5" y="148" class="lbls muted" text-anchor="middle">couloir</text>
+<rect x="158" y="165" width="160" height="85" class="cab" />
+<line x1="238" y1="165" x2="238" y2="250" class="app"/>
+<text x="238" y="215" class="lbls" text-anchor="middle">④ Buffet h 85</text>
+<rect x="188" y="60" width="100" height="70" class="mirror" />
+<text x="238" y="98" class="lbls" text-anchor="middle">tableau ou affiche</text>
+<circle cx="298" cy="155" r="9" class="lamp"/>
+<text x="0" y="262" class="lblx muted" text-anchor="start">sud</text>
+<text x="358" y="262" class="lblx muted" text-anchor="end">nord</text>
+<path d="M158 272 L318 272" class="dim" marker-start="url(#tk)" marker-end="url(#tk)"/>
+<text x="238" y="280" class="dimt" text-anchor="middle">160</text></svg></div><p class="cap">B · Mur ouest, vu depuis l'est : buffet bas sous un tableau, porte du couloir.</p></div>
+
+<h2>Principe</h2>
+<div class="grid2">
+<div class="card"><h3>Télé de côté par rapport à la baie</h3><p>La seule lumière vient de la baie à l'est : la télé sur le mur nord et le canapé sur le mur sud la reçoivent de côté, sans reflet sur l'écran ni contre-jour. Le recul de 3 m convient à un 65 à 75 pouces.</p></div>
+<div class="card"><h3>① Bibliothèque sur l'axe de la pièce</h3><p>284 × 35, du mur de 414 jusqu'au décroché : la niche TV de 160 tombe au centre de la pièce (272 cm) et donc face au canapé. Caissons bas fermés de 50, étagères ouvertes de part et d'autre, niches hautes au-dessus de l'écran.</p></div>
+<div class="card"><h3>② Canapé contre le mur sud</h3><p>Le dos au mur de la chambre, le canapé dégage tout le centre. Il démarre à 157 cm du mur ouest : en entrant, on a 82 cm de passage avant d'obliquer vers la baie. 43 cm entre canapé et table basse, 125 cm entre table et bibliothèque.</p></div>
+<div class="card"><h3>④ ⑤ ⑥ Les deux coins</h3><p>À l'ouest, loin de la lumière, un buffet bas de 160 × 45 (vaisselle de réception, jeux, platine). À l'est, dans le décroché de 130, un bureau 120 × 60 éclairé par la baie, et un fauteuil de lecture avec guéridon et lampadaire dans l'angle sud-est. Le milieu de la baie reste dégagé pour passer vers la pièce 1.</p></div>
+</div>
+
+<h2>Points à vérifier</h2>
+<div class="hyp"><ul>
+<li><b>La baie du mur est</b> (202 cm d'après le relevé) : coulissante ou battante ? Si elle bat vers l'intérieur, le bureau et le fauteuil doivent s'écarter de son débattement.</li>
+<li><b>Le décroché nord-est</b> (130 cm, mur 3 cm plus bas) : le relevé n'y montre pas d'ouverture. S'il y a une fenêtre, le bureau y gagne.</li>
+<li><b>Prises et antenne</b> : la télé suppose une prise et l'antenne ou la box au centre du mur nord.</li>
+<li><b>Radiateurs</b> : non relevés ; un radiateur sous la baie ou sur le mur nord change la place du bureau ou la largeur de la bibliothèque.</li>
+<li><b>Table de repas</b> : la proposition n'en prévoit pas (la cuisine a une table pour deux). Pour recevoir à quatre ou six, une table pliante ou à rallonges peut se ranger derrière le buffet ; une variante avec table fixe est possible si besoin.</li>
+</ul></div>
+
+<section id="changements">
+<h2>Changements</h2>
+<div class="scroll-t"><table>
+<thead><tr><th>Version</th><th>Date</th><th>Changements</th></tr></thead>
+<tbody><tr><td><b>V1</b></td><td>01/10/2026</td><td>Première proposition à partir du relevé : bibliothèque 284 × 35 avec niche TV sur le mur nord, canapé 230 × 95 contre le mur sud, table basse, buffet 160 × 45 à l'ouest, bureau 120 × 60 et fauteuil près de la baie. Plan et deux élévations.</td></tr></tbody>
+</table></div>
+</section>
+</div>
+</body>
+</html>

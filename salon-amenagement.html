@@ -1,0 +1,880 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Aménagement du salon</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wght@400;500;700;800&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+<style>
+:root{
+  --paper:#F7F8F6; --ink:#1D2A33; --muted:#5E6B73; --line:#C9D0D4; --wood:#B07A45;
+  --water:#2F7FB5; --tri:#C8412C; --flow:#2E8B57; --cook2:#7B5EA7;
+  --panel:#FFFFFF; --cab:#ECE6DA; --tall:#D8CFBD; --tech:#E1E6E9; --glass:#CFE4F2;
+  color-scheme:light;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --paper:#141A1F; --ink:#E4EAED; --muted:#9AA7AE; --line:#34414A; --wood:#C9925A;
+    --water:#5AA8DE; --tri:#E8664F; --flow:#4CB97A; --cook2:#A68BD2;
+    --panel:#1B2329; --cab:#2A3338; --tall:#394449; --tech:#26303A; --glass:#1F3A4E;
+    color-scheme:dark;
+  }
+}
+:root[data-theme="dark"]{
+  --paper:#141A1F; --ink:#E4EAED; --muted:#9AA7AE; --line:#34414A; --wood:#C9925A;
+  --water:#5AA8DE; --tri:#E8664F; --flow:#4CB97A; --cook2:#A68BD2;
+  --panel:#1B2329; --cab:#2A3338; --tall:#394449; --tech:#26303A; --glass:#1F3A4E;
+  color-scheme:dark;
+}
+*{box-sizing:border-box}
+html,body{margin:0}
+body{background:var(--paper);color:var(--ink);font-family:Archivo,system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;line-height:1.55;font-size:16px}
+.wrap{max-width:1120px;margin:0 auto;padding:28px 16px 64px}
+.kicker{font-family:"JetBrains Mono",ui-monospace,Menlo,monospace;font-size:12px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted)}
+h1{font-size:clamp(28px,5vw,44px);line-height:1.08;margin:6px 0 12px;font-weight:800;letter-spacing:-.01em}
+h2{font-size:22px;margin:44px 0 10px;font-weight:700}
+h3{font-size:17px;margin:22px 0 6px}
+p{margin:8px 0}
+.pitch{font-size:18px;max-width:780px;color:var(--ink)}
+.stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:12px;margin:22px 0 8px}
+.stat{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:12px 14px}
+.stat b{display:block;font-family:"JetBrains Mono",ui-monospace,monospace;font-size:24px;font-weight:600}
+.stat span{font-size:13px;color:var(--muted)}
+.fig{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:12px;margin:14px 0}
+.scroll{overflow-x:auto;-webkit-overflow-scrolling:touch}
+.scroll svg{display:block;width:100%;min-width:720px;height:auto}
+.scroll svg.small{min-width:340px;max-width:600px;margin:0 auto}
+.cap{font-size:13px;color:var(--muted);margin:8px 4px 2px}
+.legend{display:flex;flex-wrap:wrap;gap:8px 18px;font-size:13px;margin:10px 4px}
+.legend span{display:inline-flex;align-items:center;gap:6px}
+.legend svg{width:26px;height:14px;flex:none}
+.grid2{display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:16px}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:14px 16px}
+.card h3{margin-top:0}
+ul{padding-left:20px;margin:6px 0}
+li{margin:3px 0}
+table{border-collapse:collapse;width:100%;font-size:14px}
+th,td{text-align:left;padding:7px 8px;border-bottom:1px solid var(--line);vertical-align:top}
+td.num,th.num{text-align:right;font-family:"JetBrains Mono",ui-monospace,monospace;white-space:nowrap}
+td.st{text-align:center;font-size:17px;white-space:nowrap}
+tfoot td{font-weight:700}
+.mono{font-family:"JetBrains Mono",ui-monospace,monospace}
+.note{font-size:13px;color:var(--muted)}
+.ok{color:var(--flow);font-weight:700}
+.warn{color:var(--wood);font-weight:700}
+.hyp{border-left:3px solid var(--wood);padding:6px 12px;background:var(--panel);font-size:14px;margin:12px 0}
+@media (max-width:480px){ body{font-size:15px} .stat b{font-size:21px} th,td{padding:6px 5px} }
+
+/* SVG */
+svg text{font-family:Archivo,system-ui,sans-serif;fill:var(--ink)}
+.w{fill:var(--ink)}
+.wcut{fill:var(--ink)}
+.nw{fill:url(#hn);stroke:var(--ink);stroke-width:.8}
+.ghost{fill:none;stroke:var(--muted);stroke-width:1;stroke-dasharray:4 3}
+.floorbg{fill:var(--wood);fill-opacity:.13}
+.pq{fill:none;stroke:var(--wood);stroke-width:.6;stroke-opacity:.45}
+.cellf{fill:var(--tech)}
+.tl{fill:none;stroke:var(--line);stroke-width:.6}
+.wc{fill:var(--line);fill-opacity:.55}
+.cab{fill:var(--cab);stroke:var(--ink);stroke-width:.7}
+.cabcut{fill:var(--tall);stroke:var(--ink);stroke-width:1.4}
+.tall{fill:var(--tall);stroke:var(--ink);stroke-width:.8}
+.pf{fill:var(--tall);stroke:var(--wood);stroke-width:1.8}
+.tech{fill:var(--tech);stroke:var(--ink);stroke-width:.7;stroke-dasharray:3 2}
+.wt{fill:none;stroke:var(--ink);stroke-width:1.6}
+.app{fill:none;stroke:var(--ink);stroke-width:.8}
+.appf{fill:var(--panel);stroke:var(--ink);stroke-width:.8}
+.dark{fill:var(--ink)}
+.upper{fill:none;stroke:var(--muted);stroke-width:.8;stroke-dasharray:3 2}
+.win{fill:var(--glass);stroke:var(--ink);stroke-width:.7}
+.glass{stroke:var(--water);stroke-width:1.2}
+.winleaf{fill:none;stroke:var(--muted);stroke-width:.6;stroke-dasharray:2 2}
+.doorzone{fill:var(--tri);fill-opacity:.06;stroke:none}
+.doorarc{fill:none;stroke:var(--ink);stroke-width:.8}
+.doorleaf{stroke:var(--ink);stroke-width:3}
+.door100{stroke:var(--tri);stroke-width:1.2;stroke-dasharray:3 2}
+.swing{fill:none;stroke:var(--muted);stroke-width:.6;stroke-dasharray:2 2}
+.dim{stroke:var(--muted);stroke-width:.6;fill:none}
+.dimt{fill:var(--muted);font-family:"JetBrains Mono",ui-monospace,monospace !important;font-size:8px}
+.lbl{font-size:7.5px}
+.lbls{font-size:6.5px}
+.lblx{font-size:5px}
+.lblb{font-size:9px;font-weight:700}
+.muted{fill:var(--muted)}
+.woodt{fill:var(--wood);font-weight:700}
+.tri{fill:var(--tri);fill-opacity:.07;stroke:var(--tri);stroke-width:1.6}
+.triv{fill:var(--tri)}
+.trit{fill:var(--tri);font-family:"JetBrains Mono",monospace !important;font-size:8px;font-weight:600}
+.tribg{fill:var(--panel);stroke:var(--tri);stroke-width:.6}
+.flow{fill:none;stroke:var(--flow);stroke-width:2.2;marker-end:url(#af)}
+.mf{fill:var(--flow)}
+.badge{fill:var(--flow)}
+.badget{fill:#fff;font-size:8px;font-weight:700}
+.z1{fill:url(#h1);stroke:var(--water);stroke-width:.8}
+.z2{fill:url(#h2);stroke:var(--cook2);stroke-width:.8}
+.h1l{stroke:var(--water);stroke-width:1;stroke-opacity:.45}
+.h2l{stroke:var(--cook2);stroke-width:1;stroke-opacity:.45}
+.z1t{fill:var(--water);font-size:8px;font-weight:700}
+.z2t{fill:var(--cook2);font-size:8px;font-weight:700}
+.pin{fill:none;stroke:var(--water);stroke-width:1.6}
+.pout{fill:none;stroke:var(--water);stroke-width:1.6;stroke-dasharray:5 3}
+.wt2{fill:var(--water);font-size:7px}
+.duct{fill:none;stroke:var(--muted);stroke-width:1.2;stroke-dasharray:6 3}
+.air{fill:none;stroke:var(--cook2);stroke-width:1.1;marker-end:url(#aa)}
+.airt{fill:var(--cook2);font-size:6px}
+.sec{stroke:var(--tri);stroke-width:.9;stroke-dasharray:10 3 2 3;fill:none}
+.secm{fill:var(--tri)}
+.sect{fill:var(--tri);font-weight:800;font-size:11px}
+.plinth{fill:var(--tall);stroke:var(--ink);stroke-width:.6}
+.cred{fill:var(--wood);fill-opacity:.12;stroke:none}
+.bgwall{fill:var(--line);fill-opacity:.35;stroke:none}
+.person1{fill:var(--water);fill-opacity:.35;stroke:var(--water);stroke-width:1}
+.person2{fill:var(--cook2);fill-opacity:.35;stroke:var(--cook2);stroke-width:1}
+.person3{fill:var(--wood);fill-opacity:.3;stroke:var(--wood);stroke-width:1}
+.floorl{stroke:var(--ink);stroke-width:2}
+.ceil{stroke:var(--muted);stroke-width:1;stroke-dasharray:6 4}
+.tbl{fill:var(--wood);fill-opacity:.5;stroke:var(--ink);stroke-width:.9}
+.stool{fill:var(--wood);fill-opacity:.28;stroke:var(--ink);stroke-width:.7}
+.stoolp{fill:none;stroke:var(--wood);stroke-width:.8;stroke-dasharray:2 1.5}
+.dine{fill:var(--wood);fill-opacity:.07;stroke:var(--wood);stroke-width:.8;stroke-dasharray:4 2}
+.dinet{fill:var(--wood);font-size:8px;font-weight:700}
+.rack{fill:var(--wood);fill-opacity:.22;stroke:var(--wood);stroke-width:.8}
+.park{fill:none;stroke:var(--wood);stroke-width:1;stroke-dasharray:3 2}
+.rail{stroke:var(--ink);stroke-width:1.1}
+.vent{fill:var(--ink);fill-opacity:.8}
+.broom{fill:var(--flow);fill-opacity:.1;stroke:var(--flow);stroke-width:.9;stroke-dasharray:3 2}
+.broomt{fill:var(--flow);font-weight:700}
+.conf{fill:url(#hx);stroke:var(--tri);stroke-width:1}
+.hxl{stroke:var(--tri);stroke-width:1.1}
+.ecs{fill:var(--glass);stroke:var(--water);stroke-width:1.3}
+.conft{fill:var(--tri);font-weight:800}
+.sleaf{fill:var(--ink)}
+.sleafc{fill:none;stroke:var(--ink);stroke-width:.8;stroke-dasharray:3 2}
+.srail{stroke:var(--tri);stroke-width:1.4}
+.slide{stroke:var(--tri);stroke-width:1;fill:none}
+.okt{fill:var(--flow);font-weight:700}
+.changes{max-width:860px;font-size:15px;margin:6px 0 4px;padding-left:20px}
+section{margin-top:52px;padding-top:8px;border-top:2px solid var(--line)}
+.scroll-t{overflow-x:auto}
+#changements table{min-width:620px}
+.vant{fill:var(--wood);fill-opacity:.3;stroke:var(--ink);stroke-width:.8}
+.slot{fill:var(--tri);fill-opacity:.1;stroke:var(--tri);stroke-width:.6;stroke-dasharray:2 1.5}
+.bgf{opacity:.5}
+.egout{fill:var(--glass);fill-opacity:.6;stroke:var(--water);stroke-width:.7}
+.egl{stroke:var(--water);stroke-width:.6}
+.ll{fill:var(--panel);stroke:var(--ink);stroke-width:1.2}
+.hid{fill:none;stroke:var(--muted);stroke-width:1;stroke-dasharray:4 3}
+.free{fill:var(--flow);fill-opacity:.08;stroke:var(--flow);stroke-width:.6;stroke-dasharray:2 1.5}
+.cfl{fill:var(--tri);fill-opacity:.16;stroke:var(--tri);stroke-width:.6;stroke-dasharray:2 1.5}
+.ve{font-size:7px}.ves{font-size:6px}.veb{font-size:8px;font-weight:700}
+.vc{font-size:4.2px}.vcb{font-size:4.8px;font-weight:700}
+.vlab{fill:var(--wood);font-size:7px;font-weight:700;letter-spacing:.04em}
+.card .scroll svg.small{max-width:100%}
+.gridv{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,500px),1fr));gap:16px}
+.claus{fill:var(--wood);fill-opacity:.45;stroke:var(--ink);stroke-width:.9}
+.clausc{fill:none;stroke:var(--wood);stroke-width:.9;stroke-dasharray:3 2}
+.switch{display:flex;flex-wrap:wrap;gap:8px;margin:10px 0 6px}
+.switch button{font:inherit;font-size:14px;padding:8px 14px;border-radius:999px;border:1px solid var(--line);background:var(--panel);color:var(--ink);cursor:pointer}
+.switch button[aria-selected="true"]{background:var(--ink);color:var(--paper);border-color:var(--ink)}
+.switch button:focus-visible{outline:2px solid var(--wood);outline-offset:2px}
+.opts{display:flex;flex-wrap:wrap;align-items:center;gap:6px 14px;margin:4px 0 10px;font-size:13px}
+.opts .optl{font-family:"JetBrains Mono",ui-monospace,Menlo,monospace;font-size:11px;letter-spacing:.06em;text-transform:uppercase;color:var(--muted)}
+.opts .seg{display:inline-flex;border:1px solid var(--line);border-radius:8px;overflow:hidden}
+.opts .seg button{font:inherit;font-size:13px;padding:5px 10px;border:0;background:var(--panel);color:var(--ink);cursor:pointer}
+.opts .seg button+button{border-left:1px solid var(--line)}
+.opts .seg button[aria-pressed="true"]{background:var(--wood);color:var(--paper)}
+.opts .seg button:focus-visible{outline:2px solid var(--wood);outline-offset:-2px}
+/* options : chaque élément dépendant porte la classe de sa valeur */
+:root[data-door="w"] .door-e,:root[data-door="e"] .door-w,:root[data-tbl="sq"] .tbl-rd,:root[data-tbl="sq"] .tbl-bq,:root[data-tbl="rd"] .tbl-sq,:root[data-tbl="rd"] .tbl-bq,:root[data-tbl="bq"] .tbl-sq,:root[data-tbl="bq"] .tbl-rd{display:none}
+[hidden]{display:none!important}
+.tag{display:inline-block;font-family:"JetBrains Mono",ui-monospace,monospace;font-size:12px;padding:1px 7px;border-radius:5px;background:var(--tech);margin-right:6px}
+
+
+.tile{fill:url(#tl)}
+.room{fill:var(--line);fill-opacity:.18}
+.roomt{fill:var(--muted);font-size:9px;font-weight:600}
+.sofa{fill:var(--cook2);fill-opacity:.18;stroke:var(--ink);stroke-width:.8}
+.sofac{fill:var(--cook2);fill-opacity:.12;stroke:var(--ink);stroke-width:.5}
+.rug{fill:var(--wood);fill-opacity:.08;stroke:var(--wood);stroke-width:.7;stroke-dasharray:5 3}
+.plant{fill:var(--flow);fill-opacity:.25;stroke:var(--flow);stroke-width:.8}
+.mirror{fill:var(--glass);stroke:var(--ink);stroke-width:.7}
+.tv{fill:var(--ink);fill-opacity:.85}
+.lamp{fill:#E8B44A;fill-opacity:.55;stroke:var(--ink);stroke-width:.6}
+.pass{fill:none;stroke:var(--flow);stroke-width:.9}
+.passt{fill:var(--flow);font-family:"JetBrains Mono",monospace !important;font-size:7px;font-weight:600}
+.hook{fill:var(--ink)}
+.book{fill:var(--wood);fill-opacity:.35;stroke:none}
+.inner{fill:none;stroke:var(--muted);stroke-width:.6;stroke-dasharray:3 2}
+.el-ceil{stroke:var(--muted);stroke-width:.8;stroke-dasharray:6 4}
+</style>
+</head>
+<body>
+<div class="wrap">
+<svg width="0" height="0" style="position:absolute" aria-hidden="true" focusable="false"><defs>
+<pattern id="tl" width="30" height="30" patternUnits="userSpaceOnUse"><path class="tl" d="M30 0 L0 0 L0 30"/></pattern>
+<marker id="tk" viewBox="0 0 10 10" refX="5" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M2 8 L8 2" style="stroke:var(--muted)" stroke-width="1.4"/></marker>
+</defs></svg>
+<div class="kicker">Salon · V3 · variantes A / B · plan et élévations</div>
+<h1>Aménagement du salon</h1>
+<p class="pitch">Une bibliothèque, une table pour recevoir six à huit personnes côté couloir, et un coin salon tourné vers la baie avec le canapé SÖDERHAMN. Deux variantes : bibliothèque au nord (A) ou à l'ouest (B) ; le bouton bascule le plan et les élévations. L'historique est en fin de document (<a href="#changements">Changements</a>).</p>
+<div class="stats"><div class="stat"><b>6 → 8</b><span>couverts</span></div><div class="stat"><b>198 × 99</b><span>SÖDERHAMN 3 places</span></div><div class="stat"><b>414 / 262</b><span>bibliothèque A / B (cm)</span></div><div class="stat"><b>19,7 m²</b><span>surface du salon</span></div></div>
+
+<h2>Plans à l'échelle</h2>
+<div class="switch" role="tablist" aria-label="Variante">
+  <button type="button" role="tab" data-v="A" aria-selected="true"><b>A</b> · Bibliothèque au nord</button>
+  <button type="button" role="tab" data-v="B" aria-selected="false"><b>B</b> · Bibliothèque à l'ouest</button>
+</div>
+<div data-panel="A">
+<div class="fig"><div class="scroll"><svg viewBox="-140 -45 820 470" class="" role="img" aria-label="Plan du salon, variante A"><rect x="-130" y="-10" width="120" height="278" class="room" />
+<text x="-70" y="60" class="roomt" text-anchor="middle">Cellier</text>
+<text x="-70" y="180" class="roomt" text-anchor="middle">WC</text>
+<rect x="-130" y="268" width="120" height="102" class="room" />
+<text x="-70" y="330" class="roomt" text-anchor="middle">Couloir</text>
+<rect x="556" y="-10" width="110" height="380" class="room" />
+<text x="611" y="330" class="roomt" text-anchor="middle">Pièce 1</text>
+<rect x="0" y="370" width="556" height="50" class="room" />
+<text x="278" y="400" class="roomt" text-anchor="middle">Chambre</text>
+<polygon points="0,0 414,0 414,3 544,3 544,358 0,358" class="appf" style="stroke:none"/>
+<polygon points="0,0 414,0 414,3 544,3 544,358 0,358" class="tile"/>
+<rect x="-10" y="-12" width="424" height="12" class="w" />
+<rect x="414" y="-12" width="142" height="15" class="w" />
+<rect x="-10" y="0" width="10" height="268" class="w" />
+<rect x="-10" y="343" width="10" height="27" class="w" />
+<rect x="-10" y="358" width="566" height="12" class="w" />
+<rect x="544" y="3" width="12" height="69" class="w" />
+<rect x="544" y="274" width="12" height="96" class="w" />
+<rect x="544" y="72" width="12" height="202" class="win" />
+<line x1="550" y1="72" x2="550" y2="274" class="glass"/>
+<text x="568" y="173" class="lbls muted" text-anchor="middle" transform="rotate(-90 568 173)">baie 202</text>
+<line x1="-10" y1="268" x2="0" y2="268" class="app"/>
+<line x1="-10" y1="343" x2="0" y2="343" class="app"/>
+<text x="12" y="305" class="lblx muted" text-anchor="middle" transform="rotate(-90 12 305)">passage</text>
+<path d="M0 -30 L544 -30" class="dim" marker-start="url(#tk)" marker-end="url(#tk)"/>
+<text x="272" y="-32.5" class="dimt" text-anchor="middle">544</text>
+<path d="M-18 0 L-18 358" class="dim" marker-start="url(#tk)" marker-end="url(#tk)"/>
+<text x="-20.5" y="179" class="dimt" text-anchor="middle" transform="rotate(-90 -20.5 179)">358</text>
+<rect x="0" y="0" width="414" height="35" class="tall" />
+<line x1="82.8" y1="0" x2="82.8" y2="35" class="app"/>
+<line x1="165.6" y1="0" x2="165.6" y2="35" class="app"/>
+<line x1="248.4" y1="0" x2="248.4" y2="35" class="app"/>
+<line x1="331.2" y1="0" x2="331.2" y2="35" class="app"/>
+<text x="207" y="22" class="lbls" text-anchor="middle"><tspan class="lblb">①</tspan> Bibliothèque 414 × 35 · h 250 · 5 travées</text>
+<rect x="0" y="85" width="80" height="160" class="dine" />
+<rect x="170" y="85" width="80" height="160" class="dine" />
+<rect x="80" y="245" width="90" height="60" class="ghost" />
+<text x="125" y="278" class="lblx muted" text-anchor="middle">allonge 40 + tête</text>
+<rect x="80" y="85" width="90" height="160" class="tbl" rx="3" />
+<rect x="32" y="90" width="44" height="44" class="stool" rx="5" />
+<rect x="174" y="90" width="44" height="44" class="stool" rx="5" />
+<rect x="32" y="143" width="44" height="44" class="stool" rx="5" />
+<rect x="174" y="143" width="44" height="44" class="stool" rx="5" />
+<rect x="32" y="196" width="44" height="44" class="stool" rx="5" />
+<rect x="174" y="196" width="44" height="44" class="stool" rx="5" />
+<circle cx="125" cy="165" r="10" class="lamp"/>
+<text x="125" y="134.5" class="lbls" text-anchor="middle"><tspan class="lblb">②</tspan> Table</text>
+<text x="125" y="142.5" class="lbls" text-anchor="middle">160 × 90</text>
+<text x="125" y="150.5" class="lbls" text-anchor="middle">6 → 8</text>
+<rect x="266" y="76" width="99" height="198" class="sofa" rx="4" />
+<rect x="266" y="76" width="99" height="6" class="sofac" rx="2" />
+<rect x="266" y="268" width="99" height="6" class="sofac" rx="2" />
+<rect x="266" y="82" width="22" height="186" class="sofac" rx="3" />
+<rect x="290" y="83" width="73" height="61.3" class="sofac" rx="3" />
+<rect x="290" y="144.3" width="73" height="61.3" class="sofac" rx="3" />
+<rect x="290" y="205.6" width="73" height="61.3" class="sofac" rx="3" />
+<text x="278" y="175" class="lblx" text-anchor="middle" transform="rotate(-90 278 175)"><tspan class="lblb">③</tspan> SÖDERHAMN 3 places + accoudoirs · 198 × 99</text>
+<rect x="408" y="125" width="70" height="100" class="tbl" rx="4" />
+<text x="443" y="178" class="lblx" text-anchor="middle">table basse</text>
+<rect x="430" y="15" width="80" height="80" class="sofa" rx="8" />
+<rect x="430" y="15" width="80" height="18" class="sofac" rx="4" />
+<text x="470" y="66" class="lbls" text-anchor="middle"><tspan class="lblb">④</tspan> Fauteuil</text>
+<circle cx="420" cy="305" r="16" class="tbl"/>
+<text x="420" y="307" class="lblx" text-anchor="middle">pouf</text>
+<circle cx="276" cy="62" r="8" class="lamp"/>
+<circle cx="526" cy="316" r="13" class="plant"/>
+<path d="M200 245 L200 358" class="pass"/>
+<circle cx="200" cy="245" r="1.3" class="mf"/>
+<circle cx="200" cy="358" r="1.3" class="mf"/>
+<text x="197" y="305" class="passt" text-anchor="middle" transform="rotate(-90 197 305)">113</text>
+<path d="M170 175 L266 175" class="pass"/>
+<circle cx="170" cy="175" r="1.3" class="mf"/>
+<circle cx="266" cy="175" r="1.3" class="mf"/>
+<text x="218" y="172" class="passt" text-anchor="middle">96</text>
+<path d="M320 274 L320 358" class="pass"/>
+<circle cx="320" cy="274" r="1.3" class="mf"/>
+<circle cx="320" cy="358" r="1.3" class="mf"/>
+<text x="317" y="318" class="passt" text-anchor="middle" transform="rotate(-90 317 318)">84</text>
+<path d="M478 185 L544 185" class="pass"/>
+<circle cx="478" cy="185" r="1.3" class="mf"/>
+<circle cx="544" cy="185" r="1.3" class="mf"/>
+<text x="511" y="182" class="passt" text-anchor="middle">66</text>
+<path d="M365 250 L408 250" class="pass"/>
+<circle cx="365" cy="250" r="1.3" class="mf"/>
+<circle cx="408" cy="250" r="1.3" class="mf"/>
+<text x="386" y="247" class="passt" text-anchor="middle">43</text>
+<path d="M140 35 L140 85" class="pass"/>
+<circle cx="140" cy="35" r="1.3" class="mf"/>
+<circle cx="140" cy="85" r="1.3" class="mf"/>
+<text x="144" y="64" class="passt" text-anchor="start">50</text></svg></div><p class="cap">Variante A. Plan vu de dessus, 1 unité = 1 cm. Le couloir est en bas à gauche, la baie à droite. On entre par un passage sans porte. Coin repas côté couloir, coin salon côté baie.</p></div>
+</div>
+<div data-panel="B" hidden>
+<div class="fig"><div class="scroll"><svg viewBox="-140 -45 820 470" class="" role="img" aria-label="Plan du salon, variante B"><rect x="-130" y="-10" width="120" height="278" class="room" />
+<text x="-70" y="60" class="roomt" text-anchor="middle">Cellier</text>
+<text x="-70" y="180" class="roomt" text-anchor="middle">WC</text>
+<rect x="-130" y="268" width="120" height="102" class="room" />
+<text x="-70" y="330" class="roomt" text-anchor="middle">Couloir</text>
+<rect x="556" y="-10" width="110" height="380" class="room" />
+<text x="611" y="330" class="roomt" text-anchor="middle">Pièce 1</text>
+<rect x="0" y="370" width="556" height="50" class="room" />
+<text x="278" y="400" class="roomt" text-anchor="middle">Chambre</text>
+<polygon points="0,0 414,0 414,3 544,3 544,358 0,358" class="appf" style="stroke:none"/>
+<polygon points="0,0 414,0 414,3 544,3 544,358 0,358" class="tile"/>
+<rect x="-10" y="-12" width="424" height="12" class="w" />
+<rect x="414" y="-12" width="142" height="15" class="w" />
+<rect x="-10" y="0" width="10" height="268" class="w" />
+<rect x="-10" y="343" width="10" height="27" class="w" />
+<rect x="-10" y="358" width="566" height="12" class="w" />
+<rect x="544" y="3" width="12" height="69" class="w" />
+<rect x="544" y="274" width="12" height="96" class="w" />
+<rect x="544" y="72" width="12" height="202" class="win" />
+<line x1="550" y1="72" x2="550" y2="274" class="glass"/>
+<text x="568" y="173" class="lbls muted" text-anchor="middle" transform="rotate(-90 568 173)">baie 202</text>
+<line x1="-10" y1="268" x2="0" y2="268" class="app"/>
+<line x1="-10" y1="343" x2="0" y2="343" class="app"/>
+<text x="12" y="305" class="lblx muted" text-anchor="middle" transform="rotate(-90 12 305)">passage</text>
+<path d="M0 -30 L544 -30" class="dim" marker-start="url(#tk)" marker-end="url(#tk)"/>
+<text x="272" y="-32.5" class="dimt" text-anchor="middle">544</text>
+<path d="M-18 0 L-18 358" class="dim" marker-start="url(#tk)" marker-end="url(#tk)"/>
+<text x="-20.5" y="179" class="dimt" text-anchor="middle" transform="rotate(-90 -20.5 179)">358</text>
+<rect x="0" y="0" width="35" height="262" class="tall" />
+<line x1="0" y1="87.3" x2="35" y2="87.3" class="app"/>
+<line x1="0" y1="174.7" x2="35" y2="174.7" class="app"/>
+<text x="18" y="131" class="lbls" text-anchor="middle" transform="rotate(-90 18 131)"><tspan class="lblb">①</tspan> Bibliothèque 262 × 35 · h 250 · 3 travées</text>
+<rect x="35" y="70" width="80" height="160" class="dine" />
+<rect x="205" y="70" width="80" height="160" class="dine" />
+<rect x="115" y="230" width="90" height="60" class="ghost" />
+<text x="160" y="263" class="lblx muted" text-anchor="middle">allonge 40 + tête</text>
+<rect x="115" y="70" width="90" height="160" class="tbl" rx="3" />
+<rect x="67" y="75" width="44" height="44" class="stool" rx="5" />
+<rect x="209" y="75" width="44" height="44" class="stool" rx="5" />
+<rect x="67" y="128" width="44" height="44" class="stool" rx="5" />
+<rect x="209" y="128" width="44" height="44" class="stool" rx="5" />
+<rect x="67" y="181" width="44" height="44" class="stool" rx="5" />
+<rect x="209" y="181" width="44" height="44" class="stool" rx="5" />
+<circle cx="160" cy="150" r="10" class="lamp"/>
+<text x="160" y="119.5" class="lbls" text-anchor="middle"><tspan class="lblb">②</tspan> Table</text>
+<text x="160" y="127.5" class="lbls" text-anchor="middle">160 × 90</text>
+<text x="160" y="135.5" class="lbls" text-anchor="middle">6 → 8</text>
+<rect x="285" y="76" width="99" height="198" class="sofa" rx="4" />
+<rect x="285" y="76" width="99" height="6" class="sofac" rx="2" />
+<rect x="285" y="268" width="99" height="6" class="sofac" rx="2" />
+<rect x="285" y="82" width="22" height="186" class="sofac" rx="3" />
+<rect x="309" y="83" width="73" height="61.3" class="sofac" rx="3" />
+<rect x="309" y="144.3" width="73" height="61.3" class="sofac" rx="3" />
+<rect x="309" y="205.6" width="73" height="61.3" class="sofac" rx="3" />
+<text x="297" y="175" class="lblx" text-anchor="middle" transform="rotate(-90 297 175)"><tspan class="lblb">③</tspan> SÖDERHAMN 3 places + accoudoirs · 198 × 99</text>
+<rect x="427" y="125" width="50" height="100" class="tbl" rx="4" />
+<text x="452" y="178" class="lblx" text-anchor="middle">table basse</text>
+<rect x="430" y="15" width="80" height="80" class="sofa" rx="8" />
+<rect x="430" y="15" width="80" height="18" class="sofac" rx="4" />
+<text x="470" y="66" class="lbls" text-anchor="middle"><tspan class="lblb">④</tspan> Fauteuil</text>
+<circle cx="420" cy="305" r="16" class="tbl"/>
+<text x="420" y="307" class="lblx" text-anchor="middle">pouf</text>
+<circle cx="295" cy="62" r="8" class="lamp"/>
+<circle cx="526" cy="316" r="13" class="plant"/>
+<path d="M160 230 L160 358" class="pass"/>
+<circle cx="160" cy="230" r="1.3" class="mf"/>
+<circle cx="160" cy="358" r="1.3" class="mf"/>
+<text x="157" y="296" class="passt" text-anchor="middle" transform="rotate(-90 157 296)">128</text>
+<path d="M330 274 L330 358" class="pass"/>
+<circle cx="330" cy="274" r="1.3" class="mf"/>
+<circle cx="330" cy="358" r="1.3" class="mf"/>
+<text x="327" y="318" class="passt" text-anchor="middle" transform="rotate(-90 327 318)">84</text>
+<path d="M477 185 L544 185" class="pass"/>
+<circle cx="477" cy="185" r="1.3" class="mf"/>
+<circle cx="544" cy="185" r="1.3" class="mf"/>
+<text x="510" y="182" class="passt" text-anchor="middle">67</text>
+<path d="M384 250 L427 250" class="pass"/>
+<circle cx="384" cy="250" r="1.3" class="mf"/>
+<circle cx="427" cy="250" r="1.3" class="mf"/>
+<text x="405" y="247" class="passt" text-anchor="middle">43</text>
+<path d="M160 0 L160 70" class="pass"/>
+<circle cx="160" cy="0" r="1.3" class="mf"/>
+<circle cx="160" cy="70" r="1.3" class="mf"/>
+<text x="164" y="38" class="passt" text-anchor="start">70</text></svg></div><p class="cap">Variante B. Plan vu de dessus, 1 unité = 1 cm. La bibliothèque occupe le mur ouest jusqu'au passage ; la table se décale de 35 vers l'est, le canapé de 19.</p></div>
+</div>
+<div class="legend"><span><svg viewBox="0 0 26 14"><rect x="0" y="0" width="26" height="14" class="tall"/></svg>Bibliothèque</span><span><svg viewBox="0 0 26 14"><rect x="0" y="0" width="26" height="14" class="sofa"/></svg>Assises</span><span><svg viewBox="0 0 26 14"><rect x="0" y="0" width="26" height="14" class="tbl"/></svg>Tables</span><span><svg viewBox="0 0 26 14"><rect x="0" y="0" width="26" height="14" class="stool"/></svg>Chaises</span><span><svg viewBox="0 0 26 14"><rect x="1" y="1" width="24" height="12" class="dine"/></svg>Recul des chaises (80)</span><span><svg viewBox="0 0 26 14"><rect x="1" y="1" width="24" height="12" class="ghost"/></svg>Table rallongée</span><span><svg viewBox="0 0 26 14"><circle cx="13" cy="7" r="6" class="lamp"/></svg>Lampe</span><span><svg viewBox="0 0 26 14"><line x1="1" y1="7" x2="25" y2="7" class="pass"/></svg>Passage libre (cm)</span></div>
+<h2>Élévations</h2>
+<div data-panel="A">
+<div class="fig"><div class="scroll"><svg viewBox="-35 -12 620 290" class="" role="img" aria-label="Variante A, élévation du mur nord"><line x1="-10" y1="250" x2="554" y2="250" class="floorl"/>
+<line x1="-10" y1="0" x2="554" y2="0" class="el-ceil"/>
+<text x="2" y="-3" class="lblx muted" text-anchor="start">plafond 250</text>
+<rect x="-10" y="0" width="10" height="250" class="w" />
+<rect x="544" y="0" width="12" height="250" class="w" />
+<rect x="0" y="0" width="414" height="250" class="tall" />
+<line x1="0" y1="0" x2="0" y2="250" class="app"/>
+<line x1="41.4" y1="170" x2="41.4" y2="250" class="app"/>
+<rect x="33.4" y="176" width="6" height="2" class="dark" />
+<rect x="43.4" y="176" width="6" height="2" class="dark" />
+<line x1="0" y1="40" x2="82.8" y2="40" class="app"/>
+<rect x="6" y="14" width="7.5" height="26" class="book" />
+<rect x="15.5" y="17" width="7.5" height="23" class="book" />
+<rect x="25" y="20" width="7.5" height="20" class="book" />
+<rect x="34.5" y="14" width="7.5" height="26" class="book" />
+<rect x="44" y="17" width="7.5" height="23" class="book" />
+<rect x="53.5" y="20" width="7.5" height="20" class="book" />
+<rect x="63" y="14" width="7.5" height="26" class="book" />
+<line x1="0" y1="75" x2="82.8" y2="75" class="app"/>
+<rect x="6" y="49" width="7.5" height="26" class="book" />
+<rect x="15.5" y="52" width="7.5" height="23" class="book" />
+<rect x="25" y="55" width="7.5" height="20" class="book" />
+<rect x="34.5" y="49" width="7.5" height="26" class="book" />
+<rect x="44" y="52" width="7.5" height="23" class="book" />
+<rect x="53.5" y="55" width="7.5" height="20" class="book" />
+<rect x="63" y="49" width="7.5" height="26" class="book" />
+<line x1="0" y1="110" x2="82.8" y2="110" class="app"/>
+<rect x="6" y="84" width="7.5" height="26" class="book" />
+<rect x="15.5" y="87" width="7.5" height="23" class="book" />
+<rect x="25" y="90" width="7.5" height="20" class="book" />
+<rect x="34.5" y="84" width="7.5" height="26" class="book" />
+<rect x="44" y="87" width="7.5" height="23" class="book" />
+<rect x="53.5" y="90" width="7.5" height="20" class="book" />
+<rect x="63" y="84" width="7.5" height="26" class="book" />
+<line x1="0" y1="140" x2="82.8" y2="140" class="app"/>
+<rect x="6" y="114" width="7.5" height="26" class="book" />
+<rect x="15.5" y="117" width="7.5" height="23" class="book" />
+<rect x="25" y="120" width="7.5" height="20" class="book" />
+<rect x="34.5" y="114" width="7.5" height="26" class="book" />
+<line x1="0" y1="170" x2="82.8" y2="170" class="app"/>
+<rect x="6" y="144" width="7.5" height="26" class="book" />
+<rect x="15.5" y="147" width="7.5" height="23" class="book" />
+<rect x="25" y="150" width="7.5" height="20" class="book" />
+<rect x="34.5" y="144" width="7.5" height="26" class="book" />
+<rect x="44" y="147" width="7.5" height="23" class="book" />
+<rect x="53.5" y="150" width="7.5" height="20" class="book" />
+<rect x="63" y="144" width="7.5" height="26" class="book" />
+<line x1="82.8" y1="0" x2="82.8" y2="250" class="app"/>
+<line x1="124.2" y1="170" x2="124.2" y2="250" class="app"/>
+<rect x="116.2" y="176" width="6" height="2" class="dark" />
+<rect x="126.2" y="176" width="6" height="2" class="dark" />
+<line x1="82.8" y1="40" x2="165.6" y2="40" class="app"/>
+<rect x="88.8" y="14" width="7.5" height="26" class="book" />
+<rect x="98.3" y="17" width="7.5" height="23" class="book" />
+<rect x="107.8" y="20" width="7.5" height="20" class="book" />
+<rect x="117.3" y="14" width="7.5" height="26" class="book" />
+<rect x="126.8" y="17" width="7.5" height="23" class="book" />
+<rect x="136.3" y="20" width="7.5" height="20" class="book" />
+<rect x="145.8" y="14" width="7.5" height="26" class="book" />
+<line x1="82.8" y1="75" x2="165.6" y2="75" class="app"/>
+<rect x="88.8" y="49" width="7.5" height="26" class="book" />
+<rect x="98.3" y="52" width="7.5" height="23" class="book" />
+<rect x="107.8" y="55" width="7.5" height="20" class="book" />
+<rect x="117.3" y="49" width="7.5" height="26" class="book" />
+<rect x="126.8" y="52" width="7.5" height="23" class="book" />
+<rect x="136.3" y="55" width="7.5" height="20" class="book" />
+<rect x="145.8" y="49" width="7.5" height="26" class="book" />
+<line x1="82.8" y1="110" x2="165.6" y2="110" class="app"/>
+<rect x="88.8" y="84" width="7.5" height="26" class="book" />
+<rect x="98.3" y="87" width="7.5" height="23" class="book" />
+<rect x="107.8" y="90" width="7.5" height="20" class="book" />
+<rect x="117.3" y="84" width="7.5" height="26" class="book" />
+<rect x="126.8" y="87" width="7.5" height="23" class="book" />
+<rect x="136.3" y="90" width="7.5" height="20" class="book" />
+<rect x="145.8" y="84" width="7.5" height="26" class="book" />
+<line x1="82.8" y1="140" x2="165.6" y2="140" class="app"/>
+<rect x="88.8" y="114" width="7.5" height="26" class="book" />
+<rect x="98.3" y="117" width="7.5" height="23" class="book" />
+<rect x="107.8" y="120" width="7.5" height="20" class="book" />
+<rect x="117.3" y="114" width="7.5" height="26" class="book" />
+<line x1="82.8" y1="170" x2="165.6" y2="170" class="app"/>
+<rect x="88.8" y="144" width="7.5" height="26" class="book" />
+<rect x="98.3" y="147" width="7.5" height="23" class="book" />
+<rect x="107.8" y="150" width="7.5" height="20" class="book" />
+<rect x="117.3" y="144" width="7.5" height="26" class="book" />
+<rect x="126.8" y="147" width="7.5" height="23" class="book" />
+<rect x="136.3" y="150" width="7.5" height="20" class="book" />
+<rect x="145.8" y="144" width="7.5" height="26" class="book" />
+<line x1="165.6" y1="0" x2="165.6" y2="250" class="app"/>
+<line x1="207" y1="170" x2="207" y2="250" class="app"/>
+<rect x="199" y="176" width="6" height="2" class="dark" />
+<rect x="209" y="176" width="6" height="2" class="dark" />
+<line x1="165.6" y1="40" x2="248.4" y2="40" class="app"/>
+<rect x="171.6" y="14" width="7.5" height="26" class="book" />
+<rect x="181.1" y="17" width="7.5" height="23" class="book" />
+<rect x="190.6" y="20" width="7.5" height="20" class="book" />
+<rect x="200.1" y="14" width="7.5" height="26" class="book" />
+<rect x="209.6" y="17" width="7.5" height="23" class="book" />
+<rect x="219.1" y="20" width="7.5" height="20" class="book" />
+<rect x="228.6" y="14" width="7.5" height="26" class="book" />
+<line x1="165.6" y1="75" x2="248.4" y2="75" class="app"/>
+<rect x="171.6" y="49" width="7.5" height="26" class="book" />
+<rect x="181.1" y="52" width="7.5" height="23" class="book" />
+<rect x="190.6" y="55" width="7.5" height="20" class="book" />
+<rect x="200.1" y="49" width="7.5" height="26" class="book" />
+<rect x="209.6" y="52" width="7.5" height="23" class="book" />
+<rect x="219.1" y="55" width="7.5" height="20" class="book" />
+<rect x="228.6" y="49" width="7.5" height="26" class="book" />
+<line x1="165.6" y1="110" x2="248.4" y2="110" class="app"/>
+<rect x="171.6" y="84" width="7.5" height="26" class="book" />
+<rect x="181.1" y="87" width="7.5" height="23" class="book" />
+<rect x="190.6" y="90" width="7.5" height="20" class="book" />
+<rect x="200.1" y="84" width="7.5" height="26" class="book" />
+<rect x="209.6" y="87" width="7.5" height="23" class="book" />
+<rect x="219.1" y="90" width="7.5" height="20" class="book" />
+<rect x="228.6" y="84" width="7.5" height="26" class="book" />
+<line x1="165.6" y1="140" x2="248.4" y2="140" class="app"/>
+<rect x="171.6" y="114" width="7.5" height="26" class="book" />
+<rect x="181.1" y="117" width="7.5" height="23" class="book" />
+<rect x="190.6" y="120" width="7.5" height="20" class="book" />
+<rect x="200.1" y="114" width="7.5" height="26" class="book" />
+<line x1="165.6" y1="170" x2="248.4" y2="170" class="app"/>
+<rect x="171.6" y="144" width="7.5" height="26" class="book" />
+<rect x="181.1" y="147" width="7.5" height="23" class="book" />
+<rect x="190.6" y="150" width="7.5" height="20" class="book" />
+<rect x="200.1" y="144" width="7.5" height="26" class="book" />
+<rect x="209.6" y="147" width="7.5" height="23" class="book" />
+<rect x="219.1" y="150" width="7.5" height="20" class="book" />
+<rect x="228.6" y="144" width="7.5" height="26" class="book" />
+<line x1="248.4" y1="0" x2="248.4" y2="250" class="app"/>
+<line x1="289.8" y1="170" x2="289.8" y2="250" class="app"/>
+<rect x="281.8" y="176" width="6" height="2" class="dark" />
+<rect x="291.8" y="176" width="6" height="2" class="dark" />
+<line x1="248.4" y1="40" x2="331.2" y2="40" class="app"/>
+<rect x="254.4" y="14" width="7.5" height="26" class="book" />
+<rect x="263.9" y="17" width="7.5" height="23" class="book" />
+<rect x="273.4" y="20" width="7.5" height="20" class="book" />
+<rect x="282.9" y="14" width="7.5" height="26" class="book" />
+<rect x="292.4" y="17" width="7.5" height="23" class="book" />
+<rect x="301.9" y="20" width="7.5" height="20" class="book" />
+<rect x="311.4" y="14" width="7.5" height="26" class="book" />
+<line x1="248.4" y1="75" x2="331.2" y2="75" class="app"/>
+<rect x="254.4" y="49" width="7.5" height="26" class="book" />
+<rect x="263.9" y="52" width="7.5" height="23" class="book" />
+<rect x="273.4" y="55" width="7.5" height="20" class="book" />
+<rect x="282.9" y="49" width="7.5" height="26" class="book" />
+<rect x="292.4" y="52" width="7.5" height="23" class="book" />
+<rect x="301.9" y="55" width="7.5" height="20" class="book" />
+<rect x="311.4" y="49" width="7.5" height="26" class="book" />
+<line x1="248.4" y1="110" x2="331.2" y2="110" class="app"/>
+<rect x="254.4" y="84" width="7.5" height="26" class="book" />
+<rect x="263.9" y="87" width="7.5" height="23" class="book" />
+<rect x="273.4" y="90" width="7.5" height="20" class="book" />
+<rect x="282.9" y="84" width="7.5" height="26" class="book" />
+<rect x="292.4" y="87" width="7.5" height="23" class="book" />
+<rect x="301.9" y="90" width="7.5" height="20" class="book" />
+<rect x="311.4" y="84" width="7.5" height="26" class="book" />
+<line x1="248.4" y1="140" x2="331.2" y2="140" class="app"/>
+<rect x="254.4" y="114" width="7.5" height="26" class="book" />
+<rect x="263.9" y="117" width="7.5" height="23" class="book" />
+<rect x="273.4" y="120" width="7.5" height="20" class="book" />
+<rect x="282.9" y="114" width="7.5" height="26" class="book" />
+<line x1="248.4" y1="170" x2="331.2" y2="170" class="app"/>
+<rect x="254.4" y="144" width="7.5" height="26" class="book" />
+<rect x="263.9" y="147" width="7.5" height="23" class="book" />
+<rect x="273.4" y="150" width="7.5" height="20" class="book" />
+<rect x="282.9" y="144" width="7.5" height="26" class="book" />
+<rect x="292.4" y="147" width="7.5" height="23" class="book" />
+<rect x="301.9" y="150" width="7.5" height="20" class="book" />
+<rect x="311.4" y="144" width="7.5" height="26" class="book" />
+<line x1="331.2" y1="0" x2="331.2" y2="250" class="app"/>
+<line x1="372.6" y1="170" x2="372.6" y2="250" class="app"/>
+<rect x="364.6" y="176" width="6" height="2" class="dark" />
+<rect x="374.6" y="176" width="6" height="2" class="dark" />
+<line x1="331.2" y1="40" x2="414" y2="40" class="app"/>
+<rect x="337.2" y="14" width="7.5" height="26" class="book" />
+<rect x="346.7" y="17" width="7.5" height="23" class="book" />
+<rect x="356.2" y="20" width="7.5" height="20" class="book" />
+<rect x="365.7" y="14" width="7.5" height="26" class="book" />
+<rect x="375.2" y="17" width="7.5" height="23" class="book" />
+<rect x="384.7" y="20" width="7.5" height="20" class="book" />
+<rect x="394.2" y="14" width="7.5" height="26" class="book" />
+<line x1="331.2" y1="75" x2="414" y2="75" class="app"/>
+<rect x="337.2" y="49" width="7.5" height="26" class="book" />
+<rect x="346.7" y="52" width="7.5" height="23" class="book" />
+<rect x="356.2" y="55" width="7.5" height="20" class="book" />
+<rect x="365.7" y="49" width="7.5" height="26" class="book" />
+<rect x="375.2" y="52" width="7.5" height="23" class="book" />
+<rect x="384.7" y="55" width="7.5" height="20" class="book" />
+<rect x="394.2" y="49" width="7.5" height="26" class="book" />
+<line x1="331.2" y1="110" x2="414" y2="110" class="app"/>
+<rect x="337.2" y="84" width="7.5" height="26" class="book" />
+<rect x="346.7" y="87" width="7.5" height="23" class="book" />
+<rect x="356.2" y="90" width="7.5" height="20" class="book" />
+<rect x="365.7" y="84" width="7.5" height="26" class="book" />
+<rect x="375.2" y="87" width="7.5" height="23" class="book" />
+<rect x="384.7" y="90" width="7.5" height="20" class="book" />
+<rect x="394.2" y="84" width="7.5" height="26" class="book" />
+<line x1="331.2" y1="140" x2="414" y2="140" class="app"/>
+<rect x="337.2" y="114" width="7.5" height="26" class="book" />
+<rect x="346.7" y="117" width="7.5" height="23" class="book" />
+<rect x="356.2" y="120" width="7.5" height="20" class="book" />
+<rect x="365.7" y="114" width="7.5" height="26" class="book" />
+<line x1="331.2" y1="170" x2="414" y2="170" class="app"/>
+<rect x="337.2" y="144" width="7.5" height="26" class="book" />
+<rect x="346.7" y="147" width="7.5" height="23" class="book" />
+<rect x="356.2" y="150" width="7.5" height="20" class="book" />
+<rect x="365.7" y="144" width="7.5" height="26" class="book" />
+<rect x="375.2" y="147" width="7.5" height="23" class="book" />
+<rect x="384.7" y="150" width="7.5" height="20" class="book" />
+<rect x="394.2" y="144" width="7.5" height="26" class="book" />
+<text x="207" y="215" class="lbls" text-anchor="middle">① portes basses h 80 (vaisselle de réception, nappes, jeux)</text>
+<rect x="430" y="175" width="80" height="75" class="sofa" rx="6" />
+<text x="470" y="215" class="lbls" text-anchor="middle">④ fauteuil</text>
+<path d="M0 262 L414 262" class="dim" marker-start="url(#tk)" marker-end="url(#tk)"/>
+<text x="207" y="270" class="dimt" text-anchor="middle">414</text>
+<path d="M560 0 L560 250" class="dim" marker-start="url(#tk)" marker-end="url(#tk)"/>
+<text x="568" y="125" class="dimt" text-anchor="middle" transform="rotate(-90 568 125)">250</text>
+<path d="M-20 170 L-20 250" class="dim" marker-start="url(#tk)" marker-end="url(#tk)"/>
+<text x="-22.5" y="210" class="dimt" text-anchor="middle" transform="rotate(-90 -22.5 210)">80</text></svg></div><p class="cap">A · Mur nord, vu depuis le sud : bibliothèque toute hauteur sur les 414 cm du mur, portes basses fermées, fauteuil dans le décroché.</p></div>
+<div class="fig"><div class="scroll"><svg viewBox="-20 -12 420 300" class="small" role="img" aria-label="Variante A, vue du coin repas vers le mur ouest"><line x1="-10" y1="250" x2="368" y2="250" class="floorl"/>
+<line x1="-10" y1="0" x2="368" y2="0" class="el-ceil"/>
+<text x="2" y="-3" class="lblx muted" text-anchor="start">plafond 250</text>
+<rect x="15" y="46" width="75" height="204" class="room" />
+<text x="52.5" y="150" class="lbls muted" text-anchor="middle">passage</text>
+<text x="52.5" y="159" class="lbls muted" text-anchor="middle">vers le couloir</text>
+<rect x="323" y="0" width="35" height="250" class="tall" />
+<text x="340.5" y="125" class="lblb" text-anchor="middle">①</text>
+<rect x="113" y="175" width="160" height="4" class="tbl" />
+<line x1="118" y1="179" x2="118" y2="250" class="app"/>
+<line x1="268" y1="179" x2="268" y2="250" class="app"/>
+<rect x="226" y="205" width="40" height="4" class="stool" />
+<line x1="228" y1="209" x2="228" y2="250" class="app"/>
+<line x1="264" y1="209" x2="264" y2="250" class="app"/>
+<line x1="264" y1="160" x2="264" y2="205" class="app"/>
+<rect x="173" y="205" width="40" height="4" class="stool" />
+<line x1="175" y1="209" x2="175" y2="250" class="app"/>
+<line x1="211" y1="209" x2="211" y2="250" class="app"/>
+<line x1="211" y1="160" x2="211" y2="205" class="app"/>
+<rect x="120" y="205" width="40" height="4" class="stool" />
+<line x1="122" y1="209" x2="122" y2="250" class="app"/>
+<line x1="158" y1="209" x2="158" y2="250" class="app"/>
+<line x1="158" y1="160" x2="158" y2="205" class="app"/>
+<line x1="193" y1="0" x2="193" y2="80" class="app"/>
+<path d="M171 95 L215 95 L205 80 L181 80 Z" class="lamp"/>
+<text x="219" y="90" class="lblx muted" text-anchor="start">suspension h 155</text>
+<text x="193" y="194" class="lbls" text-anchor="middle">② table h 75</text>
+<text x="0" y="262" class="lblx muted" text-anchor="start">sud</text>
+<text x="358" y="262" class="lblx muted" text-anchor="end">nord</text></svg></div><p class="cap">A · Coin repas, vu depuis l'est vers le mur ouest : table 160 × 90, chaises, suspension à 155 au-dessus du plateau, passage vers le couloir à gauche.</p></div>
+</div>
+<div data-panel="B" hidden>
+<div class="fig"><div class="scroll"><svg viewBox="-30 -12 430 290" class="small" role="img" aria-label="Variante B, élévation du mur ouest"><line x1="-10" y1="250" x2="368" y2="250" class="floorl"/>
+<line x1="-10" y1="0" x2="368" y2="0" class="el-ceil"/>
+<text x="2" y="-3" class="lblx muted" text-anchor="start">plafond 250</text>
+<rect x="15" y="46" width="75" height="204" class="room" />
+<text x="52.5" y="150" class="lbls muted" text-anchor="middle">passage</text>
+<text x="52.5" y="159" class="lbls muted" text-anchor="middle">vers le couloir</text>
+<rect x="96" y="0" width="262" height="250" class="tall" />
+<line x1="96" y1="0" x2="96" y2="250" class="app"/>
+<line x1="139.7" y1="170" x2="139.7" y2="250" class="app"/>
+<rect x="131.7" y="176" width="6" height="2" class="dark" />
+<rect x="141.7" y="176" width="6" height="2" class="dark" />
+<line x1="96" y1="40" x2="183.3" y2="40" class="app"/>
+<rect x="102" y="14" width="7.5" height="26" class="book" />
+<rect x="111.5" y="17" width="7.5" height="23" class="book" />
+<rect x="121" y="20" width="7.5" height="20" class="book" />
+<rect x="130.5" y="14" width="7.5" height="26" class="book" />
+<rect x="140" y="17" width="7.5" height="23" class="book" />
+<rect x="149.5" y="20" width="7.5" height="20" class="book" />
+<rect x="159" y="14" width="7.5" height="26" class="book" />
+<rect x="168.5" y="17" width="7.5" height="23" class="book" />
+<line x1="96" y1="75" x2="183.3" y2="75" class="app"/>
+<rect x="102" y="49" width="7.5" height="26" class="book" />
+<rect x="111.5" y="52" width="7.5" height="23" class="book" />
+<rect x="121" y="55" width="7.5" height="20" class="book" />
+<rect x="130.5" y="49" width="7.5" height="26" class="book" />
+<rect x="140" y="52" width="7.5" height="23" class="book" />
+<rect x="149.5" y="55" width="7.5" height="20" class="book" />
+<rect x="159" y="49" width="7.5" height="26" class="book" />
+<rect x="168.5" y="52" width="7.5" height="23" class="book" />
+<line x1="96" y1="110" x2="183.3" y2="110" class="app"/>
+<rect x="102" y="84" width="7.5" height="26" class="book" />
+<rect x="111.5" y="87" width="7.5" height="23" class="book" />
+<rect x="121" y="90" width="7.5" height="20" class="book" />
+<rect x="130.5" y="84" width="7.5" height="26" class="book" />
+<rect x="140" y="87" width="7.5" height="23" class="book" />
+<rect x="149.5" y="90" width="7.5" height="20" class="book" />
+<rect x="159" y="84" width="7.5" height="26" class="book" />
+<rect x="168.5" y="87" width="7.5" height="23" class="book" />
+<line x1="96" y1="140" x2="183.3" y2="140" class="app"/>
+<rect x="102" y="114" width="7.5" height="26" class="book" />
+<rect x="111.5" y="117" width="7.5" height="23" class="book" />
+<rect x="121" y="120" width="7.5" height="20" class="book" />
+<rect x="130.5" y="114" width="7.5" height="26" class="book" />
+<line x1="96" y1="170" x2="183.3" y2="170" class="app"/>
+<rect x="102" y="144" width="7.5" height="26" class="book" />
+<rect x="111.5" y="147" width="7.5" height="23" class="book" />
+<rect x="121" y="150" width="7.5" height="20" class="book" />
+<rect x="130.5" y="144" width="7.5" height="26" class="book" />
+<rect x="140" y="147" width="7.5" height="23" class="book" />
+<rect x="149.5" y="150" width="7.5" height="20" class="book" />
+<rect x="159" y="144" width="7.5" height="26" class="book" />
+<rect x="168.5" y="147" width="7.5" height="23" class="book" />
+<line x1="183.3" y1="0" x2="183.3" y2="250" class="app"/>
+<line x1="227" y1="170" x2="227" y2="250" class="app"/>
+<rect x="219" y="176" width="6" height="2" class="dark" />
+<rect x="229" y="176" width="6" height="2" class="dark" />
+<line x1="183.3" y1="40" x2="270.7" y2="40" class="app"/>
+<rect x="189.3" y="14" width="7.5" height="26" class="book" />
+<rect x="198.8" y="17" width="7.5" height="23" class="book" />
+<rect x="208.3" y="20" width="7.5" height="20" class="book" />
+<rect x="217.8" y="14" width="7.5" height="26" class="book" />
+<rect x="227.3" y="17" width="7.5" height="23" class="book" />
+<rect x="236.8" y="20" width="7.5" height="20" class="book" />
+<rect x="246.3" y="14" width="7.5" height="26" class="book" />
+<rect x="255.8" y="17" width="7.5" height="23" class="book" />
+<line x1="183.3" y1="75" x2="270.7" y2="75" class="app"/>
+<rect x="189.3" y="49" width="7.5" height="26" class="book" />
+<rect x="198.8" y="52" width="7.5" height="23" class="book" />
+<rect x="208.3" y="55" width="7.5" height="20" class="book" />
+<rect x="217.8" y="49" width="7.5" height="26" class="book" />
+<rect x="227.3" y="52" width="7.5" height="23" class="book" />
+<rect x="236.8" y="55" width="7.5" height="20" class="book" />
+<rect x="246.3" y="49" width="7.5" height="26" class="book" />
+<rect x="255.8" y="52" width="7.5" height="23" class="book" />
+<line x1="183.3" y1="110" x2="270.7" y2="110" class="app"/>
+<rect x="189.3" y="84" width="7.5" height="26" class="book" />
+<rect x="198.8" y="87" width="7.5" height="23" class="book" />
+<rect x="208.3" y="90" width="7.5" height="20" class="book" />
+<rect x="217.8" y="84" width="7.5" height="26" class="book" />
+<rect x="227.3" y="87" width="7.5" height="23" class="book" />
+<rect x="236.8" y="90" width="7.5" height="20" class="book" />
+<rect x="246.3" y="84" width="7.5" height="26" class="book" />
+<rect x="255.8" y="87" width="7.5" height="23" class="book" />
+<line x1="183.3" y1="140" x2="270.7" y2="140" class="app"/>
+<rect x="189.3" y="114" width="7.5" height="26" class="book" />
+<rect x="198.8" y="117" width="7.5" height="23" class="book" />
+<rect x="208.3" y="120" width="7.5" height="20" class="book" />
+<rect x="217.8" y="114" width="7.5" height="26" class="book" />
+<line x1="183.3" y1="170" x2="270.7" y2="170" class="app"/>
+<rect x="189.3" y="144" width="7.5" height="26" class="book" />
+<rect x="198.8" y="147" width="7.5" height="23" class="book" />
+<rect x="208.3" y="150" width="7.5" height="20" class="book" />
+<rect x="217.8" y="144" width="7.5" height="26" class="book" />
+<rect x="227.3" y="147" width="7.5" height="23" class="book" />
+<rect x="236.8" y="150" width="7.5" height="20" class="book" />
+<rect x="246.3" y="144" width="7.5" height="26" class="book" />
+<rect x="255.8" y="147" width="7.5" height="23" class="book" />
+<line x1="270.7" y1="0" x2="270.7" y2="250" class="app"/>
+<line x1="314.3" y1="170" x2="314.3" y2="250" class="app"/>
+<rect x="306.3" y="176" width="6" height="2" class="dark" />
+<rect x="316.3" y="176" width="6" height="2" class="dark" />
+<line x1="270.7" y1="40" x2="358" y2="40" class="app"/>
+<rect x="276.7" y="14" width="7.5" height="26" class="book" />
+<rect x="286.2" y="17" width="7.5" height="23" class="book" />
+<rect x="295.7" y="20" width="7.5" height="20" class="book" />
+<rect x="305.2" y="14" width="7.5" height="26" class="book" />
+<rect x="314.7" y="17" width="7.5" height="23" class="book" />
+<rect x="324.2" y="20" width="7.5" height="20" class="book" />
+<rect x="333.7" y="14" width="7.5" height="26" class="book" />
+<rect x="343.2" y="17" width="7.5" height="23" class="book" />
+<line x1="270.7" y1="75" x2="358" y2="75" class="app"/>
+<rect x="276.7" y="49" width="7.5" height="26" class="book" />
+<rect x="286.2" y="52" width="7.5" height="23" class="book" />
+<rect x="295.7" y="55" width="7.5" height="20" class="book" />
+<rect x="305.2" y="49" width="7.5" height="26" class="book" />
+<rect x="314.7" y="52" width="7.5" height="23" class="book" />
+<rect x="324.2" y="55" width="7.5" height="20" class="book" />
+<rect x="333.7" y="49" width="7.5" height="26" class="book" />
+<rect x="343.2" y="52" width="7.5" height="23" class="book" />
+<line x1="270.7" y1="110" x2="358" y2="110" class="app"/>
+<rect x="276.7" y="84" width="7.5" height="26" class="book" />
+<rect x="286.2" y="87" width="7.5" height="23" class="book" />
+<rect x="295.7" y="90" width="7.5" height="20" class="book" />
+<rect x="305.2" y="84" width="7.5" height="26" class="book" />
+<rect x="314.7" y="87" width="7.5" height="23" class="book" />
+<rect x="324.2" y="90" width="7.5" height="20" class="book" />
+<rect x="333.7" y="84" width="7.5" height="26" class="book" />
+<rect x="343.2" y="87" width="7.5" height="23" class="book" />
+<line x1="270.7" y1="140" x2="358" y2="140" class="app"/>
+<rect x="276.7" y="114" width="7.5" height="26" class="book" />
+<rect x="286.2" y="117" width="7.5" height="23" class="book" />
+<rect x="295.7" y="120" width="7.5" height="20" class="book" />
+<rect x="305.2" y="114" width="7.5" height="26" class="book" />
+<line x1="270.7" y1="170" x2="358" y2="170" class="app"/>
+<rect x="276.7" y="144" width="7.5" height="26" class="book" />
+<rect x="286.2" y="147" width="7.5" height="23" class="book" />
+<rect x="295.7" y="150" width="7.5" height="20" class="book" />
+<rect x="305.2" y="144" width="7.5" height="26" class="book" />
+<rect x="314.7" y="147" width="7.5" height="23" class="book" />
+<rect x="324.2" y="150" width="7.5" height="20" class="book" />
+<rect x="333.7" y="144" width="7.5" height="26" class="book" />
+<rect x="343.2" y="147" width="7.5" height="23" class="book" />
+<text x="227" y="215" class="lbls" text-anchor="middle">① portes basses h 80</text>
+<text x="0" y="262" class="lblx muted" text-anchor="start">sud</text>
+<text x="358" y="262" class="lblx muted" text-anchor="end">nord</text>
+<path d="M96 262 L358 262" class="dim" marker-start="url(#tk)" marker-end="url(#tk)"/>
+<text x="227" y="270" class="dimt" text-anchor="middle">262</text>
+<path d="M372 0 L372 250" class="dim" marker-start="url(#tk)" marker-end="url(#tk)"/>
+<text x="380" y="125" class="dimt" text-anchor="middle" transform="rotate(-90 380 125)">250</text>
+<path d="M-14 170 L-14 250" class="dim" marker-start="url(#tk)" marker-end="url(#tk)"/>
+<text x="-16.5" y="210" class="dimt" text-anchor="middle" transform="rotate(-90 -16.5 210)">80</text></svg></div><p class="cap">B · Mur ouest, vu depuis l'est : bibliothèque de 262 en trois travées, du coin nord jusqu'au passage du couloir.</p></div>
+<div class="fig"><div class="scroll"><svg viewBox="-20 -12 420 300" class="small" role="img" aria-label="Variante B, coin repas devant la bibliothèque"><line x1="-10" y1="250" x2="368" y2="250" class="floorl"/>
+<line x1="-10" y1="0" x2="368" y2="0" class="el-ceil"/>
+<text x="2" y="-3" class="lblx muted" text-anchor="start">plafond 250</text>
+<rect x="15" y="46" width="75" height="204" class="room" />
+<rect x="96" y="0" width="262" height="250" class="tall" />
+<text x="227" y="30" class="lblx muted" text-anchor="middle">① bibliothèque (derrière)</text>
+<rect x="128" y="175" width="160" height="4" class="tbl" />
+<line x1="133" y1="179" x2="133" y2="250" class="app"/>
+<line x1="283" y1="179" x2="283" y2="250" class="app"/>
+<rect x="241" y="205" width="40" height="4" class="stool" />
+<line x1="243" y1="209" x2="243" y2="250" class="app"/>
+<line x1="279" y1="209" x2="279" y2="250" class="app"/>
+<line x1="279" y1="160" x2="279" y2="205" class="app"/>
+<rect x="188" y="205" width="40" height="4" class="stool" />
+<line x1="190" y1="209" x2="190" y2="250" class="app"/>
+<line x1="226" y1="209" x2="226" y2="250" class="app"/>
+<line x1="226" y1="160" x2="226" y2="205" class="app"/>
+<rect x="135" y="205" width="40" height="4" class="stool" />
+<line x1="137" y1="209" x2="137" y2="250" class="app"/>
+<line x1="173" y1="209" x2="173" y2="250" class="app"/>
+<line x1="173" y1="160" x2="173" y2="205" class="app"/>
+<line x1="208" y1="0" x2="208" y2="80" class="app"/>
+<path d="M186 95 L230 95 L220 80 L196 80 Z" class="lamp"/>
+<text x="234" y="90" class="lblx muted" text-anchor="start">suspension h 155</text>
+<text x="208" y="194" class="lbls" text-anchor="middle">② table h 75</text>
+<text x="0" y="262" class="lblx muted" text-anchor="start">sud</text>
+<text x="358" y="262" class="lblx muted" text-anchor="end">nord</text></svg></div><p class="cap">B · Coin repas, vu depuis l'est : la table se trouve devant la bibliothèque, avec 80 cm de recul pour les chaises.</p></div>
+</div>
+
+<h2>Principe</h2>
+<div class="grid2">
+<div class="card"><h3>③ Canapé SÖDERHAMN</h3><p>Module 3 places SÖDERHAMN (186) avec ses deux accoudoirs de 6 : 198 × 99 × 83. Il laisse 84 cm entre son bout et le mur sud. Il tourne le dos au coin repas et regarde la baie : il sépare les deux usages sans cloison. Le fauteuil, dans le décroché nord-est, et un pouf au sud forment un U ouvert sur la lumière autour de la table basse.</p></div>
+<div class="card"><h3>② Table pour recevoir, côté couloir</h3><p>Table de 160 × 90 près du passage vers le couloir, donc au plus court depuis la cuisine. 6 couverts ; avec une allonge de 40 vers le sud et une chaise en bout, on passe à 8 sans gêner le passage. 80 cm de recul derrière chaque chaise.</p></div>
+<div class="card"><h3>A · Bibliothèque au nord</h3><p>414 × 35 sur tout le mur nord, 5 travées, environ 30 m d'étagères. Portes basses jusqu'à 80 pour ce qui sert à recevoir. Elle est accessible depuis le coin repas comme depuis le salon. 96 cm entre la table et le canapé, 66 le long de la baie.</p></div>
+<div class="card"><h3>B · Bibliothèque à l'ouest</h3><p>262 × 35 sur le mur ouest, du coin nord au passage, 3 travées, environ 19 m d'étagères : une « salle à manger bibliothèque ». Le mur nord reste libre (tableaux). Tout se décale vers l'est : il ne reste que les 80 de recul entre la table et le canapé, et la table basse passe à 50 de large pour garder 67 le long de la baie.</p></div>
+</div>
+
+<h2>Points à vérifier</h2>
+<div class="hyp"><ul>
+<li><b>La baie du mur est</b> (202 cm d'après le relevé) : avec une coulissante, les 66 à 67 cm laissés devant suffisent ; une baie battante vers l'intérieur demanderait plus.</li>
+<li><b>Le décroché nord-est</b> (130 cm, mur 3 cm plus bas) : le relevé n'y montre pas d'ouverture.</li>
+<li><b>Suspension</b> : il faut un point lumineux au-dessus de la table, probablement à déplacer (A : x ≈ 125, y ≈ 165 ; B : x ≈ 160, y ≈ 150).</li>
+<li><b>Bibliothèque</b> : à fixer au mur (charge d'environ 25 kg par mètre d'étagère) ; vérifier qu'il n'y a ni radiateur ni prise sur le mur choisi. En B, le mur ouest est la cloison du cellier et du WC : vérifier qu'elle supporte la fixation.</li>
+</ul></div>
+<script>
+(function(){
+  var bs=document.querySelectorAll('.switch button');
+  function show(v){
+    bs.forEach(function(b){b.setAttribute('aria-selected',b.getAttribute('data-v')===v?'true':'false')});
+    document.querySelectorAll('[data-panel]').forEach(function(p){p.hidden=p.getAttribute('data-panel')!==v});
+    try{localStorage.setItem('salon-var',v)}catch(e){}
+  }
+  bs.forEach(function(b){b.addEventListener('click',function(){show(b.getAttribute('data-v'))})});
+  var v=null;try{v=localStorage.getItem('salon-var')}catch(e){}
+  if(/^#[AB]$/.test(location.hash))v=location.hash.slice(1);
+  if(v==='B')show(v);
+})();
+</script>
+
+<section id="changements">
+<h2>Changements</h2>
+<div class="scroll-t"><table>
+<thead><tr><th>Version</th><th>Date</th><th>Changements</th></tr></thead>
+<tbody><tr><td><b>V3</b></td><td>01/10/2026</td><td>Canapé remplacé par le module 3 places IKEA SÖDERHAMN avec deux accoudoirs (186 + 2 × 6 = 198 × 99). Ajout de la variante B : bibliothèque 262 × 35 sur le mur ouest, table et salon décalés vers l'est, table basse 50 × 100. Bouton A/B sur le plan et les élévations. La V2.1 est archivée (archive/salon-amenagement-v2.html).</td></tr><tr><td><b>V2.1</b></td><td>01/10/2026</td><td>Le salon n'a pas de porte : l'ouverture vers le couloir est un passage libre (plan et vue B).</td></tr><tr><td><b>V2</b></td><td>01/10/2026</td><td>Plus de télévision ni de bureau (demande du client). Bibliothèque 414 × 35 sur tout le mur nord, table 160 × 90 pour 6 (8 avec allonge) côté porte, canapé 210 × 95 dos à la table et tourné vers la baie, fauteuil dans le décroché. Buffet supprimé. La V1 est archivée (archive/salon-amenagement-v1.html).</td></tr><tr><td><b>V1</b></td><td>01/10/2026</td><td>Première proposition à partir du relevé : bibliothèque 284 × 35 avec niche TV sur le mur nord, canapé 230 × 95 contre le mur sud, table basse, buffet 160 × 45 à l'ouest, bureau 120 × 60 et fauteuil près de la baie. Plan et deux élévations.</td></tr></tbody>
+</table></div>
+</section>
+</div>
+</body>
+</html>
