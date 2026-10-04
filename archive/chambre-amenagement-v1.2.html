@@ -1,0 +1,639 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Aménagement de la chambre</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wght@400;500;700;800&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+<style>
+:root{
+  --paper:#F7F8F6; --ink:#1D2A33; --muted:#5E6B73; --line:#C9D0D4; --wood:#B07A45;
+  --water:#2F7FB5; --tri:#C8412C; --flow:#2E8B57; --cook2:#7B5EA7;
+  --panel:#FFFFFF; --cab:#ECE6DA; --tall:#D8CFBD; --tech:#E1E6E9; --glass:#CFE4F2;
+  color-scheme:light;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --paper:#141A1F; --ink:#E4EAED; --muted:#9AA7AE; --line:#34414A; --wood:#C9925A;
+    --water:#5AA8DE; --tri:#E8664F; --flow:#4CB97A; --cook2:#A68BD2;
+    --panel:#1B2329; --cab:#2A3338; --tall:#394449; --tech:#26303A; --glass:#1F3A4E;
+    color-scheme:dark;
+  }
+}
+:root[data-theme="dark"]{
+  --paper:#141A1F; --ink:#E4EAED; --muted:#9AA7AE; --line:#34414A; --wood:#C9925A;
+  --water:#5AA8DE; --tri:#E8664F; --flow:#4CB97A; --cook2:#A68BD2;
+  --panel:#1B2329; --cab:#2A3338; --tall:#394449; --tech:#26303A; --glass:#1F3A4E;
+  color-scheme:dark;
+}
+*{box-sizing:border-box}
+html,body{margin:0}
+body{background:var(--paper);color:var(--ink);font-family:Archivo,system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;line-height:1.55;font-size:16px}
+.wrap{max-width:1120px;margin:0 auto;padding:28px 16px 64px}
+.kicker{font-family:"JetBrains Mono",ui-monospace,Menlo,monospace;font-size:12px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted)}
+h1{font-size:clamp(28px,5vw,44px);line-height:1.08;margin:6px 0 12px;font-weight:800;letter-spacing:-.01em}
+h2{font-size:22px;margin:44px 0 10px;font-weight:700}
+h3{font-size:17px;margin:22px 0 6px}
+p{margin:8px 0}
+.pitch{font-size:18px;max-width:780px;color:var(--ink)}
+.stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:12px;margin:22px 0 8px}
+.stat{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:12px 14px}
+.stat b{display:block;font-family:"JetBrains Mono",ui-monospace,monospace;font-size:24px;font-weight:600}
+.stat span{font-size:13px;color:var(--muted)}
+.fig{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:12px;margin:14px 0}
+.scroll{overflow-x:auto;-webkit-overflow-scrolling:touch}
+.scroll svg{display:block;width:100%;min-width:720px;height:auto}
+.scroll svg.small{min-width:340px;max-width:600px;margin:0 auto}
+.cap{font-size:13px;color:var(--muted);margin:8px 4px 2px}
+.legend{display:flex;flex-wrap:wrap;gap:8px 18px;font-size:13px;margin:10px 4px}
+.legend span{display:inline-flex;align-items:center;gap:6px}
+.legend svg{width:26px;height:14px;flex:none}
+.grid2{display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:16px}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:14px 16px}
+.card h3{margin-top:0}
+ul{padding-left:20px;margin:6px 0}
+li{margin:3px 0}
+table{border-collapse:collapse;width:100%;font-size:14px}
+th,td{text-align:left;padding:7px 8px;border-bottom:1px solid var(--line);vertical-align:top}
+td.num,th.num{text-align:right;font-family:"JetBrains Mono",ui-monospace,monospace;white-space:nowrap}
+td.st{text-align:center;font-size:17px;white-space:nowrap}
+tfoot td{font-weight:700}
+.mono{font-family:"JetBrains Mono",ui-monospace,monospace}
+.note{font-size:13px;color:var(--muted)}
+.ok{color:var(--flow);font-weight:700}
+.warn{color:var(--wood);font-weight:700}
+.hyp{border-left:3px solid var(--wood);padding:6px 12px;background:var(--panel);font-size:14px;margin:12px 0}
+@media (max-width:480px){ body{font-size:15px} .stat b{font-size:21px} th,td{padding:6px 5px} }
+
+/* SVG */
+svg text{font-family:Archivo,system-ui,sans-serif;fill:var(--ink)}
+.w{fill:var(--ink)}
+.wcut{fill:var(--ink)}
+.nw{fill:url(#hn);stroke:var(--ink);stroke-width:.8}
+.ghost{fill:none;stroke:var(--muted);stroke-width:1;stroke-dasharray:4 3}
+.floorbg{fill:var(--wood);fill-opacity:.13}
+.pq{fill:none;stroke:var(--wood);stroke-width:.6;stroke-opacity:.45}
+.cellf{fill:var(--tech)}
+.tl{fill:none;stroke:var(--line);stroke-width:.6}
+.wc{fill:var(--line);fill-opacity:.55}
+.cab{fill:var(--cab);stroke:var(--ink);stroke-width:.7}
+.cabcut{fill:var(--tall);stroke:var(--ink);stroke-width:1.4}
+.tall{fill:var(--tall);stroke:var(--ink);stroke-width:.8}
+.pf{fill:var(--tall);stroke:var(--wood);stroke-width:1.8}
+.tech{fill:var(--tech);stroke:var(--ink);stroke-width:.7;stroke-dasharray:3 2}
+.wt{fill:none;stroke:var(--ink);stroke-width:1.6}
+.app{fill:none;stroke:var(--ink);stroke-width:.8}
+.appf{fill:var(--panel);stroke:var(--ink);stroke-width:.8}
+.dark{fill:var(--ink)}
+.upper{fill:none;stroke:var(--muted);stroke-width:.8;stroke-dasharray:3 2}
+.win{fill:var(--glass);stroke:var(--ink);stroke-width:.7}
+.glass{stroke:var(--water);stroke-width:1.2}
+.winleaf{fill:none;stroke:var(--muted);stroke-width:.6;stroke-dasharray:2 2}
+.doorzone{fill:var(--tri);fill-opacity:.06;stroke:none}
+.doorarc{fill:none;stroke:var(--ink);stroke-width:.8}
+.doorleaf{stroke:var(--ink);stroke-width:3}
+.door100{stroke:var(--tri);stroke-width:1.2;stroke-dasharray:3 2}
+.swing{fill:none;stroke:var(--muted);stroke-width:.6;stroke-dasharray:2 2}
+.dim{stroke:var(--muted);stroke-width:.6;fill:none}
+.dimt{fill:var(--muted);font-family:"JetBrains Mono",ui-monospace,monospace !important;font-size:8px}
+.lbl{font-size:7.5px}
+.lbls{font-size:6.5px}
+.lblx{font-size:5px}
+.lblb{font-size:9px;font-weight:700}
+.muted{fill:var(--muted)}
+.woodt{fill:var(--wood);font-weight:700}
+.tri{fill:var(--tri);fill-opacity:.07;stroke:var(--tri);stroke-width:1.6}
+.triv{fill:var(--tri)}
+.trit{fill:var(--tri);font-family:"JetBrains Mono",monospace !important;font-size:8px;font-weight:600}
+.tribg{fill:var(--panel);stroke:var(--tri);stroke-width:.6}
+.flow{fill:none;stroke:var(--flow);stroke-width:2.2;marker-end:url(#af)}
+.mf{fill:var(--flow)}
+.badge{fill:var(--flow)}
+.badget{fill:#fff;font-size:8px;font-weight:700}
+.z1{fill:url(#h1);stroke:var(--water);stroke-width:.8}
+.z2{fill:url(#h2);stroke:var(--cook2);stroke-width:.8}
+.h1l{stroke:var(--water);stroke-width:1;stroke-opacity:.45}
+.h2l{stroke:var(--cook2);stroke-width:1;stroke-opacity:.45}
+.z1t{fill:var(--water);font-size:8px;font-weight:700}
+.z2t{fill:var(--cook2);font-size:8px;font-weight:700}
+.pin{fill:none;stroke:var(--water);stroke-width:1.6}
+.pout{fill:none;stroke:var(--water);stroke-width:1.6;stroke-dasharray:5 3}
+.wt2{fill:var(--water);font-size:7px}
+.duct{fill:none;stroke:var(--muted);stroke-width:1.2;stroke-dasharray:6 3}
+.air{fill:none;stroke:var(--cook2);stroke-width:1.1;marker-end:url(#aa)}
+.airt{fill:var(--cook2);font-size:6px}
+.sec{stroke:var(--tri);stroke-width:.9;stroke-dasharray:10 3 2 3;fill:none}
+.secm{fill:var(--tri)}
+.sect{fill:var(--tri);font-weight:800;font-size:11px}
+.plinth{fill:var(--tall);stroke:var(--ink);stroke-width:.6}
+.cred{fill:var(--wood);fill-opacity:.12;stroke:none}
+.bgwall{fill:var(--line);fill-opacity:.35;stroke:none}
+.person1{fill:var(--water);fill-opacity:.35;stroke:var(--water);stroke-width:1}
+.person2{fill:var(--cook2);fill-opacity:.35;stroke:var(--cook2);stroke-width:1}
+.person3{fill:var(--wood);fill-opacity:.3;stroke:var(--wood);stroke-width:1}
+.floorl{stroke:var(--ink);stroke-width:2}
+.ceil{stroke:var(--muted);stroke-width:1;stroke-dasharray:6 4}
+.tbl{fill:var(--wood);fill-opacity:.5;stroke:var(--ink);stroke-width:.9}
+.stool{fill:var(--wood);fill-opacity:.28;stroke:var(--ink);stroke-width:.7}
+.stoolp{fill:none;stroke:var(--wood);stroke-width:.8;stroke-dasharray:2 1.5}
+.dine{fill:var(--wood);fill-opacity:.07;stroke:var(--wood);stroke-width:.8;stroke-dasharray:4 2}
+.dinet{fill:var(--wood);font-size:8px;font-weight:700}
+.rack{fill:var(--wood);fill-opacity:.22;stroke:var(--wood);stroke-width:.8}
+.park{fill:none;stroke:var(--wood);stroke-width:1;stroke-dasharray:3 2}
+.rail{stroke:var(--ink);stroke-width:1.1}
+.vent{fill:var(--ink);fill-opacity:.8}
+.broom{fill:var(--flow);fill-opacity:.1;stroke:var(--flow);stroke-width:.9;stroke-dasharray:3 2}
+.broomt{fill:var(--flow);font-weight:700}
+.conf{fill:url(#hx);stroke:var(--tri);stroke-width:1}
+.hxl{stroke:var(--tri);stroke-width:1.1}
+.ecs{fill:var(--glass);stroke:var(--water);stroke-width:1.3}
+.conft{fill:var(--tri);font-weight:800}
+.sleaf{fill:var(--ink)}
+.sleafc{fill:none;stroke:var(--ink);stroke-width:.8;stroke-dasharray:3 2}
+.srail{stroke:var(--tri);stroke-width:1.4}
+.slide{stroke:var(--tri);stroke-width:1;fill:none}
+.okt{fill:var(--flow);font-weight:700}
+.changes{max-width:860px;font-size:15px;margin:6px 0 4px;padding-left:20px}
+section{margin-top:52px;padding-top:8px;border-top:2px solid var(--line)}
+.scroll-t{overflow-x:auto}
+#changements table{min-width:620px}
+.vant{fill:var(--wood);fill-opacity:.3;stroke:var(--ink);stroke-width:.8}
+.slot{fill:var(--tri);fill-opacity:.1;stroke:var(--tri);stroke-width:.6;stroke-dasharray:2 1.5}
+.bgf{opacity:.5}
+.egout{fill:var(--glass);fill-opacity:.6;stroke:var(--water);stroke-width:.7}
+.egl{stroke:var(--water);stroke-width:.6}
+.ll{fill:var(--panel);stroke:var(--ink);stroke-width:1.2}
+.hid{fill:none;stroke:var(--muted);stroke-width:1;stroke-dasharray:4 3}
+.free{fill:var(--flow);fill-opacity:.08;stroke:var(--flow);stroke-width:.6;stroke-dasharray:2 1.5}
+.cfl{fill:var(--tri);fill-opacity:.16;stroke:var(--tri);stroke-width:.6;stroke-dasharray:2 1.5}
+.ve{font-size:7px}.ves{font-size:6px}.veb{font-size:8px;font-weight:700}
+.vc{font-size:4.2px}.vcb{font-size:4.8px;font-weight:700}
+.vlab{fill:var(--wood);font-size:7px;font-weight:700;letter-spacing:.04em}
+.card .scroll svg.small{max-width:100%}
+.gridv{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,500px),1fr));gap:16px}
+.claus{fill:var(--wood);fill-opacity:.45;stroke:var(--ink);stroke-width:.9}
+.clausc{fill:none;stroke:var(--wood);stroke-width:.9;stroke-dasharray:3 2}
+.switch{display:flex;flex-wrap:wrap;gap:8px;margin:10px 0 6px}
+.switch button{font:inherit;font-size:14px;padding:8px 14px;border-radius:999px;border:1px solid var(--line);background:var(--panel);color:var(--ink);cursor:pointer}
+.switch button[aria-selected="true"]{background:var(--ink);color:var(--paper);border-color:var(--ink)}
+.switch button:focus-visible{outline:2px solid var(--wood);outline-offset:2px}
+.opts{display:flex;flex-wrap:wrap;align-items:center;gap:6px 14px;margin:4px 0 10px;font-size:13px}
+.opts .optl{font-family:"JetBrains Mono",ui-monospace,Menlo,monospace;font-size:11px;letter-spacing:.06em;text-transform:uppercase;color:var(--muted)}
+.opts .seg{display:inline-flex;border:1px solid var(--line);border-radius:8px;overflow:hidden}
+.opts .seg button{font:inherit;font-size:13px;padding:5px 10px;border:0;background:var(--panel);color:var(--ink);cursor:pointer}
+.opts .seg button+button{border-left:1px solid var(--line)}
+.opts .seg button[aria-pressed="true"]{background:var(--wood);color:var(--paper)}
+.opts .seg button:focus-visible{outline:2px solid var(--wood);outline-offset:-2px}
+/* options : chaque élément dépendant porte la classe de sa valeur */
+:root[data-door="w"] .door-e,:root[data-door="e"] .door-w,:root[data-tbl="sq"] .tbl-rd,:root[data-tbl="sq"] .tbl-bq,:root[data-tbl="rd"] .tbl-sq,:root[data-tbl="rd"] .tbl-bq,:root[data-tbl="bq"] .tbl-sq,:root[data-tbl="bq"] .tbl-rd{display:none}
+[hidden]{display:none!important}
+.tag{display:inline-block;font-family:"JetBrains Mono",ui-monospace,monospace;font-size:12px;padding:1px 7px;border-radius:5px;background:var(--tech);margin-right:6px}
+
+
+.tile{fill:url(#tl)}
+.room{fill:var(--line);fill-opacity:.18}
+.roomt{fill:var(--muted);font-size:9px;font-weight:600}
+.sofa{fill:var(--cook2);fill-opacity:.18;stroke:var(--ink);stroke-width:.8}
+.sofac{fill:var(--cook2);fill-opacity:.12;stroke:var(--ink);stroke-width:.5}
+.rug{fill:var(--wood);fill-opacity:.08;stroke:var(--wood);stroke-width:.7;stroke-dasharray:5 3}
+.plant{fill:var(--flow);fill-opacity:.25;stroke:var(--flow);stroke-width:.8}
+.mirror{fill:var(--glass);stroke:var(--ink);stroke-width:.7}
+.tv{fill:var(--ink);fill-opacity:.85}
+.lamp{fill:#E8B44A;fill-opacity:.55;stroke:var(--ink);stroke-width:.6}
+.pass{fill:none;stroke:var(--flow);stroke-width:.9}
+.passt{fill:var(--flow);font-family:"JetBrains Mono",monospace !important;font-size:7px;font-weight:600}
+.hook{fill:var(--ink)}
+.book{fill:var(--wood);fill-opacity:.35;stroke:none}
+.inner{fill:none;stroke:var(--muted);stroke-width:.6;stroke-dasharray:3 2}
+.el-ceil{stroke:var(--muted);stroke-width:.8;stroke-dasharray:6 4}
+
+.bed{fill:var(--water);fill-opacity:.10;stroke:var(--ink);stroke-width:.9}
+.mat{fill:var(--panel);stroke:var(--ink);stroke-width:.6}
+.pil{fill:var(--panel);stroke:var(--ink);stroke-width:.6}
+.duvet{fill:var(--water);fill-opacity:.16;stroke:var(--water);stroke-width:.6}
+.head{fill:var(--wood);fill-opacity:.45;stroke:var(--ink);stroke-width:.9}
+.closet{fill:var(--tech);stroke:var(--ink);stroke-width:.7}
+.plug{fill:var(--tri)}
+.valet{fill:var(--cook2);fill-opacity:.12;stroke:var(--cook2);stroke-width:.8;stroke-dasharray:4 2}
+.valett{fill:var(--cook2);font-weight:700}
+.peg{fill:var(--cook2)}
+.cloth{fill:var(--cook2);fill-opacity:.18;stroke:var(--cook2);stroke-width:.6}
+.wleaf{stroke:var(--ink);stroke-width:2.2}
+</style>
+</head>
+<body>
+<div class="wrap">
+<svg width="0" height="0" style="position:absolute" aria-hidden="true" focusable="false"><defs>
+<pattern id="tl" width="30" height="30" patternUnits="userSpaceOnUse"><path class="tl" d="M30 0 L0 0 L0 30"/></pattern>
+<marker id="tk" viewBox="0 0 10 10" refX="5" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M2 8 L8 2" style="stroke:var(--muted)" stroke-width="1.4"/></marker>
+<marker id="ar" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto"><path d="M0 0 L10 5 L0 10 Z" style="fill:var(--tri)"/></marker>
+</defs></svg>
+<div class="kicker">Chambre · V1.2 · variantes A / B · plan et élévations</div>
+<h1>Aménagement de la chambre</h1>
+<p class="pitch">Un lit de 160 tête au mur sud, centré entre le placard existant et la fenêtre, deux chevets, une commode contre le mur est, et un coin pour les vêtements déjà portés, ni propres ni sales. Deux variantes pour ce coin : un compartiment dans le placard existant (A) ou des patères au-dessus de la commode (B) ; le bouton bascule le plan et les élévations. Le pied du lit ne laisse que 41 cm jusqu'au mur nord (voir <a href="#verifier">Points à vérifier</a>). L'historique est en fin de document (<a href="#changements">Changements</a>).</p>
+<div class="stats"><div class="stat"><b>160 × 200</b><span>matelas, tête au sud</span></div><div class="stat"><b>41</b><span>passage au pied du lit (cm)</span></div><div class="stat"><b>115 / 115</b><span>de chaque côté du lit (cm)</span></div><div class="stat"><b>10,7 m²</b><span>surface de la chambre</span></div></div>
+
+<h2>Plans à l'échelle</h2>
+<div class="switch" role="tablist" aria-label="Variante">
+  <button type="button" role="tab" data-v="A" aria-selected="true"><b>A</b> · Valet dans le placard</button>
+  <button type="button" role="tab" data-v="B" aria-selected="false"><b>B</b> · Patères sur la commode</button>
+</div>
+<div data-panel="A"><div class="fig"><div class="scroll"><svg viewBox="-140 -70 640 370" role="img" aria-label="Plan de la chambre, variante A"><rect x="-130" y="0" width="120" height="160" class="room" />
+<text x="-70" y="90" class="roomt" text-anchor="middle">Couloir</text>
+<rect x="-10" y="-60" width="463" height="48" class="room" />
+<text x="401" y="-40" class="roomt" text-anchor="middle">Salon</text>
+<rect x="0" y="0" width="441" height="251" class="appf"  style="stroke:none"/>
+<rect x="0" y="0" width="441" height="251" class="tile" />
+<rect x="0" y="80" width="47" height="171" class="closet" />
+<text x="21.5" y="190" class="lblx muted" text-anchor="middle" transform="rotate(-90 21.5 190)">Placard existant · 164</text>
+<rect x="0" y="80" width="47" height="7" class="w" />
+<rect x="42" y="80" width="5" height="12" class="w" />
+<rect x="42" y="247" width="5" height="4" class="w" />
+<line x1="44.5" y1="92" x2="44.5" y2="172.5" class="rail"/>
+<line x1="42.5" y1="166.5" x2="42.5" y2="247" class="rail"/>
+<text x="53" y="200" class="lblx muted" text-anchor="middle" transform="rotate(-90 53 200)">porte du placard 155</text>
+<rect x="-10" y="-12" width="463" height="12" class="w" />
+<rect x="-10" y="251" width="463" height="12" class="w" />
+<rect x="-10" y="0" width="10" height="3" class="w" />
+<rect x="-10" y="70" width="10" height="181" class="w" />
+<rect x="441" y="0" width="12" height="90" class="w" />
+<rect x="441" y="232" width="12" height="19" class="w" />
+<rect x="428" y="0" width="13" height="10" class="w" />
+<rect x="441" y="90" width="12" height="142" class="win" />
+<line x1="445" y1="90" x2="445" y2="163" class="wleaf"/>
+<line x1="449" y1="159" x2="449" y2="232" class="wleaf"/>
+<path d="M435 205 L435 175" class="slide" marker-end="url(#ar)"/>
+<text x="463" y="161.0" class="lbls muted" text-anchor="middle" transform="rotate(-90 463 161.0)">fenêtre coulissante 142</text>
+<path d="M0 3 L67 3 A67 67 0 0 1 0 70 Z" class="doorzone"/>
+<path d="M67 3 A67 67 0 0 1 0 70" class="doorarc"/>
+<line x1="0" y1="3" x2="67" y2="3" class="doorleaf"/>
+<text x="-20" y="36.5" class="lblx muted" text-anchor="middle" transform="rotate(-90 -20 36.5)">porte</text>
+<rect x="162" y="41" width="164" height="204" class="bed" rx="3" />
+<rect x="164" y="43" width="160" height="200" class="mat" rx="4" />
+<rect x="166" y="45" width="156" height="128" class="duvet" rx="4" />
+<rect x="172" y="203" width="68" height="34" class="pil" rx="6" />
+<rect x="248" y="203" width="68" height="34" class="pil" rx="6" />
+<rect x="160" y="245" width="168" height="6" class="head" />
+<text x="244.0" y="104" class="lbl" text-anchor="middle"><tspan class="lblb">①</tspan> Lit 160 × 200</text>
+<text x="244.0" y="114" class="lbls" text-anchor="middle">cadre 164 × 204 · tête de lit 168</text>
+<text x="244.0" y="123" class="lbls muted" text-anchor="middle">tête au mur sud</text>
+<rect x="118" y="216" width="40" height="35" class="cab" rx="2" />
+<text x="138.0" y="232" class="lbls" text-anchor="middle"><tspan class="lblb">②</tspan></text>
+<text x="138.0" y="241" class="lblx" text-anchor="middle">40 × 35</text>
+<circle cx="138.0" cy="248" r="2" class="lamp"/>
+<rect x="330" y="216" width="40" height="35" class="cab" rx="2" />
+<text x="350.0" y="232" class="lbls" text-anchor="middle"><tspan class="lblb">②</tspan></text>
+<text x="350.0" y="241" class="lblx" text-anchor="middle">40 × 35</text>
+<circle cx="350.0" cy="248" r="2" class="lamp"/>
+<rect x="401" y="12" width="40" height="85" class="cab" rx="2" />
+<line x1="401" y1="40" x2="441" y2="40" class="app"/>
+<line x1="401" y1="68" x2="441" y2="68" class="app"/>
+<text x="417.0" y="54" class="lblx" text-anchor="middle" transform="rotate(-90 417.0 54)"><tspan class="lblb">③</tspan> 85 × 40</text>
+<rect x="0" y="87" width="42" height="40" class="valet" />
+<line x1="0" y1="127" x2="42" y2="127" class="rail"/>
+<circle cx="9" cy="88.5" r="1.6" class="peg"/>
+<circle cx="21" cy="88.5" r="1.6" class="peg"/>
+<circle cx="33" cy="88.5" r="1.6" class="peg"/>
+<text x="53" y="96" class="lblx valett" text-anchor="start"><tspan class="lblb">④</tspan> Compartiment valet dans le placard</text>
+<text x="53" y="103" class="lblx valett" text-anchor="start">40 cm, cloison, 3 patères h 165 + tablette</text>
+<text x="53" y="110" class="lblx valett" text-anchor="start">vêtements portés</text>
+<circle cx="244.0" cy="146.0" r="5" class="lamp" style="fill-opacity:.25"/>
+<path d="M0 -24 L441 -24" class="dim" marker-start="url(#tk)" marker-end="url(#tk)"/>
+<text x="220.5" y="-26.5" class="dimt" text-anchor="middle">441</text>
+<path d="M47 273 L441 273" class="dim" marker-start="url(#tk)" marker-end="url(#tk)"/>
+<text x="244.0" y="283" class="dimt" text-anchor="middle">394</text>
+<path d="M475 0 L475 251" class="dim" marker-start="url(#tk)" marker-end="url(#tk)"/>
+<text x="472" y="125.5" class="dimt" text-anchor="middle" transform="rotate(-90 472 125.5)">251</text>
+<path d="M-38 80 L-38 251" class="dim" marker-start="url(#tk)" marker-end="url(#tk)"/>
+<text x="-41" y="165.5" class="dimt" text-anchor="middle" transform="rotate(-90 -41 165.5)">171</text>
+<path d="M250 0 L250 41" class="pass"/>
+<circle cx="250" cy="0" r="1.3" class="mf"/>
+<circle cx="250" cy="41" r="1.3" class="mf"/>
+<text x="254" y="24" class="passt" text-anchor="start">41</text>
+<path d="M47 180 L162 180" class="pass"/>
+<circle cx="47" cy="180" r="1.3" class="mf"/>
+<circle cx="162" cy="180" r="1.3" class="mf"/>
+<text x="104.5" y="177" class="passt" text-anchor="middle">115</text>
+<path d="M47 226 L118 226" class="pass"/>
+<circle cx="47" cy="226" r="1.3" class="mf"/>
+<circle cx="118" cy="226" r="1.3" class="mf"/>
+<text x="82.5" y="223" class="passt" text-anchor="middle">71</text>
+<path d="M326 75 L401 75" class="pass"/>
+<circle cx="326" cy="75" r="1.3" class="mf"/>
+<circle cx="401" cy="75" r="1.3" class="mf"/>
+<text x="363.5" y="72" class="passt" text-anchor="middle">75</text>
+<path d="M326 160 L441 160" class="pass"/>
+<circle cx="326" cy="160" r="1.3" class="mf"/>
+<circle cx="441" cy="160" r="1.3" class="mf"/>
+<text x="383.5" y="157" class="passt" text-anchor="middle">115</text>
+<text x="244.0" y="260" class="lblx muted" text-anchor="middle">mur sud</text></svg></div><p class="cap">Variante A. Plan vu de dessus, 1 unité = 1 cm, nord en haut. On entre par le couloir à l'ouest (en haut à gauche) ; le compartiment valet est la première partie du placard, juste à droite en entrant.</p></div></div>
+<div data-panel="B" hidden><div class="fig"><div class="scroll"><svg viewBox="-140 -70 640 370" role="img" aria-label="Plan de la chambre, variante B"><rect x="-130" y="0" width="120" height="160" class="room" />
+<text x="-70" y="90" class="roomt" text-anchor="middle">Couloir</text>
+<rect x="-10" y="-60" width="463" height="48" class="room" />
+<text x="401" y="-40" class="roomt" text-anchor="middle">Salon</text>
+<rect x="0" y="0" width="441" height="251" class="appf"  style="stroke:none"/>
+<rect x="0" y="0" width="441" height="251" class="tile" />
+<rect x="0" y="80" width="47" height="171" class="closet" />
+<text x="21.5" y="190" class="lblx muted" text-anchor="middle" transform="rotate(-90 21.5 190)">Placard existant · 164</text>
+<rect x="0" y="80" width="47" height="7" class="w" />
+<rect x="42" y="80" width="5" height="12" class="w" />
+<rect x="42" y="247" width="5" height="4" class="w" />
+<line x1="44.5" y1="92" x2="44.5" y2="172.5" class="rail"/>
+<line x1="42.5" y1="166.5" x2="42.5" y2="247" class="rail"/>
+<text x="53" y="200" class="lblx muted" text-anchor="middle" transform="rotate(-90 53 200)">porte du placard 155</text>
+<rect x="-10" y="-12" width="463" height="12" class="w" />
+<rect x="-10" y="251" width="463" height="12" class="w" />
+<rect x="-10" y="0" width="10" height="3" class="w" />
+<rect x="-10" y="70" width="10" height="181" class="w" />
+<rect x="441" y="0" width="12" height="90" class="w" />
+<rect x="441" y="232" width="12" height="19" class="w" />
+<rect x="428" y="0" width="13" height="10" class="w" />
+<rect x="441" y="90" width="12" height="142" class="win" />
+<line x1="445" y1="90" x2="445" y2="163" class="wleaf"/>
+<line x1="449" y1="159" x2="449" y2="232" class="wleaf"/>
+<path d="M435 205 L435 175" class="slide" marker-end="url(#ar)"/>
+<text x="463" y="161.0" class="lbls muted" text-anchor="middle" transform="rotate(-90 463 161.0)">fenêtre coulissante 142</text>
+<path d="M0 3 L67 3 A67 67 0 0 1 0 70 Z" class="doorzone"/>
+<path d="M67 3 A67 67 0 0 1 0 70" class="doorarc"/>
+<line x1="0" y1="3" x2="67" y2="3" class="doorleaf"/>
+<text x="-20" y="36.5" class="lblx muted" text-anchor="middle" transform="rotate(-90 -20 36.5)">porte</text>
+<rect x="162" y="41" width="164" height="204" class="bed" rx="3" />
+<rect x="164" y="43" width="160" height="200" class="mat" rx="4" />
+<rect x="166" y="45" width="156" height="128" class="duvet" rx="4" />
+<rect x="172" y="203" width="68" height="34" class="pil" rx="6" />
+<rect x="248" y="203" width="68" height="34" class="pil" rx="6" />
+<rect x="160" y="245" width="168" height="6" class="head" />
+<text x="244.0" y="104" class="lbl" text-anchor="middle"><tspan class="lblb">①</tspan> Lit 160 × 200</text>
+<text x="244.0" y="114" class="lbls" text-anchor="middle">cadre 164 × 204 · tête de lit 168</text>
+<text x="244.0" y="123" class="lbls muted" text-anchor="middle">tête au mur sud</text>
+<rect x="118" y="216" width="40" height="35" class="cab" rx="2" />
+<text x="138.0" y="232" class="lbls" text-anchor="middle"><tspan class="lblb">②</tspan></text>
+<text x="138.0" y="241" class="lblx" text-anchor="middle">40 × 35</text>
+<circle cx="138.0" cy="248" r="2" class="lamp"/>
+<rect x="330" y="216" width="40" height="35" class="cab" rx="2" />
+<text x="350.0" y="232" class="lbls" text-anchor="middle"><tspan class="lblb">②</tspan></text>
+<text x="350.0" y="241" class="lblx" text-anchor="middle">40 × 35</text>
+<circle cx="350.0" cy="248" r="2" class="lamp"/>
+<rect x="401" y="12" width="40" height="85" class="cab" rx="2" />
+<line x1="401" y1="40" x2="441" y2="40" class="app"/>
+<line x1="401" y1="68" x2="441" y2="68" class="app"/>
+<text x="417.0" y="54" class="lblx" text-anchor="middle" transform="rotate(-90 417.0 54)"><tspan class="lblb">③</tspan> 85 × 40</text>
+<rect x="411" y="16" width="30" height="76" class="valet" />
+<circle cx="439.5" cy="24" r="1.6" class="peg"/>
+<circle cx="439.5" cy="39" r="1.6" class="peg"/>
+<circle cx="439.5" cy="54" r="1.6" class="peg"/>
+<circle cx="439.5" cy="69" r="1.6" class="peg"/>
+<circle cx="439.5" cy="84" r="1.6" class="peg"/>
+<text x="397" y="30" class="lblx valett" text-anchor="end"><tspan class="lblb">④</tspan> 5 patères h 165</text>
+<text x="397" y="37" class="lblx valett" text-anchor="end">au-dessus de la commode</text>
+<text x="397" y="44" class="lblx valett" text-anchor="end">vêtements portés</text>
+<circle cx="244.0" cy="146.0" r="5" class="lamp" style="fill-opacity:.25"/>
+<path d="M0 -24 L441 -24" class="dim" marker-start="url(#tk)" marker-end="url(#tk)"/>
+<text x="220.5" y="-26.5" class="dimt" text-anchor="middle">441</text>
+<path d="M47 273 L441 273" class="dim" marker-start="url(#tk)" marker-end="url(#tk)"/>
+<text x="244.0" y="283" class="dimt" text-anchor="middle">394</text>
+<path d="M475 0 L475 251" class="dim" marker-start="url(#tk)" marker-end="url(#tk)"/>
+<text x="472" y="125.5" class="dimt" text-anchor="middle" transform="rotate(-90 472 125.5)">251</text>
+<path d="M-38 80 L-38 251" class="dim" marker-start="url(#tk)" marker-end="url(#tk)"/>
+<text x="-41" y="165.5" class="dimt" text-anchor="middle" transform="rotate(-90 -41 165.5)">171</text>
+<path d="M250 0 L250 41" class="pass"/>
+<circle cx="250" cy="0" r="1.3" class="mf"/>
+<circle cx="250" cy="41" r="1.3" class="mf"/>
+<text x="254" y="24" class="passt" text-anchor="start">41</text>
+<path d="M47 180 L162 180" class="pass"/>
+<circle cx="47" cy="180" r="1.3" class="mf"/>
+<circle cx="162" cy="180" r="1.3" class="mf"/>
+<text x="104.5" y="177" class="passt" text-anchor="middle">115</text>
+<path d="M47 226 L118 226" class="pass"/>
+<circle cx="47" cy="226" r="1.3" class="mf"/>
+<circle cx="118" cy="226" r="1.3" class="mf"/>
+<text x="82.5" y="223" class="passt" text-anchor="middle">71</text>
+<path d="M326 75 L401 75" class="pass"/>
+<circle cx="326" cy="75" r="1.3" class="mf"/>
+<circle cx="401" cy="75" r="1.3" class="mf"/>
+<text x="363.5" y="72" class="passt" text-anchor="middle">75</text>
+<path d="M326 160 L441 160" class="pass"/>
+<circle cx="326" cy="160" r="1.3" class="mf"/>
+<circle cx="441" cy="160" r="1.3" class="mf"/>
+<text x="383.5" y="157" class="passt" text-anchor="middle">115</text>
+<text x="244.0" y="260" class="lblx muted" text-anchor="middle">mur sud</text></svg></div><p class="cap">Variante B. Plan vu de dessus, 1 unité = 1 cm, nord en haut. Les vêtements portés sont pendus au mur est, au-dessus de la commode, entre le décroché et la fenêtre.</p></div></div>
+<div class="legend"><span><svg viewBox="0 0 26 14"><rect x="0" y="0" width="26" height="14" class="bed"/></svg>Lit</span><span><svg viewBox="0 0 26 14"><rect x="0" y="0" width="26" height="14" class="head"/></svg>Tête de lit</span><span><svg viewBox="0 0 26 14"><rect x="0" y="0" width="26" height="14" class="cab"/></svg>Chevets, commode</span><span><svg viewBox="0 0 26 14"><rect x="0" y="0" width="26" height="14" class="valet"/></svg>Vêtements portés</span><span><svg viewBox="0 0 26 14"><rect x="0" y="0" width="26" height="14" class="closet"/></svg>Placard existant</span><span><svg viewBox="0 0 26 14"><rect x="0" y="0" width="26" height="14" class="doorzone"/></svg>Débattement de porte</span><span><svg viewBox="0 0 26 14"><path d="M2 7 L24 7" class="pass"/></svg>Passage (cm)</span></div>
+
+<h2>Élévations</h2>
+<div class="fig"><div class="scroll"><svg viewBox="-45 -22 520 290" role="img" aria-label="Élévation du mur sud, tête de lit"><line x1="-12" y1="250" x2="453" y2="250" class="floorl"/>
+<line x1="-12" y1="0" x2="453" y2="0" class="el-ceil"/>
+<text x="2" y="-3" class="lblx muted" text-anchor="start">plafond 250</text>
+<rect x="-12" y="0" width="12" height="250" class="w" />
+<rect x="441" y="0" width="10" height="250" class="w" />
+<rect x="394" y="0" width="47" height="250" class="closet" />
+<rect x="394" y="0" width="5" height="250" class="wcut" />
+<text x="417.5" y="120" class="lblx muted" text-anchor="middle" transform="rotate(-90 417.5 120)">placard existant (coupe)</text>
+<rect x="113" y="140" width="168" height="110" class="head" rx="2" />
+<rect x="115" y="220" width="164" height="26" class="bed" rx="2" />
+<rect x="272" y="246" width="4" height="4" class="dark" />
+<rect x="118" y="246" width="4" height="4" class="dark" />
+<rect x="117" y="198" width="160" height="22" class="mat" rx="3" />
+<rect x="125" y="180" width="68" height="18" class="pil" rx="6" />
+<rect x="201" y="180" width="68" height="18" class="pil" rx="6" />
+<text x="197.0" y="170" class="lbls" text-anchor="middle"><tspan class="lblb">①</tspan> Tête de lit h 110</text>
+<text x="197.0" y="212" class="lblx muted" text-anchor="middle">matelas h 52</text>
+<rect x="283" y="200" width="40" height="50" class="cab" rx="1.5" />
+<line x1="283" y1="215" x2="323" y2="215" class="app"/>
+<text x="303.0" y="230" class="lblx" text-anchor="middle"><tspan class="lblb">②</tspan> h 50</text>
+<rect x="299.0" y="122" width="8" height="8" class="lamp" />
+<line x1="303.0" y1="130" x2="303.0" y2="140" class="app"/>
+<text x="303.0" y="118" class="lblx muted" text-anchor="middle">applique h 125</text>
+<rect x="298.0" y="178" width="10" height="4" class="plug" />
+<text x="303.0" y="173" class="lblx muted" text-anchor="middle">prises h 70</text>
+<rect x="71" y="200" width="40" height="50" class="cab" rx="1.5" />
+<line x1="71" y1="215" x2="111" y2="215" class="app"/>
+<text x="91.0" y="230" class="lblx" text-anchor="middle"><tspan class="lblb">②</tspan> h 50</text>
+<rect x="87.0" y="122" width="8" height="8" class="lamp" />
+<line x1="91.0" y1="130" x2="91.0" y2="140" class="app"/>
+<text x="91.0" y="118" class="lblx muted" text-anchor="middle">applique h 125</text>
+<rect x="86.0" y="178" width="10" height="4" class="plug" />
+<text x="91.0" y="173" class="lblx muted" text-anchor="middle">prises h 70</text>
+<path d="M113 -8 L281 -8" class="dim" marker-start="url(#tk)" marker-end="url(#tk)"/>
+<text x="197.0" y="-10" class="dimt" text-anchor="middle">168</text>
+<path d="M-30 140 L-30 250" class="dim" marker-start="url(#tk)" marker-end="url(#tk)"/>
+<text x="-33" y="195.0" class="dimt" text-anchor="middle" transform="rotate(-90 -33 195.0)">110</text></svg></div><p class="cap">Mur sud, vu depuis le pied du lit, identique dans les deux variantes : l'est (la fenêtre) est à gauche, le placard à droite.</p></div>
+<div data-panel="A"><div class="gridv">
+<div class="fig"><div class="scroll"><svg class="small" viewBox="-35 -22 320 290" role="img" aria-label="Variante A, élévation du mur est, fenêtre"><line x1="-12" y1="250" x2="263" y2="250" class="floorl"/>
+<line x1="-12" y1="0" x2="263" y2="0" class="el-ceil"/>
+<text x="2" y="-3" class="lblx muted" text-anchor="start">plafond 250</text>
+<rect x="-12" y="0" width="12" height="250" class="w" />
+<rect x="251" y="0" width="12" height="250" class="w" />
+<rect x="0" y="0" width="10" height="250" class="bgwall" />
+<rect x="90" y="35" width="142" height="109" class="win" />
+<rect x="93" y="38" width="67" height="103" class="app" />
+<rect x="162" y="38" width="67" height="103" class="app" />
+<path d="M218 90 L173 90" class="slide" marker-end="url(#ar)"/>
+<text x="126.5" y="87" class="lblx muted" text-anchor="middle">fixe</text>
+<text x="195.5" y="98" class="lblx muted" text-anchor="middle">coulisse vers le nord</text>
+<text x="161.0" y="31" class="lblx muted" text-anchor="middle">fenêtre coulissante 142 · allège 106 · linteau 215</text>
+<rect x="12" y="165" width="85" height="85" class="cab" rx="1.5" />
+<line x1="12" y1="192" x2="97" y2="192" class="app"/>
+<line x1="12" y1="219" x2="97" y2="219" class="app"/>
+<rect x="48.5" y="178" width="12" height="2" class="dark" />
+<rect x="48.5" y="205" width="12" height="2" class="dark" />
+<rect x="48.5" y="232" width="12" height="2" class="dark" />
+<text x="54.5" y="158" class="lblx" text-anchor="middle"><tspan class="lblb">③</tspan> Commode h 85</text>
+<rect x="216" y="200" width="35" height="50" class="hid" />
+<rect x="245" y="140" width="6" height="110" class="head" />
+<rect x="41" y="220" width="204" height="26" class="bed" rx="2" />
+<rect x="43" y="198" width="200" height="22" class="mat" rx="3" />
+<rect x="205" y="184" width="36" height="14" class="pil" rx="5" />
+<text x="143.0" y="212" class="lblx" text-anchor="middle"><tspan class="lblb">①</tspan> Lit (profil) · 41 au pied</text>
+<path d="M0 -10 L90 -10" class="dim" marker-start="url(#tk)" marker-end="url(#tk)"/>
+<text x="45.0" y="-12" class="dimt" text-anchor="middle">90</text>
+<path d="M90 -10 L232 -10" class="dim" marker-start="url(#tk)" marker-end="url(#tk)"/>
+<text x="161.0" y="-12" class="dimt" text-anchor="middle">142</text>
+<path d="M232 -10 L251 -10" class="dim" marker-start="url(#tk)" marker-end="url(#tk)"/>
+<text x="241.5" y="-12" class="dimt" text-anchor="middle">19</text>
+<text x="4" y="262" class="lblx muted" text-anchor="start">nord</text>
+<text x="247" y="262" class="lblx muted" text-anchor="end">sud</text></svg></div><p class="cap">Variante A. Mur est, vu depuis le placard : la commode au nord, la fenêtre coulissante, le lit de profil (le chevet est caché derrière).</p></div>
+<div class="fig"><div class="scroll"><svg class="small" viewBox="-35 -22 320 290" role="img" aria-label="Variante A, élévation du mur ouest, placard et porte"><line x1="-12" y1="250" x2="263" y2="250" class="floorl"/>
+<line x1="-12" y1="0" x2="263" y2="0" class="el-ceil"/>
+<text x="2" y="-3" class="lblx muted" text-anchor="start">plafond 250</text>
+<rect x="-12" y="0" width="12" height="250" class="w" />
+<rect x="251" y="0" width="12" height="250" class="w" />
+<rect x="0" y="0" width="171" height="250" class="bgwall" />
+<rect x="4" y="46" width="155" height="204" class="closet" />
+<line x1="81.5" y1="46" x2="81.5" y2="250" class="app"/>
+<text x="81.5" y="42" class="lblx muted" text-anchor="middle">placard existant · porte 155</text>
+<rect x="181" y="46" width="67" height="204" class="appf" />
+<circle cx="187" cy="145" r="2" class="dark"/>
+<text x="214.5" y="42" class="lblx muted" text-anchor="middle">porte du couloir</text>
+<rect x="124" y="50" width="40" height="200" class="valet" />
+<line x1="124" y1="50" x2="124" y2="250" class="inner"/>
+<line x1="124" y1="185" x2="164" y2="185" class="app"/>
+<rect x="130" y="173" width="28" height="12" class="cloth" rx="2" />
+<text x="144.0" y="192" class="lblx valett" text-anchor="middle">tablette h 65</text>
+<rect x="126" y="87" width="10" height="55" class="cloth" rx="3" />
+<circle cx="131" cy="85" r="1.8" class="peg"/>
+<rect x="139" y="87" width="10" height="55" class="cloth" rx="3" />
+<circle cx="144" cy="85" r="1.8" class="peg"/>
+<rect x="152" y="87" width="10" height="55" class="cloth" rx="3" />
+<circle cx="157" cy="85" r="1.8" class="peg"/>
+<text x="144.0" y="58" class="lblx valett" text-anchor="middle"><tspan class="lblb">④</tspan> compartiment valet</text>
+<text x="144.0" y="150" class="lblx valett" text-anchor="middle">derrière la porte</text>
+<text x="144.0" y="34" class="lblx" text-anchor="middle"></text>
+<rect x="0" y="140" width="6" height="110" class="ghost" />
+<rect x="6" y="198" width="204" height="52" class="ghost" />
+<rect x="0" y="200" width="35" height="50" class="ghost" />
+<text x="108.0" y="220" class="lblx muted" text-anchor="middle">lit et chevet au premier plan</text>
+<text x="4" y="262" class="lblx muted" text-anchor="start">sud</text>
+<text x="247" y="262" class="lblx muted" text-anchor="end">nord</text></svg></div><p class="cap">Variante A. Mur ouest, vu depuis la fenêtre : le placard existant à gauche, avec le compartiment valet derrière l'extrémité nord de sa porte, puis la porte du couloir à droite. Le lit et le chevet, au premier plan, sont en pointillés.</p></div>
+</div></div>
+<div data-panel="B" hidden><div class="gridv">
+<div class="fig"><div class="scroll"><svg class="small" viewBox="-35 -22 320 290" role="img" aria-label="Variante B, élévation du mur est, fenêtre"><line x1="-12" y1="250" x2="263" y2="250" class="floorl"/>
+<line x1="-12" y1="0" x2="263" y2="0" class="el-ceil"/>
+<text x="2" y="-3" class="lblx muted" text-anchor="start">plafond 250</text>
+<rect x="-12" y="0" width="12" height="250" class="w" />
+<rect x="251" y="0" width="12" height="250" class="w" />
+<rect x="0" y="0" width="10" height="250" class="bgwall" />
+<rect x="90" y="35" width="142" height="109" class="win" />
+<rect x="93" y="38" width="67" height="103" class="app" />
+<rect x="162" y="38" width="67" height="103" class="app" />
+<path d="M218 90 L173 90" class="slide" marker-end="url(#ar)"/>
+<text x="126.5" y="87" class="lblx muted" text-anchor="middle">fixe</text>
+<text x="195.5" y="98" class="lblx muted" text-anchor="middle">coulisse vers le nord</text>
+<text x="161.0" y="31" class="lblx muted" text-anchor="middle">fenêtre coulissante 142 · allège 106 · linteau 215</text>
+<rect x="12" y="165" width="85" height="85" class="cab" rx="1.5" />
+<line x1="12" y1="192" x2="97" y2="192" class="app"/>
+<line x1="12" y1="219" x2="97" y2="219" class="app"/>
+<rect x="48.5" y="178" width="12" height="2" class="dark" />
+<rect x="48.5" y="205" width="12" height="2" class="dark" />
+<rect x="48.5" y="232" width="12" height="2" class="dark" />
+<text x="54.5" y="158" class="lblx" text-anchor="middle"><tspan class="lblb">③</tspan> Commode h 85</text>
+<rect x="18" y="87" width="12" height="55" class="cloth" rx="3" />
+<rect x="33" y="87" width="12" height="55" class="cloth" rx="3" />
+<rect x="48" y="87" width="12" height="55" class="cloth" rx="3" />
+<rect x="63" y="87" width="12" height="55" class="cloth" rx="3" />
+<rect x="78" y="87" width="12" height="55" class="cloth" rx="3" />
+<line x1="18" y1="85" x2="90" y2="85" class="rail"/>
+<circle cx="24" cy="85" r="1.8" class="peg"/>
+<circle cx="39" cy="85" r="1.8" class="peg"/>
+<circle cx="54" cy="85" r="1.8" class="peg"/>
+<circle cx="69" cy="85" r="1.8" class="peg"/>
+<circle cx="84" cy="85" r="1.8" class="peg"/>
+<text x="54.0" y="80" class="lblx valett" text-anchor="middle"><tspan class="lblb">④</tspan> 5 patères h 165</text>
+<rect x="216" y="200" width="35" height="50" class="hid" />
+<rect x="245" y="140" width="6" height="110" class="head" />
+<rect x="41" y="220" width="204" height="26" class="bed" rx="2" />
+<rect x="43" y="198" width="200" height="22" class="mat" rx="3" />
+<rect x="205" y="184" width="36" height="14" class="pil" rx="5" />
+<text x="143.0" y="212" class="lblx" text-anchor="middle"><tspan class="lblb">①</tspan> Lit (profil) · 41 au pied</text>
+<path d="M0 -10 L90 -10" class="dim" marker-start="url(#tk)" marker-end="url(#tk)"/>
+<text x="45.0" y="-12" class="dimt" text-anchor="middle">90</text>
+<path d="M90 -10 L232 -10" class="dim" marker-start="url(#tk)" marker-end="url(#tk)"/>
+<text x="161.0" y="-12" class="dimt" text-anchor="middle">142</text>
+<path d="M232 -10 L251 -10" class="dim" marker-start="url(#tk)" marker-end="url(#tk)"/>
+<text x="241.5" y="-12" class="dimt" text-anchor="middle">19</text>
+<text x="4" y="262" class="lblx muted" text-anchor="start">nord</text>
+<text x="247" y="262" class="lblx muted" text-anchor="end">sud</text></svg></div><p class="cap">Variante B. Mur est, vu depuis le placard : cinq patères à 165 au-dessus de la commode, la fenêtre coulissante, le lit de profil.</p></div>
+<div class="fig"><div class="scroll"><svg class="small" viewBox="-35 -22 320 290" role="img" aria-label="Variante B, élévation du mur ouest, placard et porte"><line x1="-12" y1="250" x2="263" y2="250" class="floorl"/>
+<line x1="-12" y1="0" x2="263" y2="0" class="el-ceil"/>
+<text x="2" y="-3" class="lblx muted" text-anchor="start">plafond 250</text>
+<rect x="-12" y="0" width="12" height="250" class="w" />
+<rect x="251" y="0" width="12" height="250" class="w" />
+<rect x="0" y="0" width="171" height="250" class="bgwall" />
+<rect x="4" y="46" width="155" height="204" class="closet" />
+<line x1="81.5" y1="46" x2="81.5" y2="250" class="app"/>
+<text x="81.5" y="42" class="lblx muted" text-anchor="middle">placard existant · porte 155</text>
+<rect x="181" y="46" width="67" height="204" class="appf" />
+<circle cx="187" cy="145" r="2" class="dark"/>
+<text x="214.5" y="42" class="lblx muted" text-anchor="middle">porte du couloir</text>
+<rect x="0" y="140" width="6" height="110" class="ghost" />
+<rect x="6" y="198" width="204" height="52" class="ghost" />
+<rect x="0" y="200" width="35" height="50" class="ghost" />
+<text x="108.0" y="220" class="lblx muted" text-anchor="middle">lit et chevet au premier plan</text>
+<text x="4" y="262" class="lblx muted" text-anchor="start">sud</text>
+<text x="247" y="262" class="lblx muted" text-anchor="end">nord</text></svg></div><p class="cap">Variante B. Mur ouest, vu depuis la fenêtre : le placard existant à gauche, la porte du couloir à droite. Le lit et le chevet, au premier plan, sont en pointillés.</p></div>
+</div></div>
+
+<h2>Principe</h2>
+<div class="grid2">
+<div class="card"><h3>① Lit 160, tête au sud</h3><p>Matelas 160 × 200 sur un cadre de 164 × 204, tête de lit de 168 × 6, h 110. Le lit est centré sur la partie de la pièce qui va du placard (x 47) au mur est : 115 cm de chaque côté. Il ne passe devant ni la porte, ni la fenêtre, ni l'ouverture du placard.</p></div>
+<div class="card"><h3>② Chevets</h3><p>Deux chevets de 40 × 35, h 50, à 2 cm de la tête de lit. Le chevet ouest laisse 71 cm devant le placard. La fenêtre est coulissante, comme celle de la cuisine : aucun battant ne vient sur le chevet est. Une applique au-dessus de chacun, à 125 cm, et deux prises à 70 cm.</p></div>
+<div class="card"><h3>③ Commode</h3><p>85 × 40, h 85, contre le mur est, de la sortie du décroché (y 12) jusqu'à y 97. Elle dépasse de 7 cm devant la fenêtre, mais reste sous l'allège de 106. Elle laisse 75 cm le long du lit. Le placard existant (0,9 m²) reste la penderie des vêtements propres.</p></div>
+<div class="card"><h3>④ A · Valet dans le placard</h3><p>La porte du placard (155) couvre presque toute sa longueur (164) : il n'y a pas de pan de mur libre à côté. On consacre donc aux vêtements portés les 40 premiers centimètres du placard, côté nord : une cloison les sépare des vêtements propres, avec trois patères à 165 sur la cloison du fond et une tablette à 65 pour ce qui se plie. C'est juste à droite en entrant, et rien ne s'ajoute dans la chambre. Il reste environ 120 cm de penderie. Pour que ça s'aère, une porte ajourée ou à lames, ou au moins une grille en haut de ce compartiment.</p></div>
+<div class="card"><h3>④ B · Patères sur la commode</h3><p>Cinq patères à 165 sur le mur est, au-dessus de la commode, entre le décroché et la fenêtre (y 24 → 84). Les vêtements pendent au-dessus du plateau ; on peut poser un panier sur la commode pour ce qui se plie. Rien ne s'ajoute au sol. En revanche, c'est au fond de la chambre, et le dessus de la commode devient moins utilisable.</p></div>
+<div class="card"><h3>Circulation</h3><p>La porte s'ouvre dans l'angle nord-ouest et ne touche rien. On longe le pied du lit (41 cm) pour rejoindre le côté est, puis 115 cm de chaque côté. Le côté ouest dessert aussi le placard, et donc en A le compartiment valet.</p></div>
+</div>
+
+<h2 id="verifier">Points à vérifier</h2>
+<div class="hyp"><ul>
+<li><b>Passage au pied du lit : 41 cm.</b> On recommande 60 à 70 cm. C'est la conséquence de la profondeur de la pièce (251) avec un lit de 210 hors tout tête au sud. Pour gagner de la place : un cadre sans pied de lit ni débord (lit plateforme 160 × 200 hors tout ≈ 204 → 47), une tête de lit fixée au mur plutôt que solidaire du lit, ou un matelas 160 × 190 (≈ 51 à 57).</li>
+<li><b>Placard</b> : 164 de long, porte de 155 (relevé du client). La profondeur retenue (47 au nu de la cloison) vient de 441 − 393,7 ; la cote 50,3 du relevé est à confirmer. Le type de porte (coulissante, pliante) décide de la partie accessible en premier : en A, il faut pouvoir ouvrir l'extrémité nord sans tout déplacer.</li>
+<li><b>Porte du couloir</b> : paumelles au nord, ouverture en poussant vers le mur nord, d'après le relevé. Si elle ouvrait vers le sud, elle buterait sur le placard.</li>
+<li><b>Décroché nord-est</b> : 13 le long du mur nord, 10 le long du mur est, d'après le relevé. Si c'est l'inverse, la commode commence à y 15 au lieu de 12.</li>
+<li><b>Électricité et chauffage</b> : position des prises, de l'interrupteur et d'un radiateur non relevée. Il faut deux prises et une commande d'éclairage de chaque côté du lit (h 70), et le radiateur, s'il est sous la fenêtre, ne doit pas être masqué par la commode.</li>
+</ul></div>
+<script>
+(function(){
+  var bs=document.querySelectorAll('.switch button');
+  function show(v){
+    bs.forEach(function(b){b.setAttribute('aria-selected',b.getAttribute('data-v')===v?'true':'false')});
+    document.querySelectorAll('[data-panel]').forEach(function(p){p.hidden=p.getAttribute('data-panel')!==v});
+    try{localStorage.setItem('chambre-var',v)}catch(e){}
+  }
+  bs.forEach(function(b){b.addEventListener('click',function(){show(b.getAttribute('data-v'))})});
+  var v=null;try{v=localStorage.getItem('chambre-var')}catch(e){}
+  if(/^#[AB]$/.test(location.hash))v=location.hash.slice(1);
+  if(v==='B')show(v);
+})();
+</script>
+
+<section id="changements">
+<h2>Changements</h2>
+<div class="scroll-t"><table>
+<thead><tr><th>Version</th><th>Date</th><th>Changements</th></tr></thead>
+<tbody><tr><td><b>V1.2</b></td><td>04/10/2026</td><td>Correction du placard (relevé du client) : 164 de long, porte de 155 ; il n'y a donc pas de pan de mur libre à côté de la porte. La variante A devient un compartiment valet de 40 cm au nord du placard, avec cloison, 3 patères à 165 et une tablette, à la place du banc et des patères sur le mur.</td></tr><tr><td><b>V1.1</b></td><td>04/10/2026</td><td>Fenêtre comme celle de la cuisine : coulissante, sans battant (vantail fixe au nord, mobile au sud qui glisse vers le nord), allège 106, linteau 215. Décroché de 13 × 10 dans l'angle nord-est : la commode descend à y 12 → 97, sous l'allège. Ajout d'un coin pour les vêtements portés, en deux variantes : A, valet à l'entrée (banc 40 × 35 et 3 patères sur le trumeau du placard) ; B, 5 patères au-dessus de la commode. Bouton A/B sur le plan et les élévations est et ouest.</td></tr><tr><td><b>V1</b></td><td>04/10/2026</td><td>Première proposition à partir du relevé : lit 160 × 200 tête au mur sud, centré entre le placard et le mur est (115 cm de chaque côté, 41 au pied), deux chevets 40 × 35, commode 85 × 40 au mur est au nord de la fenêtre. Plan et trois élévations (sud, est, ouest).</td></tr></tbody>
+</table></div>
+</section>
+</div>
+</body>
+</html>
