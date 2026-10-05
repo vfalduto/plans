@@ -63,13 +63,13 @@ code{font-family:"JetBrains Mono",ui-monospace,Menlo,monospace;font-size:13px}
 <header class="ph"><a href="index.html" aria-label="Retour aux plans">← Plans</a><span>Rendus 3D cuisine</span></header>
 <!-- /page-header -->
 <main>
-  <div class="kicker">Variante A · V1 · FreeCAD + Blender</div>
+  <div class="kicker">Variante A · V1.1 · FreeCAD + Blender</div>
   <h1>Rendus 3D cuisine</h1>
-  <p class="lead">Modèle 3D construit dans FreeCAD à partir des cotes du plan et des coupes (variante A, table carrée 70 × 70), rendu dans Blender (Cycles). Meubles bas et hauts bleus, meubles toute hauteur en noyer, poignées profilées toute longueur dans la teinte de la façade, plan terrazzo gris clair, crédence zellige ivoire, parquet bâtons rompus.</p>
+  <p class="lead">Modèle 3D construit dans FreeCAD à partir des cotes du plan et des coupes (variante A, table carrée 70 × 70), rendu dans Blender (Cycles). Meubles bas et hauts sauge, meubles toute hauteur en noyer, poignées profilées toute longueur dans la teinte de la façade, plan terrazzo gris clair, crédence zellige ivoire, parquet bâtons rompus.</p>
   <div class="seg" role="group" aria-label="Décoration"><button type="button" data-deco="1" aria-pressed="true">Avec déco</button><button type="button" data-deco="0" aria-pressed="false">Sans déco</button></div>
 
   <section class="view">
-    <div class="head"><div><h2>Depuis l'entrée, vers le nord-ouest</h2><p class="sub">Rangée nord bleue, étagères ouvertes, fenêtre coulissante, coin repas.</p></div></div>
+    <div class="head"><div><h2>Depuis l'entrée, vers le nord-ouest</h2><p class="sub">Rangée nord sauge, étagères ouvertes, fenêtre coulissante, coin repas.</p></div></div>
     <a class="stage" href="cuisine-3d/rendu-entree-deco.jpg" target="_blank" data-v="entree"><img class="main r3d" src="cuisine-3d/rendu-entree-deco.jpg" data-v="entree" alt="Rendu 3D, depuis l'entrée, vers le nord-ouest" loading="lazy"></a>
   </section>
 
@@ -84,6 +84,11 @@ code{font-family:"JetBrains Mono",ui-monospace,Menlo,monospace;font-size:13px}
   </section>
 
   <section class="view">
+    <div class="head"><div><h2>Assis à table</h2><p class="sub">Sur la chaise côté four, regard vers la fenêtre et la rangée nord.</p></div></div>
+    <a class="stage" href="cuisine-3d/rendu-assis-deco.jpg" target="_blank" data-v="assis"><img class="main r3d" src="cuisine-3d/rendu-assis-deco.jpg" data-v="assis" alt="Rendu 3D, assis à table" loading="lazy"></a>
+  </section>
+
+  <section class="view">
     <div class="head"><div><h2>Vue plongeante</h2><p class="sub">Plafond retiré : l'ensemble cuisine et cellier.</p></div></div>
     <a class="stage" href="cuisine-3d/rendu-plongee-deco.jpg" target="_blank" data-v="plongee"><img class="main r3d" src="cuisine-3d/rendu-plongee-deco.jpg" data-v="plongee" alt="Rendu 3D, vue plongeante" loading="lazy"></a>
   </section>
@@ -91,7 +96,8 @@ code{font-family:"JetBrains Mono",ui-monospace,Menlo,monospace;font-size:13px}
   <section class="view">
     <h2>À savoir</h2>
     <ul class="facts">
-      <li>Le bleu est provisoire : pétrole fumé #2F5557 du nuancier, en attendant la référence du « bleu canopé ».</li>
+      <li>Teinte des meubles bas et hauts : sauge #8D9B80, celle des <a href="cuisine-rendus.html">rendus Gemini</a>.</li>
+      <li>Vues prises à hauteur d'yeux d'une personne de 1,75 m : 1,63 m debout, 1,20 m assise ; la vue plongeante fait exception.</li>
       <li>Les cotes sont recopiées du plan à la main : une modification de <a href="cuisine-plan.html">cuisine-plan.html</a> ne passe pas encore dans la 3D.</li>
       <li>Textures CC0 : noyer et parquet de Poly Haven, terrazzo d'ambientCG. La décoration est indicative.</li>
       <li>Scripts : <code>3d/cuisine_a.py</code> (FreeCAD), <code>3d/rendu.py</code> (Blender), <code>3d/textures.py</code> ; regénérer avec <code>just rendu-3d</code>.</li>
@@ -103,6 +109,7 @@ code{font-family:"JetBrains Mono",ui-monospace,Menlo,monospace;font-size:13px}
     <table>
       <thead><tr><th>Version</th><th>Date</th><th>Changements</th></tr></thead>
       <tbody>
+        <tr><td><b>V1.1</b></td><td>05/10/2026</td><td>Meubles bas et hauts en sauge #8D9B80 (couleur des rendus Gemini) ; caméras à hauteur d'yeux (1,63 m debout) avec verticales droites ; nouvelle vue assise à table (1,20 m) ; vase et corbeille de fruits déplacés sur la table.</td></tr>
         <tr><td><b>V1</b></td><td>05/10/2026</td><td>Premiers rendus 3D de la variante A : 4 vues (entrée, fenêtre, cellier, plongée), avec et sans décoration.</td></tr>
       </tbody>
     </table>

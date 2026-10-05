@@ -4,11 +4,12 @@
 # Lancement (sans interface) :
 #   /Applications/Blender.app/Contents/MacOS/Blender -b --python 3d/rendu.py -- [échantillons] [sans|deco] [vue ...]
 #   ex. : ... -- 32 deco cellier   (aperçu rapide d'une vue, avec décoration)
+#         ... -- aucune            (régénère seulement les .blend, sans rendu)
 # Sans précision : 128 échantillons, les deux versions, toutes les vues.
 #
 # Produit dans 3d/sortie/ : rendu-<vue>.png (sans déco), rendu-<vue>-deco.png (avec),
 # cuisine-a.blend et cuisine-a-deco.blend (à ouvrir pour changer de point de vue).
-# Matériaux : d'après le préfixe du nom de l'objet (« facade_bleu__… » → MATS["facade_bleu"]).
+# Matériaux : d'après le préfixe du nom de l'objet (« facade_couleur__… » → MATS["facade_couleur"]).
 
 import math
 import os
@@ -23,9 +24,9 @@ TEX = os.path.join(HERE, "textures")
 args = sys.argv[sys.argv.index("--") + 1:] if "--" in sys.argv else []
 SAMPLES = next((int(a) for a in args if a.isdigit()), 128)
 VERSIONS = [a for a in args if a in ("sans", "deco")] or ["sans", "deco"]
-VUES = [a for a in args if not a.isdigit() and a not in ("sans", "deco")] or ["entree", "fenetre", "cellier", "plongee"]
+VUES = [a for a in args if not a.isdigit() and a not in ("sans", "deco")] or ["entree", "fenetre", "cellier", "assis", "plongee"]
 
-BLEU = "#2F5557"   # pétrole fumé du nuancier, en attendant la référence exacte du « bleu canopé »
+COULEUR_BAS = "#8D9B80"   # sauge des rendus Gemini (cuisine-gemini/prompts-gemini.md), meubles bas et hauts
 
 
 def hexrgb(h):
@@ -44,7 +45,7 @@ MATS = {
     "plafond":          ("#F5F2EC", 0.95, {}),
     "sol_bois":         ("#B98A55", 0.5, {"tex": "parquet", "sens": "sol", "echelle": 3.4}),
     "sol_carrelage":    ("#D8D5CE", 0.5, {}),
-    "facade_bleu":      (BLEU, 0.45, {}),                                      # laque mate
+    "facade_couleur":      (COULEUR_BAS, 0.45, {}),                                      # laque mate
     "facade_noyer":     ("#45291A", 0.5, NOYER),
     "etagere":          ("#45291A", 0.5, dict(NOYER, sens="h")),
     "chaise":           ("#45291A", 0.5, NOYER),
@@ -291,14 +292,19 @@ def build_scene(glb):
     return ceiling
 
 
+# Vues à hauteur d'yeux : personne de 1,75 m, yeux à 163 debout, 120 assise (assise de chaise à 46).
+# Visée horizontale et décentrement vertical (shift) : les verticales restent droites, comme en photo d'architecture.
+DEBOUT, ASSIS = 163, 120
 VIEWS = {
     # depuis la baie d'entrée, regard vers la rangée nord et la fenêtre
-    "entree":  dict(loc=(268, 236, 158), target=(105, 40, 105), lens=17),
+    "entree":  dict(loc=(268, 236, DEBOUT), target=(105, 40, DEBOUT), lens=18, shift=-0.12),
     # depuis l'angle de la fenêtre, regard vers le frigo, le four et le cellier
-    "fenetre": dict(loc=(12, 120, 160), target=(320, 150, 118), lens=17),
+    "fenetre": dict(loc=(12, 120, DEBOUT), target=(320, 150, DEBOUT), lens=18, shift=-0.12),
     # depuis le seuil du cellier, porte ouverte : étagères, râtelier à balais, lave-linge, ballon
-    "cellier": dict(loc=(322, 110, 172), target=(415, 40, 105), lens=12),
-    # vue plongeante, plafond masqué
+    "cellier": dict(loc=(326, 100, DEBOUT), target=(420, 40, DEBOUT), lens=12, shift=-0.15),
+    # assis sur la chaise 2 (dossier à l'est), regard vers la fenêtre et la rangée nord
+    "assis":   dict(loc=(197, 195, ASSIS), target=(40, 110, ASSIS), lens=20, shift=0.02),
+    # vue plongeante, plafond masqué (vue de coupe, hors hauteur d'yeux)
     "plongee": dict(loc=(330, 360, 470), target=(160, 110, 40), lens=22, no_ceiling=True),
 }
 
@@ -306,16 +312,19 @@ for version in VERSIONS:
     suffix = "-deco" if version == "deco" else ""
     ceiling = build_scene(os.path.join(OUT, f"cuisine-a{suffix}.glb"))
     sc = bpy.context.scene
-    for name in VUES:
+    for name in VIEWS:  # toutes les caméras dans le .blend, rendu des seules vues demandées
         v = VIEWS[name]
         cam_data = bpy.data.cameras.new(name)
         cam_data.lens = v["lens"]
         cam_data.sensor_width = 36
+        cam_data.shift_y = v.get("shift", 0.0)
         cam = bpy.data.objects.new("cam_" + name, cam_data)
         sc.collection.objects.link(cam)
         cam.location = p(*v["loc"])
         look_at(cam, p(*v["target"]))
         sc.camera = cam
+        if name not in VUES:
+            continue
         if ceiling:
             ceiling.hide_render = bool(v.get("no_ceiling"))
         sc.render.filepath = os.path.join(OUT, f"rendu-{name}{suffix}.png")

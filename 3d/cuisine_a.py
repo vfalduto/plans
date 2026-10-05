@@ -67,7 +67,7 @@ def handle(name, x0, x1, y0, y1, z0, z1):
 J = 0.15  # demi-jeu entre façades
 
 
-BAS = "facade_bleu"     # meubles bas et hauts
+BAS = "facade_couleur"     # meubles bas et hauts
 COL = "facade_noyer"    # meubles toute hauteur
 # Poignées : profilé toute longueur, dans le matériau de la façade, saillie 2,5, épaisseur 1,5.
 # « haut » / « bas » : le long du chant haut ou bas ; « g » / « d » / « n » : le long du chant vertical.
@@ -326,13 +326,13 @@ cyl("ceramique_bleue", "liquide_vaisselle", 199, 9, 2.6, 91, 110, plan=False)
 # table : sets de table, vase et fleurs, corbeille de fruits
 box("lin", "set_1", 112, 140, 178, 212, 75, 75.3, plan=False)
 box("lin", "set_2", 146, 174, 178, 212, 75, 75.3, plan=False)
-cyl("verre", "vase", 143, 186, 4, 75, 95, plan=False)
+cyl("verre", "vase", 125, 208, 4, 75, 95, plan=False)
 for i, (dx, dy, h) in enumerate(((0, 0, 118), (-3, 1.5, 112), (3, -1.5, 114))):
-    cyl("tige", f"tige_{i + 1}", 143 + dx, 186 + dy, 0.25, 90, h, plan=False)
-    sphere("fleurs", f"fleur_{i + 1}", 143 + dx, 186 + dy, h + 1.5, 2.2)
-cyl("ceramique", "coupe_fruits", 143, 204, 9, 75, 80, plan=False)
+    cyl("tige", f"tige_{i + 1}", 125 + dx, 208 + dy, 0.25, 90, h, plan=False)
+    sphere("fleurs", f"fleur_{i + 1}", 125 + dx, 208 + dy, h + 1.5, 2.2)
+cyl("ceramique", "coupe_fruits", 145, 190, 9, 75, 80, plan=False)
 for i, (dx, dy) in enumerate(((-4, -2), (4, -1), (0, 4))):
-    sphere("fruits", f"fruit_{i + 1}", 143 + dx, 204 + dy, 83, 3.8)
+    sphere("fruits", f"fruit_{i + 1}", 145 + dx, 190 + dy, 83, 3.8)
 
 # suspension globe au-dessus de la table
 cyl("noir", "fil_suspension", 143, 195, 0.4, 187, 250, plan=False)
