@@ -13,8 +13,6 @@
 *{box-sizing:border-box}
 body{margin:0;background:var(--bg);color:var(--ink);font-family:Archivo,system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;line-height:1.5}
 main{max-width:1040px;margin:0 auto;padding:40px 16px 64px}
-.back{color:var(--muted);text-decoration:none;font-size:14px}
-.back:hover{color:var(--ink)}
 h1{font-size:clamp(28px,5vw,40px);font-weight:800;margin:8px 0 6px;letter-spacing:-.01em}
 .lead{color:var(--muted);margin:0 0 8px;max-width:70ch}
 .view{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:20px;margin-top:28px}
@@ -46,8 +44,11 @@ pre{white-space:pre-wrap;font-family:"JetBrains Mono",ui-monospace,Menlo,monospa
 </style>
 </head>
 <body>
+<!-- page-header -->
+<style>.ph{--ph-bg:#f7f4ee;--ph-ink:#24211c;--ph-muted:#6e675c;--ph-line:#e3ddd2;--ph-accent:#5f7a5c;position:sticky;top:0;z-index:100;display:flex;align-items:center;gap:12px;padding:10px 16px;background:var(--ph-bg);border-bottom:1px solid var(--ph-line);color:var(--ph-ink);font:600 15px/1.3 Archivo,system-ui,-apple-system,"Segoe UI",Roboto,sans-serif}@media (prefers-color-scheme:dark){:root:not([data-theme="light"]) .ph{--ph-bg:#1b1a17;--ph-ink:#ece7dd;--ph-muted:#a39b8d;--ph-line:#3a362f;--ph-accent:#9db998}}:root[data-theme="dark"] .ph{--ph-bg:#1b1a17;--ph-ink:#ece7dd;--ph-muted:#a39b8d;--ph-line:#3a362f;--ph-accent:#9db998}.ph a{flex:none;display:inline-flex;align-items:center;gap:6px;padding:6px 12px;border:1px solid var(--ph-line);border-radius:8px;color:var(--ph-muted);text-decoration:none;font-weight:400;font-size:14px}.ph a:hover{color:var(--ph-ink);border-color:var(--ph-accent)}.ph span{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}@media print{.ph{display:none}}</style>
+<header class="ph"><a href="index.html" aria-label="Retour aux plans">← Plans</a><span>Rendus cuisine</span></header>
+<!-- /page-header -->
 <main>
-  <a class="back" href="index.html">← Plans maison</a>
   <h1>Rendus cuisine</h1>
   <p class="lead">Rendus Gemini du plan retenu, variante B (bas sauge, colonnes noyer). Une vue par conversation Gemini : joindre les images dans l'ordre indiqué, puis coller le prompt.</p>
 

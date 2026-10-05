@@ -1,0 +1,129 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Rendus 3D cuisine</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wght@400;600;800&family=JetBrains+Mono:wght@400&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#f7f4ee;--card:#fffdf9;--ink:#24211c;--muted:#6e675c;--line:#e3ddd2;--accent:#5f7a5c;--accent-ink:#fff}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#1b1a17;--card:#24221e;--ink:#ece7dd;--muted:#a39b8d;--line:#3a362f;--accent:#9db998;--accent-ink:#1b1a17}}
+:root[data-theme="dark"]{--bg:#1b1a17;--card:#24221e;--ink:#ece7dd;--muted:#a39b8d;--line:#3a362f;--accent:#9db998;--accent-ink:#1b1a17}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:Archivo,system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;line-height:1.5}
+main{max-width:1040px;margin:0 auto;padding:40px 16px 64px}
+h1{font-size:clamp(28px,5vw,40px);font-weight:800;margin:8px 0 6px;letter-spacing:-.01em}
+.lead{color:var(--muted);margin:0 0 8px;max-width:70ch}
+.view{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:20px;margin-top:28px}
+.head{display:flex;gap:16px;align-items:flex-start;justify-content:space-between;flex-wrap:wrap;margin-bottom:14px}
+h2{font-size:20px;margin:0}
+.sub{color:var(--muted);margin:2px 0 0;font-size:14px}
+h3{font-size:12px;text-transform:uppercase;letter-spacing:.08em;color:var(--muted);margin:22px 0 10px;font-weight:600}
+button{font:inherit;cursor:pointer}
+.copy{background:var(--accent);color:var(--accent-ink);border:0;border-radius:8px;padding:9px 16px;font-weight:600;white-space:nowrap}
+.copy.done{opacity:.85}
+.stage{display:block;border-radius:10px;overflow:hidden;background:var(--line)}
+.main{display:block;width:100%;height:auto;aspect-ratio:1024/765;object-fit:cover}
+.thumbs{display:flex;gap:8px;margin-top:10px;flex-wrap:wrap}
+.thumb{position:relative;padding:0;border:2px solid transparent;border-radius:8px;overflow:hidden;background:none;width:110px}
+.thumb img{display:block;width:100%;aspect-ratio:1024/765;object-fit:cover;opacity:.7}
+.thumb span{position:absolute;left:4px;bottom:4px;background:rgba(0,0,0,.6);color:#fff;font-size:11px;padding:1px 6px;border-radius:4px;font-family:"JetBrains Mono",ui-monospace,Menlo,monospace}
+.thumb.on{border-color:var(--accent)}
+.thumb.on img,.thumb:hover img{opacity:1}
+.atts{display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:10px}
+.att{position:relative;display:block;color:inherit;text-decoration:none;font-size:13px;border:1px solid var(--line);border-radius:8px;overflow:hidden;background:#fff}
+.att img{display:block;width:100%;height:96px;object-fit:contain;background:#fff}
+.att span:last-child{display:block;padding:5px 8px;background:var(--card);border-top:1px solid var(--line)}
+.att .n{position:absolute;top:5px;left:5px;width:20px;height:20px;border-radius:50%;background:var(--accent);color:var(--accent-ink);font-size:11px;font-weight:600;display:grid;place-items:center}
+.att:hover{border-color:var(--accent)}
+details{margin-top:18px}
+summary{cursor:pointer;color:var(--muted);font-size:14px}
+pre{white-space:pre-wrap;font-family:"JetBrains Mono",ui-monospace,Menlo,monospace;font-size:12px;line-height:1.55;background:var(--bg);border:1px solid var(--line);border-radius:8px;padding:14px;margin:10px 0 0;max-height:420px;overflow:auto}
+.note{color:var(--muted);font-size:14px;margin:6px 0 0}
+</style>
+<style>
+.main{aspect-ratio:4/3}
+.kicker{font-family:"JetBrains Mono",ui-monospace,Menlo,monospace;font-size:12px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted)}
+.seg{display:inline-flex;border:1px solid var(--line);border-radius:8px;overflow:hidden;margin-top:18px}
+.seg button{border:0;background:var(--card);color:var(--ink);padding:7px 14px;font-size:14px}
+.seg button+button{border-left:1px solid var(--line)}
+.seg button[aria-pressed="true"]{background:var(--accent);color:var(--accent-ink)}
+.seg button:focus-visible{outline:2px solid var(--accent);outline-offset:-2px}
+.facts{margin:10px 0 0;padding-left:20px;max-width:75ch}
+.facts li{margin:4px 0}
+table{border-collapse:collapse;width:100%;font-size:14px;margin-top:10px}
+th,td{text-align:left;padding:7px 8px;border-bottom:1px solid var(--line);vertical-align:top}
+code{font-family:"JetBrains Mono",ui-monospace,Menlo,monospace;font-size:13px}
+</style>
+</head>
+<body>
+<!-- page-header -->
+<style>.ph{--ph-bg:#f7f4ee;--ph-ink:#24211c;--ph-muted:#6e675c;--ph-line:#e3ddd2;--ph-accent:#5f7a5c;position:sticky;top:0;z-index:100;display:flex;align-items:center;gap:12px;padding:10px 16px;background:var(--ph-bg);border-bottom:1px solid var(--ph-line);color:var(--ph-ink);font:600 15px/1.3 Archivo,system-ui,-apple-system,"Segoe UI",Roboto,sans-serif}@media (prefers-color-scheme:dark){:root:not([data-theme="light"]) .ph{--ph-bg:#1b1a17;--ph-ink:#ece7dd;--ph-muted:#a39b8d;--ph-line:#3a362f;--ph-accent:#9db998}}:root[data-theme="dark"] .ph{--ph-bg:#1b1a17;--ph-ink:#ece7dd;--ph-muted:#a39b8d;--ph-line:#3a362f;--ph-accent:#9db998}.ph a{flex:none;display:inline-flex;align-items:center;gap:6px;padding:6px 12px;border:1px solid var(--ph-line);border-radius:8px;color:var(--ph-muted);text-decoration:none;font-weight:400;font-size:14px}.ph a:hover{color:var(--ph-ink);border-color:var(--ph-accent)}.ph span{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}@media print{.ph{display:none}}</style>
+<header class="ph"><a href="index.html" aria-label="Retour aux plans">← Plans</a><span>Rendus 3D cuisine</span></header>
+<!-- /page-header -->
+<main>
+  <div class="kicker">Variante A · V1 · FreeCAD + Blender</div>
+  <h1>Rendus 3D cuisine</h1>
+  <p class="lead">Modèle 3D construit dans FreeCAD à partir des cotes du plan et des coupes (variante A, table carrée 70 × 70), rendu dans Blender (Cycles). Meubles bas et hauts bleus, meubles toute hauteur en noyer, poignées profilées toute longueur dans la teinte de la façade, plan terrazzo gris clair, crédence zellige ivoire, parquet bâtons rompus.</p>
+  <div class="seg" role="group" aria-label="Décoration"><button type="button" data-deco="1" aria-pressed="true">Avec déco</button><button type="button" data-deco="0" aria-pressed="false">Sans déco</button></div>
+
+  <section class="view">
+    <div class="head"><div><h2>Depuis l'entrée, vers le nord-ouest</h2><p class="sub">Rangée nord bleue, étagères ouvertes, fenêtre coulissante, coin repas.</p></div></div>
+    <a class="stage" href="cuisine-3d/rendu-entree-deco.jpg" target="_blank" data-v="entree"><img class="main r3d" src="cuisine-3d/rendu-entree-deco.jpg" data-v="entree" alt="Rendu 3D, depuis l'entrée, vers le nord-ouest" loading="lazy"></a>
+  </section>
+
+  <section class="view">
+    <div class="head"><div><h2>Depuis la fenêtre, vers l'est</h2><p class="sub">Colonnes noyer : frigo, four et micro-ondes ; porte du cellier ouverte, porte d'entrée à étagères et ardoise.</p></div></div>
+    <a class="stage" href="cuisine-3d/rendu-fenetre-deco.jpg" target="_blank" data-v="fenetre"><img class="main r3d" src="cuisine-3d/rendu-fenetre-deco.jpg" data-v="fenetre" alt="Rendu 3D, depuis la fenêtre, vers l'est" loading="lazy"></a>
+  </section>
+
+  <section class="view">
+    <div class="head"><div><h2>Depuis le seuil du cellier</h2><p class="sub">Étagères P30, râtelier à balais, lave-linge devant le ballon.</p></div></div>
+    <a class="stage" href="cuisine-3d/rendu-cellier-deco.jpg" target="_blank" data-v="cellier"><img class="main r3d" src="cuisine-3d/rendu-cellier-deco.jpg" data-v="cellier" alt="Rendu 3D, depuis le seuil du cellier" loading="lazy"></a>
+  </section>
+
+  <section class="view">
+    <div class="head"><div><h2>Vue plongeante</h2><p class="sub">Plafond retiré : l'ensemble cuisine et cellier.</p></div></div>
+    <a class="stage" href="cuisine-3d/rendu-plongee-deco.jpg" target="_blank" data-v="plongee"><img class="main r3d" src="cuisine-3d/rendu-plongee-deco.jpg" data-v="plongee" alt="Rendu 3D, vue plongeante" loading="lazy"></a>
+  </section>
+
+  <section class="view">
+    <h2>À savoir</h2>
+    <ul class="facts">
+      <li>Le bleu est provisoire : pétrole fumé #2F5557 du nuancier, en attendant la référence du « bleu canopé ».</li>
+      <li>Les cotes sont recopiées du plan à la main : une modification de <a href="cuisine-plan.html">cuisine-plan.html</a> ne passe pas encore dans la 3D.</li>
+      <li>Textures CC0 : noyer et parquet de Poly Haven, terrazzo d'ambientCG. La décoration est indicative.</li>
+      <li>Scripts : <code>3d/cuisine_a.py</code> (FreeCAD), <code>3d/rendu.py</code> (Blender), <code>3d/textures.py</code> ; regénérer avec <code>just rendu-3d</code>.</li>
+    </ul>
+  </section>
+
+  <section class="view">
+    <h2>Changements</h2>
+    <table>
+      <thead><tr><th>Version</th><th>Date</th><th>Changements</th></tr></thead>
+      <tbody>
+        <tr><td><b>V1</b></td><td>05/10/2026</td><td>Premiers rendus 3D de la variante A : 4 vues (entrée, fenêtre, cellier, plongée), avec et sans décoration.</td></tr>
+      </tbody>
+    </table>
+  </section>
+</main>
+<script>
+(() => {
+  const btns = document.querySelectorAll('.seg button');
+  const set = (deco) => {
+    btns.forEach(b => b.setAttribute('aria-pressed', String(b.dataset.deco === deco)));
+    document.querySelectorAll('a.stage[data-v]').forEach(a => {
+      const src = `cuisine-3d/rendu-${a.dataset.v}${deco === '1' ? '-deco' : ''}.jpg`;
+      a.href = src; a.querySelector('img').src = src;
+    });
+    try { localStorage.setItem('r3d-deco', deco); } catch (e) {}
+  };
+  btns.forEach(b => b.addEventListener('click', () => set(b.dataset.deco)));
+  let saved = null;
+  try { saved = localStorage.getItem('r3d-deco'); } catch (e) {}
+  if (saved === '0') set('0');
+})();
+</script>
+</body>
+</html>

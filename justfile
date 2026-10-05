@@ -29,3 +29,11 @@ pages-wait:
     done
     echo "Délai dépassé, vérifier : https://github.com/{{repo}}/actions" >&2
     exit 1
+
+# Regénère le modèle 3D (FreeCAD) et les rendus (Blender), puis les copie en JPG pour cuisine-3d.html
+rendu-3d echantillons="128":
+    python3 3d/textures.py
+    /Applications/FreeCAD.app/Contents/Resources/bin/freecadcmd 3d/cuisine_a.py
+    /Applications/Blender.app/Contents/MacOS/Blender -b --python 3d/rendu.py -- {{echantillons}}
+    mkdir -p cuisine-3d
+    for f in 3d/sortie/rendu-*.png; do sips -s format jpeg -s formatOptions 85 "$f" --out "cuisine-3d/$(basename "$f" .png).jpg" >/dev/null; done
