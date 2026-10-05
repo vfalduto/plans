@@ -1,0 +1,1135 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Bibliothèque du salon</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wght@400;500;700;800&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+<style>
+:root{
+  --paper:#F7F8F6; --ink:#1D2A33; --muted:#5E6B73; --line:#C9D0D4; --wood:#B07A45;
+  --water:#2F7FB5; --tri:#C8412C; --flow:#2E8B57; --cook2:#7B5EA7;
+  --panel:#FFFFFF; --cab:#ECE6DA; --tall:#D8CFBD; --tech:#E1E6E9; --glass:#CFE4F2;
+  color-scheme:light;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --paper:#141A1F; --ink:#E4EAED; --muted:#9AA7AE; --line:#34414A; --wood:#C9925A;
+    --water:#5AA8DE; --tri:#E8664F; --flow:#4CB97A; --cook2:#A68BD2;
+    --panel:#1B2329; --cab:#2A3338; --tall:#394449; --tech:#26303A; --glass:#1F3A4E;
+    color-scheme:dark;
+  }
+}
+:root[data-theme="dark"]{
+  --paper:#141A1F; --ink:#E4EAED; --muted:#9AA7AE; --line:#34414A; --wood:#C9925A;
+  --water:#5AA8DE; --tri:#E8664F; --flow:#4CB97A; --cook2:#A68BD2;
+  --panel:#1B2329; --cab:#2A3338; --tall:#394449; --tech:#26303A; --glass:#1F3A4E;
+  color-scheme:dark;
+}
+*{box-sizing:border-box}
+html,body{margin:0}
+body{background:var(--paper);color:var(--ink);font-family:Archivo,system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;line-height:1.55;font-size:16px}
+.wrap{max-width:1120px;margin:0 auto;padding:28px 16px 64px}
+.kicker{font-family:"JetBrains Mono",ui-monospace,Menlo,monospace;font-size:12px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted)}
+h1{font-size:clamp(28px,5vw,44px);line-height:1.08;margin:6px 0 12px;font-weight:800;letter-spacing:-.01em}
+h2{font-size:22px;margin:44px 0 10px;font-weight:700}
+h3{font-size:17px;margin:22px 0 6px}
+p{margin:8px 0}
+.pitch{font-size:18px;max-width:780px;color:var(--ink)}
+.stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:12px;margin:22px 0 8px}
+.stat{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:12px 14px}
+.stat b{display:block;font-family:"JetBrains Mono",ui-monospace,monospace;font-size:24px;font-weight:600}
+.stat span{font-size:13px;color:var(--muted)}
+.fig{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:12px;margin:14px 0}
+.scroll{overflow-x:auto;-webkit-overflow-scrolling:touch}
+.scroll svg{display:block;width:100%;min-width:720px;height:auto}
+.scroll svg.small{min-width:340px;max-width:600px;margin:0 auto}
+.cap{font-size:13px;color:var(--muted);margin:8px 4px 2px}
+.legend{display:flex;flex-wrap:wrap;gap:8px 18px;font-size:13px;margin:10px 4px}
+.legend span{display:inline-flex;align-items:center;gap:6px}
+.legend svg{width:26px;height:14px;flex:none}
+.grid2{display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:16px}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:14px 16px}
+.card h3{margin-top:0}
+ul{padding-left:20px;margin:6px 0}
+li{margin:3px 0}
+table{border-collapse:collapse;width:100%;font-size:14px}
+th,td{text-align:left;padding:7px 8px;border-bottom:1px solid var(--line);vertical-align:top}
+td.num,th.num{text-align:right;font-family:"JetBrains Mono",ui-monospace,monospace;white-space:nowrap}
+td.st{text-align:center;font-size:17px;white-space:nowrap}
+tfoot td{font-weight:700}
+.mono{font-family:"JetBrains Mono",ui-monospace,monospace}
+.note{font-size:13px;color:var(--muted)}
+.ok{color:var(--flow);font-weight:700}
+.warn{color:var(--wood);font-weight:700}
+.hyp{border-left:3px solid var(--wood);padding:6px 12px;background:var(--panel);font-size:14px;margin:12px 0}
+@media (max-width:480px){ body{font-size:15px} .stat b{font-size:21px} th,td{padding:6px 5px} }
+
+/* SVG */
+svg text{font-family:Archivo,system-ui,sans-serif;fill:var(--ink)}
+.w{fill:var(--ink)}
+.wcut{fill:var(--ink)}
+.nw{fill:url(#hn);stroke:var(--ink);stroke-width:.8}
+.ghost{fill:none;stroke:var(--muted);stroke-width:1;stroke-dasharray:4 3}
+.floorbg{fill:var(--wood);fill-opacity:.13}
+.pq{fill:none;stroke:var(--wood);stroke-width:.6;stroke-opacity:.45}
+.cellf{fill:var(--tech)}
+.tl{fill:none;stroke:var(--line);stroke-width:.6}
+.wc{fill:var(--line);fill-opacity:.55}
+.cab{fill:var(--cab);stroke:var(--ink);stroke-width:.7}
+.cabcut{fill:var(--tall);stroke:var(--ink);stroke-width:1.4}
+.tall{fill:var(--tall);stroke:var(--ink);stroke-width:.8}
+.pf{fill:var(--tall);stroke:var(--wood);stroke-width:1.8}
+.tech{fill:var(--tech);stroke:var(--ink);stroke-width:.7;stroke-dasharray:3 2}
+.wt{fill:none;stroke:var(--ink);stroke-width:1.6}
+.app{fill:none;stroke:var(--ink);stroke-width:.8}
+.appf{fill:var(--panel);stroke:var(--ink);stroke-width:.8}
+.dark{fill:var(--ink)}
+.upper{fill:none;stroke:var(--muted);stroke-width:.8;stroke-dasharray:3 2}
+.win{fill:var(--glass);stroke:var(--ink);stroke-width:.7}
+.glass{stroke:var(--water);stroke-width:1.2}
+.winleaf{fill:none;stroke:var(--muted);stroke-width:.6;stroke-dasharray:2 2}
+.doorzone{fill:var(--tri);fill-opacity:.06;stroke:none}
+.doorarc{fill:none;stroke:var(--ink);stroke-width:.8}
+.doorleaf{stroke:var(--ink);stroke-width:3}
+.door100{stroke:var(--tri);stroke-width:1.2;stroke-dasharray:3 2}
+.swing{fill:none;stroke:var(--muted);stroke-width:.6;stroke-dasharray:2 2}
+.dim{stroke:var(--muted);stroke-width:.6;fill:none}
+.dimt{fill:var(--muted);font-family:"JetBrains Mono",ui-monospace,monospace !important;font-size:8px}
+.lbl{font-size:7.5px}
+.lbls{font-size:6.5px}
+.lblx{font-size:5px}
+.lblb{font-size:9px;font-weight:700}
+.muted{fill:var(--muted)}
+.woodt{fill:var(--wood);font-weight:700}
+.tri{fill:var(--tri);fill-opacity:.07;stroke:var(--tri);stroke-width:1.6}
+.triv{fill:var(--tri)}
+.trit{fill:var(--tri);font-family:"JetBrains Mono",monospace !important;font-size:8px;font-weight:600}
+.tribg{fill:var(--panel);stroke:var(--tri);stroke-width:.6}
+.flow{fill:none;stroke:var(--flow);stroke-width:2.2;marker-end:url(#af)}
+.mf{fill:var(--flow)}
+.badge{fill:var(--flow)}
+.badget{fill:#fff;font-size:8px;font-weight:700}
+.z1{fill:url(#h1);stroke:var(--water);stroke-width:.8}
+.z2{fill:url(#h2);stroke:var(--cook2);stroke-width:.8}
+.h1l{stroke:var(--water);stroke-width:1;stroke-opacity:.45}
+.h2l{stroke:var(--cook2);stroke-width:1;stroke-opacity:.45}
+.z1t{fill:var(--water);font-size:8px;font-weight:700}
+.z2t{fill:var(--cook2);font-size:8px;font-weight:700}
+.pin{fill:none;stroke:var(--water);stroke-width:1.6}
+.pout{fill:none;stroke:var(--water);stroke-width:1.6;stroke-dasharray:5 3}
+.wt2{fill:var(--water);font-size:7px}
+.duct{fill:none;stroke:var(--muted);stroke-width:1.2;stroke-dasharray:6 3}
+.air{fill:none;stroke:var(--cook2);stroke-width:1.1;marker-end:url(#aa)}
+.airt{fill:var(--cook2);font-size:6px}
+.sec{stroke:var(--tri);stroke-width:.9;stroke-dasharray:10 3 2 3;fill:none}
+.secm{fill:var(--tri)}
+.sect{fill:var(--tri);font-weight:800;font-size:11px}
+.plinth{fill:var(--tall);stroke:var(--ink);stroke-width:.6}
+.cred{fill:var(--wood);fill-opacity:.12;stroke:none}
+.bgwall{fill:var(--line);fill-opacity:.35;stroke:none}
+.person1{fill:var(--water);fill-opacity:.35;stroke:var(--water);stroke-width:1}
+.person2{fill:var(--cook2);fill-opacity:.35;stroke:var(--cook2);stroke-width:1}
+.person3{fill:var(--wood);fill-opacity:.3;stroke:var(--wood);stroke-width:1}
+.floorl{stroke:var(--ink);stroke-width:2}
+.ceil{stroke:var(--muted);stroke-width:1;stroke-dasharray:6 4}
+.tbl{fill:var(--wood);fill-opacity:.5;stroke:var(--ink);stroke-width:.9}
+.stool{fill:var(--wood);fill-opacity:.28;stroke:var(--ink);stroke-width:.7}
+.stoolp{fill:none;stroke:var(--wood);stroke-width:.8;stroke-dasharray:2 1.5}
+.dine{fill:var(--wood);fill-opacity:.07;stroke:var(--wood);stroke-width:.8;stroke-dasharray:4 2}
+.dinet{fill:var(--wood);font-size:8px;font-weight:700}
+.rack{fill:var(--wood);fill-opacity:.22;stroke:var(--wood);stroke-width:.8}
+.park{fill:none;stroke:var(--wood);stroke-width:1;stroke-dasharray:3 2}
+.rail{stroke:var(--ink);stroke-width:1.1}
+.vent{fill:var(--ink);fill-opacity:.8}
+.broom{fill:var(--flow);fill-opacity:.1;stroke:var(--flow);stroke-width:.9;stroke-dasharray:3 2}
+.broomt{fill:var(--flow);font-weight:700}
+.conf{fill:url(#hx);stroke:var(--tri);stroke-width:1}
+.hxl{stroke:var(--tri);stroke-width:1.1}
+.ecs{fill:var(--glass);stroke:var(--water);stroke-width:1.3}
+.conft{fill:var(--tri);font-weight:800}
+.sleaf{fill:var(--ink)}
+.sleafc{fill:none;stroke:var(--ink);stroke-width:.8;stroke-dasharray:3 2}
+.srail{stroke:var(--tri);stroke-width:1.4}
+.slide{stroke:var(--tri);stroke-width:1;fill:none}
+.okt{fill:var(--flow);font-weight:700}
+.changes{max-width:860px;font-size:15px;margin:6px 0 4px;padding-left:20px}
+section{margin-top:52px;padding-top:8px;border-top:2px solid var(--line)}
+.scroll-t{overflow-x:auto}
+#changements table{min-width:620px}
+.vant{fill:var(--wood);fill-opacity:.3;stroke:var(--ink);stroke-width:.8}
+.slot{fill:var(--tri);fill-opacity:.1;stroke:var(--tri);stroke-width:.6;stroke-dasharray:2 1.5}
+.bgf{opacity:.5}
+.egout{fill:var(--glass);fill-opacity:.6;stroke:var(--water);stroke-width:.7}
+.egl{stroke:var(--water);stroke-width:.6}
+.ll{fill:var(--panel);stroke:var(--ink);stroke-width:1.2}
+.hid{fill:none;stroke:var(--muted);stroke-width:1;stroke-dasharray:4 3}
+.free{fill:var(--flow);fill-opacity:.08;stroke:var(--flow);stroke-width:.6;stroke-dasharray:2 1.5}
+.cfl{fill:var(--tri);fill-opacity:.16;stroke:var(--tri);stroke-width:.6;stroke-dasharray:2 1.5}
+.ve{font-size:7px}.ves{font-size:6px}.veb{font-size:8px;font-weight:700}
+.vc{font-size:4.2px}.vcb{font-size:4.8px;font-weight:700}
+.vlab{fill:var(--wood);font-size:7px;font-weight:700;letter-spacing:.04em}
+.card .scroll svg.small{max-width:100%}
+.gridv{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,500px),1fr));gap:16px}
+.claus{fill:var(--wood);fill-opacity:.45;stroke:var(--ink);stroke-width:.9}
+.clausc{fill:none;stroke:var(--wood);stroke-width:.9;stroke-dasharray:3 2}
+.switch{display:flex;flex-wrap:wrap;gap:8px;margin:10px 0 6px}
+.switch button{font:inherit;font-size:14px;padding:8px 14px;border-radius:999px;border:1px solid var(--line);background:var(--panel);color:var(--ink);cursor:pointer}
+.switch button[aria-selected="true"]{background:var(--ink);color:var(--paper);border-color:var(--ink)}
+.switch button:focus-visible{outline:2px solid var(--wood);outline-offset:2px}
+.opts{display:flex;flex-wrap:wrap;align-items:center;gap:6px 14px;margin:4px 0 10px;font-size:13px}
+.opts .optl{font-family:"JetBrains Mono",ui-monospace,Menlo,monospace;font-size:11px;letter-spacing:.06em;text-transform:uppercase;color:var(--muted)}
+.opts .seg{display:inline-flex;border:1px solid var(--line);border-radius:8px;overflow:hidden}
+.opts .seg button{font:inherit;font-size:13px;padding:5px 10px;border:0;background:var(--panel);color:var(--ink);cursor:pointer}
+.opts .seg button+button{border-left:1px solid var(--line)}
+.opts .seg button[aria-pressed="true"]{background:var(--wood);color:var(--paper)}
+.opts .seg button:focus-visible{outline:2px solid var(--wood);outline-offset:-2px}
+/* options : chaque élément dépendant porte la classe de sa valeur */
+:root[data-door="w"] .door-e,:root[data-door="e"] .door-w,:root[data-tbl="sq"] .tbl-rd,:root[data-tbl="sq"] .tbl-bq,:root[data-tbl="rd"] .tbl-sq,:root[data-tbl="rd"] .tbl-bq,:root[data-tbl="bq"] .tbl-sq,:root[data-tbl="bq"] .tbl-rd{display:none}
+[hidden]{display:none!important}
+.tag{display:inline-block;font-family:"JetBrains Mono",ui-monospace,monospace;font-size:12px;padding:1px 7px;border-radius:5px;background:var(--tech);margin-right:6px}
+
+
+.tile{fill:url(#tl)}
+.room{fill:var(--line);fill-opacity:.18}
+.roomt{fill:var(--muted);font-size:9px;font-weight:600}
+.sofa{fill:var(--cook2);fill-opacity:.18;stroke:var(--ink);stroke-width:.8}
+.sofac{fill:var(--cook2);fill-opacity:.12;stroke:var(--ink);stroke-width:.5}
+.rug{fill:var(--wood);fill-opacity:.08;stroke:var(--wood);stroke-width:.7;stroke-dasharray:5 3}
+.plant{fill:var(--flow);fill-opacity:.25;stroke:var(--flow);stroke-width:.8}
+.mirror{fill:var(--glass);stroke:var(--ink);stroke-width:.7}
+.tv{fill:var(--ink);fill-opacity:.85}
+.lamp{fill:#E8B44A;fill-opacity:.55;stroke:var(--ink);stroke-width:.6}
+.pass{fill:none;stroke:var(--flow);stroke-width:.9}
+.passt{fill:var(--flow);font-family:"JetBrains Mono",monospace !important;font-size:7px;font-weight:600}
+.hook{fill:var(--ink)}
+.book{fill:var(--wood);fill-opacity:.35;stroke:none}
+.inner{fill:none;stroke:var(--muted);stroke-width:.6;stroke-dasharray:3 2}
+.el-ceil{stroke:var(--muted);stroke-width:.8;stroke-dasharray:6 4}
+.alu{fill:#9AA3A8;stroke:var(--ink);stroke-width:.4}
+.steel{fill:var(--muted);stroke:none}
+.ball{fill:#B9C0C4;stroke:var(--ink);stroke-width:.4}
+.shelf{fill:var(--panel);stroke:var(--ink);stroke-width:.6}
+.usmp{fill:var(--tech);stroke:var(--ink);stroke-width:.5}
+.usmd{fill:#6E8C9C;fill-opacity:.55;stroke:var(--ink);stroke-width:.6}
+.cabv{fill:var(--cab);stroke:var(--ink);stroke-width:.7}
+.wire{stroke:var(--ink);stroke-width:.9;fill:none}
+.rung{stroke:var(--ink);stroke-width:.35}
+.spare{fill:var(--flow);fill-opacity:.1;stroke:var(--flow);stroke-width:.6;stroke-dasharray:2 1.5}
+.frame{fill:var(--wood);fill-opacity:.35;stroke:var(--ink);stroke-width:.6}
+td.v{white-space:nowrap}
+</style>
+</head>
+<body>
+<!-- page-header -->
+<style>.ph{--ph-bg:#f7f4ee;--ph-ink:#24211c;--ph-muted:#6e675c;--ph-line:#e3ddd2;--ph-accent:#5f7a5c;position:sticky;top:0;z-index:100;display:flex;align-items:center;gap:12px;padding:10px 16px;background:var(--ph-bg);border-bottom:1px solid var(--ph-line);color:var(--ph-ink);font:600 15px/1.3 Archivo,system-ui,-apple-system,"Segoe UI",Roboto,sans-serif}@media (prefers-color-scheme:dark){:root:not([data-theme="light"]) .ph{--ph-bg:#1b1a17;--ph-ink:#ece7dd;--ph-muted:#a39b8d;--ph-line:#3a362f;--ph-accent:#9db998}}:root[data-theme="dark"] .ph{--ph-bg:#1b1a17;--ph-ink:#ece7dd;--ph-muted:#a39b8d;--ph-line:#3a362f;--ph-accent:#9db998}.ph a{flex:none;display:inline-flex;align-items:center;gap:6px;padding:6px 12px;border:1px solid var(--ph-line);border-radius:8px;color:var(--ph-muted);text-decoration:none;font-weight:400;font-size:14px}.ph a:hover{color:var(--ph-ink);border-color:var(--ph-accent)}.ph span{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}@media print{.ph{display:none}}</style>
+<header class="ph"><a href="index.html" aria-label="Retour aux plans">← Plans</a><span>Bibliothèque du salon</span></header>
+<!-- /page-header -->
+<div class="wrap">
+<svg width="0" height="0" style="position:absolute" aria-hidden="true" focusable="false"><defs>
+<pattern id="tl" width="30" height="30" patternUnits="userSpaceOnUse"><path class="tl" d="M30 0 L0 0 L0 30"/></pattern>
+<marker id="tk" viewBox="0 0 10 10" refX="5" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M2 8 L8 2" style="stroke:var(--muted)" stroke-width="1.4"/></marker>
+</defs></svg>
+<div class="kicker">Salon · bibliothèque du mur ouest · V1 · variantes Vitsoe / String / USM</div>
+<h1>Bibliothèque du salon</h1>
+<p class="pitch">Trois systèmes du commerce pour le mur ouest de la variante B du <a href="salon-amenagement.html#B">salon</a>, sur les 258 cm qui séparent le coin nord du cadre du passage : Vitsoe 606, String System et USM Haller. Le bouton bascule le plan et l'élévation. Une fois la variante validée, elle sera modélisée en 3D. L'historique est en fin de document (<a href="#changements">Changements</a>).</p>
+<div class="stats"><div class="stat"><b>258</b><span>longueur utile (cm)</span></div><div class="stat"><b>250</b><span>hauteur sous plafond</span></div><div class="stat"><b>74</b><span>dessus des rangements bas</span></div><div class="stat"><b>3</b><span>systèmes avec modèles 3D</span></div></div>
+<h2>Plan et élévation</h2>
+<div class="switch" role="tablist" aria-label="Variante">
+  <button type="button" role="tab" data-v="V" aria-selected="true"><b>V</b> · Vitsoe 606</button>
+  <button type="button" role="tab" data-v="S" aria-selected="false"><b>S</b> · String System</button>
+  <button type="button" role="tab" data-v="U" aria-selected="false"><b>U</b> · USM Haller</button>
+</div>
+<div data-panel="V">
+<div class="fig"><div class="scroll"><svg viewBox="-140 -45 545 470" role="img" aria-label="Plan, variante Vitsoe 606">
+<rect x="-130" y="-10" width="120" height="278" class="room" />
+<text x="-70" y="60" class="roomt" text-anchor="middle">Cellier</text>
+<text x="-70" y="180" class="roomt" text-anchor="middle">WC</text>
+<rect x="-130" y="268" width="120" height="102" class="room" />
+<text x="-70" y="330" class="roomt" text-anchor="middle">Couloir</text>
+<rect x="0" y="370" width="400" height="50" class="room" />
+<text x="200" y="400" class="roomt" text-anchor="middle">Chambre</text>
+<polygon points="0,0 400,0 400,358 0,358" class="appf" style="stroke:none"/>
+<polygon points="0,0 400,0 400,358 0,358" class="tile"/>
+<rect x="-10" y="-12" width="410" height="12" class="w" />
+<rect x="-10" y="0" width="10" height="268" class="w" />
+<rect x="-10" y="343" width="10" height="27" class="w" />
+<rect x="-10" y="358" width="410" height="12" class="w" />
+<rect x="0" y="258" width="4" height="10" class="frame" />
+<rect x="0" y="343" width="4" height="10" class="frame" />
+<text x="14" y="305" class="lblx muted" text-anchor="middle" transform="rotate(-90 14 305)">passage</text>
+<text x="8" y="263" class="lblx muted" text-anchor="start">cadre</text>
+<path d="M-24 0 L-24 258" class="dim" marker-start="url(#tk)" marker-end="url(#tk)"/>
+<text x="-26.5" y="129.0" class="dimt" text-anchor="middle" transform="rotate(-90 -26.5 129.0)">258 utiles</text>
+<rect x="0" y="3.5" width="38" height="249.1" class="cab" />
+<line x1="24" y1="3.5" x2="24" y2="252.6" class="upper"/>
+<rect x="0" y="2.5" width="3" height="2" class="alu" />
+<rect x="0" y="93.7" width="3" height="2" class="alu" />
+<rect x="0" y="184.9" width="3" height="2" class="alu" />
+<rect x="0" y="251.6" width="3" height="2" class="alu" />
+<text x="19" y="128" class="lblx" text-anchor="middle" transform="rotate(-90 19 128)"><tspan class="lblb">①</tspan> Vitsoe 606 · 91,2 + 91,2 + 66,7 · armoires 36, étagères 22</text>
+<rect x="0" y="256.1" width="20" height="1.8999999999999773" class="spare" />
+<text x="24" y="259.05" class="passt" text-anchor="start">jeu 1,9</text>
+<rect x="115" y="230" width="90" height="60" class="ghost" />
+<text x="160" y="263" class="lblx muted" text-anchor="middle">allonge 40 + tête</text>
+<rect x="115" y="70" width="90" height="160" class="tbl" rx="3" />
+<rect x="67" y="75" width="44" height="44" class="stool" rx="5" />
+<rect x="209" y="75" width="44" height="44" class="stool" rx="5" />
+<rect x="67" y="128" width="44" height="44" class="stool" rx="5" />
+<rect x="209" y="128" width="44" height="44" class="stool" rx="5" />
+<rect x="67" y="181" width="44" height="44" class="stool" rx="5" />
+<rect x="209" y="181" width="44" height="44" class="stool" rx="5" />
+<circle cx="160" cy="150" r="10" class="lamp"/>
+<text x="160" y="119.5" class="lbls" text-anchor="middle"><tspan class="lblb">②</tspan> Table</text>
+<text x="160" y="127.5" class="lbls" text-anchor="middle">160 × 90</text>
+<rect x="285" y="76" width="99" height="198" class="sofa" rx="4" />
+<rect x="285" y="82" width="22" height="186" class="sofac" rx="3" />
+<text x="297" y="175" class="lblx" text-anchor="middle" transform="rotate(-90 297 175)"><tspan class="lblb">③</tspan> SÖDERHAMN 198 × 99</text>
+<path d="M38 150 L115 150" class="pass"/>
+<circle cx="38" cy="150" r="1.3" class="mf"/><circle cx="115" cy="150" r="1.3" class="mf"/>
+<text x="76.5" y="147" class="passt" text-anchor="middle">77</text>
+<path d="M24 40 L115 40" class="pass"/>
+<circle cx="24" cy="40" r="1.3" class="mf"/><circle cx="115" cy="40" r="1.3" class="mf"/>
+<text x="69.5" y="37" class="passt" text-anchor="middle">91 au-dessus de 74</text>
+<path d="M160 230 L160 358" class="pass"/>
+<text x="157" y="296" class="passt" text-anchor="middle" transform="rotate(-90 157 296)">128</text>
+</svg></div><p class="cap">Vitsoe 606 · Plan, 1 unité = 1 cm. Les armoires basses (38 avec le rail) sont plus profondes que les étagères du haut (24, en pointillé). La table reste où elle était en B : il y a 77 derrière les chaises, au niveau des armoires.</p></div>
+<div class="fig"><div class="scroll"><svg viewBox="-36 -14 446 300" role="img" aria-label="Élévation du mur ouest, variante Vitsoe 606">
+<line x1="-10" y1="250" x2="368" y2="250" class="floorl"/>
+<line x1="-10" y1="0" x2="368" y2="0" class="el-ceil"/>
+<text x="2" y="-3" class="lblx muted" text-anchor="start">plafond 250</text>
+<rect x="15" y="46" width="75" height="204" class="room" />
+<text x="52.5" y="150" class="lbls muted" text-anchor="middle">passage</text>
+<rect x="90" y="40" width="10" height="210" class="frame" />
+<rect x="100" y="0" width="258" height="250" class="bgwall" />
+<rect x="263.9" y="176" width="90" height="36" class="cabv" />
+<line x1="308.9" y1="176" x2="308.9" y2="212" class="app"/>
+<rect x="304.9" y="208" width="8" height="1.2" class="dark" />
+<rect x="172.7" y="176" width="90" height="36" class="cabv" />
+<line x1="217.7" y1="176" x2="217.7" y2="212" class="app"/>
+<rect x="213.7" y="208" width="8" height="1.2" class="dark" />
+<rect x="106" y="176" width="65.5" height="36" class="cabv" />
+<line x1="138.8" y1="176" x2="138.8" y2="212" class="app"/>
+<rect x="134.8" y="208" width="8" height="1.2" class="dark" />
+<rect x="263.9" y="146" width="90" height="1.4" class="shelf" />
+<rect x="265.9" y="118.6" width="4" height="26" class="book" />
+<rect x="270.3" y="121.6" width="3.2" height="23" class="book" />
+<rect x="273.9" y="124.6" width="3.2" height="20" class="book" />
+<rect x="277.5" y="118.6" width="4" height="26" class="book" />
+<rect x="281.9" y="120.6" width="3.2" height="24" class="book" />
+<rect x="285.5" y="123.6" width="3.2" height="21" class="book" />
+<rect x="289.1" y="119.6" width="4" height="25" class="book" />
+<rect x="293.5" y="122.6" width="3.2" height="22" class="book" />
+<rect x="297.1" y="118.6" width="3.2" height="26" class="book" />
+<rect x="300.7" y="121.6" width="4" height="23" class="book" />
+<rect x="305.1" y="124.6" width="3.2" height="20" class="book" />
+<rect x="308.7" y="118.6" width="3.2" height="26" class="book" />
+<rect x="172.7" y="146" width="90" height="1.4" class="shelf" />
+<rect x="174.7" y="121.6" width="3.2" height="23" class="book" />
+<rect x="178.3" y="124.6" width="3.2" height="20" class="book" />
+<rect x="181.9" y="118.6" width="4" height="26" class="book" />
+<rect x="186.3" y="120.6" width="3.2" height="24" class="book" />
+<rect x="189.9" y="123.6" width="3.2" height="21" class="book" />
+<rect x="193.5" y="119.6" width="4" height="25" class="book" />
+<rect x="197.9" y="122.6" width="3.2" height="22" class="book" />
+<rect x="201.5" y="118.6" width="3.2" height="26" class="book" />
+<rect x="205.1" y="121.6" width="4" height="23" class="book" />
+<rect x="209.5" y="124.6" width="3.2" height="20" class="book" />
+<rect x="213.1" y="118.6" width="3.2" height="26" class="book" />
+<rect x="216.7" y="120.6" width="4" height="24" class="book" />
+<rect x="221.1" y="123.6" width="3.2" height="21" class="book" />
+<rect x="224.7" y="119.6" width="3.2" height="25" class="book" />
+<rect x="228.3" y="122.6" width="4" height="22" class="book" />
+<rect x="106" y="146" width="65.5" height="1.4" class="shelf" />
+<rect x="108" y="124.6" width="3.2" height="20" class="book" />
+<rect x="111.6" y="118.6" width="4" height="26" class="book" />
+<rect x="116" y="120.6" width="3.2" height="24" class="book" />
+<rect x="119.6" y="123.6" width="3.2" height="21" class="book" />
+<rect x="123.2" y="119.6" width="4" height="25" class="book" />
+<rect x="127.6" y="122.6" width="3.2" height="22" class="book" />
+<rect x="131.2" y="118.6" width="3.2" height="26" class="book" />
+<rect x="134.8" y="121.6" width="4" height="23" class="book" />
+<rect x="139.2" y="124.6" width="3.2" height="20" class="book" />
+<rect x="142.8" y="118.6" width="3.2" height="26" class="book" />
+<rect x="146.4" y="120.6" width="4" height="24" class="book" />
+<rect x="150.8" y="123.6" width="3.2" height="21" class="book" />
+<rect x="154.4" y="119.6" width="3.2" height="25" class="book" />
+<rect x="263.9" y="114" width="90" height="1.4" class="shelf" />
+<rect x="265.9" y="86.6" width="4" height="26" class="book" />
+<rect x="270.3" y="88.6" width="3.2" height="24" class="book" />
+<rect x="273.9" y="91.6" width="3.2" height="21" class="book" />
+<rect x="277.5" y="87.6" width="4" height="25" class="book" />
+<rect x="281.9" y="90.6" width="3.2" height="22" class="book" />
+<rect x="285.5" y="86.6" width="3.2" height="26" class="book" />
+<rect x="289.1" y="89.6" width="4" height="23" class="book" />
+<rect x="293.5" y="92.6" width="3.2" height="20" class="book" />
+<rect x="297.1" y="86.6" width="3.2" height="26" class="book" />
+<rect x="300.7" y="88.6" width="4" height="24" class="book" />
+<rect x="305.1" y="91.6" width="3.2" height="21" class="book" />
+<rect x="308.7" y="87.6" width="3.2" height="25" class="book" />
+<rect x="312.3" y="90.6" width="4" height="22" class="book" />
+<rect x="316.7" y="86.6" width="3.2" height="26" class="book" />
+<rect x="320.3" y="89.6" width="3.2" height="23" class="book" />
+<rect x="172.7" y="114" width="90" height="1.4" class="shelf" />
+<rect x="174.7" y="88.6" width="3.2" height="24" class="book" />
+<rect x="178.3" y="91.6" width="3.2" height="21" class="book" />
+<rect x="181.9" y="87.6" width="4" height="25" class="book" />
+<rect x="186.3" y="90.6" width="3.2" height="22" class="book" />
+<rect x="189.9" y="86.6" width="3.2" height="26" class="book" />
+<rect x="193.5" y="89.6" width="4" height="23" class="book" />
+<rect x="197.9" y="92.6" width="3.2" height="20" class="book" />
+<rect x="201.5" y="86.6" width="3.2" height="26" class="book" />
+<rect x="205.1" y="88.6" width="4" height="24" class="book" />
+<rect x="209.5" y="91.6" width="3.2" height="21" class="book" />
+<rect x="213.1" y="87.6" width="3.2" height="25" class="book" />
+<rect x="216.7" y="90.6" width="4" height="22" class="book" />
+<rect x="221.1" y="86.6" width="3.2" height="26" class="book" />
+<rect x="224.7" y="89.6" width="3.2" height="23" class="book" />
+<rect x="228.3" y="92.6" width="4" height="20" class="book" />
+<rect x="232.7" y="86.6" width="3.2" height="26" class="book" />
+<rect x="236.3" y="88.6" width="3.2" height="24" class="book" />
+<rect x="239.9" y="91.6" width="4" height="21" class="book" />
+<rect x="106" y="114" width="65.5" height="1.4" class="shelf" />
+<rect x="108" y="91.6" width="3.2" height="21" class="book" />
+<rect x="111.6" y="87.6" width="4" height="25" class="book" />
+<rect x="116" y="90.6" width="3.2" height="22" class="book" />
+<rect x="119.6" y="86.6" width="3.2" height="26" class="book" />
+<rect x="123.2" y="89.6" width="4" height="23" class="book" />
+<rect x="127.6" y="92.6" width="3.2" height="20" class="book" />
+<rect x="131.2" y="86.6" width="3.2" height="26" class="book" />
+<rect x="134.8" y="88.6" width="4" height="24" class="book" />
+<rect x="263.9" y="82" width="90" height="1.4" class="shelf" />
+<rect x="265.9" y="55.6" width="4" height="25" class="book" />
+<rect x="270.3" y="58.6" width="3.2" height="22" class="book" />
+<rect x="273.9" y="54.6" width="3.2" height="26" class="book" />
+<rect x="277.5" y="57.6" width="4" height="23" class="book" />
+<rect x="281.9" y="60.6" width="3.2" height="20" class="book" />
+<rect x="285.5" y="54.6" width="3.2" height="26" class="book" />
+<rect x="289.1" y="56.6" width="4" height="24" class="book" />
+<rect x="293.5" y="59.6" width="3.2" height="21" class="book" />
+<rect x="297.1" y="55.6" width="3.2" height="25" class="book" />
+<rect x="300.7" y="58.6" width="4" height="22" class="book" />
+<rect x="305.1" y="54.6" width="3.2" height="26" class="book" />
+<rect x="308.7" y="57.6" width="3.2" height="23" class="book" />
+<rect x="312.3" y="60.6" width="4" height="20" class="book" />
+<rect x="316.7" y="54.6" width="3.2" height="26" class="book" />
+<rect x="320.3" y="56.6" width="3.2" height="24" class="book" />
+<rect x="323.9" y="59.6" width="4" height="21" class="book" />
+<rect x="328.3" y="55.6" width="3.2" height="25" class="book" />
+<rect x="172.7" y="82" width="90" height="1.4" class="shelf" />
+<rect x="174.7" y="58.6" width="3.2" height="22" class="book" />
+<rect x="178.3" y="54.6" width="3.2" height="26" class="book" />
+<rect x="181.9" y="57.6" width="4" height="23" class="book" />
+<rect x="186.3" y="60.6" width="3.2" height="20" class="book" />
+<rect x="189.9" y="54.6" width="3.2" height="26" class="book" />
+<rect x="193.5" y="56.6" width="4" height="24" class="book" />
+<rect x="197.9" y="59.6" width="3.2" height="21" class="book" />
+<rect x="201.5" y="55.6" width="3.2" height="25" class="book" />
+<rect x="205.1" y="58.6" width="4" height="22" class="book" />
+<rect x="209.5" y="54.6" width="3.2" height="26" class="book" />
+<rect x="213.1" y="57.6" width="3.2" height="23" class="book" />
+<rect x="216.7" y="60.6" width="4" height="20" class="book" />
+<rect x="106" y="82" width="65.5" height="1.4" class="shelf" />
+<rect x="108" y="54.6" width="3.2" height="26" class="book" />
+<rect x="111.6" y="57.6" width="4" height="23" class="book" />
+<rect x="116" y="60.6" width="3.2" height="20" class="book" />
+<rect x="119.6" y="54.6" width="3.2" height="26" class="book" />
+<rect x="123.2" y="56.6" width="4" height="24" class="book" />
+<rect x="127.6" y="59.6" width="3.2" height="21" class="book" />
+<rect x="131.2" y="55.6" width="3.2" height="25" class="book" />
+<rect x="134.8" y="58.6" width="4" height="22" class="book" />
+<rect x="139.2" y="54.6" width="3.2" height="26" class="book" />
+<rect x="142.8" y="57.6" width="3.2" height="23" class="book" />
+<rect x="146.4" y="60.6" width="4" height="20" class="book" />
+<rect x="263.9" y="50" width="90" height="1.4" class="shelf" />
+<rect x="265.9" y="25.6" width="4" height="23" class="book" />
+<rect x="270.3" y="28.6" width="3.2" height="20" class="book" />
+<rect x="273.9" y="22.6" width="3.2" height="26" class="book" />
+<rect x="277.5" y="24.6" width="4" height="24" class="book" />
+<rect x="281.9" y="27.6" width="3.2" height="21" class="book" />
+<rect x="285.5" y="23.6" width="3.2" height="25" class="book" />
+<rect x="289.1" y="26.6" width="4" height="22" class="book" />
+<rect x="293.5" y="22.6" width="3.2" height="26" class="book" />
+<rect x="297.1" y="25.6" width="3.2" height="23" class="book" />
+<rect x="300.7" y="28.6" width="4" height="20" class="book" />
+<rect x="305.1" y="22.6" width="3.2" height="26" class="book" />
+<rect x="308.7" y="24.6" width="3.2" height="24" class="book" />
+<rect x="172.7" y="50" width="90" height="1.4" class="shelf" />
+<rect x="174.7" y="28.6" width="3.2" height="20" class="book" />
+<rect x="178.3" y="22.6" width="3.2" height="26" class="book" />
+<rect x="181.9" y="24.6" width="4" height="24" class="book" />
+<rect x="186.3" y="27.6" width="3.2" height="21" class="book" />
+<rect x="189.9" y="23.6" width="3.2" height="25" class="book" />
+<rect x="193.5" y="26.6" width="4" height="22" class="book" />
+<rect x="197.9" y="22.6" width="3.2" height="26" class="book" />
+<rect x="201.5" y="25.6" width="3.2" height="23" class="book" />
+<rect x="205.1" y="28.6" width="4" height="20" class="book" />
+<rect x="209.5" y="22.6" width="3.2" height="26" class="book" />
+<rect x="213.1" y="24.6" width="3.2" height="24" class="book" />
+<rect x="216.7" y="27.6" width="4" height="21" class="book" />
+<rect x="221.1" y="23.6" width="3.2" height="25" class="book" />
+<rect x="224.7" y="26.6" width="3.2" height="22" class="book" />
+<rect x="228.3" y="22.6" width="4" height="26" class="book" />
+<rect x="106" y="50" width="65.5" height="1.4" class="shelf" />
+<rect x="108" y="22.6" width="3.2" height="26" class="book" />
+<rect x="111.6" y="24.6" width="4" height="24" class="book" />
+<rect x="116" y="27.6" width="3.2" height="21" class="book" />
+<rect x="119.6" y="23.6" width="3.2" height="25" class="book" />
+<rect x="123.2" y="26.6" width="4" height="22" class="book" />
+<rect x="127.6" y="22.6" width="3.2" height="26" class="book" />
+<rect x="131.2" y="25.6" width="3.2" height="23" class="book" />
+<rect x="134.8" y="28.6" width="4" height="20" class="book" />
+<rect x="139.2" y="22.6" width="3.2" height="26" class="book" />
+<rect x="142.8" y="24.6" width="3.2" height="24" class="book" />
+<rect x="146.4" y="27.6" width="4" height="21" class="book" />
+<rect x="150.8" y="23.6" width="3.2" height="25" class="book" />
+<rect x="154.4" y="26.6" width="3.2" height="22" class="book" />
+<rect x="263.9" y="18" width="90" height="1.4" class="shelf" />
+<rect x="172.7" y="18" width="90" height="1.4" class="shelf" />
+<rect x="106" y="18" width="65.5" height="1.4" class="shelf" />
+<rect x="353.3" y="10" width="2.4" height="228" class="alu" />
+<rect x="262.1" y="10" width="2.4" height="228" class="alu" />
+<rect x="170.9" y="10" width="2.4" height="228" class="alu" />
+<rect x="104.2" y="10" width="2.4" height="228" class="alu" />
+<text x="217.7" y="164" class="lbls muted" text-anchor="middle">armoires 36 · dessus à 74</text>
+<path d="M105.4 268 L354.5 268" class="dim" marker-start="url(#tk)" marker-end="url(#tk)"/>
+<text x="230" y="278" class="dimt" text-anchor="middle">66,7 · 91,2 · 91,2 (entraxes) · 256 hors tout</text>
+<path d="M386 10 L386 238" class="dim" marker-start="url(#tk)" marker-end="url(#tk)"/>
+<text x="394" y="124" class="dimt" text-anchor="middle" transform="rotate(-90 394 124)">E-Track 228</text>
+<path d="M-14 176 L-14 250" class="dim" marker-start="url(#tk)" marker-end="url(#tk)"/>
+<text x="-16.5" y="213" class="dimt" text-anchor="middle" transform="rotate(-90 -16.5 213)">74</text>
+<text x="0" y="262" class="lblx muted" text-anchor="start">sud</text>
+<text x="358" y="262" class="lblx muted" text-anchor="end">nord</text>
+</svg></div><p class="cap">Vitsoe 606 · Mur ouest vu depuis l'est. Quatre rails E-Track en aluminium vissés dans la cloison, à 3,5 du coin nord. Trois armoires basses de 36 de profondeur, avec le dessus à hauteur de table (74), puis cinq niveaux d'étagères de 22 tous les 32 cm. Il reste 1,9 cm de jeu côté passage.</p></div>
+</div>
+<div data-panel="S" hidden>
+<div class="fig"><div class="scroll"><svg viewBox="-140 -45 545 470" role="img" aria-label="Plan, variante String System">
+<rect x="-130" y="-10" width="120" height="278" class="room" />
+<text x="-70" y="60" class="roomt" text-anchor="middle">Cellier</text>
+<text x="-70" y="180" class="roomt" text-anchor="middle">WC</text>
+<rect x="-130" y="268" width="120" height="102" class="room" />
+<text x="-70" y="330" class="roomt" text-anchor="middle">Couloir</text>
+<rect x="0" y="370" width="400" height="50" class="room" />
+<text x="200" y="400" class="roomt" text-anchor="middle">Chambre</text>
+<polygon points="0,0 400,0 400,358 0,358" class="appf" style="stroke:none"/>
+<polygon points="0,0 400,0 400,358 0,358" class="tile"/>
+<rect x="-10" y="-12" width="410" height="12" class="w" />
+<rect x="-10" y="0" width="10" height="268" class="w" />
+<rect x="-10" y="343" width="10" height="27" class="w" />
+<rect x="-10" y="358" width="410" height="12" class="w" />
+<rect x="0" y="258" width="4" height="10" class="frame" />
+<rect x="0" y="343" width="4" height="10" class="frame" />
+<text x="14" y="305" class="lblx muted" text-anchor="middle" transform="rotate(-90 14 305)">passage</text>
+<text x="8" y="263" class="lblx muted" text-anchor="start">cadre</text>
+<path d="M-24 0 L-24 258" class="dim" marker-start="url(#tk)" marker-end="url(#tk)"/>
+<text x="-26.5" y="129.0" class="dimt" text-anchor="middle" transform="rotate(-90 -26.5 129.0)">258 utiles</text>
+<rect x="0" y="0" width="30" height="240" class="cab" />
+<rect x="0" y="0.0" width="30" height="1.5" class="dark" />
+<rect x="0" y="79.5" width="30" height="1.5" class="dark" />
+<rect x="0" y="159.0" width="30" height="1.5" class="dark" />
+<rect x="0" y="238.5" width="30" height="1.5" class="dark" />
+<text x="15" y="120" class="lblx" text-anchor="middle" transform="rotate(-90 15 120)"><tspan class="lblb">①</tspan> String · 3 travées de 78 · prof. 30</text>
+<rect x="0" y="240" width="20" height="18" class="spare" />
+<text x="24" y="251.0" class="passt" text-anchor="start">jeu 18</text>
+<rect x="115" y="230" width="90" height="60" class="ghost" />
+<text x="160" y="263" class="lblx muted" text-anchor="middle">allonge 40 + tête</text>
+<rect x="115" y="70" width="90" height="160" class="tbl" rx="3" />
+<rect x="67" y="75" width="44" height="44" class="stool" rx="5" />
+<rect x="209" y="75" width="44" height="44" class="stool" rx="5" />
+<rect x="67" y="128" width="44" height="44" class="stool" rx="5" />
+<rect x="209" y="128" width="44" height="44" class="stool" rx="5" />
+<rect x="67" y="181" width="44" height="44" class="stool" rx="5" />
+<rect x="209" y="181" width="44" height="44" class="stool" rx="5" />
+<circle cx="160" cy="150" r="10" class="lamp"/>
+<text x="160" y="119.5" class="lbls" text-anchor="middle"><tspan class="lblb">②</tspan> Table</text>
+<text x="160" y="127.5" class="lbls" text-anchor="middle">160 × 90</text>
+<rect x="285" y="76" width="99" height="198" class="sofa" rx="4" />
+<rect x="285" y="82" width="22" height="186" class="sofac" rx="3" />
+<text x="297" y="175" class="lblx" text-anchor="middle" transform="rotate(-90 297 175)"><tspan class="lblb">③</tspan> SÖDERHAMN 198 × 99</text>
+<path d="M30 150 L115 150" class="pass"/>
+<circle cx="30" cy="150" r="1.3" class="mf"/><circle cx="115" cy="150" r="1.3" class="mf"/>
+<text x="72.5" y="147" class="passt" text-anchor="middle">85</text>
+<path d="M160 230 L160 358" class="pass"/>
+<text x="157" y="296" class="passt" text-anchor="middle" transform="rotate(-90 157 296)">128</text>
+</svg></div><p class="cap">String System · Plan, 1 unité = 1 cm. La profondeur est de 30 partout : 85 derrière les chaises, soit 5 de mieux qu'avec la bibliothèque de 35.</p></div>
+<div class="fig"><div class="scroll"><svg viewBox="-36 -14 446 300" role="img" aria-label="Élévation du mur ouest, variante String System">
+<line x1="-10" y1="250" x2="368" y2="250" class="floorl"/>
+<line x1="-10" y1="0" x2="368" y2="0" class="el-ceil"/>
+<text x="2" y="-3" class="lblx muted" text-anchor="start">plafond 250</text>
+<rect x="15" y="46" width="75" height="204" class="room" />
+<text x="52.5" y="150" class="lbls muted" text-anchor="middle">passage</text>
+<rect x="90" y="40" width="10" height="210" class="frame" />
+<rect x="100" y="0" width="258" height="250" class="bgwall" />
+<rect x="278.5" y="240" width="78" height="1.6" class="shelf" />
+<rect x="280.5" y="215.4" width="3.2" height="23" class="book" />
+<rect x="284.1" y="218.4" width="3.2" height="20" class="book" />
+<rect x="287.7" y="212.4" width="4" height="26" class="book" />
+<rect x="292.1" y="214.4" width="3.2" height="24" class="book" />
+<rect x="295.7" y="217.4" width="3.2" height="21" class="book" />
+<rect x="299.3" y="213.4" width="4" height="25" class="book" />
+<rect x="303.7" y="216.4" width="3.2" height="22" class="book" />
+<rect x="307.3" y="212.4" width="3.2" height="26" class="book" />
+<rect x="310.9" y="215.4" width="4" height="23" class="book" />
+<rect x="315.3" y="218.4" width="3.2" height="20" class="book" />
+<rect x="318.9" y="212.4" width="3.2" height="26" class="book" />
+<rect x="322.5" y="214.4" width="4" height="24" class="book" />
+<rect x="326.9" y="217.4" width="3.2" height="21" class="book" />
+<rect x="279" y="176" width="77" height="37" class="cabv" />
+<rect x="312.5" y="180" width="10" height="1.2" class="dark" />
+<rect x="278.5" y="144" width="78" height="1.6" class="shelf" />
+<rect x="280.5" y="119.4" width="3.2" height="23" class="book" />
+<rect x="284.1" y="122.4" width="3.2" height="20" class="book" />
+<rect x="287.7" y="116.4" width="4" height="26" class="book" />
+<rect x="292.1" y="118.4" width="3.2" height="24" class="book" />
+<rect x="295.7" y="121.4" width="3.2" height="21" class="book" />
+<rect x="299.3" y="117.4" width="4" height="25" class="book" />
+<rect x="303.7" y="120.4" width="3.2" height="22" class="book" />
+<rect x="307.3" y="116.4" width="3.2" height="26" class="book" />
+<rect x="310.9" y="119.4" width="4" height="23" class="book" />
+<rect x="278.5" y="112" width="78" height="1.6" class="shelf" />
+<rect x="280.5" y="90.4" width="3.2" height="20" class="book" />
+<rect x="284.1" y="84.4" width="4" height="26" class="book" />
+<rect x="288.5" y="86.4" width="3.2" height="24" class="book" />
+<rect x="292.1" y="89.4" width="3.2" height="21" class="book" />
+<rect x="295.7" y="85.4" width="4" height="25" class="book" />
+<rect x="300.1" y="88.4" width="3.2" height="22" class="book" />
+<rect x="303.7" y="84.4" width="3.2" height="26" class="book" />
+<rect x="307.3" y="87.4" width="4" height="23" class="book" />
+<rect x="311.7" y="90.4" width="3.2" height="20" class="book" />
+<rect x="315.3" y="84.4" width="3.2" height="26" class="book" />
+<rect x="318.9" y="86.4" width="4" height="24" class="book" />
+<rect x="323.3" y="89.4" width="3.2" height="21" class="book" />
+<rect x="278.5" y="80" width="78" height="1.6" class="shelf" />
+<rect x="280.5" y="52.4" width="4" height="26" class="book" />
+<rect x="284.9" y="54.4" width="3.2" height="24" class="book" />
+<rect x="288.5" y="57.4" width="3.2" height="21" class="book" />
+<rect x="292.1" y="53.4" width="4" height="25" class="book" />
+<rect x="296.5" y="56.4" width="3.2" height="22" class="book" />
+<rect x="300.1" y="52.4" width="3.2" height="26" class="book" />
+<rect x="303.7" y="55.4" width="4" height="23" class="book" />
+<rect x="308.1" y="58.4" width="3.2" height="20" class="book" />
+<rect x="311.7" y="52.4" width="3.2" height="26" class="book" />
+<rect x="315.3" y="54.4" width="4" height="24" class="book" />
+<rect x="319.7" y="57.4" width="3.2" height="21" class="book" />
+<rect x="323.3" y="53.4" width="3.2" height="25" class="book" />
+<rect x="326.9" y="56.4" width="4" height="22" class="book" />
+<rect x="331.3" y="52.4" width="3.2" height="26" class="book" />
+<rect x="334.9" y="55.4" width="3.2" height="23" class="book" />
+<rect x="278.5" y="52" width="78" height="1.6" class="shelf" />
+<rect x="199" y="240" width="78" height="1.6" class="shelf" />
+<rect x="201" y="215.4" width="4" height="23" class="book" />
+<rect x="205.4" y="218.4" width="3.2" height="20" class="book" />
+<rect x="209" y="212.4" width="3.2" height="26" class="book" />
+<rect x="212.6" y="214.4" width="4" height="24" class="book" />
+<rect x="217" y="217.4" width="3.2" height="21" class="book" />
+<rect x="220.6" y="213.4" width="3.2" height="25" class="book" />
+<rect x="224.2" y="216.4" width="4" height="22" class="book" />
+<rect x="228.6" y="212.4" width="3.2" height="26" class="book" />
+<rect x="232.2" y="215.4" width="3.2" height="23" class="book" />
+<rect x="235.8" y="218.4" width="4" height="20" class="book" />
+<rect x="240.2" y="212.4" width="3.2" height="26" class="book" />
+<rect x="243.8" y="214.4" width="3.2" height="24" class="book" />
+<rect x="247.4" y="217.4" width="4" height="21" class="book" />
+<rect x="199.5" y="176" width="77" height="37" class="cabv" />
+<rect x="233" y="180" width="10" height="1.2" class="dark" />
+<rect x="199" y="144" width="78" height="1.6" class="shelf" />
+<rect x="201" y="119.4" width="4" height="23" class="book" />
+<rect x="205.4" y="122.4" width="3.2" height="20" class="book" />
+<rect x="209" y="116.4" width="3.2" height="26" class="book" />
+<rect x="212.6" y="118.4" width="4" height="24" class="book" />
+<rect x="217" y="121.4" width="3.2" height="21" class="book" />
+<rect x="220.6" y="117.4" width="3.2" height="25" class="book" />
+<rect x="224.2" y="120.4" width="4" height="22" class="book" />
+<rect x="228.6" y="116.4" width="3.2" height="26" class="book" />
+<rect x="232.2" y="119.4" width="3.2" height="23" class="book" />
+<rect x="199" y="112" width="78" height="1.6" class="shelf" />
+<rect x="201" y="90.4" width="3.2" height="20" class="book" />
+<rect x="204.6" y="84.4" width="3.2" height="26" class="book" />
+<rect x="208.2" y="86.4" width="4" height="24" class="book" />
+<rect x="212.6" y="89.4" width="3.2" height="21" class="book" />
+<rect x="216.2" y="85.4" width="3.2" height="25" class="book" />
+<rect x="219.8" y="88.4" width="4" height="22" class="book" />
+<rect x="224.2" y="84.4" width="3.2" height="26" class="book" />
+<rect x="227.8" y="87.4" width="3.2" height="23" class="book" />
+<rect x="231.4" y="90.4" width="4" height="20" class="book" />
+<rect x="235.8" y="84.4" width="3.2" height="26" class="book" />
+<rect x="239.4" y="86.4" width="3.2" height="24" class="book" />
+<rect x="243" y="89.4" width="4" height="21" class="book" />
+<rect x="199" y="80" width="78" height="1.6" class="shelf" />
+<rect x="201" y="52.4" width="3.2" height="26" class="book" />
+<rect x="204.6" y="54.4" width="4" height="24" class="book" />
+<rect x="209" y="57.4" width="3.2" height="21" class="book" />
+<rect x="212.6" y="53.4" width="3.2" height="25" class="book" />
+<rect x="216.2" y="56.4" width="4" height="22" class="book" />
+<rect x="220.6" y="52.4" width="3.2" height="26" class="book" />
+<rect x="224.2" y="55.4" width="3.2" height="23" class="book" />
+<rect x="227.8" y="58.4" width="4" height="20" class="book" />
+<rect x="232.2" y="52.4" width="3.2" height="26" class="book" />
+<rect x="235.8" y="54.4" width="3.2" height="24" class="book" />
+<rect x="239.4" y="57.4" width="4" height="21" class="book" />
+<rect x="243.8" y="53.4" width="3.2" height="25" class="book" />
+<rect x="247.4" y="56.4" width="3.2" height="22" class="book" />
+<rect x="251" y="52.4" width="4" height="26" class="book" />
+<rect x="255.4" y="55.4" width="3.2" height="23" class="book" />
+<rect x="199" y="52" width="78" height="1.6" class="shelf" />
+<rect x="119.5" y="240" width="78" height="1.6" class="shelf" />
+<rect x="121.5" y="212.4" width="3.2" height="26" class="book" />
+<rect x="125.1" y="215.4" width="3.2" height="23" class="book" />
+<rect x="128.7" y="218.4" width="4" height="20" class="book" />
+<rect x="133.1" y="212.4" width="3.2" height="26" class="book" />
+<rect x="136.7" y="214.4" width="3.2" height="24" class="book" />
+<rect x="140.3" y="217.4" width="4" height="21" class="book" />
+<rect x="144.7" y="213.4" width="3.2" height="25" class="book" />
+<rect x="148.3" y="216.4" width="3.2" height="22" class="book" />
+<rect x="151.9" y="212.4" width="4" height="26" class="book" />
+<rect x="156.3" y="215.4" width="3.2" height="23" class="book" />
+<rect x="159.9" y="218.4" width="3.2" height="20" class="book" />
+<rect x="163.5" y="212.4" width="4" height="26" class="book" />
+<rect x="167.9" y="214.4" width="3.2" height="24" class="book" />
+<rect x="120" y="176" width="77" height="37" class="cabv" />
+<rect x="153.5" y="180" width="10" height="1.2" class="dark" />
+<rect x="119.5" y="144" width="78" height="1.6" class="shelf" />
+<rect x="121.5" y="116.4" width="3.2" height="26" class="book" />
+<rect x="125.1" y="119.4" width="3.2" height="23" class="book" />
+<rect x="128.7" y="122.4" width="4" height="20" class="book" />
+<rect x="133.1" y="116.4" width="3.2" height="26" class="book" />
+<rect x="136.7" y="118.4" width="3.2" height="24" class="book" />
+<rect x="140.3" y="121.4" width="4" height="21" class="book" />
+<rect x="144.7" y="117.4" width="3.2" height="25" class="book" />
+<rect x="148.3" y="120.4" width="3.2" height="22" class="book" />
+<rect x="151.9" y="116.4" width="4" height="26" class="book" />
+<rect x="119.5" y="112" width="78" height="1.6" class="shelf" />
+<rect x="121.5" y="87.4" width="3.2" height="23" class="book" />
+<rect x="125.1" y="90.4" width="4" height="20" class="book" />
+<rect x="129.5" y="84.4" width="3.2" height="26" class="book" />
+<rect x="133.1" y="86.4" width="3.2" height="24" class="book" />
+<rect x="136.7" y="89.4" width="4" height="21" class="book" />
+<rect x="141.1" y="85.4" width="3.2" height="25" class="book" />
+<rect x="144.7" y="88.4" width="3.2" height="22" class="book" />
+<rect x="148.3" y="84.4" width="4" height="26" class="book" />
+<rect x="152.7" y="87.4" width="3.2" height="23" class="book" />
+<rect x="156.3" y="90.4" width="3.2" height="20" class="book" />
+<rect x="159.9" y="84.4" width="4" height="26" class="book" />
+<rect x="164.3" y="86.4" width="3.2" height="24" class="book" />
+<rect x="119.5" y="80" width="78" height="1.6" class="shelf" />
+<rect x="121.5" y="58.4" width="4" height="20" class="book" />
+<rect x="125.9" y="52.4" width="3.2" height="26" class="book" />
+<rect x="129.5" y="54.4" width="3.2" height="24" class="book" />
+<rect x="133.1" y="57.4" width="4" height="21" class="book" />
+<rect x="137.5" y="53.4" width="3.2" height="25" class="book" />
+<rect x="141.1" y="56.4" width="3.2" height="22" class="book" />
+<rect x="144.7" y="52.4" width="4" height="26" class="book" />
+<rect x="149.1" y="55.4" width="3.2" height="23" class="book" />
+<rect x="152.7" y="58.4" width="3.2" height="20" class="book" />
+<rect x="156.3" y="52.4" width="4" height="26" class="book" />
+<rect x="160.7" y="54.4" width="3.2" height="24" class="book" />
+<rect x="164.3" y="57.4" width="3.2" height="21" class="book" />
+<rect x="167.9" y="53.4" width="4" height="25" class="book" />
+<rect x="172.3" y="56.4" width="3.2" height="22" class="book" />
+<rect x="175.9" y="52.4" width="3.2" height="26" class="book" />
+<rect x="119.5" y="52" width="78" height="1.6" class="shelf" />
+<rect x="356.5" y="50" width="1.5" height="200" class="dark" />
+<rect x="277" y="50" width="1.5" height="200" class="dark" />
+<rect x="197.5" y="50" width="1.5" height="200" class="dark" />
+<rect x="118" y="50" width="1.5" height="200" class="dark" />
+<text x="239" y="164" class="lbls muted" text-anchor="middle">armoires à abattant 78 × 30 · dessus à 74</text>
+<text x="239" y="25" class="lbls muted" text-anchor="middle">mur libre au-dessus de 200 (cadres)</text>
+<path d="M118 268 L358 268" class="dim" marker-start="url(#tk)" marker-end="url(#tk)"/>
+<text x="238" y="278" class="dimt" text-anchor="middle">3 × 78 + montants ≈ 240</text>
+<path d="M386 50 L386 250" class="dim" marker-start="url(#tk)" marker-end="url(#tk)"/>
+<text x="394" y="150" class="dimt" text-anchor="middle" transform="rotate(-90 394 150)">montants 200</text>
+<path d="M-14 176 L-14 250" class="dim" marker-start="url(#tk)" marker-end="url(#tk)"/>
+<text x="-16.5" y="213" class="dimt" text-anchor="middle" transform="rotate(-90 -16.5 213)">74</text>
+<text x="0" y="262" class="lblx muted" text-anchor="start">sud</text>
+<text x="358" y="262" class="lblx muted" text-anchor="end">nord</text>
+</svg></div><p class="cap">String System · Mur ouest vu depuis l'est. Quatre montants au sol de 200 × 30 et trois travées de 78. Une tablette basse pour les grands livres, des armoires à abattant dont le dessus est à 74, puis quatre niveaux. Le poids repose sur le sol : la cloison ne sert qu'à retenir le haut. Il reste environ 18 cm côté passage.</p></div>
+</div>
+<div data-panel="U" hidden>
+<div class="fig"><div class="scroll"><svg viewBox="-140 -45 545 470" role="img" aria-label="Plan, variante USM Haller">
+<rect x="-130" y="-10" width="120" height="278" class="room" />
+<text x="-70" y="60" class="roomt" text-anchor="middle">Cellier</text>
+<text x="-70" y="180" class="roomt" text-anchor="middle">WC</text>
+<rect x="-130" y="268" width="120" height="102" class="room" />
+<text x="-70" y="330" class="roomt" text-anchor="middle">Couloir</text>
+<rect x="0" y="370" width="400" height="50" class="room" />
+<text x="200" y="400" class="roomt" text-anchor="middle">Chambre</text>
+<polygon points="0,0 400,0 400,358 0,358" class="appf" style="stroke:none"/>
+<polygon points="0,0 400,0 400,358 0,358" class="tile"/>
+<rect x="-10" y="-12" width="410" height="12" class="w" />
+<rect x="-10" y="0" width="10" height="268" class="w" />
+<rect x="-10" y="343" width="10" height="27" class="w" />
+<rect x="-10" y="358" width="410" height="12" class="w" />
+<rect x="0" y="258" width="4" height="10" class="frame" />
+<rect x="0" y="343" width="4" height="10" class="frame" />
+<text x="14" y="305" class="lblx muted" text-anchor="middle" transform="rotate(-90 14 305)">passage</text>
+<text x="8" y="263" class="lblx muted" text-anchor="start">cadre</text>
+<path d="M-24 0 L-24 258" class="dim" marker-start="url(#tk)" marker-end="url(#tk)"/>
+<text x="-26.5" y="129.0" class="dimt" text-anchor="middle" transform="rotate(-90 -26.5 129.0)">258 utiles</text>
+<rect x="0" y="0" width="37" height="252" class="cab" />
+<circle cx="1" cy="1" r="1.4" class="ball"/><circle cx="36" cy="1" r="1.4" class="ball"/>
+<line x1="1" y1="1" x2="36" y2="1" class="app"/>
+<circle cx="1" cy="76" r="1.4" class="ball"/><circle cx="36" cy="76" r="1.4" class="ball"/>
+<line x1="1" y1="76" x2="36" y2="76" class="app"/>
+<circle cx="1" cy="151" r="1.4" class="ball"/><circle cx="36" cy="151" r="1.4" class="ball"/>
+<line x1="1" y1="151" x2="36" y2="151" class="app"/>
+<circle cx="1" cy="201" r="1.4" class="ball"/><circle cx="36" cy="201" r="1.4" class="ball"/>
+<line x1="1" y1="201" x2="36" y2="201" class="app"/>
+<circle cx="1" cy="251" r="1.4" class="ball"/><circle cx="36" cy="251" r="1.4" class="ball"/>
+<line x1="1" y1="251" x2="36" y2="251" class="app"/>
+<text x="18.5" y="126" class="lblx" text-anchor="middle" transform="rotate(-90 18.5 126)"><tspan class="lblb">①</tspan> USM Haller · 75 + 75 + 50 + 50 · prof. 35</text>
+<rect x="0" y="252" width="20" height="6" class="spare" />
+<text x="24" y="257.0" class="passt" text-anchor="start">jeu 6</text>
+<rect x="115" y="230" width="90" height="60" class="ghost" />
+<text x="160" y="263" class="lblx muted" text-anchor="middle">allonge 40 + tête</text>
+<rect x="115" y="70" width="90" height="160" class="tbl" rx="3" />
+<rect x="67" y="75" width="44" height="44" class="stool" rx="5" />
+<rect x="209" y="75" width="44" height="44" class="stool" rx="5" />
+<rect x="67" y="128" width="44" height="44" class="stool" rx="5" />
+<rect x="209" y="128" width="44" height="44" class="stool" rx="5" />
+<rect x="67" y="181" width="44" height="44" class="stool" rx="5" />
+<rect x="209" y="181" width="44" height="44" class="stool" rx="5" />
+<circle cx="160" cy="150" r="10" class="lamp"/>
+<text x="160" y="119.5" class="lbls" text-anchor="middle"><tspan class="lblb">②</tspan> Table</text>
+<text x="160" y="127.5" class="lbls" text-anchor="middle">160 × 90</text>
+<rect x="285" y="76" width="99" height="198" class="sofa" rx="4" />
+<rect x="285" y="82" width="22" height="186" class="sofac" rx="3" />
+<text x="297" y="175" class="lblx" text-anchor="middle" transform="rotate(-90 297 175)"><tspan class="lblb">③</tspan> SÖDERHAMN 198 × 99</text>
+<path d="M37 150 L115 150" class="pass"/>
+<circle cx="37" cy="150" r="1.3" class="mf"/><circle cx="115" cy="150" r="1.3" class="mf"/>
+<text x="76.0" y="147" class="passt" text-anchor="middle">78</text>
+<path d="M160 230 L160 358" class="pass"/>
+<text x="157" y="296" class="passt" text-anchor="middle" transform="rotate(-90 157 296)">128</text>
+</svg></div><p class="cap">USM Haller · Plan, 1 unité = 1 cm. 35 entre axes, soit environ 37 avec les boules : 78 derrière les chaises.</p></div>
+<div class="fig"><div class="scroll"><svg viewBox="-36 -14 446 300" role="img" aria-label="Élévation du mur ouest, variante USM Haller">
+<line x1="-10" y1="250" x2="368" y2="250" class="floorl"/>
+<line x1="-10" y1="0" x2="368" y2="0" class="el-ceil"/>
+<text x="2" y="-3" class="lblx muted" text-anchor="start">plafond 250</text>
+<rect x="15" y="46" width="75" height="204" class="room" />
+<text x="52.5" y="150" class="lbls muted" text-anchor="middle">passage</text>
+<rect x="90" y="40" width="10" height="210" class="frame" />
+<rect x="100" y="0" width="258" height="250" class="bgwall" />
+<rect x="283" y="212.5" width="73" height="33" class="usmd" />
+<rect x="314.5" y="214.5" width="10" height="1" class="dark" />
+<rect x="283" y="177.5" width="73" height="33" class="usmd" />
+<rect x="314.5" y="179.5" width="10" height="1" class="dark" />
+<rect x="284" y="155.9" width="3.2" height="20" class="book" />
+<rect x="287.6" y="149.9" width="4" height="26" class="book" />
+<rect x="292" y="151.9" width="3.2" height="24" class="book" />
+<rect x="295.6" y="154.9" width="3.2" height="21" class="book" />
+<rect x="299.2" y="150.9" width="4" height="25" class="book" />
+<rect x="303.6" y="153.9" width="3.2" height="22" class="book" />
+<rect x="307.2" y="149.9" width="3.2" height="26" class="book" />
+<rect x="310.8" y="152.9" width="4" height="23" class="book" />
+<rect x="315.2" y="155.9" width="3.2" height="20" class="book" />
+<rect x="318.8" y="149.9" width="3.2" height="26" class="book" />
+<rect x="322.4" y="151.9" width="4" height="24" class="book" />
+<rect x="326.8" y="154.9" width="3.2" height="21" class="book" />
+<rect x="330.4" y="150.9" width="3.2" height="25" class="book" />
+<rect x="334" y="153.9" width="4" height="22" class="book" />
+<rect x="283" y="107.5" width="73" height="33" class="usmp" />
+<rect x="284" y="114.9" width="4" height="26" class="book" />
+<rect x="288.4" y="116.9" width="3.2" height="24" class="book" />
+<rect x="292" y="119.9" width="3.2" height="21" class="book" />
+<rect x="295.6" y="115.9" width="4" height="25" class="book" />
+<rect x="300" y="118.9" width="3.2" height="22" class="book" />
+<rect x="303.6" y="114.9" width="3.2" height="26" class="book" />
+<rect x="307.2" y="117.9" width="4" height="23" class="book" />
+<rect x="311.6" y="120.9" width="3.2" height="20" class="book" />
+<rect x="315.2" y="114.9" width="3.2" height="26" class="book" />
+<rect x="318.8" y="116.9" width="4" height="24" class="book" />
+<rect x="284" y="81.9" width="3.2" height="24" class="book" />
+<rect x="287.6" y="84.9" width="3.2" height="21" class="book" />
+<rect x="291.2" y="80.9" width="4" height="25" class="book" />
+<rect x="295.6" y="83.9" width="3.2" height="22" class="book" />
+<rect x="299.2" y="79.9" width="3.2" height="26" class="book" />
+<rect x="302.8" y="82.9" width="4" height="23" class="book" />
+<rect x="307.2" y="85.9" width="3.2" height="20" class="book" />
+<rect x="310.8" y="79.9" width="3.2" height="26" class="book" />
+<rect x="314.4" y="81.9" width="4" height="24" class="book" />
+<rect x="318.8" y="84.9" width="3.2" height="21" class="book" />
+<rect x="322.4" y="80.9" width="3.2" height="25" class="book" />
+<rect x="326" y="83.9" width="4" height="22" class="book" />
+<rect x="284" y="49.9" width="3.2" height="21" class="book" />
+<rect x="287.6" y="45.9" width="4" height="25" class="book" />
+<rect x="292" y="48.9" width="3.2" height="22" class="book" />
+<rect x="295.6" y="44.9" width="3.2" height="26" class="book" />
+<rect x="299.2" y="47.9" width="4" height="23" class="book" />
+<rect x="303.6" y="50.9" width="3.2" height="20" class="book" />
+<rect x="307.2" y="44.9" width="3.2" height="26" class="book" />
+<rect x="310.8" y="46.9" width="4" height="24" class="book" />
+<rect x="315.2" y="49.9" width="3.2" height="21" class="book" />
+<rect x="318.8" y="45.9" width="3.2" height="25" class="book" />
+<rect x="322.4" y="48.9" width="4" height="22" class="book" />
+<rect x="326.8" y="44.9" width="3.2" height="26" class="book" />
+<rect x="330.4" y="47.9" width="3.2" height="23" class="book" />
+<rect x="334" y="50.9" width="4" height="20" class="book" />
+<line x1="282" y1="246.5" x2="357" y2="246.5" class="rail"/>
+<line x1="282" y1="211.5" x2="357" y2="211.5" class="rail"/>
+<line x1="282" y1="176.5" x2="357" y2="176.5" class="rail"/>
+<line x1="282" y1="141.5" x2="357" y2="141.5" class="rail"/>
+<line x1="282" y1="106.5" x2="357" y2="106.5" class="rail"/>
+<line x1="282" y1="71.5" x2="357" y2="71.5" class="rail"/>
+<line x1="282" y1="36.5" x2="357" y2="36.5" class="rail"/>
+<rect x="208" y="212.5" width="73" height="33" class="usmd" />
+<rect x="239.5" y="214.5" width="10" height="1" class="dark" />
+<rect x="208" y="177.5" width="73" height="33" class="usmd" />
+<rect x="239.5" y="179.5" width="10" height="1" class="dark" />
+<rect x="209" y="154.9" width="3.2" height="21" class="book" />
+<rect x="212.6" y="150.9" width="4" height="25" class="book" />
+<rect x="217" y="153.9" width="3.2" height="22" class="book" />
+<rect x="220.6" y="149.9" width="3.2" height="26" class="book" />
+<rect x="224.2" y="152.9" width="4" height="23" class="book" />
+<rect x="228.6" y="155.9" width="3.2" height="20" class="book" />
+<rect x="232.2" y="149.9" width="3.2" height="26" class="book" />
+<rect x="235.8" y="151.9" width="4" height="24" class="book" />
+<rect x="240.2" y="154.9" width="3.2" height="21" class="book" />
+<rect x="243.8" y="150.9" width="3.2" height="25" class="book" />
+<rect x="247.4" y="153.9" width="4" height="22" class="book" />
+<rect x="251.8" y="149.9" width="3.2" height="26" class="book" />
+<rect x="255.4" y="152.9" width="3.2" height="23" class="book" />
+<rect x="259" y="155.9" width="4" height="20" class="book" />
+<rect x="208" y="107.5" width="73" height="33" class="usmp" />
+<rect x="209" y="115.9" width="4" height="25" class="book" />
+<rect x="213.4" y="118.9" width="3.2" height="22" class="book" />
+<rect x="217" y="114.9" width="3.2" height="26" class="book" />
+<rect x="220.6" y="117.9" width="4" height="23" class="book" />
+<rect x="225" y="120.9" width="3.2" height="20" class="book" />
+<rect x="228.6" y="114.9" width="3.2" height="26" class="book" />
+<rect x="232.2" y="116.9" width="4" height="24" class="book" />
+<rect x="236.6" y="119.9" width="3.2" height="21" class="book" />
+<rect x="240.2" y="115.9" width="3.2" height="25" class="book" />
+<rect x="243.8" y="118.9" width="4" height="22" class="book" />
+<rect x="209" y="83.9" width="3.2" height="22" class="book" />
+<rect x="212.6" y="79.9" width="3.2" height="26" class="book" />
+<rect x="216.2" y="82.9" width="4" height="23" class="book" />
+<rect x="220.6" y="85.9" width="3.2" height="20" class="book" />
+<rect x="224.2" y="79.9" width="3.2" height="26" class="book" />
+<rect x="227.8" y="81.9" width="4" height="24" class="book" />
+<rect x="232.2" y="84.9" width="3.2" height="21" class="book" />
+<rect x="235.8" y="80.9" width="3.2" height="25" class="book" />
+<rect x="239.4" y="83.9" width="4" height="22" class="book" />
+<rect x="243.8" y="79.9" width="3.2" height="26" class="book" />
+<rect x="247.4" y="82.9" width="3.2" height="23" class="book" />
+<rect x="251" y="85.9" width="4" height="20" class="book" />
+<rect x="209" y="44.9" width="3.2" height="26" class="book" />
+<rect x="212.6" y="47.9" width="4" height="23" class="book" />
+<rect x="217" y="50.9" width="3.2" height="20" class="book" />
+<rect x="220.6" y="44.9" width="3.2" height="26" class="book" />
+<rect x="224.2" y="46.9" width="4" height="24" class="book" />
+<rect x="228.6" y="49.9" width="3.2" height="21" class="book" />
+<rect x="232.2" y="45.9" width="3.2" height="25" class="book" />
+<rect x="235.8" y="48.9" width="4" height="22" class="book" />
+<rect x="240.2" y="44.9" width="3.2" height="26" class="book" />
+<rect x="243.8" y="47.9" width="3.2" height="23" class="book" />
+<rect x="247.4" y="50.9" width="4" height="20" class="book" />
+<rect x="251.8" y="44.9" width="3.2" height="26" class="book" />
+<rect x="255.4" y="46.9" width="3.2" height="24" class="book" />
+<rect x="259" y="49.9" width="4" height="21" class="book" />
+<line x1="207" y1="246.5" x2="282" y2="246.5" class="rail"/>
+<line x1="207" y1="211.5" x2="282" y2="211.5" class="rail"/>
+<line x1="207" y1="176.5" x2="282" y2="176.5" class="rail"/>
+<line x1="207" y1="141.5" x2="282" y2="141.5" class="rail"/>
+<line x1="207" y1="106.5" x2="282" y2="106.5" class="rail"/>
+<line x1="207" y1="71.5" x2="282" y2="71.5" class="rail"/>
+<line x1="207" y1="36.5" x2="282" y2="36.5" class="rail"/>
+<rect x="158" y="212.5" width="48" height="33" class="usmd" />
+<rect x="177" y="214.5" width="10" height="1" class="dark" />
+<rect x="158" y="177.5" width="48" height="33" class="usmd" />
+<rect x="177" y="179.5" width="10" height="1" class="dark" />
+<rect x="159" y="149.9" width="3.2" height="26" class="book" />
+<rect x="162.6" y="152.9" width="4" height="23" class="book" />
+<rect x="167" y="155.9" width="3.2" height="20" class="book" />
+<rect x="170.6" y="149.9" width="3.2" height="26" class="book" />
+<rect x="174.2" y="151.9" width="4" height="24" class="book" />
+<rect x="178.6" y="154.9" width="3.2" height="21" class="book" />
+<rect x="182.2" y="150.9" width="3.2" height="25" class="book" />
+<rect x="185.8" y="153.9" width="4" height="22" class="book" />
+<rect x="190.2" y="149.9" width="3.2" height="26" class="book" />
+<rect x="158" y="107.5" width="48" height="33" class="usmp" />
+<rect x="159" y="117.9" width="4" height="23" class="book" />
+<rect x="163.4" y="120.9" width="3.2" height="20" class="book" />
+<rect x="167" y="114.9" width="3.2" height="26" class="book" />
+<rect x="170.6" y="116.9" width="4" height="24" class="book" />
+<rect x="175" y="119.9" width="3.2" height="21" class="book" />
+<rect x="178.6" y="115.9" width="3.2" height="25" class="book" />
+<rect x="159" y="85.9" width="3.2" height="20" class="book" />
+<rect x="162.6" y="79.9" width="3.2" height="26" class="book" />
+<rect x="166.2" y="81.9" width="4" height="24" class="book" />
+<rect x="170.6" y="84.9" width="3.2" height="21" class="book" />
+<rect x="174.2" y="80.9" width="3.2" height="25" class="book" />
+<rect x="177.8" y="83.9" width="4" height="22" class="book" />
+<rect x="182.2" y="79.9" width="3.2" height="26" class="book" />
+<rect x="185.8" y="82.9" width="3.2" height="23" class="book" />
+<rect x="159" y="44.9" width="3.2" height="26" class="book" />
+<rect x="162.6" y="46.9" width="4" height="24" class="book" />
+<rect x="167" y="49.9" width="3.2" height="21" class="book" />
+<rect x="170.6" y="45.9" width="3.2" height="25" class="book" />
+<rect x="174.2" y="48.9" width="4" height="22" class="book" />
+<rect x="178.6" y="44.9" width="3.2" height="26" class="book" />
+<rect x="182.2" y="47.9" width="3.2" height="23" class="book" />
+<rect x="185.8" y="50.9" width="4" height="20" class="book" />
+<rect x="190.2" y="44.9" width="3.2" height="26" class="book" />
+<line x1="157" y1="246.5" x2="207" y2="246.5" class="rail"/>
+<line x1="157" y1="211.5" x2="207" y2="211.5" class="rail"/>
+<line x1="157" y1="176.5" x2="207" y2="176.5" class="rail"/>
+<line x1="157" y1="141.5" x2="207" y2="141.5" class="rail"/>
+<line x1="157" y1="106.5" x2="207" y2="106.5" class="rail"/>
+<line x1="157" y1="71.5" x2="207" y2="71.5" class="rail"/>
+<line x1="157" y1="36.5" x2="207" y2="36.5" class="rail"/>
+<rect x="108" y="212.5" width="48" height="33" class="usmd" />
+<rect x="127" y="214.5" width="10" height="1" class="dark" />
+<rect x="108" y="177.5" width="48" height="33" class="usmd" />
+<rect x="127" y="179.5" width="10" height="1" class="dark" />
+<rect x="109" y="155.9" width="3.2" height="20" class="book" />
+<rect x="112.6" y="149.9" width="3.2" height="26" class="book" />
+<rect x="116.2" y="151.9" width="4" height="24" class="book" />
+<rect x="120.6" y="154.9" width="3.2" height="21" class="book" />
+<rect x="124.2" y="150.9" width="3.2" height="25" class="book" />
+<rect x="127.8" y="153.9" width="4" height="22" class="book" />
+<rect x="132.2" y="149.9" width="3.2" height="26" class="book" />
+<rect x="135.8" y="152.9" width="3.2" height="23" class="book" />
+<rect x="139.4" y="155.9" width="4" height="20" class="book" />
+<rect x="109" y="114.9" width="3.2" height="26" class="book" />
+<rect x="112.6" y="116.9" width="4" height="24" class="book" />
+<rect x="117" y="119.9" width="3.2" height="21" class="book" />
+<rect x="120.6" y="115.9" width="3.2" height="25" class="book" />
+<rect x="124.2" y="118.9" width="4" height="22" class="book" />
+<rect x="128.6" y="114.9" width="3.2" height="26" class="book" />
+<rect x="108" y="72.5" width="48" height="33" class="usmp" />
+<rect x="109" y="81.9" width="4" height="24" class="book" />
+<rect x="113.4" y="84.9" width="3.2" height="21" class="book" />
+<rect x="117" y="80.9" width="3.2" height="25" class="book" />
+<rect x="120.6" y="83.9" width="4" height="22" class="book" />
+<rect x="125" y="79.9" width="3.2" height="26" class="book" />
+<rect x="128.6" y="82.9" width="3.2" height="23" class="book" />
+<rect x="132.2" y="85.9" width="4" height="20" class="book" />
+<rect x="109" y="49.9" width="3.2" height="21" class="book" />
+<rect x="112.6" y="45.9" width="3.2" height="25" class="book" />
+<rect x="116.2" y="48.9" width="4" height="22" class="book" />
+<rect x="120.6" y="44.9" width="3.2" height="26" class="book" />
+<rect x="124.2" y="47.9" width="3.2" height="23" class="book" />
+<rect x="127.8" y="50.9" width="4" height="20" class="book" />
+<rect x="132.2" y="44.9" width="3.2" height="26" class="book" />
+<rect x="135.8" y="46.9" width="3.2" height="24" class="book" />
+<rect x="139.4" y="49.9" width="4" height="21" class="book" />
+<line x1="107" y1="246.5" x2="157" y2="246.5" class="rail"/>
+<line x1="107" y1="211.5" x2="157" y2="211.5" class="rail"/>
+<line x1="107" y1="176.5" x2="157" y2="176.5" class="rail"/>
+<line x1="107" y1="141.5" x2="157" y2="141.5" class="rail"/>
+<line x1="107" y1="106.5" x2="157" y2="106.5" class="rail"/>
+<line x1="107" y1="71.5" x2="157" y2="71.5" class="rail"/>
+<line x1="107" y1="36.5" x2="157" y2="36.5" class="rail"/>
+<line x1="357" y1="246.5" x2="357" y2="36.5" class="rail"/>
+<circle cx="357" cy="246.5" r="1.3" class="ball"/>
+<circle cx="357" cy="211.5" r="1.3" class="ball"/>
+<circle cx="357" cy="176.5" r="1.3" class="ball"/>
+<circle cx="357" cy="141.5" r="1.3" class="ball"/>
+<circle cx="357" cy="106.5" r="1.3" class="ball"/>
+<circle cx="357" cy="71.5" r="1.3" class="ball"/>
+<circle cx="357" cy="36.5" r="1.3" class="ball"/>
+<rect x="356" y="246.5" width="2" height="3.5" class="dark" />
+<line x1="282" y1="246.5" x2="282" y2="36.5" class="rail"/>
+<circle cx="282" cy="246.5" r="1.3" class="ball"/>
+<circle cx="282" cy="211.5" r="1.3" class="ball"/>
+<circle cx="282" cy="176.5" r="1.3" class="ball"/>
+<circle cx="282" cy="141.5" r="1.3" class="ball"/>
+<circle cx="282" cy="106.5" r="1.3" class="ball"/>
+<circle cx="282" cy="71.5" r="1.3" class="ball"/>
+<circle cx="282" cy="36.5" r="1.3" class="ball"/>
+<rect x="281" y="246.5" width="2" height="3.5" class="dark" />
+<line x1="207" y1="246.5" x2="207" y2="36.5" class="rail"/>
+<circle cx="207" cy="246.5" r="1.3" class="ball"/>
+<circle cx="207" cy="211.5" r="1.3" class="ball"/>
+<circle cx="207" cy="176.5" r="1.3" class="ball"/>
+<circle cx="207" cy="141.5" r="1.3" class="ball"/>
+<circle cx="207" cy="106.5" r="1.3" class="ball"/>
+<circle cx="207" cy="71.5" r="1.3" class="ball"/>
+<circle cx="207" cy="36.5" r="1.3" class="ball"/>
+<rect x="206" y="246.5" width="2" height="3.5" class="dark" />
+<line x1="157" y1="246.5" x2="157" y2="36.5" class="rail"/>
+<circle cx="157" cy="246.5" r="1.3" class="ball"/>
+<circle cx="157" cy="211.5" r="1.3" class="ball"/>
+<circle cx="157" cy="176.5" r="1.3" class="ball"/>
+<circle cx="157" cy="141.5" r="1.3" class="ball"/>
+<circle cx="157" cy="106.5" r="1.3" class="ball"/>
+<circle cx="157" cy="71.5" r="1.3" class="ball"/>
+<circle cx="157" cy="36.5" r="1.3" class="ball"/>
+<rect x="156" y="246.5" width="2" height="3.5" class="dark" />
+<line x1="107" y1="246.5" x2="107" y2="36.5" class="rail"/>
+<circle cx="107" cy="246.5" r="1.3" class="ball"/>
+<circle cx="107" cy="211.5" r="1.3" class="ball"/>
+<circle cx="107" cy="176.5" r="1.3" class="ball"/>
+<circle cx="107" cy="141.5" r="1.3" class="ball"/>
+<circle cx="107" cy="106.5" r="1.3" class="ball"/>
+<circle cx="107" cy="71.5" r="1.3" class="ball"/>
+<circle cx="107" cy="36.5" r="1.3" class="ball"/>
+<rect x="106" y="246.5" width="2" height="3.5" class="dark" />
+<path d="M106 268 L358 268" class="dim" marker-start="url(#tk)" marker-end="url(#tk)"/>
+<text x="232" y="278" class="dimt" text-anchor="middle">75 · 75 · 50 · 50 (axes) · ≈ 252 hors tout</text>
+<path d="M386 35.5 L386 250" class="dim" marker-start="url(#tk)" marker-end="url(#tk)"/>
+<text x="394" y="143" class="dimt" text-anchor="middle" transform="rotate(-90 394 143)">≈ 213 · 6 × 35</text>
+<path d="M-14 176 L-14 250" class="dim" marker-start="url(#tk)" marker-end="url(#tk)"/>
+<text x="-16.5" y="213" class="dimt" text-anchor="middle" transform="rotate(-90 -16.5 213)">74</text>
+<text x="0" y="262" class="lblx muted" text-anchor="start">sud</text>
+<text x="358" y="262" class="lblx muted" text-anchor="end">nord</text>
+</svg></div><p class="cap">USM Haller · Mur ouest vu depuis l'est. Structure tubes et boules chromés de 4 colonnes (75, 75, 50, 50) et 6 rangs de 35. Les deux rangs du bas ont des portes abattantes (dessus à 74), et quelques fonds pleins rythment les quatre rangs ouverts. Le meuble porte son propre poids ; au-delà de 178 de haut, USM conseille une simple fixation anti-basculement. Il reste environ 6 cm côté passage.</p></div>
+</div>
+<div class="legend"><span><svg viewBox="0 0 26 14"><rect x="1" y="2" width="24" height="10" class="cab"/></svg>Bibliothèque</span><span><svg viewBox="0 0 26 14"><rect x="1" y="2" width="24" height="10" class="spare"/></svg>Jeu restant avant le cadre</span><span><svg viewBox="0 0 26 14"><rect x="1" y="2" width="24" height="10" class="frame"/></svg>Cadre du passage</span><span><svg viewBox="0 0 26 14"><path d="M1 7 L25 7" class="pass"/></svg>Recul (cm)</span></div>
+<h2>Comparaison</h2>
+<div class="scroll-t"><table>
+<thead><tr><th></th><th>V · Vitsoe 606</th><th>S · String System</th><th>U · USM Haller</th></tr></thead><tbody>
+<tr><th>Composition</th><td>3 travées (91,2 + 91,2 + 66,7 entre axes), rails E-Track de 228</td><td>4 montants 200 × 30, 3 travées de 78</td><td>4 colonnes (75 + 75 + 50 + 50), 6 rangs de 35</td></tr>
+<tr><th>Largeur hors tout</th><td>256,1 (jeu 1,9)</td><td>≈ 240 (jeu ≈ 18)</td><td>≈ 252 (jeu ≈ 6)</td></tr>
+<tr><th>Profondeur</th><td>24 en haut, 38 en bas</td><td>30</td><td>≈ 37</td></tr>
+<tr><th>Hauteur</th><td>rails de 12 à 240</td><td>200</td><td>≈ 213</td></tr>
+<tr><th>Rangements fermés</th><td>3 armoires 36 × 90 / 65,5</td><td>3 armoires à abattant 78 × 30</td><td>8 abattants (2 rangs)</td></tr>
+<tr><th>Étagères ouvertes</th><td>5 niveaux · ≈ 12 m</td><td>5 niveaux · ≈ 11,7 m</td><td>4 niveaux · 10 m</td></tr>
+<tr><th>Recul derrière les chaises</th><td><span class="warn">77</span> (91 au-dessus de 74)</td><td><span class="ok">85</span></td><td><span class="warn">78</span></td></tr>
+<tr><th>Charge sur la cloison</th><td><span class="warn">tout le poids</span></td><td>haut des montants seulement</td><td><span class="ok">anti-basculement seulement</span></td></tr>
+<tr><th>Modèles 3D</th><td>SketchUp (3D Warehouse) + guide de conception officiel</td><td>CAO officielle (3Dfindit), Blender (BlenderKit)</td><td>CAO officielle (USM, BIMobject, pCon)</td></tr>
+</tbody></table></div>
+<h2>Principe</h2>
+<div class="grid2">
+<div class="card"><h3>V · Vitsoe 606</h3><p>C'est celui qui remplit le mieux le mur : 256 sur 258. Les étagères de 22 dégagent la pièce en hauteur, et les armoires de 36 font un buffet à hauteur de table, pratique pour recevoir. En contrepartie, tout est accroché à la cloison du cellier et du WC, qui doit être assez solide pour cela.</p></div>
+<div class="card"><h3>S · String System</h3><p>Le moins profond (30) et le moins cher. Les montants en fil d'acier sont légers à l'œil, et le mur reste libre au-dessus de 200 pour des cadres. Comme les travées ne font que 78, il reste environ 18 cm vides côté passage (une plante, une liseuse).</p></div>
+<div class="card"><h3>U · USM Haller</h3><p>Il tient debout tout seul : la cloison ne porte rien. Sa profondeur de 35 est celle du plan, et ses deux rangs d'abattants reprennent les portes basses du plan. C'est aussi le plus massif à l'œil (métal laqué, boules chromées) et le plus cher.</p></div>
+</div>
+<h2>Points à vérifier</h2>
+<div class="hyp"><ul>
+<li><b>Cloison ouest</b> (cellier et WC) : il faut savoir comment elle est faite (plaque de plâtre sur ossature, carreaux de plâtre ou maçonnerie). C'est ce qui décide entre V et U. Vitsoe conseille des fixations lourdes et un renfort si la cloison est en plaque.</li>
+<li><b>Plinthe</b> : son épaisseur décale tout vers la pièce. Vitsoe propose des pattes murales longues au-delà de 3 cm.</li>
+<li><b>Prises et interrupteurs</b> sur ce mur : à relever pour placer les armoires ou les abattants.</li>
+<li><b>Cotes à confirmer auprès des fabricants</b> : l'épaisseur des montants String, la profondeur hors tout des boules USM, et la hauteur et la position des armoires Vitsoe et String. Elles ont été estimées pour ce plan.</li>
+</ul></div>
+<h2>Modèles 3D</h2>
+<ul>
+<li>Vitsoe 606 : <a href="https://3dwarehouse.sketchup.com/model/4f3e79313fbf474df7248d9dbed7a7b8/Vitsoe-606-Universal-Shelving-System">3D Warehouse</a> · <a href="https://www.vitsoe.com/site/download/495/606_Universal_Shelving_System_planning_guide.pdf">guide de conception (PDF)</a></li>
+<li>String System : <a href="https://www.3dfindit.com/en/cad-bim-library/manufacturer/string-furniture?path=string_furniture">3Dfindit (CAO officielle)</a> · <a href="https://www.blenderkit.com/asset-gallery-detail/299303b1-76bb-43ba-a448-5940b204fbec/">BlenderKit</a></li>
+<li>USM Haller : <a href="https://www.usm.com/en/customer-care/downloads">téléchargements USM</a> · <a href="https://modula24.com/en/knowledge/usm-haller-dimensions-sizes-grid">grille de cotes</a></li>
+</ul>
+<script>
+(function(){
+  var bs=document.querySelectorAll('.switch button');
+  function show(v){
+    bs.forEach(function(b){b.setAttribute('aria-selected',b.getAttribute('data-v')===v?'true':'false')});
+    document.querySelectorAll('[data-panel]').forEach(function(p){p.hidden=p.getAttribute('data-panel')!==v});
+    try{localStorage.setItem('salon-biblio',v)}catch(e){}
+  }
+  bs.forEach(function(b){b.addEventListener('click',function(){show(b.getAttribute('data-v'))})});
+  var v=null;try{v=localStorage.getItem('salon-biblio')}catch(e){}
+  if(/^#[VSU]$/.test(location.hash))v=location.hash.slice(1);
+  if(v==='S'||v==='U')show(v);
+})();
+</script>
+<section id="changements">
+<h2>Changements</h2>
+<div class="scroll-t"><table>
+<thead><tr><th>Version</th><th>Date</th><th>Changements</th></tr></thead>
+<tbody><tr><td><b>V1</b></td><td>05/10/2026</td><td>Première proposition pour le mur ouest, sur 258 cm utiles entre le coin nord et le cadre du passage : Vitsoe 606 (256,1, fixé au mur), String System (≈ 240, montants au sol de 200) et USM Haller (≈ 252, autoportant). Plan, élévation, comparaison et sources des modèles 3D.</td></tr></tbody>
+</table></div>
+</section>
+</div>
+</body>
+</html>
