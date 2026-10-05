@@ -134,6 +134,10 @@ cell = Part.Face(Part.makePolygon([V(x * 10, -y * 10, -20) for x, y in
                                     (382, 122), (312, 122), (312, 62), (317, 62), (317, 0)]]))
 _add("sol_carrelage", "cellier", cell.extrude(V(0, 0, 20)), None)
 box("sol_carrelage", "wc", 392, 484, 110, 252, -2, 0, plan=False)
+# amorce du couloir derrière la porte d'entrée (vue par la baie)
+box("sol_bois", "couloir", 180, 382, 262, 330, -2, 0, plan=False)
+box("mur", "couloir_fond", 180, 382, 330, 340, 0, H, plan=False)
+box("plafond", "couloir", 180, 382, 262, 330, H, H + 2, plan=False)
 box("plafond", "plafond", -20, 494, -20, 262, H, H + 2, plan=False)
 
 # ------------------------------------------------------------------ fenêtre coulissante

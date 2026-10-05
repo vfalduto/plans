@@ -29,6 +29,38 @@ VUES = [a for a in args if not a.isdigit() and a not in ("sans", "deco")] or ["e
 COULEUR_BAS = "#8D9B80"   # sauge des rendus Gemini (cuisine-gemini/prompts-gemini.md), meubles bas et hauts
 
 
+# Soleil : position calculée (lieu, date, heure légale). Azimut compté depuis le nord vers l'est.
+LIEU = (48.86, 2.35)                 # Paris (latitude, longitude)
+DATE_HEURE = (2026, 6, 21, 17, 0)    # 21 juin, 17 h 00 heure d'été
+UTC_DECALAGE = 2
+SOLEIL_FORCE = 60.0                  # W/m² Blender : rapport soleil / ciel d'une fin de journée claire
+EXPOSITION = -0.8                    # compensation d'exposition (IL)
+LAMPES = False                       # plein jour : plafonniers, réglette et suspension éteints (le cellier reste éclairé)
+CIEL_FORCE = 0.35                    # intensité du ciel physique
+
+
+def position_soleil(lat, lon, an, mois, jour, h, mn, decalage):
+    """Hauteur et azimut du soleil en degrés (formules simplifiées de l'almanach, ± 0,5°)."""
+    import datetime
+    t = datetime.datetime(an, mois, jour, h, mn) - datetime.timedelta(hours=decalage)
+    d = (t - datetime.datetime(2000, 1, 1, 12)).total_seconds() / 86400
+    g = math.radians((357.529 + 0.98560028 * d) % 360)
+    q = (280.459 + 0.98564736 * d) % 360
+    lam = math.radians((q + 1.915 * math.sin(g) + 0.020 * math.sin(2 * g)) % 360)
+    eps = math.radians(23.439 - 0.00000036 * d)
+    ra = math.atan2(math.cos(eps) * math.sin(lam), math.cos(lam))
+    dec = math.asin(math.sin(eps) * math.sin(lam))
+    gmst = (18.697374558 + 24.06570982441908 * d) % 24
+    ha = math.radians(gmst * 15 + lon) - ra
+    la = math.radians(lat)
+    alt = math.asin(math.sin(la) * math.sin(dec) + math.cos(la) * math.cos(dec) * math.cos(ha))
+    az = math.atan2(-math.sin(ha), math.tan(dec) * math.cos(la) - math.sin(la) * math.cos(ha))
+    return math.degrees(alt), math.degrees(az) % 360
+
+
+SUN_ALT, SUN_AZ = position_soleil(*LIEU, *DATE_HEURE, UTC_DECALAGE)
+
+
 def hexrgb(h):
     h = h.lstrip("#")
     c = [int(h[i:i + 2], 16) / 255 for i in (0, 2, 4)]
@@ -219,7 +251,7 @@ def build_scene(glb):
     bpy.ops.wm.read_factory_settings(use_empty=True)
     bpy.ops.import_scene.gltf(filepath=glb)
     mats = {}
-    ceiling = None
+    ceiling = []  # plafonds, masqués dans la vue plongeante
     globes = []
     for o in bpy.context.scene.objects:
         if o.type != "MESH":
@@ -231,8 +263,10 @@ def build_scene(glb):
         o.data.materials.append(mats[key])
         for poly in o.data.polygons:
             poly.use_smooth = key in ("globe", "feuillage", "fleurs", "fruits")
+        if key == "verre":
+            o.visible_shadow = False  # vitrage mince : laisse passer le soleil (pas de caustiques)
         if key == "plafond":
-            ceiling = o
+            ceiling.append(o)
         if key == "globe":
             globes.append(o)
     missing = sorted(k for k in mats if k not in MATS)
@@ -255,31 +289,54 @@ def build_scene(glb):
     sc.render.resolution_x, sc.render.resolution_y = 1600, 1200
     sc.view_settings.view_transform = "AgX"
     sc.view_settings.look = "AgX - Base Contrast"
+    sc.view_settings.exposure = EXPOSITION
 
+    # ciel physique (diffusion multiple) calé sur la position du soleil, sans disque : le soleil est la lampe ci-dessous
     world = bpy.data.worlds.new("ciel")
     sc.world = world
     world.use_nodes = True
-    bg = world.node_tree.nodes["Background"]
-    bg.inputs["Color"].default_value = hexrgb("#BFD6EA")
-    bg.inputs["Strength"].default_value = 1.6
+    nt = world.node_tree
+    sky = nt.nodes.new("ShaderNodeTexSky")
+    sky.sky_type = "MULTIPLE_SCATTERING"
+    sky.sun_disc = False
+    sky.sun_elevation = math.radians(SUN_ALT)
+    sky.sun_rotation = math.radians(SUN_AZ)
+    bg = nt.nodes["Background"]
+    bg.inputs["Strength"].default_value = CIEL_FORCE
+    nt.links.new(sky.outputs["Color"], bg.inputs["Color"])
+    # vu directement par la caméra (vue plongeante), le fond reste un gris clair uni
+    fond = nt.nodes.new("ShaderNodeBackground")
+    fond.inputs["Color"].default_value = hexrgb("#E4E9EC")
+    path = nt.nodes.new("ShaderNodeLightPath")
+    mix = nt.nodes.new("ShaderNodeMixShader")
+    nt.links.new(path.outputs["Is Camera Ray"], mix.inputs["Fac"])
+    nt.links.new(bg.outputs["Background"], mix.inputs[1])
+    nt.links.new(fond.outputs["Background"], mix.inputs[2])
+    nt.links.new(mix.outputs["Shader"], nt.nodes["World Output"].inputs["Surface"])
 
-    # soleil de fin d'après-midi par la fenêtre ouest
+    # soleil réel : fenêtre ouest, 17 h (heure d'été) le 21 juin à Paris
     bpy.ops.object.light_add(type="SUN", location=(0, 0, 5))
     sun = bpy.context.object
-    sun.data.energy = 3.5
-    sun.data.angle = math.radians(1.5)
-    sun.data.color = (1.0, 0.93, 0.84)
-    look_at(sun, sun.location + Vector((1.0, -0.45, -0.55)))
+    sun.data.energy = SOLEIL_FORCE
+    sun.data.angle = math.radians(0.53)
+    sun.data.color = (1.0, 0.95, 0.88)
+    a, h = math.radians(SUN_AZ), math.radians(SUN_ALT)
+    vers_soleil = Vector((math.sin(a) * math.cos(h), math.cos(a) * math.cos(h), math.sin(h)))
+    look_at(sun, sun.location - vers_soleil)
 
     # portail dans la baie de la fenêtre
     portal = area(p(-21, 129, 160.5), 1.42, 0, shape="RECTANGLE", size_y=1.09)
     portal.data.cycles.is_portal = True
     look_at(portal, p(100, 129, 160.5))
 
-    # plafonniers cuisine et cellier, réglette sous les meubles hauts
+    # cellier (sans fenêtre) éclairé ; plafonniers cuisine, réglette et suspension selon LAMPES
+    area(p(375, 50, 248), 0.4, 45)
+    if not LAMPES:
+        for g in globes:
+            g.active_material.node_tree.nodes["Principled BSDF"].inputs["Emission Strength"].default_value = 0.0
+        return ceiling
     for x, y in [(90, 110), (230, 140)]:
         area(p(x, y, 248), 0.45, 60)
-    area(p(375, 50, 248), 0.4, 45)
     area(p(179, 28, 146.5), 1.3, 25, color=(1.0, 0.88, 0.72), shape="RECTANGLE", size_y=0.04)
     # la suspension éclaire vraiment la table
     for g in globes:
@@ -325,11 +382,11 @@ for version in VERSIONS:
         sc.camera = cam
         if name not in VUES:
             continue
-        if ceiling:
-            ceiling.hide_render = bool(v.get("no_ceiling"))
+        for c in ceiling:
+            c.hide_render = bool(v.get("no_ceiling"))
         sc.render.filepath = os.path.join(OUT, f"rendu-{name}{suffix}.png")
         bpy.ops.render.render(write_still=True)
-        print("Rendu :", sc.render.filepath)
-    if ceiling:
-        ceiling.hide_render = False
+        print("Rendu :", sc.render.filepath, f"(soleil h {SUN_ALT:.1f}°, az {SUN_AZ:.1f}°)")
+    for c in ceiling:
+        c.hide_render = False
     bpy.ops.wm.save_as_mainfile(filepath=os.path.join(OUT, f"cuisine-a{suffix}.blend"), compress=True)
