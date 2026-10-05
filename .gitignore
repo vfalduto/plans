@@ -2,3 +2,4 @@
 .playwright-cli/
 3d/sortie/
 3d/textures/
+__pycache__/
