@@ -37,3 +37,9 @@ rendu-3d echantillons="256":
     /Applications/Blender.app/Contents/MacOS/Blender -b --python 3d/rendu.py -- {{echantillons}}
     mkdir -p cuisine-3d
     for f in 3d/sortie/rendu-*.png; do sips -s format jpeg -s formatOptions 85 "$f" --out "cuisine-3d/$(basename "$f" .png).jpg" >/dev/null; done
+
+# Rendus 3D de la bibliothèque du salon (3 systèmes) → salon-3d/
+rendu-salon echantillons="256":
+    /Applications/Blender.app/Contents/MacOS/Blender -b --python 3d/salon_biblio.py -- {{echantillons}}
+    mkdir -p salon-3d
+    for f in 3d/sortie/salon-biblio-*.png; do sips -s format jpeg -s formatOptions 85 "$f" --out "salon-3d/$(basename "$f" .png).jpg" >/dev/null; done

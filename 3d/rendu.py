@@ -651,33 +651,35 @@ VIEWS = {
     "plongee": dict(loc=(330, 360, 470), target=(160, 110, 40), lens=22, no_ceiling=True),
 }
 
-for teinte in TEINTES:
-    COULEUR_BAS, TEINTE_TERRAZZO, suffixe_teinte, ESSENCE, LAMPES = VARIANTES[teinte]
-    for version in VERSIONS:
-        suffix = ("-deco" if version == "deco" else "") + suffixe_teinte
-        glb = "cuisine-a-deco.glb" if version == "deco" else "cuisine-a.glb"
-        ceiling = build_scene(os.path.join(OUT, glb), deco=version == "deco")
-        sc = bpy.context.scene
-        for name in VIEWS:  # toutes les caméras dans le .blend, rendu des seules vues demandées
-            v = VIEWS[name]
-            cam_data = bpy.data.cameras.new(name)
-            cam_data.lens = v["lens"]
-            cam_data.sensor_width = 36
-            cam_data.shift_y = v.get("shift", 0.0)
-            cam = bpy.data.objects.new("cam_" + name, cam_data)
-            sc.collection.objects.link(cam)
-            cam.location = p(*v["loc"])
-            look_at(cam, p(*v["target"]))
-            sc.camera = cam
-            if name not in VUES:
-                continue
-            for c in ceiling + [o for o in sc.objects if o.get("exterieur")]:
-                c.hide_render = bool(v.get("no_ceiling"))
-                for ch in c.children_recursive:
-                    ch.hide_render = bool(v.get("no_ceiling"))
-            sc.render.filepath = os.path.join(OUT, f"rendu-{name}{suffix}.png")
-            bpy.ops.render.render(write_still=True)
-            print("Rendu :", sc.render.filepath, f"(soleil h {SUN_ALT:.1f}°, az {SUN_AZ:.1f}°)")
-        for c in ceiling:
-            c.hide_render = False
-        bpy.ops.wm.save_as_mainfile(filepath=os.path.join(OUT, f"cuisine-a{suffix}.blend"), compress=True)
+# Sans effet quand le module est importé (3d/salon_biblio.py réutilise matériaux, soleil et réglages).
+if __name__ == "__main__":
+    for teinte in TEINTES:
+        COULEUR_BAS, TEINTE_TERRAZZO, suffixe_teinte, ESSENCE, LAMPES = VARIANTES[teinte]
+        for version in VERSIONS:
+            suffix = ("-deco" if version == "deco" else "") + suffixe_teinte
+            glb = "cuisine-a-deco.glb" if version == "deco" else "cuisine-a.glb"
+            ceiling = build_scene(os.path.join(OUT, glb), deco=version == "deco")
+            sc = bpy.context.scene
+            for name in VIEWS:  # toutes les caméras dans le .blend, rendu des seules vues demandées
+                v = VIEWS[name]
+                cam_data = bpy.data.cameras.new(name)
+                cam_data.lens = v["lens"]
+                cam_data.sensor_width = 36
+                cam_data.shift_y = v.get("shift", 0.0)
+                cam = bpy.data.objects.new("cam_" + name, cam_data)
+                sc.collection.objects.link(cam)
+                cam.location = p(*v["loc"])
+                look_at(cam, p(*v["target"]))
+                sc.camera = cam
+                if name not in VUES:
+                    continue
+                for c in ceiling + [o for o in sc.objects if o.get("exterieur")]:
+                    c.hide_render = bool(v.get("no_ceiling"))
+                    for ch in c.children_recursive:
+                        ch.hide_render = bool(v.get("no_ceiling"))
+                sc.render.filepath = os.path.join(OUT, f"rendu-{name}{suffix}.png")
+                bpy.ops.render.render(write_still=True)
+                print("Rendu :", sc.render.filepath, f"(soleil h {SUN_ALT:.1f}°, az {SUN_AZ:.1f}°)")
+            for c in ceiling:
+                c.hide_render = False
+            bpy.ops.wm.save_as_mainfile(filepath=os.path.join(OUT, f"cuisine-a{suffix}.blend"), compress=True)
