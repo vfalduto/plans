@@ -63,7 +63,7 @@ code{font-family:"JetBrains Mono",ui-monospace,Menlo,monospace;font-size:13px}
 <header class="ph"><a href="index.html" aria-label="Retour aux plans">← Plans</a><span>Rendus 3D cuisine</span></header>
 <!-- /page-header -->
 <main>
-  <div class="kicker">Variante A · V1.2 · FreeCAD + Blender</div>
+  <div class="kicker">Variante A · V1.3 · FreeCAD + Blender</div>
   <h1>Rendus 3D cuisine</h1>
   <p class="lead">Modèle 3D construit dans FreeCAD à partir des cotes du plan et des coupes (variante A, table carrée 70 × 70), rendu dans Blender (Cycles). Meubles bas et hauts sauge, meubles toute hauteur en noyer, poignées profilées toute longueur dans la teinte de la façade, plan terrazzo gris clair, crédence zellige ivoire, parquet bâtons rompus.</p>
   <div class="seg" role="group" aria-label="Décoration"><button type="button" data-deco="1" aria-pressed="true">Avec déco</button><button type="button" data-deco="0" aria-pressed="false">Sans déco</button></div>
@@ -100,7 +100,7 @@ code{font-family:"JetBrains Mono",ui-monospace,Menlo,monospace;font-size:13px}
       <li>Lumière du jour seule : soleil calculé pour le 21 juin à 17 h (heure d'été) à Paris, 45° de hauteur, venant de l'ouest-sud-ouest par la fenêtre ; ciel physique ; lampes de la cuisine éteintes.</li>
       <li>Vues prises à hauteur d'yeux d'une personne de 1,75 m : 1,63 m debout, 1,20 m assise ; la vue plongeante fait exception.</li>
       <li>Les cotes sont recopiées du plan à la main : une modification de <a href="cuisine-plan.html">cuisine-plan.html</a> ne passe pas encore dans la 3D.</li>
-      <li>Textures CC0 : noyer et parquet de Poly Haven, terrazzo d'ambientCG. La décoration est indicative.</li>
+      <li>Textures, vue extérieure et objets de décoration CC0 : Poly Haven (noyer, parquet, panorama de cour d'immeubles, vase, bol, fruits, livres, plante, paniers, cartons, balai) et ambientCG (terrazzo). Chaises de type Cesca, zellige et cannage modélisés. La décoration est indicative.</li>
       <li>Scripts : <code>3d/cuisine_a.py</code> (FreeCAD), <code>3d/rendu.py</code> (Blender), <code>3d/textures.py</code> ; regénérer avec <code>just rendu-3d</code>.</li>
     </ul>
   </section>
@@ -110,6 +110,7 @@ code{font-family:"JetBrains Mono",ui-monospace,Menlo,monospace;font-size:13px}
     <table>
       <thead><tr><th>Version</th><th>Date</th><th>Changements</th></tr></thead>
       <tbody>
+        <tr><td><b>V1.3</b></td><td>05/10/2026</td><td>Plus photo-réaliste : arêtes arrondies (2 mm), panorama d'immeubles par la fenêtre, objets de décoration remplacés par de vrais modèles 3D, chaises de type Cesca (tube chromé, noyer, cannage), textures plaquées en UV avec relief, enduit des murs, zellige à joints, laque à brillance irrégulière ; parquet tourné de 90° ; réglages Cycles (rebonds, débruitage, échantillonnage adaptatif, 256 échantillons).</td></tr>
         <tr><td><b>V1.2</b></td><td>05/10/2026</td><td>Éclairage d'été à 17 h : soleil réel par la fenêtre ouest (h 45°, azimut 252°), ciel physique, lampes éteintes ; vitrage laissant passer le soleil ; amorce de couloir derrière la porte d'entrée.</td></tr>
         <tr><td><b>V1.1</b></td><td>05/10/2026</td><td>Meubles bas et hauts en sauge #8D9B80 (couleur des rendus Gemini) ; caméras à hauteur d'yeux (1,63 m debout) avec verticales droites ; nouvelle vue assise à table (1,20 m) ; vase et corbeille de fruits déplacés sur la table.</td></tr>
         <tr><td><b>V1</b></td><td>05/10/2026</td><td>Premiers rendus 3D de la variante A : 4 vues (entrée, fenêtre, cellier, plongée), avec et sans décoration.</td></tr>

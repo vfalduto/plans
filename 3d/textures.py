@@ -1,4 +1,5 @@
-# Télécharge les textures du rendu (CC0, Poly Haven et ambientCG) dans 3d/textures/.
+# Télécharge les textures, la vue extérieure (HDRI) et les modèles 3D du rendu (CC0, Poly Haven et ambientCG)
+# dans 3d/textures/ et 3d/modeles/.
 #   python3 3d/textures.py
 # Ne retélécharge pas ce qui est déjà là.
 
@@ -46,7 +47,43 @@ def ambientcg(name, asset):
             f.write(z.read(member))
 
 
+# vue extérieure (HDRI) et modèles 3D Poly Haven (glTF 1k), dans 3d/textures/ et 3d/modeles/<id>/
+HDRI = "urban_courtyard"
+MODELES = ["potted_plant_04", "ceramic_vase_04", "wooden_bowl_01", "food_apple_01", "lemon", "pot_enamel_01",
+           "book_encyclopedia_set_01", "wicker_basket_01", "wicker_basket_02", "cardboard_box_01",
+           "wooden_broom", "plastic_broom"]
+MOD = os.path.join(HERE, "modeles")
+
+
+def hdri(asset):
+    path = os.path.join(DEST, f"{asset}_2k.hdr")
+    if not os.path.exists(path):
+        files = json.loads(get(f"https://api.polyhaven.com/files/{asset}"))
+        with open(path, "wb") as f:
+            f.write(get(files["hdri"]["2k"]["hdr"]["url"]))
+
+
+def modele(asset):
+    folder = os.path.join(MOD, asset)
+    main = os.path.join(folder, f"{asset}.gltf")
+    if os.path.exists(main):
+        return
+    g = json.loads(get(f"https://api.polyhaven.com/files/{asset}"))["gltf"]["1k"]["gltf"]
+    for rel, info in g["include"].items():
+        dst = os.path.join(folder, rel)
+        os.makedirs(os.path.dirname(dst), exist_ok=True)
+        with open(dst, "wb") as f:
+            f.write(get(info["url"]))
+    with open(main, "wb") as f:
+        f.write(get(g["url"]))
+
+
 os.makedirs(DEST, exist_ok=True)
 for name, (src, asset) in TEXTURES.items():
     (polyhaven if src == "polyhaven" else ambientcg)(name, asset)
     print("ok", name, asset)
+hdri(HDRI)
+print("ok hdri", HDRI)
+for asset in MODELES:
+    modele(asset)
+    print("ok modèle", asset)

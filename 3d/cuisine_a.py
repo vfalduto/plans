@@ -271,13 +271,42 @@ table_carree()
 
 
 def chaise(name, x0, y0, dossier):
-    box("chaise", name + "_assise", x0, x0 + 42, y0, y0 + 42, 43, 46)
-    for i, (dx, dy) in enumerate([(2, 2), (36, 2), (2, 36), (36, 36)]):
-        box("chaise", f"{name}_pied_{i + 1}", x0 + dx, x0 + dx + 4, y0 + dy, y0 + dy + 4, 0, 43, plan=False)
-    bx = x0 if dossier == "ouest" else x0 + 38
-    box("chaise", name + "_dossier", bx, bx + 4, y0 + 2, y0 + 40, 60, 88, plan=False)
-    for i, dy in enumerate((2, 36)):
-        box("chaise", f"{name}_montant_{i + 1}", bx, bx + 4, y0 + dy, y0 + dy + 4, 46, 60, plan=False)
+    """Chaise type Cesca dans l'emprise 42 × 42 : luge en tube chromé Ø 2,5, cadres noyer, assise et dossier cannés.
+    u = profondeur depuis le dossier, v = largeur ; dossier « ouest » (x0) ou « est » (x0 + 42)."""
+    def P(u, v, z):
+        x = x0 + u if dossier == "ouest" else x0 + 42 - u
+        return V(x * 10, -(y0 + v) * 10, z * 10)
+
+    r = 12.5  # rayon du tube (mm)
+
+    def tube(n, a, b):
+        d = b - a
+        _add("chrome", f"{name}_{n}", Part.makeCylinder(r, d.Length, a, d), None)
+
+    for side, v in (("g", 2), ("d", 40)):
+        pts = [P(3, v, 78.5), P(1, v, 46), P(39, v, 43), P(41, v, 1.3), P(5, v, 1.3)]
+        for i in range(len(pts) - 1):
+            tube(f"tube_{side}{i}", pts[i], pts[i + 1])
+        for i, pt in enumerate(pts):
+            _add("chrome", f"{name}_coude_{side}{i}", Part.makeSphere(r, pt), None)
+    tube("traverse_sol", P(5, 2, 1.3), P(5, 40, 1.3))
+    # assise : cadre noyer 42 × 42 × 3, cannage tendu dedans
+    seat_o = solid(*_uv_box(x0, y0, dossier, 0, 42, 0, 42), 44, 47)
+    seat_i = solid(*_uv_box(x0, y0, dossier, 5, 37, 5, 37), 43, 48)
+    _add("chaise", name + "_cadre_assise", seat_o.cut(seat_i), ("rect", (x0, y0, x0 + 42, y0 + 42)))
+    box("cannage", name + "_cannage_assise", *_uv_box(x0, y0, dossier, 5, 37, 5, 37), 45.2, 45.6, plan=False)
+    # dossier : cadre 42 × 22, épaisseur 2,5, entre h 58 et 80
+    back_o = solid(*_uv_box(x0, y0, dossier, 1.5, 4, 0, 42), 58, 80)
+    back_i = solid(*_uv_box(x0, y0, dossier, 1, 4.5, 5, 37), 62, 76)
+    _add("chaise", name + "_cadre_dossier", back_o.cut(back_i), None)
+    box("cannage", name + "_cannage_dossier", *_uv_box(x0, y0, dossier, 2.6, 2.9, 5, 37), 62, 76, plan=False)
+
+
+def _uv_box(x0, y0, dossier, u0, u1, v0, v1):
+    """Rectangle (u, v) de la chaise → (x0, x1, y0, y1) du plan."""
+    if dossier == "ouest":
+        return x0 + u0, x0 + u1, y0 + v0, y0 + v1
+    return x0 + 42 - u1, x0 + 42 - u0, y0 + v0, y0 + v1
 
 
 chaise("chaise_1", 76, 174, "ouest")

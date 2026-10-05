@@ -1,11 +1,11 @@
 # Rendu Blender (Cycles) de la cuisine, variante A, à partir de 3d/sortie/cuisine-a[-deco].glb.
 #
-# Prérequis : python3 3d/textures.py (textures CC0 dans 3d/textures/).
+# Prérequis : python3 3d/textures.py (textures, vue extérieure et modèles CC0 dans 3d/textures/ et 3d/modeles/).
 # Lancement (sans interface) :
 #   /Applications/Blender.app/Contents/MacOS/Blender -b --python 3d/rendu.py -- [échantillons] [sans|deco] [vue ...]
 #   ex. : ... -- 32 deco cellier   (aperçu rapide d'une vue, avec décoration)
 #         ... -- aucune            (régénère seulement les .blend, sans rendu)
-# Sans précision : 128 échantillons, les deux versions, toutes les vues.
+# Sans précision : 256 échantillons (échantillonnage adaptatif), les deux versions, toutes les vues.
 #
 # Produit dans 3d/sortie/ : rendu-<vue>.png (sans déco), rendu-<vue>-deco.png (avec),
 # cuisine-a.blend et cuisine-a-deco.blend (à ouvrir pour changer de point de vue).
@@ -13,30 +13,39 @@
 
 import math
 import os
+import re
 import sys
 
+import bmesh
 import bpy
 from mathutils import Vector
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 OUT = os.path.join(HERE, "sortie")
 TEX = os.path.join(HERE, "textures")
+MOD = os.path.join(HERE, "modeles")
 args = sys.argv[sys.argv.index("--") + 1:] if "--" in sys.argv else []
-SAMPLES = next((int(a) for a in args if a.isdigit()), 128)
+SAMPLES = next((int(a) for a in args if a.isdigit()), 256)
 VERSIONS = [a for a in args if a in ("sans", "deco")] or ["sans", "deco"]
 VUES = [a for a in args if not a.isdigit() and a not in ("sans", "deco")] or ["entree", "fenetre", "cellier", "assis", "plongee"]
 
 COULEUR_BAS = "#8D9B80"   # sauge des rendus Gemini (cuisine-gemini/prompts-gemini.md), meubles bas et hauts
-
 
 # Soleil : position calculée (lieu, date, heure légale). Azimut compté depuis le nord vers l'est.
 LIEU = (48.86, 2.35)                 # Paris (latitude, longitude)
 DATE_HEURE = (2026, 6, 21, 17, 0)    # 21 juin, 17 h 00 heure d'été
 UTC_DECALAGE = 2
 SOLEIL_FORCE = 60.0                  # W/m² Blender : rapport soleil / ciel d'une fin de journée claire
-EXPOSITION = -0.8                    # compensation d'exposition (IL)
+CIEL_FORCE = 0.35                    # intensité du ciel physique (éclairage)
+EXPOSITION = -0.2                    # compensation d'exposition (IL)
 LAMPES = False                       # plein jour : plafonniers, réglette et suspension éteints (le cellier reste éclairé)
-CIEL_FORCE = 0.35                    # intensité du ciel physique
+
+# Vue par la fenêtre : panorama HDRI (cour d'immeubles), vu seulement à travers les vitres.
+HDRI = "urban_courtyard_2k.hdr"
+HDRI_FORCE = 0.9
+HDRI_ROTATION = 0.0                  # degrés autour de la verticale, pour placer les façades face à la fenêtre
+
+CHANFREIN = 0.002                    # arêtes arrondies : 2 mm, 2 segments
 
 
 def position_soleil(lat, lon, an, mois, jour, h, mn, decalage):
@@ -68,16 +77,17 @@ def hexrgb(h):
 
 
 # couleur, rugosité, options :
-#   tex     : texture de 3d/textures (noyer, parquet, terrazzo) ; sens : "v" fil vertical, "h" fil selon x, "sol", "bloc"
+#   tex     : texture de 3d/textures (noyer, parquet, terrazzo), plaquée en UV ;
+#             sens : "v" fil vertical, "h" fil horizontal, "sol" (parquet, tourné de 90°), "bloc"
 #   teinte  : (saturation, valeur) appliquées à la texture (noyer huilé = plus sombre, plus saturé)
-#   metal, verre (transmission), emission, zellige
+#   metal, verre (transmission), emission, zellige, cannage, enduit (mur), laque (brillance irrégulière)
 NOYER = {"tex": "noyer", "sens": "v", "teinte": (1.25, 0.36)}
 MATS = {
-    "mur":              ("#F3EEE4", 0.9, {}),
-    "plafond":          ("#F5F2EC", 0.95, {}),
+    "mur":              ("#F3EEE4", 0.9, {"enduit": True}),
+    "plafond":          ("#F5F2EC", 0.95, {"enduit": True}),
     "sol_bois":         ("#B98A55", 0.5, {"tex": "parquet", "sens": "sol", "echelle": 3.4}),
     "sol_carrelage":    ("#D8D5CE", 0.5, {}),
-    "facade_couleur":      (COULEUR_BAS, 0.45, {}),                                      # laque mate
+    "facade_couleur":   (COULEUR_BAS, 0.45, {"laque": True}),
     "facade_noyer":     ("#45291A", 0.5, NOYER),
     "etagere":          ("#45291A", 0.5, dict(NOYER, sens="h")),
     "chaise":           ("#45291A", 0.5, NOYER),
@@ -88,13 +98,15 @@ MATS = {
     "plan":             ("#CFCDC7", 0.3, {"tex": "terrazzo", "sens": "bloc", "echelle": 0.6}),
     "credence":         ("#EFE7D6", 0.08, {"zellige": True}),                 # zellige ivoire
     "inox":             ("#C9C9C7", 0.3, {"metal": True}),
+    "chrome":           ("#E8E8E8", 0.08, {"metal": True}),
+    "cannage":          ("#D9B98A", 0.6, {"cannage": True}),
     "vitro":            ("#0B0B0C", 0.04, {}),
     "noir":             ("#18181A", 0.35, {}),
     "verre":            ("#FFFFFF", 0.0, {"verre": True}),
     "verre_ambre":      ("#B5651D", 0.05, {"verre": True}),
     "verre_fume":       ("#1A1C1E", 0.05, {}),
     "menuiserie":       ("#F1F1EF", 0.4, {}),
-    "porte_peinte":     ("#EEECE6", 0.5, {}),
+    "porte_peinte":     ("#EEECE6", 0.5, {"laque": True}),
     "ardoise":          ("#2F3A33", 0.9, {}),
     "electro_blanc":    ("#F2F2F0", 0.3, {}),
     "etagere_blanche":  ("#F0EEE9", 0.6, {}),
@@ -120,37 +132,82 @@ MATS = {
     "livre_c":          ("#C9B27C", 0.8, {}),
 }
 
+# Objets simplifiés remplacés par des modèles Poly Haven (version avec décoration).
+#   cacher : objets masqués ; cadre : objets (ou boîte du plan en cm) dans lesquels le modèle est ajusté ;
+#   ajuste : "dedans" (échelle pour tenir dans le cadre) ou "reel" (taille réelle) ; rot : rotation en degrés.
+REMPLACEMENTS = [
+    dict(cacher=r"__(pot_plante_haut|plante_haut)$", cadre=r"__(pot_plante_haut|plante_haut)$", modele="potted_plant_04"),
+    dict(cacher=r"__(vase|tige_\d|fleur_\d)$", cadre=r"__vase$", modele="ceramic_vase_04"),
+    dict(cacher=r"__coupe_fruits$", cadre=r"__coupe_fruits$", modele="wooden_bowl_01"),
+    dict(cacher=r"__fruit_1$", cadre=r"__fruit_1$", modele="food_apple_01"),
+    dict(cacher=r"__fruit_2$", cadre=r"__fruit_2$", modele="food_apple_01", rot=70),
+    dict(cacher=r"__fruit_3$", cadre=r"__fruit_3$", modele="lemon", rot=30),
+    dict(cacher=r"__(casserole|manche_casserole)$", cadre=r"__casserole$", modele="pot_enamel_01", rot=-90),
+    dict(cacher=r"__livre_\d$", cadre=(72, 134, 230, 250, 200, 224), modele="book_encyclopedia_set_01", rot=180),
+    dict(cacher=r"__cellier_bas_1$", cadre=r"__cellier_bas_1$", modele="wicker_basket_01", rot=90),
+    dict(cacher=r"__cellier_bas_2$", cadre=r"__cellier_bas_2$", modele="wicker_basket_01", rot=90),
+    dict(cacher=r"__panier_linge$", cadre=r"__panier_linge$", modele="wicker_basket_01"),
+    dict(cacher=r"__cellier_carton_1$", cadre=r"__cellier_carton_1$", modele="cardboard_box_01"),
+    dict(cacher=r"__cellier_carton_2$", cadre=r"__cellier_carton_2$", modele="cardboard_box_01"),
+    dict(cacher=r"__balai_\d$", cadre=(358, 378, 0, 12, 0, 150), modele="wooden_broom", ajuste="reel"),
+]
 
-def tex_vector(nt, sens, echelle):
-    """Coordonnées de texture sans UV : projection calculée depuis les coordonnées objet (m)."""
-    tc = nt.nodes.new("ShaderNodeTexCoord")
-    sep = nt.nodes.new("ShaderNodeSeparateXYZ")
-    nt.links.new(tc.outputs["Object"], sep.inputs["Vector"])
-    comb = nt.nodes.new("ShaderNodeCombineXYZ")
 
-    def add(a, b):
-        m = nt.nodes.new("ShaderNodeMath")
-        m.operation = "ADD"
-        nt.links.new(a, m.inputs[0])
-        nt.links.new(b, m.inputs[1])
-        return m.outputs[0]
+def p(x, y, z):
+    """Coordonnées du plan (cm, y vers le sud) → Blender (m, Y vers le nord)."""
+    return Vector((x / 100, -y / 100, z / 100))
 
-    X, Y, Z = sep.outputs["X"], sep.outputs["Y"], sep.outputs["Z"]
-    if sens == "v":        # fil (u de l'image) vertical, sur les faces nord-sud comme est-ouest
-        nt.links.new(Z, comb.inputs["X"])
-        nt.links.new(add(X, Y), comb.inputs["Y"])
-    elif sens == "sol":
-        nt.links.new(X, comb.inputs["X"])
-        nt.links.new(Y, comb.inputs["Y"])
-    else:                  # "h" (fil selon x) et "bloc" : dessus et chants sans étirement
-        nt.links.new(add(X, Z), comb.inputs["X"])
-        nt.links.new(add(Y, Z), comb.inputs["Y"])
-    scale = nt.nodes.new("ShaderNodeVectorMath")
-    scale.operation = "SCALE"
-    scale.inputs["Scale"].default_value = 1.0 / echelle
-    nt.links.new(comb.outputs["Vector"], scale.inputs[0])
-    return scale.outputs["Vector"]
 
+def look_at(obj, target):
+    d = Vector(target) - obj.location
+    obj.rotation_euler = d.to_track_quat("-Z", "Y").to_euler()
+
+
+# ------------------------------------------------------------------ géométrie : UV et chanfreins
+
+def make_uvs(obj, sens, echelle):
+    """UV en vraie grandeur (m / échelle), projetées par face selon son orientation, fil du bois maîtrisé."""
+    me = obj.data
+    bm = bmesh.new()
+    bm.from_mesh(me)
+    uv = bm.loops.layers.uv.verify()
+    mw = obj.matrix_world
+    for f in bm.faces:
+        n = f.normal
+        ax = max(range(3), key=lambda i: abs(n[i]))
+        for loop in f.loops:
+            co = mw @ loop.vert.co
+            x, y, z = co.x / echelle, co.y / echelle, co.z / echelle
+            if sens == "sol":                      # parquet tourné de 90°
+                u, v = y, -x
+            elif ax == 2:                          # dessus / dessous
+                u, v = x, y
+            else:
+                h = x if ax == 1 else y            # coordonnée horizontale le long de la face
+                u, v = (z, h) if sens == "v" else (h, z)
+            loop[uv].uv = (u, v)
+    bm.to_mesh(me)
+    bm.free()
+
+
+def chanfreiner(obj):
+    """Fusionne les sommets (le glTF les sépare par face) puis arrondit les arêtes vives."""
+    me = obj.data
+    bm = bmesh.new()
+    bm.from_mesh(me)
+    bmesh.ops.remove_doubles(bm, verts=bm.verts, dist=0.00005)
+    bm.to_mesh(me)
+    bm.free()
+    mod = obj.modifiers.new("chanfrein", "BEVEL")
+    mod.width = CHANFREIN
+    mod.segments = 2
+    mod.limit_method = "ANGLE"
+    mod.angle_limit = math.radians(30)
+    mod.use_clamp_overlap = True
+    mod.harden_normals = True
+
+
+# ------------------------------------------------------------------ matériaux
 
 def image(nt, name, short, vec, data=False):
     node = nt.nodes.new("ShaderNodeTexImage")
@@ -159,6 +216,23 @@ def image(nt, name, short, vec, data=False):
         node.image.colorspace_settings.name = "Non-Color"
     nt.links.new(vec, node.inputs["Vector"])
     return node
+
+
+def noise(nt, scale, vec=None, detail=4.0):
+    n = nt.nodes.new("ShaderNodeTexNoise")
+    n.inputs["Scale"].default_value = scale
+    n.inputs["Detail"].default_value = detail
+    if vec is not None:
+        nt.links.new(vec, n.inputs["Vector"])
+    return n
+
+
+def map_range(nt, src, lo, hi):
+    m = nt.nodes.new("ShaderNodeMapRange")
+    m.inputs["To Min"].default_value = lo
+    m.inputs["To Max"].default_value = hi
+    nt.links.new(src, m.inputs["Value"])
+    return m.outputs["Result"]
 
 
 def make_material(key):
@@ -177,9 +251,10 @@ def make_material(key):
     if opt.get("emission"):
         bsdf.inputs["Emission Color"].default_value = hexrgb(col)
         bsdf.inputs["Emission Strength"].default_value = opt["emission"]
+    tc = nt.nodes.new("ShaderNodeTexCoord")
     name = opt.get("tex")
     if name:
-        vec = tex_vector(nt, opt.get("sens", "bloc"), opt.get("echelle", 1.0))
+        vec = tc.outputs["UV"]
         diff = image(nt, name, "diff", vec)
         out = diff.outputs["Color"]
         if "teinte" in opt:
@@ -194,46 +269,170 @@ def make_material(key):
         mul.inputs[1].default_value = rough / 0.6
         nt.links.new(rgh.outputs["Color"], mul.inputs[0])
         nt.links.new(mul.outputs[0], bsdf.inputs["Roughness"])
+        nor = image(nt, name, "nor", vec, data=True)
+        nmap = nt.nodes.new("ShaderNodeNormalMap")
+        nmap.inputs["Strength"].default_value = 0.8
+        nt.links.new(nor.outputs["Color"], nmap.inputs["Color"])
+        nt.links.new(nmap.outputs["Normal"], bsdf.inputs["Normal"])
+    if opt.get("laque"):
+        # brillance légèrement irrégulière (traces, voile)
+        n = noise(nt, 8.0, tc.outputs["Object"])
+        nt.links.new(map_range(nt, n.outputs["Fac"], rough - 0.08, rough + 0.08), bsdf.inputs["Roughness"])
+    if opt.get("enduit"):
+        # enduit : micro-relief et nuances très faibles
+        n = noise(nt, 60.0, tc.outputs["Object"], detail=8.0)
         bump = nt.nodes.new("ShaderNodeBump")
-        bump.inputs["Strength"].default_value = 0.15
-        bump.inputs["Distance"].default_value = 0.001
-        nt.links.new(diff.outputs["Color"], bump.inputs["Height"])
+        bump.inputs["Strength"].default_value = 0.05
+        nt.links.new(n.outputs["Fac"], bump.inputs["Height"])
         nt.links.new(bump.outputs["Normal"], bsdf.inputs["Normal"])
+        mix = nt.nodes.new("ShaderNodeMix")
+        mix.data_type = "RGBA"
+        mix.inputs["Factor"].default_value = 0.04
+        mix.inputs["A"].default_value = hexrgb(col)
+        mix.inputs["B"].default_value = hexrgb("#D9D0C2")
+        big = noise(nt, 1.5, tc.outputs["Object"])
+        mul = nt.nodes.new("ShaderNodeMath")
+        mul.operation = "MULTIPLY"
+        mul.inputs[1].default_value = 0.5
+        nt.links.new(big.outputs["Fac"], mul.inputs[0])
+        nt.links.new(mul.outputs[0], mix.inputs["Factor"])
+        nt.links.new(mix.outputs["Result"], bsdf.inputs["Base Color"])
     if opt.get("zellige"):
-        # carreaux 10 × 10 émaillés : teinte variable par carreau, surface ondulée
-        vec = tex_vector(nt, "v", 1.0)
+        # carreaux 10 × 10 émaillés posés à joints fins : teinte et inclinaison variables par carreau, émail ondulé
+        sep = nt.nodes.new("ShaderNodeSeparateXYZ")
+        nt.links.new(tc.outputs["Object"], sep.inputs["Vector"])
+        comb = nt.nodes.new("ShaderNodeCombineXYZ")
+        add = nt.nodes.new("ShaderNodeMath")
+        add.operation = "ADD"
+        nt.links.new(sep.outputs["X"], add.inputs[0])
+        nt.links.new(sep.outputs["Y"], add.inputs[1])
+        nt.links.new(add.outputs[0], comb.inputs["X"])
+        nt.links.new(sep.outputs["Z"], comb.inputs["Y"])
+        vec = comb.outputs["Vector"]
         brick = nt.nodes.new("ShaderNodeTexBrick")
         brick.offset = 0.0
         brick.inputs["Scale"].default_value = 10.0
         brick.inputs["Brick Width"].default_value = 1.0
         brick.inputs["Row Height"].default_value = 1.0
-        brick.inputs["Mortar Size"].default_value = 0.012
-        brick.inputs["Bias"].default_value = 0.0
+        brick.inputs["Mortar Size"].default_value = 0.015
+        brick.inputs["Mortar Smooth"].default_value = 0.3
         base = hexrgb(col)
         brick.inputs["Color1"].default_value = base
-        brick.inputs["Color2"].default_value = tuple(c * 0.86 for c in base[:3]) + (1,)
-        brick.inputs["Mortar"].default_value = hexrgb("#E2DCCF")
+        brick.inputs["Color2"].default_value = tuple(c * 0.82 for c in base[:3]) + (1,)
+        brick.inputs["Mortar"].default_value = hexrgb("#CFC6B6")
         nt.links.new(vec, brick.inputs["Vector"])
         nt.links.new(brick.outputs["Color"], bsdf.inputs["Base Color"])
-        noise = nt.nodes.new("ShaderNodeTexNoise")
-        noise.inputs["Scale"].default_value = 18.0
-        nt.links.new(vec, noise.inputs["Vector"])
+        # relief : joint en creux + carreaux inclinés + ondulation de l'émail
+        bw = nt.nodes.new("ShaderNodeRGBToBW")
+        nt.links.new(brick.outputs["Color"], bw.inputs["Color"])
+        wav = noise(nt, 25.0, vec)
+        h = nt.nodes.new("ShaderNodeMath")
+        h.operation = "ADD"
+        nt.links.new(bw.outputs["Val"], h.inputs[0])
+        nt.links.new(wav.outputs["Fac"], h.inputs[1])
+        hm = nt.nodes.new("ShaderNodeMath")
+        hm.operation = "MULTIPLY"
+        nt.links.new(h.outputs[0], hm.inputs[0])
+        nt.links.new(brick.outputs["Fac"], hm.inputs[1])
+        inv = nt.nodes.new("ShaderNodeMath")
+        inv.operation = "SUBTRACT"
+        inv.inputs[0].default_value = 1.0
+        nt.links.new(brick.outputs["Fac"], inv.inputs[1])
+        hj = nt.nodes.new("ShaderNodeMath")
+        hj.operation = "ADD"
+        nt.links.new(hm.outputs[0], hj.inputs[0])
+        nt.links.new(inv.outputs[0], hj.inputs[1])
         bump = nt.nodes.new("ShaderNodeBump")
-        bump.inputs["Strength"].default_value = 0.35
-        nt.links.new(noise.outputs["Fac"], bump.inputs["Height"])
+        bump.inputs["Strength"].default_value = 0.5
+        bump.inputs["Distance"].default_value = 0.002
+        nt.links.new(hj.outputs[0], bump.inputs["Height"])
         nt.links.new(bump.outputs["Normal"], bsdf.inputs["Normal"])
+        nt.links.new(map_range(nt, brick.outputs["Fac"], 0.6, 0.06), bsdf.inputs["Roughness"])
+    if opt.get("cannage"):
+        # cannage viennois : brins clairs, jours réguliers (transparents) de 6 mm au pas de 12 mm
+        sep = nt.nodes.new("ShaderNodeSeparateXYZ")
+        nt.links.new(tc.outputs["Object"], sep.inputs["Vector"])
+        comb = nt.nodes.new("ShaderNodeCombineXYZ")
+        add = nt.nodes.new("ShaderNodeMath")
+        add.operation = "ADD"
+        nt.links.new(sep.outputs["X"], add.inputs[0])
+        nt.links.new(sep.outputs["Z"], add.inputs[1])
+        add2 = nt.nodes.new("ShaderNodeMath")
+        add2.operation = "ADD"
+        nt.links.new(sep.outputs["Y"], add2.inputs[0])
+        nt.links.new(sep.outputs["Z"], add2.inputs[1])
+        nt.links.new(add.outputs[0], comb.inputs["X"])
+        nt.links.new(add2.outputs[0], comb.inputs["Y"])
+        vor = nt.nodes.new("ShaderNodeTexVoronoi")
+        vor.inputs["Scale"].default_value = 83.0
+        vor.inputs["Randomness"].default_value = 0.0
+        nt.links.new(comb.outputs["Vector"], vor.inputs["Vector"])
+        hole = nt.nodes.new("ShaderNodeMath")
+        hole.operation = "GREATER_THAN"
+        hole.inputs[1].default_value = 0.3
+        nt.links.new(vor.outputs["Distance"], hole.inputs[0])
+        transp = nt.nodes.new("ShaderNodeBsdfTransparent")
+        mix = nt.nodes.new("ShaderNodeMixShader")
+        nt.links.new(hole.outputs[0], mix.inputs["Fac"])
+        nt.links.new(transp.outputs[0], mix.inputs[1])
+        nt.links.new(bsdf.outputs[0], mix.inputs[2])
+        nt.links.new(mix.outputs[0], nt.nodes["Material Output"].inputs["Surface"])
+        grain = noise(nt, 300.0, comb.outputs["Vector"])
+        nt.links.new(map_range(nt, grain.outputs["Fac"], 0.0, 1.0), bsdf.inputs["Coat Weight"])
     return m
 
 
-def look_at(obj, target):
-    d = Vector(target) - obj.location
-    obj.rotation_euler = d.to_track_quat("-Z", "Y").to_euler()
+# ------------------------------------------------------------------ modèles Poly Haven
+
+def bbox(objs):
+    pts = [o.matrix_world @ Vector(c) for o in objs if o.type == "MESH" for c in o.bound_box]
+    lo = Vector((min(v.x for v in pts), min(v.y for v in pts), min(v.z for v in pts)))
+    hi = Vector((max(v.x for v in pts), max(v.y for v in pts), max(v.z for v in pts)))
+    return lo, hi
 
 
-def p(x, y, z):
-    """Coordonnées du plan (cm, y vers le sud) → Blender (m, Y vers le nord)."""
-    return Vector((x / 100, -y / 100, z / 100))
+def remplacer(sc):
+    objs = [o for o in sc.objects if o.type == "MESH"]
+    for r in REMPLACEMENTS:
+        cacher = [o for o in objs if re.search(r["cacher"], o.name)]
+        if not cacher:
+            continue
+        if isinstance(r["cadre"], tuple):
+            x0, x1, y0, y1, z0, z1 = r["cadre"]
+            lo, hi = p(x0, y1, z0), p(x1, y0, z1)
+        else:
+            lo, hi = bbox([o for o in objs if re.search(r["cadre"], o.name)])
+        for o in cacher:
+            o.hide_render = o.hide_viewport = True
+        path = os.path.join(MOD, r["modele"], r["modele"] + ".gltf")
+        if not os.path.exists(path):
+            print("Modèle absent (lancer 3d/textures.py) :", r["modele"])
+            continue
+        before = set(sc.objects)
+        bpy.ops.import_scene.gltf(filepath=path)
+        new = [o for o in sc.objects if o not in before]
+        root = bpy.data.objects.new("modele_" + r["modele"], None)
+        sc.collection.objects.link(root)
+        for o in new:
+            o["modele"] = True
+            if o.parent is None:
+                o.parent = root
+        root.rotation_euler.z = math.radians(r.get("rot", 0))
+        bpy.context.view_layer.update()
+        mlo, mhi = bbox(new)
+        size, target = mhi - mlo, hi - lo
+        if r.get("ajuste") == "reel":
+            s = 1.0
+        else:
+            s = min(target[i] / size[i] for i in range(3) if size[i] > 1e-6)
+        root.scale = (s, s, s)
+        bpy.context.view_layer.update()
+        mlo, mhi = bbox(new)
+        centre = (lo + hi) / 2
+        root.location += Vector((centre.x - (mlo.x + mhi.x) / 2, centre.y - (mlo.y + mhi.y) / 2, lo.z - mlo.z))
 
+
+# ------------------------------------------------------------------ scène
 
 def area(loc, size, energy, color=(1.0, 0.9, 0.78), shape="DISK", size_y=None):
     bpy.ops.object.light_add(type="AREA", location=loc)
@@ -247,51 +446,46 @@ def area(loc, size, energy, color=(1.0, 0.9, 0.78), shape="DISK", size_y=None):
     return lt
 
 
-def build_scene(glb):
-    bpy.ops.wm.read_factory_settings(use_empty=True)
-    bpy.ops.import_scene.gltf(filepath=glb)
-    mats = {}
-    ceiling = []  # plafonds, masqués dans la vue plongeante
-    globes = []
-    for o in bpy.context.scene.objects:
-        if o.type != "MESH":
-            continue
-        key = o.name.split("__")[0]
-        if key not in mats:
-            mats[key] = make_material(key)
-        o.data.materials.clear()
-        o.data.materials.append(mats[key])
-        for poly in o.data.polygons:
-            poly.use_smooth = key in ("globe", "feuillage", "fleurs", "fruits")
-        if key == "verre":
-            o.visible_shadow = False  # vitrage mince : laisse passer le soleil (pas de caustiques)
-        if key == "plafond":
-            ceiling.append(o)
-        if key == "globe":
-            globes.append(o)
-    missing = sorted(k for k in mats if k not in MATS)
-    if missing:
-        print("Matériaux non définis (magenta) :", missing)
-
-    sc = bpy.context.scene
-    sc.render.engine = "CYCLES"
-    sc.cycles.samples = SAMPLES
-    sc.cycles.use_denoising = True
+def reglages_cycles(sc):
+    """Réglages Cycles pour un intérieur éclairé par une fenêtre (manuel Blender : Light Paths, Sampling, Denoising)."""
+    cy = sc.cycles
+    cy.samples = SAMPLES
+    cy.use_adaptive_sampling = True
+    cy.adaptive_threshold = 0.01          # s'arrête plus tôt dans les zones déjà propres
+    cy.max_bounces = 16
+    cy.diffuse_bounces = 8                 # la lumière rebondit beaucoup dans une petite pièce claire
+    cy.glossy_bounces = 6
+    cy.transmission_bounces = 12
+    cy.transparent_max_bounces = 16
+    cy.sample_clamp_direct = 0.0
+    cy.sample_clamp_indirect = 10.0        # supprime les « lucioles » des rebonds sans assombrir
+    cy.blur_glossy = 1.0                   # filtre des caustiques
+    cy.caustics_reflective = False
+    cy.caustics_refractive = False
+    cy.use_light_tree = True
+    cy.use_denoising = True
+    cy.denoiser = "OPENIMAGEDENOISE"
+    cy.denoising_input_passes = "RGB_ALBEDO_NORMAL"
+    cy.denoising_prefilter = "ACCURATE"
+    try:
+        cy.denoising_use_gpu = True
+    except AttributeError:
+        pass
+    sc.render.use_persistent_data = True   # garde la scène en mémoire entre les vues
     prefs = bpy.context.preferences.addons["cycles"].preferences
     try:
         prefs.compute_device_type = "METAL"
         prefs.get_devices()
         for d in prefs.devices:
             d.use = True
-        sc.cycles.device = "GPU"
+        cy.device = "GPU"
     except Exception as e:  # repli CPU
         print("GPU indisponible, rendu CPU :", e)
-    sc.render.resolution_x, sc.render.resolution_y = 1600, 1200
-    sc.view_settings.view_transform = "AgX"
-    sc.view_settings.look = "AgX - Base Contrast"
-    sc.view_settings.exposure = EXPOSITION
 
-    # ciel physique (diffusion multiple) calé sur la position du soleil, sans disque : le soleil est la lampe ci-dessous
+
+def monde(sc):
+    """Éclairage : ciel physique calé sur le soleil. Vu à travers les vitres : panorama HDRI.
+    Vu directement par la caméra (vue plongeante) : fond gris clair uni."""
     world = bpy.data.worlds.new("ciel")
     sc.world = world
     world.use_nodes = True
@@ -304,15 +498,74 @@ def build_scene(glb):
     bg = nt.nodes["Background"]
     bg.inputs["Strength"].default_value = CIEL_FORCE
     nt.links.new(sky.outputs["Color"], bg.inputs["Color"])
-    # vu directement par la caméra (vue plongeante), le fond reste un gris clair uni
+
+    tc = nt.nodes.new("ShaderNodeTexCoord")
+    mp = nt.nodes.new("ShaderNodeMapping")
+    mp.inputs["Rotation"].default_value = (0, 0, math.radians(HDRI_ROTATION))
+    nt.links.new(tc.outputs["Generated"], mp.inputs["Vector"])
+    env = nt.nodes.new("ShaderNodeTexEnvironment")
+    env.image = bpy.data.images.load(os.path.join(TEX, HDRI), check_existing=True)
+    nt.links.new(mp.outputs["Vector"], env.inputs["Vector"])
+    hbg = nt.nodes.new("ShaderNodeBackground")
+    hbg.inputs["Strength"].default_value = HDRI_FORCE
+    nt.links.new(env.outputs["Color"], hbg.inputs["Color"])
+
     fond = nt.nodes.new("ShaderNodeBackground")
     fond.inputs["Color"].default_value = hexrgb("#E4E9EC")
     path = nt.nodes.new("ShaderNodeLightPath")
-    mix = nt.nodes.new("ShaderNodeMixShader")
-    nt.links.new(path.outputs["Is Camera Ray"], mix.inputs["Fac"])
-    nt.links.new(bg.outputs["Background"], mix.inputs[1])
-    nt.links.new(fond.outputs["Background"], mix.inputs[2])
-    nt.links.new(mix.outputs["Shader"], nt.nodes["World Output"].inputs["Surface"])
+    vitre = nt.nodes.new("ShaderNodeMixShader")
+    nt.links.new(path.outputs["Is Transmission Ray"], vitre.inputs["Fac"])
+    nt.links.new(bg.outputs["Background"], vitre.inputs[1])
+    nt.links.new(hbg.outputs["Background"], vitre.inputs[2])
+    cam = nt.nodes.new("ShaderNodeMixShader")
+    nt.links.new(path.outputs["Is Camera Ray"], cam.inputs["Fac"])
+    nt.links.new(vitre.outputs["Shader"], cam.inputs[1])
+    nt.links.new(fond.outputs["Background"], cam.inputs[2])
+    nt.links.new(cam.outputs["Shader"], nt.nodes["World Output"].inputs["Surface"])
+
+
+def build_scene(glb, deco):
+    bpy.ops.wm.read_factory_settings(use_empty=True)
+    bpy.ops.import_scene.gltf(filepath=glb, import_shading="FLAT")
+    sc = bpy.context.scene
+    mats = {}
+    ceiling = []  # plafonds, masqués dans la vue plongeante
+    globes = []
+    for o in list(sc.objects):
+        if o.type != "MESH":
+            continue
+        key = o.name.split("__")[0]
+        if key not in mats:
+            mats[key] = make_material(key)
+        o.data.materials.clear()
+        o.data.materials.append(mats[key])
+        opt = MATS.get(key, (None, None, {}))[2]
+        if opt.get("tex"):
+            make_uvs(o, opt.get("sens", "bloc"), opt.get("echelle", 1.0))
+        smooth = key in ("globe", "feuillage", "fleurs", "fruits", "chrome", "tige")
+        for poly in o.data.polygons:
+            poly.use_smooth = smooth
+        if not smooth and key not in ("verre", "plafond", "credence", "cannage"):
+            chanfreiner(o)
+        if key == "verre":
+            o.visible_shadow = False  # vitrage mince : laisse passer le soleil (pas de caustiques)
+        if key == "plafond":
+            ceiling.append(o)
+        if key == "globe":
+            globes.append(o)
+    missing = sorted(k for k in mats if k not in MATS)
+    if missing:
+        print("Matériaux non définis (magenta) :", missing)
+    if deco:
+        remplacer(sc)
+
+    sc.render.engine = "CYCLES"
+    reglages_cycles(sc)
+    sc.render.resolution_x, sc.render.resolution_y = 1600, 1200
+    sc.view_settings.view_transform = "AgX"
+    sc.view_settings.look = "AgX - Base Contrast"
+    sc.view_settings.exposure = EXPOSITION
+    monde(sc)
 
     # soleil réel : fenêtre ouest, 17 h (heure d'été) le 21 juin à Paris
     bpy.ops.object.light_add(type="SUN", location=(0, 0, 5))
@@ -338,8 +591,7 @@ def build_scene(glb):
     for x, y in [(90, 110), (230, 140)]:
         area(p(x, y, 248), 0.45, 60)
     area(p(179, 28, 146.5), 1.3, 25, color=(1.0, 0.88, 0.72), shape="RECTANGLE", size_y=0.04)
-    # la suspension éclaire vraiment la table
-    for g in globes:
+    for g in globes:  # la suspension éclaire vraiment la table
         c = sum((g.matrix_world @ Vector(b) for b in g.bound_box), Vector()) / 8
         bpy.ops.object.light_add(type="POINT", location=c)
         lt = bpy.context.object
@@ -367,7 +619,7 @@ VIEWS = {
 
 for version in VERSIONS:
     suffix = "-deco" if version == "deco" else ""
-    ceiling = build_scene(os.path.join(OUT, f"cuisine-a{suffix}.glb"))
+    ceiling = build_scene(os.path.join(OUT, f"cuisine-a{suffix}.glb"), deco=version == "deco")
     sc = bpy.context.scene
     for name in VIEWS:  # toutes les caméras dans le .blend, rendu des seules vues demandées
         v = VIEWS[name]
