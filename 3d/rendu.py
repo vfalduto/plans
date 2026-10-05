@@ -27,20 +27,23 @@ MOD = os.path.join(HERE, "modeles")
 args = sys.argv[sys.argv.index("--") + 1:] if "--" in sys.argv else []
 SAMPLES = next((int(a) for a in args if a.isdigit()), 256)
 # Essences des meubles toute hauteur, étagères, portes et chaises : texture, couleur de repli, (saturation, valeur)
+# Fil de la texture : « u » horizontal dans l'image (noyer), « v » vertical (chêne) ; sert à orienter le fil sur les meubles.
 BOIS = {
-    "noyer": ("noyer", "#45291A", (1.25, 0.36)),    # noyer huilé, foncé
-    "chene": ("chene", "#A8743F", (1.15, 0.72)),    # chêne miel (façades Plum Living)
+    "noyer": ("noyer", "#45291A", (1.25, 0.36), "u"),    # noyer huilé, foncé
+    "chene": ("chene", "#A8743F", (1.15, 0.72), "v"),    # chêne miel (façades Plum Living)
 }
-# Variantes de teintes : (couleur des meubles bas et hauts, saturation et valeur du terrazzo, suffixe des fichiers, bois)
+# Variantes de teintes : (couleur des meubles bas et hauts, terrazzo (saturation, valeur, éclats éclaircis 0–1),
+# suffixe des fichiers, bois, lampes allumées)
 VARIANTES = {
-    "sauge": ("#8D9B80", (1.0, 1.0), "", "noyer"),             # sauge des rendus Gemini, terrazzo clair d'origine
-    "fonce": ("#5E6E55", (0.0, 0.82), "-fonce", "noyer"),      # vert plus foncé, terrazzo gris
-    "canopee": ("#3C524C", (0.0, 0.82), "-canopee", "chene"),  # Canopée Plum Living, terrazzo gris, chêne miel
+    "sauge": ("#8D9B80", (1.0, 1.0, 0.0), "", "noyer", ()),             # sauge des rendus Gemini, terrazzo clair d'origine
+    "fonce": ("#5E6E55", (0.0, 0.82, 0.0), "-fonce", "noyer", ()),      # vert plus foncé, terrazzo gris
+    # Canopée Plum Living, chêne miel, terrazzo gris à éclats clairs, suspension allumée
+    "canopee": ("#3C524C", (0.0, 0.9, 0.45), "-canopee", "chene", ("suspension",)),
 }
 VERSIONS = [a for a in args if a in ("sans", "deco")] or ["sans", "deco"]
 TEINTES = [a for a in args if a in VARIANTES] or list(VARIANTES)
 VUES = [a for a in args if not a.isdigit() and a not in ("sans", "deco") and a not in VARIANTES] or ["entree", "fenetre", "cellier", "assis", "plongee"]
-COULEUR_BAS, TEINTE_TERRAZZO, _, ESSENCE = VARIANTES["sauge"]   # remplacés pour chaque variante
+COULEUR_BAS, TEINTE_TERRAZZO, _, ESSENCE, LAMPES = VARIANTES["sauge"]   # remplacés pour chaque variante
 
 # Soleil : position calculée (lieu, date, heure légale). Azimut compté depuis le nord vers l'est.
 LIEU = (48.86, 2.35)                 # Paris (latitude, longitude)
@@ -49,7 +52,8 @@ UTC_DECALAGE = 2
 SOLEIL_FORCE = 60.0                  # W/m² Blender : rapport soleil / ciel d'une fin de journée claire
 CIEL_FORCE = 0.35                    # intensité du ciel physique (éclairage)
 EXPOSITION = -0.2                    # compensation d'exposition (IL)
-LAMPES = False                       # plein jour : plafonniers, réglette et suspension éteints (le cellier reste éclairé)
+# LAMPES (par variante) : lampes de la cuisine allumées parmi « suspension » et « plafonniers » (plafonniers et réglette) ;
+# le cellier, sans fenêtre, reste toujours éclairé.
 
 CHANFREIN = 0.002                    # arêtes arrondies : 2 mm, 2 segments
 
@@ -99,6 +103,8 @@ MATS = {
     "chaise":           ("#45291A", 0.5, NOYER),
     "porte_bois":       ("#45291A", 0.5, NOYER),
     "table":            ("#A87A4C", 0.45, dict(NOYER, sens="h", teinte=(1.2, 0.85))),
+    "stratifie":        ("#D9BDBB", 0.35, {}),                                # stratifié rose poudré (table Véra)
+    "epoxy_blanc":      ("#F2F0EC", 0.35, {}),                                # acier laqué époxy blanc
     "caisson":          ("#E9E5DC", 0.6, {}),
     "socle":            ("#2B3436", 0.6, {}),
     "plan":             ("#CFCDC7", 0.3, {"tex": "terrazzo", "sens": "bloc", "echelle": 0.6, "teinte": "terrazzo"}),
@@ -259,7 +265,7 @@ def make_material(key):
         col = COULEUR_BAS
     if opt.get("tex") == "noyer" and ESSENCE != "noyer":
         # autre essence : texture, couleur et teinte de la variante (la table garde son éclaircissement relatif)
-        tex, col, (sat, val) = BOIS[ESSENCE]
+        tex, col, (sat, val), _ = BOIS[ESSENCE]
         if opt is not NOYER and opt.get("teinte") != NOYER["teinte"]:
             sat, val = sat * opt["teinte"][0] / NOYER["teinte"][0], min(1.0, val * opt["teinte"][1] / NOYER["teinte"][1])
         opt = dict(opt, tex=tex, teinte=(sat, val))
@@ -286,9 +292,18 @@ def make_material(key):
         if "teinte" in opt:
             hsv = nt.nodes.new("ShaderNodeHueSaturation")
             teinte = TEINTE_TERRAZZO if opt["teinte"] == "terrazzo" else opt["teinte"]
-            hsv.inputs["Saturation"].default_value, hsv.inputs["Value"].default_value = teinte
+            hsv.inputs["Saturation"].default_value, hsv.inputs["Value"].default_value = teinte[:2]
             nt.links.new(out, hsv.inputs["Color"])
             out = hsv.outputs["Color"]
+            if len(teinte) > 2 and teinte[2]:
+                # éclats éclaircis : rapproche les éclats sombres de la teinte du fond (couleur de repli du matériau)
+                mix = nt.nodes.new("ShaderNodeMix")
+                mix.data_type = "RGBA"
+                mix.blend_type = "LIGHTEN"
+                mix.inputs["Factor"].default_value = teinte[2]
+                mix.inputs["B"].default_value = hexrgb(col)
+                nt.links.new(out, mix.inputs["A"])
+                out = mix.outputs["Result"]
         nt.links.new(out, bsdf.inputs["Base Color"])
         rgh = image(nt, name, "rough", vec, data=True)
         mul = nt.nodes.new("ShaderNodeMath")
@@ -555,11 +570,14 @@ def build_scene(glb, deco):
         o.data.materials.append(mats[key])
         opt = MATS.get(key, (None, None, {}))[2]
         if opt.get("tex"):
-            make_uvs(o, opt.get("sens", "bloc"), opt.get("echelle", 1.0))
-        smooth = key in ("globe", "feuillage", "fleurs", "fruits", "chrome", "tige")
+            sens = opt.get("sens", "bloc")
+            if opt["tex"] == "noyer" and BOIS[ESSENCE][3] == "v" and sens in ("v", "h"):
+                sens = "h" if sens == "v" else "v"   # fil vertical dans l'image : on croise la projection
+            make_uvs(o, sens, opt.get("echelle", 1.0))
+        smooth = key in ("globe", "feuillage", "fleurs", "fruits", "chrome", "tige", "epoxy_blanc")
         for poly in o.data.polygons:
             poly.use_smooth = smooth
-        if not smooth and key not in ("verre", "plafond", "credence", "cannage") and "__ext_" not in o.name:
+        if not smooth and key not in ("verre", "plafond", "credence", "cannage", "stratifie") and "__ext_" not in o.name:
             chanfreiner(o)
         if key == "verre":
             o.visible_shadow = False  # vitrage mince : laisse passer le soleil (pas de caustiques)
@@ -599,13 +617,14 @@ def build_scene(glb, deco):
 
     # cellier (sans fenêtre) éclairé ; plafonniers cuisine, réglette et suspension selon LAMPES
     area(p(375, 50, 248), 0.4, 45)
-    if not LAMPES:
+    if "plafonniers" in LAMPES:
+        for x, y in [(90, 110), (230, 140)]:
+            area(p(x, y, 248), 0.45, 60)
+        area(p(179, 28, 146.5), 1.3, 25, color=(1.0, 0.88, 0.72), shape="RECTANGLE", size_y=0.04)
+    if "suspension" not in LAMPES:
         for g in globes:
             g.active_material.node_tree.nodes["Principled BSDF"].inputs["Emission Strength"].default_value = 0.0
         return ceiling
-    for x, y in [(90, 110), (230, 140)]:
-        area(p(x, y, 248), 0.45, 60)
-    area(p(179, 28, 146.5), 1.3, 25, color=(1.0, 0.88, 0.72), shape="RECTANGLE", size_y=0.04)
     for g in globes:  # la suspension éclaire vraiment la table
         c = sum((g.matrix_world @ Vector(b) for b in g.bound_box), Vector()) / 8
         bpy.ops.object.light_add(type="POINT", location=c)
@@ -633,7 +652,7 @@ VIEWS = {
 }
 
 for teinte in TEINTES:
-    COULEUR_BAS, TEINTE_TERRAZZO, suffixe_teinte, ESSENCE = VARIANTES[teinte]
+    COULEUR_BAS, TEINTE_TERRAZZO, suffixe_teinte, ESSENCE, LAMPES = VARIANTES[teinte]
     for version in VERSIONS:
         suffix = ("-deco" if version == "deco" else "") + suffixe_teinte
         glb = "cuisine-a-deco.glb" if version == "deco" else "cuisine-a.glb"

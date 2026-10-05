@@ -289,11 +289,28 @@ box("noir", "machine_cafe", 3, 27, 214, 246, 91, 131)
 
 
 def table_carree():
-    top = Part.makeBox(700, 700, 30, V(1080, -2300, 720))
-    top = top.makeFillet(98, [e for e in top.Edges if abs(e.Vertexes[0].Point.z - e.Vertexes[1].Point.z) > 1])
-    _add("table", "plateau", top, ("rect", (108, 160, 178, 230)))
-    for i, (x, y) in enumerate([(111, 163), (171, 163), (111, 223), (171, 223)]):
-        box("table", f"pied_{i + 1}", x, x + 4, y, y + 4, 0, 72, plan=False)
+    """Table rétro type Véra (Les Gambettes) 70 × 70 × H 75 : plateau MDF 19 mm à chant noir, stratifié rose poudré,
+    quatre pieds en tube d'acier Ø 3 laqué blanc, verticaux sous le plateau puis inclinés vers l'extérieur."""
+    x0, y0, cote = 108, 160, 70
+
+    def plateau(z0, z1):
+        t = Part.makeBox(cote * 10, cote * 10, (z1 - z0) * 10, V(x0 * 10, -(y0 + cote) * 10, z0 * 10))
+        return t.makeFillet(25, [e for e in t.Edges if abs(e.Vertexes[0].Point.z - e.Vertexes[1].Point.z) > 0.5])
+
+    _add("noir", "table_chant", plateau(73.1, 74.9), ("rect", (x0, y0, x0 + cote, y0 + cote)))
+    _add("stratifie", "table_plateau", plateau(74.9, 75.0), None)
+    _add("epoxy_blanc", "table_traverse", solid(x0 + 6, x0 + cote - 6, y0 + 6, y0 + cote - 6, 70, 73.1).cut(
+        solid(x0 + 8, x0 + cote - 8, y0 + 8, y0 + cote - 8, 69, 74)), None)
+    r = 15  # rayon du tube (mm)
+    for i, (sx, sy) in enumerate(((-1, -1), (1, -1), (-1, 1), (1, 1))):
+        cx, cy = x0 + cote / 2, y0 + cote / 2
+        haut = V((cx + sx * 27) * 10, -(cy + sy * 27) * 10, 731)   # sous le plateau, 8 cm du bord
+        coude = V((cx + sx * 27) * 10, -(cy + sy * 27) * 10, 640)
+        pied = V((cx + sx * 31.5) * 10, -(cy + sy * 31.5) * 10, 8)  # au sol, 3,5 cm du bord
+        for n, (a, b) in enumerate(((haut, coude), (coude, pied))):
+            _add("epoxy_blanc", f"table_pied_{i + 1}_{n}", Part.makeCylinder(r, (b - a).Length, a, b - a), None)
+        _add("epoxy_blanc", f"table_coude_{i + 1}", Part.makeSphere(r, coude), None)
+        _add("noir", f"table_patin_{i + 1}", Part.makeCylinder(r, 8, pied - V(0, 0, 8), V(0, 0, 1)), None)
 
 
 table_carree()
