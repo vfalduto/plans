@@ -140,20 +140,48 @@ box("mur", "couloir_fond", 180, 382, 330, 340, 0, H, plan=False)
 box("plafond", "couloir", 180, 382, 262, 330, H, H + 2, plan=False)
 box("plafond", "plafond", -20, 494, -20, 262, H, H + 2, plan=False)
 
-# ------------------------------------------------------------------ fenêtre coulissante
+# ------------------------------------------------------------------ fenêtre coulissante en aluminium
 calque("fenetre")
-box("menuiserie", "appui", -20, 0, 58, 200, 105, 106)
+# appui alu posé sur l'allège (sans recouvrement : deux faces confondues sortent noires au rendu)
+box("alu", "appui", -18, -4, 58, 200, 106, 107)
+# dormant : montants et traverse haute
+box("alu", "dormant_nord", -18, -4, 58, 60, 107, 215, plan=False)
+box("alu", "dormant_sud", -18, -4, 198, 200, 107, 215, plan=False)
+box("alu", "dormant_haut", -18, -4, 60, 198, 213, 215, plan=False)
 
 
 def vantail(name, x0, x1, y0, y1):
-    outer = solid(x0, x1, y0, y1, 106, 215)
-    inner = solid(x0 - 1, x1 + 1, y0 + 5, y1 - 5, 111, 210)
-    _add("menuiserie", name, outer.cut(inner), None)
-    box("verre", name, (x0 + x1) / 2 - 0.3, (x0 + x1) / 2 + 0.3, y0 + 5, y1 - 5, 111, 210, plan=False)
+    outer = solid(x0, x1, y0, y1, 107, 213)
+    inner = solid(x0 - 1, x1 + 1, y0 + 5, y1 - 5, 112, 208)
+    _add("alu", name, outer.cut(inner), None)
+    box("verre", name, (x0 + x1) / 2 - 0.3, (x0 + x1) / 2 + 0.3, y0 + 5, y1 - 5, 112, 208, plan=False)
 
 
-vantail("vantail_fixe", -9, -6, 58, 131)
-vantail("vantail_mobile", -16, -13, 127, 200)
+vantail("vantail_fixe", -9, -6, 60, 131)
+vantail("vantail_mobile", -16, -13, 127, 198)
+
+# ------------------------------------------------------------------ extérieur : cuisine au 2e étage, immeuble en face
+# sol de la rue à 5,60 m sous le plancher (RDC + 2 étages de 2,80) ; façade d'en face à 12 m, mêmes fenêtres.
+calque("exterieur")
+SOL_EXT = -560
+box("sol_ext", "ext_rue", -2400, -20, -1600, 2000, SOL_EXT - 2, SOL_EXT, plan=False)
+box("pelouse", "ext_pelouse", -1100, -250, -1600, 2000, SOL_EXT, SOL_EXT + 2, plan=False)
+FX = -1200   # nu de la façade d'en face
+facade = solid(FX - 40, FX, -1400, 1800, SOL_EXT, 1100)
+fenetres = []
+for etage in range(6):
+    z0 = SOL_EXT + etage * 280 + 106
+    for k in range(-4, 6):
+        y0 = 58 + k * 330
+        fenetres.append((y0, z0))
+        facade = facade.cut(solid(FX - 15, FX + 1, y0, y0 + 142, z0, z0 + 109))
+_add("facade_ext", "ext_facade", facade, None)
+for i, (y0, z0) in enumerate(fenetres):
+    box("alu", f"ext_appui_{i}", FX - 2, FX + 3, y0 - 3, y0 + 145, z0 - 1.5, z0, plan=False)
+    fr = solid(FX - 12, FX - 8, y0, y0 + 142, z0, z0 + 109).cut(solid(FX - 13, FX - 7, y0 + 5, y0 + 137, z0 + 5, z0 + 104))
+    _add("alu", f"ext_cadre_{i}", fr, None)
+    box("alu", f"ext_meneau_{i}", FX - 12, FX - 8, y0 + 68, y0 + 74, z0, z0 + 109, plan=False)
+    box("vitre_ext", f"ext_vitre_{i}", FX - 10.5, FX - 9.5, y0 + 5, y0 + 137, z0 + 5, z0 + 104, plan=False)
 
 # ------------------------------------------------------------------ rangée nord (décalée de 7)
 calque("meubles_bas")
@@ -171,7 +199,8 @@ front_s("sous_evier", 189, 249, 15, 87, 60, BAS)
 # plan de travail 4 cm (x 0 → 249, profondeur 62), percé pour le bac de l'évier
 calque("plan_de_travail")
 bac = (203, 243, 10, 50)
-wt = solid(0, 249, 0, 62, 87, 91).cut(solid(*bac, 70, 92))
+# trou du plan 6 mm plus large que la cuve : leurs faces ne doivent pas se confondre (noir au rendu)
+wt = solid(0, 249, 0, 62, 87, 91).cut(solid(bac[0] - 0.6, bac[1] + 0.6, bac[2] - 0.6, bac[3] + 0.6, 70, 92))
 _add("plan", "rangee_nord", wt, ("rect", (0, 0, 249, 62)))
 
 # évier monobloc inox 86 collé : égouttoir à gauche, bac 40 × 40 × 20

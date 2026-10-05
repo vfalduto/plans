@@ -45,7 +45,8 @@ pre{white-space:pre-wrap;font-family:"JetBrains Mono",ui-monospace,Menlo,monospa
 <style>
 .main{aspect-ratio:4/3}
 .kicker{font-family:"JetBrains Mono",ui-monospace,Menlo,monospace;font-size:12px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted)}
-.seg{display:inline-flex;border:1px solid var(--line);border-radius:8px;overflow:hidden;margin-top:18px}
+.opts{display:flex;flex-wrap:wrap;gap:10px;margin-top:18px}
+.seg{display:inline-flex;border:1px solid var(--line);border-radius:8px;overflow:hidden}
 .seg button{border:0;background:var(--card);color:var(--ink);padding:7px 14px;font-size:14px}
 .seg button+button{border-left:1px solid var(--line)}
 .seg button[aria-pressed="true"]{background:var(--accent);color:var(--accent-ink)}
@@ -63,44 +64,48 @@ code{font-family:"JetBrains Mono",ui-monospace,Menlo,monospace;font-size:13px}
 <header class="ph"><a href="index.html" aria-label="Retour aux plans">← Plans</a><span>Rendus 3D cuisine</span></header>
 <!-- /page-header -->
 <main>
-  <div class="kicker">Variante A · V1.3 · FreeCAD + Blender</div>
+  <div class="kicker">Variante A · V1.4 · FreeCAD + Blender</div>
   <h1>Rendus 3D cuisine</h1>
   <p class="lead">Modèle 3D construit dans FreeCAD à partir des cotes du plan et des coupes (variante A, table carrée 70 × 70), rendu dans Blender (Cycles). Meubles bas et hauts sauge, meubles toute hauteur en noyer, poignées profilées toute longueur dans la teinte de la façade, plan terrazzo gris clair, crédence zellige ivoire, parquet bâtons rompus.</p>
-  <div class="seg" role="group" aria-label="Décoration"><button type="button" data-deco="1" aria-pressed="true">Avec déco</button><button type="button" data-deco="0" aria-pressed="false">Sans déco</button></div>
+  <div class="opts">
+    <div class="seg" role="group" aria-label="Teinte"><button type="button" data-teinte="" aria-pressed="true">Sauge · terrazzo clair</button><button type="button" data-teinte="-fonce" aria-pressed="false">Vert foncé · terrazzo gris</button></div>
+    <div class="seg" role="group" aria-label="Décoration"><button type="button" data-deco="1" aria-pressed="true">Avec déco</button><button type="button" data-deco="0" aria-pressed="false">Sans déco</button></div>
+  </div>
 
   <section class="view">
     <div class="head"><div><h2>Depuis l'entrée, vers le nord-ouest</h2><p class="sub">Rangée nord sauge, étagères ouvertes, fenêtre coulissante, coin repas.</p></div></div>
-    <a class="stage" href="cuisine-3d/rendu-entree-deco.jpg" target="_blank" data-v="entree"><img class="main r3d" src="cuisine-3d/rendu-entree-deco.jpg" data-v="entree" alt="Rendu 3D, depuis l'entrée, vers le nord-ouest" loading="lazy"></a>
+    <a class="stage" href="cuisine-3d/rendu-entree-deco.jpg?v=1.4" target="_blank" data-v="entree"><img class="main r3d" src="cuisine-3d/rendu-entree-deco.jpg?v=1.4" data-v="entree" alt="Rendu 3D, depuis l'entrée, vers le nord-ouest" loading="lazy"></a>
   </section>
 
   <section class="view">
     <div class="head"><div><h2>Depuis la fenêtre, vers l'est</h2><p class="sub">Colonnes noyer : frigo, four et micro-ondes ; porte du cellier ouverte, porte d'entrée à étagères et ardoise.</p></div></div>
-    <a class="stage" href="cuisine-3d/rendu-fenetre-deco.jpg" target="_blank" data-v="fenetre"><img class="main r3d" src="cuisine-3d/rendu-fenetre-deco.jpg" data-v="fenetre" alt="Rendu 3D, depuis la fenêtre, vers l'est" loading="lazy"></a>
+    <a class="stage" href="cuisine-3d/rendu-fenetre-deco.jpg?v=1.4" target="_blank" data-v="fenetre"><img class="main r3d" src="cuisine-3d/rendu-fenetre-deco.jpg?v=1.4" data-v="fenetre" alt="Rendu 3D, depuis la fenêtre, vers l'est" loading="lazy"></a>
   </section>
 
   <section class="view">
     <div class="head"><div><h2>Depuis le seuil du cellier</h2><p class="sub">Étagères P30, râtelier à balais, lave-linge devant le ballon.</p></div></div>
-    <a class="stage" href="cuisine-3d/rendu-cellier-deco.jpg" target="_blank" data-v="cellier"><img class="main r3d" src="cuisine-3d/rendu-cellier-deco.jpg" data-v="cellier" alt="Rendu 3D, depuis le seuil du cellier" loading="lazy"></a>
+    <a class="stage" href="cuisine-3d/rendu-cellier-deco.jpg?v=1.4" target="_blank" data-v="cellier"><img class="main r3d" src="cuisine-3d/rendu-cellier-deco.jpg?v=1.4" data-v="cellier" alt="Rendu 3D, depuis le seuil du cellier" loading="lazy"></a>
   </section>
 
   <section class="view">
     <div class="head"><div><h2>Assis à table</h2><p class="sub">Sur la chaise côté four, regard vers la fenêtre et la rangée nord.</p></div></div>
-    <a class="stage" href="cuisine-3d/rendu-assis-deco.jpg" target="_blank" data-v="assis"><img class="main r3d" src="cuisine-3d/rendu-assis-deco.jpg" data-v="assis" alt="Rendu 3D, assis à table" loading="lazy"></a>
+    <a class="stage" href="cuisine-3d/rendu-assis-deco.jpg?v=1.4" target="_blank" data-v="assis"><img class="main r3d" src="cuisine-3d/rendu-assis-deco.jpg?v=1.4" data-v="assis" alt="Rendu 3D, assis à table" loading="lazy"></a>
   </section>
 
   <section class="view">
     <div class="head"><div><h2>Vue plongeante</h2><p class="sub">Plafond retiré : l'ensemble cuisine et cellier.</p></div></div>
-    <a class="stage" href="cuisine-3d/rendu-plongee-deco.jpg" target="_blank" data-v="plongee"><img class="main r3d" src="cuisine-3d/rendu-plongee-deco.jpg" data-v="plongee" alt="Rendu 3D, vue plongeante" loading="lazy"></a>
+    <a class="stage" href="cuisine-3d/rendu-plongee-deco.jpg?v=1.4" target="_blank" data-v="plongee"><img class="main r3d" src="cuisine-3d/rendu-plongee-deco.jpg?v=1.4" data-v="plongee" alt="Rendu 3D, vue plongeante" loading="lazy"></a>
   </section>
 
   <section class="view">
     <h2>À savoir</h2>
     <ul class="facts">
-      <li>Teinte des meubles bas et hauts : sauge #8D9B80, celle des <a href="cuisine-rendus.html">rendus Gemini</a>.</li>
+      <li>Deux teintes pour les meubles bas et hauts : sauge #8D9B80 (celle des <a href="cuisine-rendus.html">rendus Gemini</a>) avec le terrazzo clair, ou vert foncé #5E6E55 avec un terrazzo gris.</li>
+      <li>Vue par la fenêtre : cuisine au 2ᵉ étage, rue plantée d'arbres et immeuble en face, à 12 m, aux mêmes fenêtres.</li>
       <li>Lumière du jour seule : soleil calculé pour le 21 juin à 17 h (heure d'été) à Paris, 45° de hauteur, venant de l'ouest-sud-ouest par la fenêtre ; ciel physique ; lampes de la cuisine éteintes.</li>
       <li>Vues prises à hauteur d'yeux d'une personne de 1,75 m : 1,63 m debout, 1,20 m assise ; la vue plongeante fait exception.</li>
       <li>Les cotes sont recopiées du plan à la main : une modification de <a href="cuisine-plan.html">cuisine-plan.html</a> ne passe pas encore dans la 3D.</li>
-      <li>Textures, vue extérieure et objets de décoration CC0 : Poly Haven (noyer, parquet, panorama de cour d'immeubles, vase, bol, fruits, livres, plante, paniers, cartons, balai) et ambientCG (terrazzo). Chaises de type Cesca, zellige et cannage modélisés. La décoration est indicative.</li>
+      <li>Textures, arbres et objets de décoration CC0 : Poly Haven (noyer, parquet, arbres, vase, bol, fruits, livres, plante, paniers, cartons, balai) et ambientCG (terrazzo). Chaises de type Cesca, zellige et cannage modélisés. La décoration est indicative.</li>
       <li>Scripts : <code>3d/cuisine_a.py</code> (FreeCAD), <code>3d/rendu.py</code> (Blender), <code>3d/textures.py</code> ; regénérer avec <code>just rendu-3d</code>.</li>
     </ul>
   </section>
@@ -110,6 +115,7 @@ code{font-family:"JetBrains Mono",ui-monospace,Menlo,monospace;font-size:13px}
     <table>
       <thead><tr><th>Version</th><th>Date</th><th>Changements</th></tr></thead>
       <tbody>
+        <tr><td><b>V1.4</b></td><td>05/10/2026</td><td>Variante vert foncé #5E6E55 + terrazzo gris (sélecteur de teinte) ; vue au 2ᵉ étage : rue, arbres et immeuble en face aux mêmes fenêtres (le panorama est retiré) ; fenêtre, appui et dormant en aluminium ; liseré noir sous la fenêtre et autour de l'évier corrigé (faces confondues) ; images versionnées pour éviter l'ancien cache du navigateur.</td></tr>
         <tr><td><b>V1.3</b></td><td>05/10/2026</td><td>Plus photo-réaliste : arêtes arrondies (2 mm), panorama d'immeubles par la fenêtre, objets de décoration remplacés par de vrais modèles 3D, chaises de type Cesca (tube chromé, noyer, cannage), textures plaquées en UV avec relief, enduit des murs, zellige à joints, laque à brillance irrégulière ; parquet tourné de 90° ; réglages Cycles (rebonds, débruitage, échantillonnage adaptatif, 256 échantillons).</td></tr>
         <tr><td><b>V1.2</b></td><td>05/10/2026</td><td>Éclairage d'été à 17 h : soleil réel par la fenêtre ouest (h 45°, azimut 252°), ciel physique, lampes éteintes ; vitrage laissant passer le soleil ; amorce de couloir derrière la porte d'entrée.</td></tr>
         <tr><td><b>V1.1</b></td><td>05/10/2026</td><td>Meubles bas et hauts en sauge #8D9B80 (couleur des rendus Gemini) ; caméras à hauteur d'yeux (1,63 m debout) avec verticales droites ; nouvelle vue assise à table (1,20 m) ; vase et corbeille de fruits déplacés sur la table.</td></tr>
@@ -120,19 +126,23 @@ code{font-family:"JetBrains Mono",ui-monospace,Menlo,monospace;font-size:13px}
 </main>
 <script>
 (() => {
-  const btns = document.querySelectorAll('.seg button');
-  const set = (deco) => {
-    btns.forEach(b => b.setAttribute('aria-pressed', String(b.dataset.deco === deco)));
+  const V = '1.4';  // version des images : change à chaque publication pour contourner le cache du navigateur
+  const state = { deco: '1', teinte: '' };
+  const load = (k, d) => { try { return localStorage.getItem(k) ?? d; } catch (e) { return d; } };
+  const save = (k, v) => { try { localStorage.setItem(k, v); } catch (e) {} };
+  state.deco = load('r3d-deco', '1');
+  state.teinte = load('r3d-teinte', '');
+  const render = () => {
+    document.querySelectorAll('[data-deco]').forEach(b => b.setAttribute('aria-pressed', String(b.dataset.deco === state.deco)));
+    document.querySelectorAll('[data-teinte]').forEach(b => b.setAttribute('aria-pressed', String(b.dataset.teinte === state.teinte)));
     document.querySelectorAll('a.stage[data-v]').forEach(a => {
-      const src = `cuisine-3d/rendu-${a.dataset.v}${deco === '1' ? '-deco' : ''}.jpg`;
+      const src = `cuisine-3d/rendu-${a.dataset.v}${state.deco === '1' ? '-deco' : ''}${state.teinte}.jpg?v=${V}`;
       a.href = src; a.querySelector('img').src = src;
     });
-    try { localStorage.setItem('r3d-deco', deco); } catch (e) {}
   };
-  btns.forEach(b => b.addEventListener('click', () => set(b.dataset.deco)));
-  let saved = null;
-  try { saved = localStorage.getItem('r3d-deco'); } catch (e) {}
-  if (saved === '0') set('0');
+  document.querySelectorAll('[data-deco]').forEach(b => b.addEventListener('click', () => { state.deco = b.dataset.deco; save('r3d-deco', state.deco); render(); }));
+  document.querySelectorAll('[data-teinte]').forEach(b => b.addEventListener('click', () => { state.teinte = b.dataset.teinte; save('r3d-teinte', state.teinte); render(); }));
+  render();
 })();
 </script>
 </body>

@@ -26,10 +26,15 @@ TEX = os.path.join(HERE, "textures")
 MOD = os.path.join(HERE, "modeles")
 args = sys.argv[sys.argv.index("--") + 1:] if "--" in sys.argv else []
 SAMPLES = next((int(a) for a in args if a.isdigit()), 256)
+# Variantes de teintes : (couleur des meubles bas et hauts, saturation et valeur du terrazzo, suffixe des fichiers)
+VARIANTES = {
+    "sauge": ("#8D9B80", (1.0, 1.0), ""),          # sauge des rendus Gemini, terrazzo clair d'origine
+    "fonce": ("#5E6E55", (0.0, 0.82), "-fonce"),    # vert plus foncé, terrazzo gris
+}
 VERSIONS = [a for a in args if a in ("sans", "deco")] or ["sans", "deco"]
-VUES = [a for a in args if not a.isdigit() and a not in ("sans", "deco")] or ["entree", "fenetre", "cellier", "assis", "plongee"]
-
-COULEUR_BAS = "#8D9B80"   # sauge des rendus Gemini (cuisine-gemini/prompts-gemini.md), meubles bas et hauts
+TEINTES = [a for a in args if a in VARIANTES] or list(VARIANTES)
+VUES = [a for a in args if not a.isdigit() and a not in ("sans", "deco") and a not in VARIANTES] or ["entree", "fenetre", "cellier", "assis", "plongee"]
+COULEUR_BAS, TEINTE_TERRAZZO = VARIANTES["sauge"][:2]   # remplacés pour chaque variante
 
 # Soleil : position calculée (lieu, date, heure légale). Azimut compté depuis le nord vers l'est.
 LIEU = (48.86, 2.35)                 # Paris (latitude, longitude)
@@ -39,11 +44,6 @@ SOLEIL_FORCE = 60.0                  # W/m² Blender : rapport soleil / ciel d'u
 CIEL_FORCE = 0.35                    # intensité du ciel physique (éclairage)
 EXPOSITION = -0.2                    # compensation d'exposition (IL)
 LAMPES = False                       # plein jour : plafonniers, réglette et suspension éteints (le cellier reste éclairé)
-
-# Vue par la fenêtre : panorama HDRI (cour d'immeubles), vu seulement à travers les vitres.
-HDRI = "urban_courtyard_2k.hdr"
-HDRI_FORCE = 0.9
-HDRI_ROTATION = 0.0                  # degrés autour de la verticale, pour placer les façades face à la fenêtre
 
 CHANFREIN = 0.002                    # arêtes arrondies : 2 mm, 2 segments
 
@@ -87,7 +87,7 @@ MATS = {
     "plafond":          ("#F5F2EC", 0.95, {"enduit": True}),
     "sol_bois":         ("#B98A55", 0.5, {"tex": "parquet", "sens": "sol", "echelle": 3.4}),
     "sol_carrelage":    ("#D8D5CE", 0.5, {}),
-    "facade_couleur":   (COULEUR_BAS, 0.45, {"laque": True}),
+    "facade_couleur":   ("COULEUR_BAS", 0.45, {"laque": True}),
     "facade_noyer":     ("#45291A", 0.5, NOYER),
     "etagere":          ("#45291A", 0.5, dict(NOYER, sens="h")),
     "chaise":           ("#45291A", 0.5, NOYER),
@@ -95,10 +95,16 @@ MATS = {
     "table":            ("#A87A4C", 0.45, dict(NOYER, sens="h", teinte=(1.2, 0.85))),
     "caisson":          ("#E9E5DC", 0.6, {}),
     "socle":            ("#2B3436", 0.6, {}),
-    "plan":             ("#CFCDC7", 0.3, {"tex": "terrazzo", "sens": "bloc", "echelle": 0.6}),
+    "plan":             ("#CFCDC7", 0.3, {"tex": "terrazzo", "sens": "bloc", "echelle": 0.6, "teinte": "terrazzo"}),
     "credence":         ("#EFE7D6", 0.08, {"zellige": True}),                 # zellige ivoire
     "inox":             ("#C9C9C7", 0.3, {"metal": True}),
     "chrome":           ("#E8E8E8", 0.08, {"metal": True}),
+    "alu":              ("#B9BCBF", 0.35, {"metal": True}),                   # aluminium anodisé naturel
+    # extérieur : rue, façade d'en face
+    "sol_ext":          ("#5E5F60", 0.85, {}),
+    "pelouse":          ("#4F6B35", 0.9, {"enduit": True}),
+    "facade_ext":       ("#B8A488", 0.85, {"enduit": True}),
+    "vitre_ext":        ("#1C2228", 0.03, {}),
     "cannage":          ("#D9B98A", 0.6, {"cannage": True}),
     "vitro":            ("#0B0B0C", 0.04, {}),
     "noir":             ("#18181A", 0.35, {}),
@@ -134,7 +140,8 @@ MATS = {
 
 # Objets simplifiés remplacés par des modèles Poly Haven (version avec décoration).
 #   cacher : objets masqués ; cadre : objets (ou boîte du plan en cm) dans lesquels le modèle est ajusté ;
-#   ajuste : "dedans" (échelle pour tenir dans le cadre) ou "reel" (taille réelle) ; rot : rotation en degrés.
+#   ajuste : "dedans" (échelle pour tenir dans le cadre), "hauteur" (hauteur du cadre) ou "reel" (taille réelle) ;
+#   rot : rotation en degrés.
 REMPLACEMENTS = [
     dict(cacher=r"__(pot_plante_haut|plante_haut)$", cadre=r"__(pot_plante_haut|plante_haut)$", modele="potted_plant_04"),
     dict(cacher=r"__(vase|tige_\d|fleur_\d)$", cadre=r"__vase$", modele="ceramic_vase_04"),
@@ -150,6 +157,11 @@ REMPLACEMENTS = [
     dict(cacher=r"__cellier_carton_1$", cadre=r"__cellier_carton_1$", modele="cardboard_box_01"),
     dict(cacher=r"__cellier_carton_2$", cadre=r"__cellier_carton_2$", modele="cardboard_box_01"),
     dict(cacher=r"__balai_\d$", cadre=(358, 378, 0, 12, 0, 150), modele="wooden_broom", ajuste="reel"),
+]
+# Arbres de la rue (dans les deux versions) : cadre en cm du plan, pied au niveau de la rue (-560).
+ARBRES = [
+    dict(cadre=(-860, -420, -420, 20, -560, 440), modele="island_tree_01", rot=20, ajuste="hauteur"),
+    dict(cadre=(-900, -500, 380, 780, -560, 340), modele="island_tree_02", rot=-40, ajuste="hauteur"),
 ]
 
 
@@ -237,6 +249,8 @@ def map_range(nt, src, lo, hi):
 
 def make_material(key):
     col, rough, opt = MATS.get(key, ("#FF00FF", 0.5, {}))
+    if col == "COULEUR_BAS":
+        col = COULEUR_BAS
     m = bpy.data.materials.new(key)
     m.use_nodes = True
     nt = m.node_tree
@@ -259,7 +273,8 @@ def make_material(key):
         out = diff.outputs["Color"]
         if "teinte" in opt:
             hsv = nt.nodes.new("ShaderNodeHueSaturation")
-            hsv.inputs["Saturation"].default_value, hsv.inputs["Value"].default_value = opt["teinte"]
+            teinte = TEINTE_TERRAZZO if opt["teinte"] == "terrazzo" else opt["teinte"]
+            hsv.inputs["Saturation"].default_value, hsv.inputs["Value"].default_value = teinte
             nt.links.new(out, hsv.inputs["Color"])
             out = hsv.outputs["Color"]
         nt.links.new(out, bsdf.inputs["Base Color"])
@@ -391,11 +406,11 @@ def bbox(objs):
     return lo, hi
 
 
-def remplacer(sc):
+def remplacer(sc, liste):
     objs = [o for o in sc.objects if o.type == "MESH"]
-    for r in REMPLACEMENTS:
-        cacher = [o for o in objs if re.search(r["cacher"], o.name)]
-        if not cacher:
+    for r in liste:
+        cacher = [o for o in objs if "cacher" in r and re.search(r["cacher"], o.name)]
+        if "cacher" in r and not cacher:
             continue
         if isinstance(r["cadre"], tuple):
             x0, x1, y0, y1, z0, z1 = r["cadre"]
@@ -413,6 +428,7 @@ def remplacer(sc):
         new = [o for o in sc.objects if o not in before]
         root = bpy.data.objects.new("modele_" + r["modele"], None)
         sc.collection.objects.link(root)
+        root["exterieur"] = "cacher" not in r
         for o in new:
             o["modele"] = True
             if o.parent is None:
@@ -423,6 +439,8 @@ def remplacer(sc):
         size, target = mhi - mlo, hi - lo
         if r.get("ajuste") == "reel":
             s = 1.0
+        elif r.get("ajuste") == "hauteur":
+            s = target.z / size.z
         else:
             s = min(target[i] / size[i] for i in range(3) if size[i] > 1e-6)
         root.scale = (s, s, s)
@@ -484,7 +502,7 @@ def reglages_cycles(sc):
 
 
 def monde(sc):
-    """Éclairage : ciel physique calé sur le soleil. Vu à travers les vitres : panorama HDRI.
+    """Éclairage et vue par la fenêtre : ciel physique calé sur le soleil.
     Vu directement par la caméra (vue plongeante) : fond gris clair uni."""
     world = bpy.data.worlds.new("ciel")
     sc.world = world
@@ -498,28 +516,12 @@ def monde(sc):
     bg = nt.nodes["Background"]
     bg.inputs["Strength"].default_value = CIEL_FORCE
     nt.links.new(sky.outputs["Color"], bg.inputs["Color"])
-
-    tc = nt.nodes.new("ShaderNodeTexCoord")
-    mp = nt.nodes.new("ShaderNodeMapping")
-    mp.inputs["Rotation"].default_value = (0, 0, math.radians(HDRI_ROTATION))
-    nt.links.new(tc.outputs["Generated"], mp.inputs["Vector"])
-    env = nt.nodes.new("ShaderNodeTexEnvironment")
-    env.image = bpy.data.images.load(os.path.join(TEX, HDRI), check_existing=True)
-    nt.links.new(mp.outputs["Vector"], env.inputs["Vector"])
-    hbg = nt.nodes.new("ShaderNodeBackground")
-    hbg.inputs["Strength"].default_value = HDRI_FORCE
-    nt.links.new(env.outputs["Color"], hbg.inputs["Color"])
-
     fond = nt.nodes.new("ShaderNodeBackground")
     fond.inputs["Color"].default_value = hexrgb("#E4E9EC")
     path = nt.nodes.new("ShaderNodeLightPath")
-    vitre = nt.nodes.new("ShaderNodeMixShader")
-    nt.links.new(path.outputs["Is Transmission Ray"], vitre.inputs["Fac"])
-    nt.links.new(bg.outputs["Background"], vitre.inputs[1])
-    nt.links.new(hbg.outputs["Background"], vitre.inputs[2])
     cam = nt.nodes.new("ShaderNodeMixShader")
     nt.links.new(path.outputs["Is Camera Ray"], cam.inputs["Fac"])
-    nt.links.new(vitre.outputs["Shader"], cam.inputs[1])
+    nt.links.new(bg.outputs["Background"], cam.inputs[1])
     nt.links.new(fond.outputs["Background"], cam.inputs[2])
     nt.links.new(cam.outputs["Shader"], nt.nodes["World Output"].inputs["Surface"])
 
@@ -545,19 +547,20 @@ def build_scene(glb, deco):
         smooth = key in ("globe", "feuillage", "fleurs", "fruits", "chrome", "tige")
         for poly in o.data.polygons:
             poly.use_smooth = smooth
-        if not smooth and key not in ("verre", "plafond", "credence", "cannage"):
+        if not smooth and key not in ("verre", "plafond", "credence", "cannage") and "__ext_" not in o.name:
             chanfreiner(o)
         if key == "verre":
             o.visible_shadow = False  # vitrage mince : laisse passer le soleil (pas de caustiques)
-        if key == "plafond":
-            ceiling.append(o)
+        if key == "plafond" or "__ext_" in o.name:
+            ceiling.append(o)  # masqués dans la vue plongeante
         if key == "globe":
             globes.append(o)
     missing = sorted(k for k in mats if k not in MATS)
     if missing:
         print("Matériaux non définis (magenta) :", missing)
+    remplacer(sc, ARBRES)
     if deco:
-        remplacer(sc)
+        remplacer(sc, REMPLACEMENTS)
 
     sc.render.engine = "CYCLES"
     reglages_cycles(sc)
@@ -617,28 +620,33 @@ VIEWS = {
     "plongee": dict(loc=(330, 360, 470), target=(160, 110, 40), lens=22, no_ceiling=True),
 }
 
-for version in VERSIONS:
-    suffix = "-deco" if version == "deco" else ""
-    ceiling = build_scene(os.path.join(OUT, f"cuisine-a{suffix}.glb"), deco=version == "deco")
-    sc = bpy.context.scene
-    for name in VIEWS:  # toutes les caméras dans le .blend, rendu des seules vues demandées
-        v = VIEWS[name]
-        cam_data = bpy.data.cameras.new(name)
-        cam_data.lens = v["lens"]
-        cam_data.sensor_width = 36
-        cam_data.shift_y = v.get("shift", 0.0)
-        cam = bpy.data.objects.new("cam_" + name, cam_data)
-        sc.collection.objects.link(cam)
-        cam.location = p(*v["loc"])
-        look_at(cam, p(*v["target"]))
-        sc.camera = cam
-        if name not in VUES:
-            continue
+for teinte in TEINTES:
+    COULEUR_BAS, TEINTE_TERRAZZO, suffixe_teinte = VARIANTES[teinte]
+    for version in VERSIONS:
+        suffix = ("-deco" if version == "deco" else "") + suffixe_teinte
+        glb = "cuisine-a-deco.glb" if version == "deco" else "cuisine-a.glb"
+        ceiling = build_scene(os.path.join(OUT, glb), deco=version == "deco")
+        sc = bpy.context.scene
+        for name in VIEWS:  # toutes les caméras dans le .blend, rendu des seules vues demandées
+            v = VIEWS[name]
+            cam_data = bpy.data.cameras.new(name)
+            cam_data.lens = v["lens"]
+            cam_data.sensor_width = 36
+            cam_data.shift_y = v.get("shift", 0.0)
+            cam = bpy.data.objects.new("cam_" + name, cam_data)
+            sc.collection.objects.link(cam)
+            cam.location = p(*v["loc"])
+            look_at(cam, p(*v["target"]))
+            sc.camera = cam
+            if name not in VUES:
+                continue
+            for c in ceiling + [o for o in sc.objects if o.get("exterieur")]:
+                c.hide_render = bool(v.get("no_ceiling"))
+                for ch in c.children_recursive:
+                    ch.hide_render = bool(v.get("no_ceiling"))
+            sc.render.filepath = os.path.join(OUT, f"rendu-{name}{suffix}.png")
+            bpy.ops.render.render(write_still=True)
+            print("Rendu :", sc.render.filepath, f"(soleil h {SUN_ALT:.1f}°, az {SUN_AZ:.1f}°)")
         for c in ceiling:
-            c.hide_render = bool(v.get("no_ceiling"))
-        sc.render.filepath = os.path.join(OUT, f"rendu-{name}{suffix}.png")
-        bpy.ops.render.render(write_still=True)
-        print("Rendu :", sc.render.filepath, f"(soleil h {SUN_ALT:.1f}°, az {SUN_AZ:.1f}°)")
-    for c in ceiling:
-        c.hide_render = False
-    bpy.ops.wm.save_as_mainfile(filepath=os.path.join(OUT, f"cuisine-a{suffix}.blend"), compress=True)
+            c.hide_render = False
+        bpy.ops.wm.save_as_mainfile(filepath=os.path.join(OUT, f"cuisine-a{suffix}.blend"), compress=True)
