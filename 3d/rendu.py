@@ -26,15 +26,21 @@ TEX = os.path.join(HERE, "textures")
 MOD = os.path.join(HERE, "modeles")
 args = sys.argv[sys.argv.index("--") + 1:] if "--" in sys.argv else []
 SAMPLES = next((int(a) for a in args if a.isdigit()), 256)
-# Variantes de teintes : (couleur des meubles bas et hauts, saturation et valeur du terrazzo, suffixe des fichiers)
+# Essences des meubles toute hauteur, étagères, portes et chaises : texture, couleur de repli, (saturation, valeur)
+BOIS = {
+    "noyer": ("noyer", "#45291A", (1.25, 0.36)),    # noyer huilé, foncé
+    "chene": ("chene", "#A8743F", (1.15, 0.72)),    # chêne miel (façades Plum Living)
+}
+# Variantes de teintes : (couleur des meubles bas et hauts, saturation et valeur du terrazzo, suffixe des fichiers, bois)
 VARIANTES = {
-    "sauge": ("#8D9B80", (1.0, 1.0), ""),          # sauge des rendus Gemini, terrazzo clair d'origine
-    "fonce": ("#5E6E55", (0.0, 0.82), "-fonce"),    # vert plus foncé, terrazzo gris
+    "sauge": ("#8D9B80", (1.0, 1.0), "", "noyer"),             # sauge des rendus Gemini, terrazzo clair d'origine
+    "fonce": ("#5E6E55", (0.0, 0.82), "-fonce", "noyer"),      # vert plus foncé, terrazzo gris
+    "canopee": ("#3C524C", (0.0, 0.82), "-canopee", "chene"),  # Canopée Plum Living, terrazzo gris, chêne miel
 }
 VERSIONS = [a for a in args if a in ("sans", "deco")] or ["sans", "deco"]
 TEINTES = [a for a in args if a in VARIANTES] or list(VARIANTES)
 VUES = [a for a in args if not a.isdigit() and a not in ("sans", "deco") and a not in VARIANTES] or ["entree", "fenetre", "cellier", "assis", "plongee"]
-COULEUR_BAS, TEINTE_TERRAZZO = VARIANTES["sauge"][:2]   # remplacés pour chaque variante
+COULEUR_BAS, TEINTE_TERRAZZO, _, ESSENCE = VARIANTES["sauge"]   # remplacés pour chaque variante
 
 # Soleil : position calculée (lieu, date, heure légale). Azimut compté depuis le nord vers l'est.
 LIEU = (48.86, 2.35)                 # Paris (latitude, longitude)
@@ -251,6 +257,12 @@ def make_material(key):
     col, rough, opt = MATS.get(key, ("#FF00FF", 0.5, {}))
     if col == "COULEUR_BAS":
         col = COULEUR_BAS
+    if opt.get("tex") == "noyer" and ESSENCE != "noyer":
+        # autre essence : texture, couleur et teinte de la variante (la table garde son éclaircissement relatif)
+        tex, col, (sat, val) = BOIS[ESSENCE]
+        if opt is not NOYER and opt.get("teinte") != NOYER["teinte"]:
+            sat, val = sat * opt["teinte"][0] / NOYER["teinte"][0], min(1.0, val * opt["teinte"][1] / NOYER["teinte"][1])
+        opt = dict(opt, tex=tex, teinte=(sat, val))
     m = bpy.data.materials.new(key)
     m.use_nodes = True
     nt = m.node_tree
@@ -621,7 +633,7 @@ VIEWS = {
 }
 
 for teinte in TEINTES:
-    COULEUR_BAS, TEINTE_TERRAZZO, suffixe_teinte = VARIANTES[teinte]
+    COULEUR_BAS, TEINTE_TERRAZZO, suffixe_teinte, ESSENCE = VARIANTES[teinte]
     for version in VERSIONS:
         suffix = ("-deco" if version == "deco" else "") + suffixe_teinte
         glb = "cuisine-a-deco.glb" if version == "deco" else "cuisine-a.glb"

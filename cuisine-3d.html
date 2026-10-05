@@ -49,6 +49,7 @@ pre{white-space:pre-wrap;font-family:"JetBrains Mono",ui-monospace,Menlo,monospa
 .seg{display:inline-flex;border:1px solid var(--line);border-radius:8px;overflow:hidden}
 .seg button{border:0;background:var(--card);color:var(--ink);padding:7px 14px;font-size:14px}
 .seg button+button{border-left:1px solid var(--line)}
+.seg button:disabled{opacity:.45;cursor:not-allowed}
 .seg button[aria-pressed="true"]{background:var(--accent);color:var(--accent-ink)}
 .seg button:focus-visible{outline:2px solid var(--accent);outline-offset:-2px}
 .facts{margin:10px 0 0;padding-left:20px;max-width:75ch}
@@ -64,48 +65,49 @@ code{font-family:"JetBrains Mono",ui-monospace,Menlo,monospace;font-size:13px}
 <header class="ph"><a href="index.html" aria-label="Retour aux plans">← Plans</a><span>Rendus 3D cuisine</span></header>
 <!-- /page-header -->
 <main>
-  <div class="kicker">Variante A · V1.4 · FreeCAD + Blender</div>
+  <div class="kicker">Variante A · V1.5 · FreeCAD + Blender</div>
   <h1>Rendus 3D cuisine</h1>
-  <p class="lead">Modèle 3D construit dans FreeCAD à partir des cotes du plan et des coupes (variante A, table carrée 70 × 70), rendu dans Blender (Cycles). Meubles bas et hauts sauge, meubles toute hauteur en noyer, poignées profilées toute longueur dans la teinte de la façade, plan terrazzo gris clair, crédence zellige ivoire, parquet bâtons rompus.</p>
+  <p class="lead">Modèle 3D construit dans FreeCAD à partir des cotes du plan et des coupes (variante A, table carrée 70 × 70), rendu dans Blender (Cycles). Meubles bas et hauts Canopée (vert profond de Plum Living), meubles toute hauteur, étagères et chaises en chêne miel, poignées profilées toute longueur dans la teinte de la façade, plan terrazzo gris, crédence zellige ivoire, parquet bâtons rompus.</p>
   <div class="opts">
-    <div class="seg" role="group" aria-label="Teinte"><button type="button" data-teinte="" aria-pressed="true">Sauge · terrazzo clair</button><button type="button" data-teinte="-fonce" aria-pressed="false">Vert foncé · terrazzo gris</button></div>
+    <div class="seg" role="group" aria-label="Teinte"><button type="button" data-teinte="-canopee" aria-pressed="true">Canopée · chêne miel</button><button type="button" data-teinte="" aria-pressed="false">Sauge · noyer</button><button type="button" data-teinte="-fonce" aria-pressed="false">Vert foncé · noyer</button></div>
     <div class="seg" role="group" aria-label="Décoration"><button type="button" data-deco="1" aria-pressed="true">Avec déco</button><button type="button" data-deco="0" aria-pressed="false">Sans déco</button></div>
   </div>
+  <p class="note" id="note-teinte" hidden>Canopée · chêne miel n'est rendue qu'avec la décoration.</p>
 
   <section class="view">
-    <div class="head"><div><h2>Depuis l'entrée, vers le nord-ouest</h2><p class="sub">Rangée nord sauge, étagères ouvertes, fenêtre coulissante, coin repas.</p></div></div>
-    <a class="stage" href="cuisine-3d/rendu-entree-deco.jpg?v=1.4" target="_blank" data-v="entree"><img class="main r3d" src="cuisine-3d/rendu-entree-deco.jpg?v=1.4" data-v="entree" alt="Rendu 3D, depuis l'entrée, vers le nord-ouest" loading="lazy"></a>
+    <div class="head"><div><h2>Depuis l'entrée, vers le nord-ouest</h2><p class="sub">Rangée nord, étagères ouvertes, fenêtre coulissante, coin repas.</p></div></div>
+    <a class="stage" href="cuisine-3d/rendu-entree-deco-canopee.jpg?v=1.5" target="_blank" data-v="entree"><img class="main r3d" src="cuisine-3d/rendu-entree-deco-canopee.jpg?v=1.5" data-v="entree" alt="Rendu 3D, depuis l'entrée, vers le nord-ouest" loading="lazy"></a>
   </section>
 
   <section class="view">
-    <div class="head"><div><h2>Depuis la fenêtre, vers l'est</h2><p class="sub">Colonnes noyer : frigo, four et micro-ondes ; porte du cellier ouverte, porte d'entrée à étagères et ardoise.</p></div></div>
-    <a class="stage" href="cuisine-3d/rendu-fenetre-deco.jpg?v=1.4" target="_blank" data-v="fenetre"><img class="main r3d" src="cuisine-3d/rendu-fenetre-deco.jpg?v=1.4" data-v="fenetre" alt="Rendu 3D, depuis la fenêtre, vers l'est" loading="lazy"></a>
+    <div class="head"><div><h2>Depuis la fenêtre, vers l'est</h2><p class="sub">Colonnes toute hauteur : frigo, four et micro-ondes ; porte du cellier ouverte, porte d'entrée à étagères et ardoise.</p></div></div>
+    <a class="stage" href="cuisine-3d/rendu-fenetre-deco-canopee.jpg?v=1.5" target="_blank" data-v="fenetre"><img class="main r3d" src="cuisine-3d/rendu-fenetre-deco-canopee.jpg?v=1.5" data-v="fenetre" alt="Rendu 3D, depuis la fenêtre, vers l'est" loading="lazy"></a>
   </section>
 
   <section class="view">
     <div class="head"><div><h2>Depuis le seuil du cellier</h2><p class="sub">Étagères P30, râtelier à balais, lave-linge devant le ballon.</p></div></div>
-    <a class="stage" href="cuisine-3d/rendu-cellier-deco.jpg?v=1.4" target="_blank" data-v="cellier"><img class="main r3d" src="cuisine-3d/rendu-cellier-deco.jpg?v=1.4" data-v="cellier" alt="Rendu 3D, depuis le seuil du cellier" loading="lazy"></a>
+    <a class="stage" href="cuisine-3d/rendu-cellier-deco-canopee.jpg?v=1.5" target="_blank" data-v="cellier"><img class="main r3d" src="cuisine-3d/rendu-cellier-deco-canopee.jpg?v=1.5" data-v="cellier" alt="Rendu 3D, depuis le seuil du cellier" loading="lazy"></a>
   </section>
 
   <section class="view">
     <div class="head"><div><h2>Assis à table</h2><p class="sub">Sur la chaise côté four, regard vers la fenêtre et la rangée nord.</p></div></div>
-    <a class="stage" href="cuisine-3d/rendu-assis-deco.jpg?v=1.4" target="_blank" data-v="assis"><img class="main r3d" src="cuisine-3d/rendu-assis-deco.jpg?v=1.4" data-v="assis" alt="Rendu 3D, assis à table" loading="lazy"></a>
+    <a class="stage" href="cuisine-3d/rendu-assis-deco-canopee.jpg?v=1.5" target="_blank" data-v="assis"><img class="main r3d" src="cuisine-3d/rendu-assis-deco-canopee.jpg?v=1.5" data-v="assis" alt="Rendu 3D, assis à table" loading="lazy"></a>
   </section>
 
   <section class="view">
     <div class="head"><div><h2>Vue plongeante</h2><p class="sub">Plafond retiré : l'ensemble cuisine et cellier.</p></div></div>
-    <a class="stage" href="cuisine-3d/rendu-plongee-deco.jpg?v=1.4" target="_blank" data-v="plongee"><img class="main r3d" src="cuisine-3d/rendu-plongee-deco.jpg?v=1.4" data-v="plongee" alt="Rendu 3D, vue plongeante" loading="lazy"></a>
+    <a class="stage" href="cuisine-3d/rendu-plongee-deco-canopee.jpg?v=1.5" target="_blank" data-v="plongee"><img class="main r3d" src="cuisine-3d/rendu-plongee-deco-canopee.jpg?v=1.5" data-v="plongee" alt="Rendu 3D, vue plongeante" loading="lazy"></a>
   </section>
 
   <section class="view">
     <h2>À savoir</h2>
     <ul class="facts">
-      <li>Deux teintes pour les meubles bas et hauts : sauge #8D9B80 (celle des <a href="cuisine-rendus.html">rendus Gemini</a>) avec le terrazzo clair, ou vert foncé #5E6E55 avec un terrazzo gris.</li>
+      <li>Trois teintes pour les meubles bas et hauts : Canopée #3C524C (<a href="https://plum-living.com/fr/products/1313-00S-L">laque mate Plum Living</a>) avec le chêne miel et le terrazzo gris ; et, dans les rendus V1.4 archivés, sauge #8D9B80 (celle des <a href="cuisine-rendus.html">rendus Gemini</a>) avec le terrazzo clair, ou vert foncé #5E6E55 avec un terrazzo gris, toutes deux avec le noyer.</li>
       <li>Vue par la fenêtre : cuisine au 2ᵉ étage, rue plantée d'arbres et immeuble en face, à 12 m, aux mêmes fenêtres.</li>
       <li>Lumière du jour seule : soleil calculé pour le 21 juin à 17 h (heure d'été) à Paris, 45° de hauteur, venant de l'ouest-sud-ouest par la fenêtre ; ciel physique ; lampes de la cuisine éteintes.</li>
       <li>Vues prises à hauteur d'yeux d'une personne de 1,75 m : 1,63 m debout, 1,20 m assise ; la vue plongeante fait exception.</li>
       <li>Les cotes sont recopiées du plan à la main : une modification de <a href="cuisine-plan.html">cuisine-plan.html</a> ne passe pas encore dans la 3D.</li>
-      <li>Textures, arbres et objets de décoration CC0 : Poly Haven (noyer, parquet, arbres, vase, bol, fruits, livres, plante, paniers, cartons, balai) et ambientCG (terrazzo). Chaises de type Cesca, zellige et cannage modélisés. La décoration est indicative.</li>
+      <li>Textures, arbres et objets de décoration CC0 : Poly Haven (noyer, chêne, parquet, arbres, vase, bol, fruits, livres, plante, paniers, cartons, balai) et ambientCG (terrazzo). Chaises de type Cesca, zellige et cannage modélisés. La décoration est indicative.</li>
       <li>Scripts : <code>3d/cuisine_a.py</code> (FreeCAD), <code>3d/rendu.py</code> (Blender), <code>3d/textures.py</code> ; regénérer avec <code>just rendu-3d</code>.</li>
     </ul>
   </section>
@@ -115,6 +117,7 @@ code{font-family:"JetBrains Mono",ui-monospace,Menlo,monospace;font-size:13px}
     <table>
       <thead><tr><th>Version</th><th>Date</th><th>Changements</th></tr></thead>
       <tbody>
+        <tr><td><b>V1.5</b></td><td>05/10/2026</td><td>Nouvelle teinte Canopée #3C524C (Plum Living) avec chêne miel pour les meubles toute hauteur, étagères, portes, table et chaises, terrazzo gris ; rendue avec décoration seulement. Les rendus V1.4 (sauge et vert foncé, noyer) sont archivés et restent accessibles par le sélecteur.</td></tr>
         <tr><td><b>V1.4</b></td><td>05/10/2026</td><td>Variante vert foncé #5E6E55 + terrazzo gris (sélecteur de teinte) ; vue au 2ᵉ étage : rue, arbres et immeuble en face aux mêmes fenêtres (le panorama est retiré) ; fenêtre, appui et dormant en aluminium ; liseré noir sous la fenêtre et autour de l'évier corrigé (faces confondues) ; images versionnées pour éviter l'ancien cache du navigateur.</td></tr>
         <tr><td><b>V1.3</b></td><td>05/10/2026</td><td>Plus photo-réaliste : arêtes arrondies (2 mm), panorama d'immeubles par la fenêtre, objets de décoration remplacés par de vrais modèles 3D, chaises de type Cesca (tube chromé, noyer, cannage), textures plaquées en UV avec relief, enduit des murs, zellige à joints, laque à brillance irrégulière ; parquet tourné de 90° ; réglages Cycles (rebonds, débruitage, échantillonnage adaptatif, 256 échantillons).</td></tr>
         <tr><td><b>V1.2</b></td><td>05/10/2026</td><td>Éclairage d'été à 17 h : soleil réel par la fenêtre ouest (h 45°, azimut 252°), ciel physique, lampes éteintes ; vitrage laissant passer le soleil ; amorce de couloir derrière la porte d'entrée.</td></tr>
@@ -126,17 +129,23 @@ code{font-family:"JetBrains Mono",ui-monospace,Menlo,monospace;font-size:13px}
 </main>
 <script>
 (() => {
-  const V = '1.4';  // version des images : change à chaque publication pour contourner le cache du navigateur
-  const state = { deco: '1', teinte: '' };
+  const V = '1.5';  // version des images : change à chaque publication pour contourner le cache du navigateur
+  const ARCHIVE = { '': 'archives/v1.4/', '-fonce': 'archives/v1.4/' };  // teintes des rendus archivés
+  const DECO_SEULE = ['-canopee'];  // teintes rendues avec décoration uniquement
+  const state = { deco: '1', teinte: '-canopee' };
   const load = (k, d) => { try { return localStorage.getItem(k) ?? d; } catch (e) { return d; } };
   const save = (k, v) => { try { localStorage.setItem(k, v); } catch (e) {} };
   state.deco = load('r3d-deco', '1');
-  state.teinte = load('r3d-teinte', '');
+  state.teinte = load('r3d-teinte', '-canopee');
+  if (!document.querySelector(`[data-teinte="${state.teinte}"]`)) state.teinte = '-canopee';
   const render = () => {
-    document.querySelectorAll('[data-deco]').forEach(b => b.setAttribute('aria-pressed', String(b.dataset.deco === state.deco)));
+    const decoSeule = DECO_SEULE.includes(state.teinte);
+    const deco = decoSeule ? '1' : state.deco;
+    document.getElementById('note-teinte').hidden = !decoSeule;
+    document.querySelectorAll('[data-deco]').forEach(b => { b.setAttribute('aria-pressed', String(b.dataset.deco === deco)); b.disabled = decoSeule && b.dataset.deco === '0'; });
     document.querySelectorAll('[data-teinte]').forEach(b => b.setAttribute('aria-pressed', String(b.dataset.teinte === state.teinte)));
     document.querySelectorAll('a.stage[data-v]').forEach(a => {
-      const src = `cuisine-3d/rendu-${a.dataset.v}${state.deco === '1' ? '-deco' : ''}${state.teinte}.jpg?v=${V}`;
+      const src = `cuisine-3d/${ARCHIVE[state.teinte] ?? ''}rendu-${a.dataset.v}${deco === '1' ? '-deco' : ''}${state.teinte}.jpg?v=${V}`;
       a.href = src; a.querySelector('img').src = src;
     });
   };

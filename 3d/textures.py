@@ -16,6 +16,7 @@ UA = {"User-Agent": "plans-cuisine/1.0"}
 # nom local → (source, identifiant)
 TEXTURES = {
     "noyer": ("polyhaven", "black_walnut_veneer_02"),    # placage noyer brut, 1 × 1 m (foncé au rendu)
+    "chene": ("polyhaven", "oak_veneer_01"),             # placage chêne, teinté miel au rendu (variante canopée)
     "parquet": ("polyhaven", "herringbone_parquet"),     # bâtons rompus, 3,4 × 3,4 m
     "terrazzo": ("ambientcg", "Terrazzo001"),            # terrazzo gris clair, grain fin
 }
