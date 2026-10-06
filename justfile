@@ -52,3 +52,8 @@ v11:
 # Fige la version courante de la cuisine V11 (bouton de comparaison + archive/cuisine-v11.x.html)
 v11-figer:
     python3 3d/v11/plan.py --figer
+
+# Recopie la proposition 9 V2 A (table carrée) depuis cuisine-plan.html dans les versions figées de la V11
+v11-figer-p9:
+    python3 3d/v11/figer_p9.py
+    python3 3d/v11/plan.py

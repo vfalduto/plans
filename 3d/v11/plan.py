@@ -439,7 +439,6 @@ tfoot td{font-weight:700}
 .vbar{position:sticky;top:0;z-index:5;display:flex;flex-wrap:wrap;align-items:center;gap:6px;padding:8px 16px;background:var(--paper);border-bottom:1px solid var(--line);font-family:"JetBrains Mono",ui-monospace,monospace;font-size:12px}
 .vbar .back{color:var(--ink);text-decoration:none;font-weight:600;margin-right:14px}
 .vbar .back:hover{text-decoration:underline}
-.fige{display:block;width:100%;height:85vh;border:1px solid var(--line);border-radius:12px;background:var(--paper)}
 .vbar span{color:var(--muted);text-transform:uppercase;letter-spacing:.08em;margin-right:4px}
 .vbar button{font:inherit;color:var(--ink);background:var(--panel);border:1px solid var(--line);border-radius:6px;padding:4px 10px;cursor:pointer}
 .vbar button[aria-pressed="true"]{background:var(--ink);color:var(--paper);border-color:var(--ink)}
@@ -533,17 +532,9 @@ def page(figees, racine=""):
 <script>
 (function () {{
   var bs = document.querySelectorAll(".vbar button"), vs = document.querySelectorAll(".ver");
-  // hauteur des pages figées intégrées : celle de leur contenu (impossible en file://, on garde 85vh)
-  function ajuster() {{
-    document.querySelectorAll("iframe.fige").forEach(function (f) {{
-      try {{ var h = f.contentDocument.documentElement.scrollHeight; if (h > 200) f.style.height = h + "px"; }} catch (e) {{}}
-    }});
-  }}
-  document.querySelectorAll("iframe.fige").forEach(function (f) {{ f.addEventListener("load", ajuster); }});
   function montre(v) {{
     if (!document.querySelector('.ver[data-v="' + v + '"]')) v = "courante";
     vs.forEach(function (d) {{ d.hidden = d.dataset.v !== v; }});
-    ajuster();
     bs.forEach(function (b) {{ b.setAttribute("aria-pressed", b.dataset.v === v); }});
     try {{ localStorage.setItem("cuisine-v11-version", v); }} catch (e) {{}}
   }}
