@@ -43,3 +43,12 @@ rendu-salon echantillons="256":
     /Applications/Blender.app/Contents/MacOS/Blender -b --python 3d/salon_biblio.py -- {{echantillons}}
     mkdir -p salon-3d
     for f in 3d/sortie/salon-biblio-*.png; do sips -s format jpeg -s formatOptions 85 "$f" --out "salon-3d/$(basename "$f" .png).jpg" >/dev/null; done
+
+# Cuisine V11 : régénère cuisine-v11.html et le modèle FreeCAD depuis 3d/v11/modele.py (source unique)
+v11:
+    python3 3d/v11/plan.py
+    /Applications/FreeCAD.app/Contents/Resources/bin/freecadcmd 3d/v11/cad.py
+
+# Fige la version courante de la cuisine V11 (bouton de comparaison + archive/cuisine-v11.x.html)
+v11-figer:
+    python3 3d/v11/plan.py --figer

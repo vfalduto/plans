@@ -1,5 +1,5 @@
 <!doctype html>
-<html lang="fr" data-tbl="sq">
+<html lang="fr" data-tbl="sq" data-fige="a">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
@@ -191,6 +191,10 @@ section{margin-top:52px;padding-top:8px;border-top:2px solid var(--line)}
 [hidden]{display:none!important}
 .tag{display:inline-block;font-family:"JetBrains Mono",ui-monospace,monospace;font-size:12px;padding:1px 7px;border-radius:5px;background:var(--tech);margin-right:6px}
 </style>
+<style>
+.switch,.opts{display:none!important}
+[data-panel]:not([data-panel="a"]){display:none!important}
+</style>
 </head>
 <body>
 <!-- page-header -->
@@ -213,7 +217,7 @@ section{margin-top:52px;padding-top:8px;border-top:2px solid var(--line)}
 </svg>
 
 
-<div class="kicker">Proposition 9 · V3.6 · plan et coupes · variantes A / A2 / C / D</div>
+<div class="kicker">Proposition 9 V2 · V3.6 · variante A · table carrée 70 × 70 · version figée le 06/10/2026</div>
 <h1>Cuisine « mur de droite aligné » V2</h1>
 <p class="pitch">Cuisine dans l'ex-chambre, cellier-buanderie derrière le mur de droite. Quatre variantes : <b>A</b> et <b>C</b> ne diffèrent que par la porte du cellier (battante, pivotante-coulissante) ; <b>A2</b> reprend A avec un four compact sous la plaque, une colonne de 40 à la place de la colonne four et une porte de cellier à galandage (passage 60) ; <b>D</b> supprime le cellier et le lave-linge, et ouvre l'ancien cellier sur la cuisine. Le bouton A / A2 / C / D bascule le plan et toutes les coupes ; l'option juste en dessous change la forme de la table. La porte d'entrée coulisse vers la table ; un décroché de la maçonnerie dans l'angle sud-est remonte les colonnes de 7. L'historique des versions est en fin de document (<a href="#changements">Changements</a>).</p>
 
@@ -4802,28 +4806,5 @@ section{margin-top:52px;padding-top:8px;border-top:2px solid var(--line)}
 </tbody></table></div>
 </section>
 </div>
-<script>
-(function(){
-  var bs=document.querySelectorAll('.switch button');
-  function show(v){
-    bs.forEach(function(b){b.setAttribute('aria-selected',b.getAttribute('data-v')===v?'true':'false')});
-    document.querySelectorAll('[data-panel]').forEach(function(p){p.hidden=p.getAttribute('data-panel')!==v});
-    try{localStorage.setItem('p9v2-plan',v)}catch(e){}
-  }
-  bs.forEach(function(b){b.addEventListener('click',function(){show(b.getAttribute('data-v'))})});
-  var v=null;try{v=localStorage.getItem('p9v2-plan')}catch(e){}
-  if(/^#(a2|[acd])$/.test(location.hash))v=location.hash.slice(1);
-  if(v==='a2'||v==='c'||v==='d')show(v);
-  // option (table) : attributs sur <html>, synchronisés entre les barres
-  var ob=document.querySelectorAll('.opts button'),root=document.documentElement;
-  function opt(k,val){
-    root.setAttribute('data-'+k,val);
-    ob.forEach(function(b){if(b.getAttribute('data-opt')===k)b.setAttribute('aria-pressed',b.getAttribute('data-val')===val?'true':'false')});
-    try{localStorage.setItem('p9v2-'+k,val)}catch(e){}
-  }
-  ob.forEach(function(b){b.addEventListener('click',function(){opt(b.getAttribute('data-opt'),b.getAttribute('data-val'))})});
-  [['tbl',/^(sq|rd|bq)$/]].forEach(function(o){var x=null;try{x=localStorage.getItem('p9v2-'+o[0])}catch(e){}if(x&&o[1].test(x))opt(o[0],x)});
-})();
-</script>
 </body>
 </html>
