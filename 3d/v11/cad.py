@@ -5,6 +5,7 @@
 # Produit 3d/sortie/cuisine-v11.FCStd et .glb. Dans FreeCAD : X = x, Y = -y (nord en haut), Z = z, en mm.
 # Chaque objet s'appelle « rôle__nom » : le rendu Blender choisira le matériau d'après le préfixe.
 
+import math
 import os
 import sys
 
@@ -39,6 +40,12 @@ cuves = [b for b in M.MEUBLES if b.role == "cuve"]
 for b in M.ENVELOPPE + M.MEUBLES:
     if isinstance(b, M.Cyl):
         s = Part.makeCylinder(b.r * 10, (b.z1 - b.z0) * 10, V(b.cx * 10, -b.cy * 10, b.z0 * 10))
+    elif isinstance(b, M.Pan):
+        # panneau en biais : boîte le long de x, centrée sur l'axe, tournée puis posée en a
+        lg = math.dist(b.a, b.b)
+        s = Part.makeBox(lg * 10, b.ep * 10, (b.z1 - b.z0) * 10, V(0, -b.ep * 5, b.z0 * 10))
+        s.rotate(V(0, 0, 0), V(0, 0, 1), math.degrees(math.atan2(-(b.b[1] - b.a[1]), b.b[0] - b.a[0])))
+        s.translate(V(b.a[0] * 10, -b.a[1] * 10, 0))
     else:
         s = solid(b.x0, b.x1, b.y0, b.y1, b.z0, b.z1)
     if b.role == "cuve":
@@ -60,8 +67,9 @@ for nom, poly in (("sol_parquet__chambre", M.SOL_PARQUET), ("sol_ciment__cellier
     add(nom, sol.extrude(V(0, 0, 20)))
 
 doc.recompute()
-doc.saveAs(os.path.join(OUT, "cuisine-v11.FCStd"))
+NOM = "cuisine-v11"
+doc.saveAs(os.path.join(OUT, f"{NOM}.FCStd"))
 for o in objs:
     o.Shape.tessellate(0.5)  # sans interface : sinon le glTF sort vide
-Import.export(objs, os.path.join(OUT, "cuisine-v11.glb"))
-print(f"{len(objs)} objets → {OUT}/cuisine-v11.glb")
+Import.export(objs, os.path.join(OUT, f"{NOM}.glb"))
+print(f"{len(objs)} objets → {OUT}/{NOM}.glb")

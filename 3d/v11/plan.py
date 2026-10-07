@@ -44,6 +44,19 @@ def cote_h(x0, x1, y, label=None, t=3):
     ])
 
 
+def cote_d(a, b, t=0.5, dt=(0, 0)):
+    """Cote oblique de a à b, texte au point t du segment, décalé de dt."""
+    d = math.dist(a, b)
+    ux, uy = (b[1] - a[1]) / d * 3, -(b[0] - a[0]) / d * 3  # demi-trait perpendiculaire
+    tx, ty = a[0] + (b[0] - a[0]) * t + dt[0], a[1] + (b[1] - a[1]) * t + dt[1]
+    return "".join([
+        f'<line class="dim" x1="{f(a[0])}" y1="{f(a[1])}" x2="{f(b[0])}" y2="{f(b[1])}"/>',
+        *(f'<line class="dim" x1="{f(p[0] - ux)}" y1="{f(p[1] - uy)}" x2="{f(p[0] + ux)}" y2="{f(p[1] + uy)}"/>'
+          for p in (a, b)),
+        text(tx, ty, f"{d:.0f}", "dimt"),
+    ])
+
+
 def cote_v(y0, y1, x, label=None, t=3):
     """Cote verticale, texte à gauche, tourné."""
     label = label or f(abs(y1 - y0))
@@ -71,7 +84,11 @@ PLAN_CLS = {"mur": "w", "allege": "win", "tech": "tech", "socle": None,
             "aspiration": "asp", "evier": "inox", "cuve": "cuve", "mitigeur": "inox",
             "colonne": "tall", "facade_col": "fac", "four": "fac", "porte": None,
             "caisson": "cab", "facade": "fac", "linteau": None, "cloison": "neuf", "porte_plan": None,
-            "table": "tbl", "pied": None, "chaise": "stool", "fileur": None, "banquette": "stool"}
+            "table": "tbl", "pied": None, "chaise": "stool", "fileur": None, "banquette": "stool",
+            "etagere": "shelf", "montant": "shelf", "trappe": "trappe",
+            "ardoise": None, "aimant": None, "micro_onde": "fac",
+            "dormant": "dorm", "dormant_haut": None, "joue": "fac", "paumelle": None,
+            "ratelier": "dark", "balai": "balai", "manche": None}
 
 
 def batons_rompus(w=8, l=32):
@@ -88,6 +105,48 @@ def batons_rompus(w=8, l=32):
             f'patternTransform="rotate(-45)">{"".join(r)}</pattern>')
 
 
+def battant(h, ferme, ouvert, label):
+    """Porte battante ouverte à 90° : vantail de la charnière au bout ouvert, arc depuis le bout fermé."""
+    (hx, hy), (fx, fy), (ox, oy) = h, ferme, ouvert
+    w = math.dist(h, ferme)
+    sweep = 1 if (fx - hx) * (oy - hy) - (fy - hy) * (ox - hx) > 0 else 0
+    lx, ly = hx + 0.55 * (fx - hx + ox - hx), hy + 0.55 * (fy - hy + oy - hy)
+    return (f'<line class="doorleaf" x1="{f(hx)}" y1="{f(hy)}" x2="{f(ox)}" y2="{f(oy)}"/>'
+            f'<path class="swing" d="M{f(fx)} {f(fy)} A{f(w)} {f(w)} 0 0 {sweep} {f(ox)} {f(oy)}"/>'
+            + text(lx, ly + 2, label, "lblx muted"))
+
+
+def vantail(v, ouvert=True):
+    """Vantail fermé ou ouvert à son angle, à son épaisseur réelle, avec ses balais (face côté cellier) et sa paumelle ;
+    ouvert, avec le balayage depuis la position fermée."""
+    (hx, hy), (fx, fy), w = v["h"], v["ferme"], v["w"]
+    ox, oy = v["ouvert"] if ouvert else v["ferme"]
+    d0 = ((fx - hx) / w, (fy - hy) / w)                 # direction fermée
+    d1 = ((ox - hx) / w, (oy - hy) / w)                 # direction ouverte
+    c, s_ = d0[0] * d1[0] + d0[1] * d1[1], d0[0] * d1[1] - d0[1] * d1[0]
+
+    def tourne(px, py):
+        """Point du vantail fermé (repère : charnière) → position ouverte."""
+        return hx + c * px - s_ * py, hy + s_ * px + c * py
+
+    def piece(u0, u1, x0, x1):
+        """Rectangle du vantail fermé, de u0 à u1 le long du vantail, de x0 à x1 en épaisseur (x relatif à la charnière)."""
+        return [tourne(x + d0[0] * u, d0[1] * u) for x, u in ((x0, u0), (x0, u1), (x1, u1), (x1, u0))]
+
+    o = []
+    if ouvert:
+        sweep = 1 if (fx - hx) * (oy - hy) - (fy - hy) * (ox - hx) > 0 else 0
+        o.append(f'<path class="swing" d="M{f(fx)} {f(fy)} A{f(w)} {f(w)} 0 0 {sweep} {f(ox)} {f(oy)}"/>')
+    o.append(f'<polygon class="leaf" points="{pts(piece(0, w, -M.EP_VANTAIL, 0))}"/>')
+    for dist, larg in v["balais"]:
+        o.append(f'<polygon class="balai" points="{pts(piece(dist - larg / 2, dist + larg / 2, 0, v["saillie"]))}"/>')
+    o.append(f'<circle class="pivot" cx="{f(hx)}" cy="{f(hy)}" r="1.4"/>')
+    if ouvert:
+        lx, ly = hx + 0.6 * (fx - hx + ox - hx), hy + 0.6 * (fy - hy + oy - hy)
+        o.append(text(lx, ly + 2, f'{f(w)} · {f(round(v["angle"]))}°', "lblx"))
+    return "".join(o)
+
+
 def plan_svg():
     o = [f"<defs>{batons_rompus()}</defs>"]
     o.append(f'<polygon class="floorbg" points="{pts(M.SOL_PARQUET)}"/>')
@@ -100,9 +159,14 @@ def plan_svg():
             o.append(text(x, y + 8 * k, ligne, "lbls muted"))
     o.append(f'<polygon class="wc" points="{pts(M.WC)}"/>')
     o.append(text(438, 185, "WC", "lbl muted"))
-    # volumes, du plus bas au plus haut
+    # volumes, du plus bas au plus haut (une seule emprise par pile de tablettes)
+    vues = set()
     for b in sorted(M.ENVELOPPE + M.MEUBLES, key=lambda b: b.z1):
         cls = PLAN_CLS[b.role]
+        if cls == "shelf":
+            if (b.x0, b.y0, b.x1, b.y1) in vues:
+                continue
+            vues.add((b.x0, b.y0, b.x1, b.y1))
         if isinstance(b, M.Cyl) and cls:
             o.append(f'<circle class="{cls}" cx="{f(b.cx)}" cy="{f(b.cy)}" r="{f(b.r)}"/>')
         elif cls:
@@ -111,22 +175,21 @@ def plan_svg():
     fe = M.FENETRE
     o.append(f'<line class="glass" x1="-7" y1="{fe["y0"]}" x2="-7" y2="{(fe["y0"] + fe["y1"]) / 2 + 2}"/>')
     o.append(f'<line class="glass" x1="-13" y1="{(fe["y0"] + fe["y1"]) / 2 - 2}" x2="-13" y2="{fe["y1"]}"/>')
-    # porte d'entrée coulissante côté cuisine, vers l'ouest (fermée ; ouverte en tireté)
+    # porte d'entrée à galandage : fermée en trait plein, rentrée dans sa poche en ocre
     en = M.ENTREE
-    (hx, hy), w = en["charniere"], en["vantail"]
-    o.append(f'<line class="doorleaf" x1="{f(hx)}" y1="{f(hy)}" x2="{f(hx)}" y2="{f(hy - w)}"/>')
-    o.append(f'<path class="swing" d="M{f(hx - w)} {f(hy)} A{f(w)} {f(w)} 0 0 1 {f(hx)} {f(hy - w)}"/>')
+    o.append(rect(en["ouvert"][0], en["y"] - 2, en["ouvert"][1], en["y"] + 2, "slid"))
+    o.append(f'<line class="doorleaf" x1="{f(en["ferme"][0])}" y1="{f(en["y"])}" x2="{f(en["ferme"][1])}" y2="{f(en["y"])}"/>')
     o.append(text((en["x0"] + en["x1"]) / 2, 270, "Entrée", "lbls"))
+    o.append(text(sum(en["poche"]) / 2, 237, "tableau noir · aimants", "lblx"))
     # ballon
     bl = M.BALLON
     o.append(f'<circle class="ecs" cx="{f(bl.cx)}" cy="{f(bl.cy)}" r="{f(bl.r)}"/>')
     o.append(text(bl.cx, bl.cy + 2, "Ballon ECS", "lblx"))
-    o.append(text(426, 28, "chute", "lblx muted"))
+    o.append(text(M.CHUTE[0] + 7, M.CHUTE[1] + 2, "chute", "lblx", "start"))
+    o.append(text(M.NOURRICE[0] - 4, M.NOURRICE[1] - 4, "nourrice", "lblx", "end"))
     # numéros des meubles
     for b in M.MEUBLES:
-        if b.role == "caisson" and b.y0 > 0:  # meubles du mur est : étiquette au centre
-            o.append(text((b.x0 + b.x1) / 2, (b.y0 + b.y1) / 2 + 3, b.etiq, "lblb"))
-        elif b.role == "caisson":
+        if b.role == "caisson":
             nom, _, equip = b.etiq.partition(" ")
             o.append(text((b.x0 + b.x1) / 2, 74, nom, "lblb"))
             if equip:
@@ -140,12 +203,10 @@ def plan_svg():
             o.append(text((b.x0 + b.x1) / 2, 50, "induction", "lblx onDark"))
         if b.role == "cuve":
             o.append(text((b.x0 + b.x1) / 2, b.y1 - 3, "évier", "lblx"))
-    # cellier : baie de 72, porte à définir
-    bc = M.BAIE_CELLIER
-    o.append(rect(bc["x0"], bc["y0"], bc["x1"], bc["y1"], "ghost"))
-    o.append(cote_v(bc["y0"], bc["y1"], bc["x1"] + 8, f'baie {f(bc["y1"] - bc["y0"])}'))
-    o.append(text(bc["x0"] - 3, (bc["y0"] + bc["y1"]) / 2, "porte à définir", "lblx muted", "middle",
-                  extra=f' transform="rotate(-90 {f(bc["x0"] - 3)} {f((bc["y0"] + bc["y1"]) / 2)})"'))
+    # cellier : vantaux ouverts vers le cellier, à l'épaisseur réelle, balayage et paumelles
+    for k, v in enumerate(M.CELLIER_VANTAUX):
+        o.append(f'<g class="vt" data-vt="{k}"><g class="ouv">{vantail(v)}</g>'
+                 f'<g class="fer">{vantail(v, ouvert=False)}</g></g>')
     # réseaux d'eau
     for role, _, p, _, _ in M.RESEAUX:
         o.append(f'<polyline class="{"pin" if role == "alim" else "pout"}" points="{pts(p)}"/>')
@@ -158,24 +219,16 @@ def plan_svg():
             o.append(rect(x0, y0, x1, y1, "swingz"))
             o.append(text((x0 + x1) / 2, (y0 + y1) / 2 + 2, f"porte {nom} abattue", "lblx muted"))
         else:
-            (hx, hy), w, sens = d
-            ex = hx + w if sens == "est" else hx - w
-            o.append(f'<line class="doorleaf" x1="{f(hx)}" y1="{f(hy)}" x2="{f(hx)}" y2="{f(hy - w)}"/>')
-            o.append(f'<path class="swing" d="M{f(ex)} {f(hy)} A{f(w)} {f(w)} 0 0 0 {f(hx)} {f(hy - w)}"/>')
-            o.append(text(hx + 3, hy - w + 8, f"porte {nom} 90°", "lblx muted", "start"))
+            o.append(battant(*d, f"porte {nom} 90°"))
     # cellier : surface et volume
     surf = aire(M.CELLIER_SOL) / 1e4
     vol = surf * M.H / 100
     bl = M.BALLON
     net = vol - math.pi * (bl.r / 100) ** 2 * (bl.z1 - bl.z0) / 100
-    for k, ligne in enumerate((f"{surf:.2f} m²", f"{vol:.2f} m³ brut", f"≈ {net:.1f} m³ net")):
-        o.append(text(380, 72 + 7 * k, ligne.replace(".", ","), "lblx"))
+    for k, ligne in enumerate((f"cellier · {surf:.2f} m²", f"{vol:.2f} m³ brut · ≈ {net:.1f} net")):
+        o.append(text(373, 39 + 7 * k, ligne.replace(".", ","), "lblx"))
     # table
     o.append(text(M.TABLE["cx"], M.TABLE["cy"] + 3, f'Ø {f(2 * M.TABLE["r"])}', "lblb"))
-    # four (C1) / B1 : entre façades, et porte du four abattue
-    yb = M.P_CAISSON + M.FACADE
-    o.append(cote_v(yb, M.COL_Y0, M.COL_X0 + 54))
-    o.append(cote_v(yb, M.COL_Y0 - 60, M.COL_X0 + 12))
     # triangle d'activité
     tp = [p for _, p in M.TRIANGLE]
     o.append(f'<polygon class="tri" points="{pts(tp)}"/>')
@@ -192,11 +245,11 @@ def plan_svg():
         for x in (-30, 500):
             o.append(f'<path class="secm" d="M{x - 4} {y} l4 {d} l4 {-d} z"/>')
             o.append(text(x, y - d * 1.2 + 3, nom, "sect"))
-    x = COUPE_C
-    o.append(f'<line class="sec" x1="{x}" y1="-82" x2="{x}" y2="300"/>')
-    for y in (-82, 300):
-        o.append(f'<path class="secm" d="M{x} {y - 4} l9 4 l-9 4 z"/>')
-        o.append(text(x - 7, y + 4, "C", "sect"))
+    for x, nom, y0, y1 in ((COUPE_C, "C", -82, 300),):
+        o.append(f'<line class="sec" x1="{x}" y1="{y0}" x2="{x}" y2="{y1}"/>')
+        for y in (y0, y1):
+            o.append(f'<path class="secm" d="M{x} {y - 4} l9 4 l-9 4 z"/>')
+            o.append(text(x - 7, y + 4, nom, "sect"))
     # cotes : chaîne du mur nord, total des meubles, longueur de la pièce
     caissons = [b for b in M.MEUBLES if b.role == "caisson" and b.y0 == 0]
     o.append(cote_h(0, caissons[0].x0, -30))
@@ -208,13 +261,13 @@ def plan_svg():
         o.append(cote_h(b.x0, b.x1, -48))
     for b in hauts:
         o.append(text((b.x0 + b.x1) / 2, 10, b.etiq, "lbls muted"))
-    cols = [b for b in M.MEUBLES if b.role == "colonne" and b.nom.startswith("caisson_c")]
-    o.append(chaine(cols, 268 + 10, lambda x: x))
-    # porte d'entrée coulissante : baie, vantail, course
+    for y0, y1 in ((M.COL_Y0, M.COL_Y0 + 60), (M.COL_Y0 + 60, M.COL_Y1)):
+        o.append(cote_v(y0, y1, 402))
+    # passages depuis l'angle sud-est des façades des meubles bas : frigo, mur nord du WC
+    o.append(cote_d((caissons[-1].x1, 62), (M.COL_X, M.JOUE_C2), 0.5, (-7, 4)))
+    # porte d'entrée à galandage : baie, poche
     o.append(cote_h(en["x0"], en["x1"], 282, f'baie {f(en["x1"] - en["x0"])}'))
-    (ex, ey), ew = en["charniere"], en["vantail"]
-    o.append(cote_v(ey - ew, ey, ex + 6, f'vantail {f(ew)}'))
-    o.append(cote_v(M.COL_Y0, M.COL_DOS, M.COL_X0 + 8))
+    o.append(cote_h(*en["poche"], 282, f'poche {f(en["poche"][1] - en["poche"][0])}'))
     o.append(cote_h(0, 434, -66))
     o.append(text(-4, -27, "bas", "lblx muted", "end"))
     o.append(text(-4, -45, "hauts", "lblx muted", "end"))
@@ -239,7 +292,12 @@ COUPE_CLS = {"mur": ("bgwall", "w"), "allege": ("bgwall", "w"), "linteau": ("wal
              "tech": ("tech", "tech"), "socle": ("plinth", "plinth"),
              "caisson": ("cab", "cab"), "facade": ("fac", "fac"), "porte": ("leaf", "leaf"),
              "colonne": ("tall", "tall"), "cloison": ("wallv", "neuf"),
-             "fileur": ("fac", "fac"), "banquette": ("stool", "stool"), "table": ("tbl", "tbl"), "pied": ("tbl", "tbl"), "chaise": ("stool", "stool"), "facade_col": ("fac", "fac"), "four": ("dark", "dark")}
+             "fileur": ("fac", "fac"), "banquette": ("stool", "stool"), "table": ("tbl", "tbl"), "pied": ("tbl", "tbl"), "chaise": ("stool", "stool"), "facade_col": ("fac", "fac"), "four": ("dark", "dark"),
+             "etagere": ("shelf", "shelfc"), "montant": ("shelf", "shelfc"), "trappe": ("trappe", "trappe"),
+             "ardoise": ("ardoise", "ardoise"), "aimant": ("aimant", "aimant"), "micro_onde": ("dark", "dark"),
+             "dormant": ("dorm", "dorm"), "dormant_haut": ("dorm", "dorm"), "joue": ("fac", "fac"),
+             "paumelle": ("dark", "dark"), "ratelier": ("dark", "dark"), "balai": ("balai", "balai"),
+             "manche": ("balai", "balai")}
 
 
 # Regard d'une coupe : (axe coupé, sens de la profondeur, miroir de l'axe horizontal)
@@ -281,15 +339,29 @@ def coupe_svg(cut, regard, umin, umax, chaines, hauteurs, xh, extra=None, origin
     for b in vus:
         u0, u1, d0, d1 = uv(b, axe)
         coupe = d0 < cut < d1
+        if isinstance(b, M.Pan) and coupe:
+            # panneau en biais coupé : on ne voit que la partie au-delà du plan, plus sa section au point de coupe
+            (ua, da), (ub, db) = [(p[0], p[1]) if axe == "y" else (p[1], p[0]) for p in (b.a, b.b)]
+            ui = ua + (ub - ua) * (cut - da) / (db - da)
+            loin = ua if (da - cut) * sens > 0 else ub
+            u0, u1 = sorted((ui, loin))
+            uc, vc = sorted((X(ui - b.ep / 2), X(ui + b.ep / 2)))
+            o.append(rect(uc, -b.z1, vc, -b.z0, COUPE_CLS[b.role][1]))
+            coupe = False
         u, v = sorted((X(max(u0, umin)), X(min(u1, umax))))
         o.append(rect(u, -b.z1, v, -b.z0, COUPE_CLS[b.role][1 if coupe else 0]))
         xm = (u + v) / 2
         if b.role == "allege" and coupe:
             o.append(text(xm, -150, "fenêtre", "lblx", extra=f' transform="rotate(-90 {f(xm)} -150)"'))
-        if b.role == "ballon":
+        if b.role == "ballon" and regard != "est":  # vers l'est, il est caché par la porte du cellier
             etiquettes.append(text(xm, -(b.z0 + b.z1) / 2, "Ballon", "lblx"))
-        if b.role == "four":
+        if b.role == "four" and v - u > 10:  # pas d'étiquette sur un four vu sur chant
             etiquettes.append(text(xm, -(b.z0 + b.z1) / 2 + 2, "four", "lblx onDark"))
+        if b.role == "micro_onde" and v - u > 10:
+            etiquettes.append(text(xm, -(b.z0 + b.z1) / 2 + 2, "micro-ondes", "lblx onDark"))
+        if b.role in ("ardoise", "aimant"):
+            etiquettes.append(text(xm, -(b.z0 + b.z1) / 2 + 2, "tableau noir" if b.role == "ardoise" else "aimants",
+                                   "lblx onDark" if b.role == "ardoise" else "lblx"))
         if getattr(b, "etiq", ""):
             zm = (b.z0 + b.z1) / 2 if b.role != "colonne" else 200
             nom, _, equip = b.etiq.partition(" ")
@@ -320,31 +392,35 @@ def coupe_a():
 
 
 def coupe_b():
-    cols = [b for b in M.MEUBLES if b.role == "colonne" and b.nom.startswith("caisson_c")]
     xmin, xmax = -20, 392
     en = M.ENTREE
     v = next(b for b in M.ENVELOPPE if b.nom == "entree_vantail")
 
+    tn = next(b for b in M.ENVELOPPE if b.nom == "tableau_noir")
+    za = next(b for b in M.ENVELOPPE if b.nom == "zone_aimantee")
+
     def porte(X):
         u0, u1 = sorted((X(en["x0"]), X(en["x1"])))
         w0, w1 = sorted((X(v.x0), X(v.x1)))
+        p0, p1 = sorted((X(en["poche"][0]), X(en["poche"][1])))
         return [cote_h(u0, u1, 38, f'baie {f(en["x1"] - en["x0"])}'),
+                cote_h(p0, p1, 38, f'poche {f(en["poche"][1] - en["poche"][0])}'),
                 cote_h(w0, w1, -v.z1 - 6, f'vantail {f(v.x1 - v.x0)} × {f(v.z1 - v.z0)}'),
-                cote_v(0, -en["h"], w0 - 8, f'baie h {en["h"]}')]
+                cote_v(0, -en["h"], w0 - 8, f'baie h {en["h"]}'),
+                cote_v(-za.z0, -za.z1, p1 + 6), cote_v(-tn.z0, -tn.z1, p1 + 6)]
 
-    return coupe_svg(COUPE_B, "sud", xmin, xmax, [(cols, 22)],
-                     [M.SOCLE, 88, 148, M.COL_Z1], xmin - 30, porte)
+    return coupe_svg(COUPE_B, "sud", xmin, xmax, [], [45, 75, 85, en["h"], M.COL_Z1], xmin - 30, porte)
 
 
 def coupe_c():
-    est = sorted([b for b in M.MEUBLES if b.nom in ("caisson_e1", "caisson_e2")], key=lambda b: b.y0)
-    bc = M.BAIE_CELLIER
-
+    cols = sorted([b for b in M.MEUBLES if b.role == "colonne"], key=lambda b: b.y0)
     def cellier(X):
-        return [cote_h(X(bc["y0"]), X(bc["y1"]), -bc["h"] + 14, f'baie cellier {f(bc["y1"] - bc["y0"])}')]
+        return [cote_h(X(M.BAIE_Y0), X(M.BAIE_Y1), -M.H - 8, f"baie {f(M.BAIE_Y1 - M.BAIE_Y0)}"),
+                cote_h(X(M.BAIE_Y0 + M.DORMANT), X(M.BAIE_Y1 - M.DORMANT), -204 - 6,
+                       " + ".join(f(w) for w in M.VANTAUX_L) + " × 199")]
 
-    return coupe_svg(COUPE_C, "est", -20, 262, [(est, 22)],
-                     [M.SOCLE, M.CAISSON_H, M.CAISSON_H + 4, M.COL_Z1], -50, cellier, origine=M.BAIE_CELLIER["y1"] + 7)
+    return coupe_svg(COUPE_C, "est", -20, 262, [(cols, 22)],
+                     [M.SOCLE, 88, M.MO_Z0, M.MO_Z1, 193, M.COL_Z1], -50, cellier)
 
 
 # ------------------------------------------------------------------ page
@@ -424,6 +500,26 @@ svg text{font-family:Archivo,system-ui,sans-serif;fill:var(--ink)}
 .swingz{fill:var(--tri);fill-opacity:.05;stroke:var(--muted);stroke-width:.7;stroke-dasharray:3 2}
 .swing{fill:none;stroke:var(--muted);stroke-width:.7;stroke-dasharray:2 2}
 .doorleaf{stroke:var(--ink);stroke-width:2}
+.ardoise{fill:#2B3230;stroke:var(--ink);stroke-width:.6}.aimant{fill:#A7AEB2;stroke:var(--ink);stroke-width:.6}
+.balai{fill:#C9A46A;stroke:var(--ink);stroke-width:.4}
+.tog{display:flex;flex-wrap:wrap;align-items:center;gap:6px;margin:0 0 10px;font-family:"JetBrains Mono",ui-monospace,monospace;font-size:12px}
+.tog span{color:var(--muted);text-transform:uppercase;letter-spacing:.08em;margin-right:4px}
+.tog button{font:inherit;color:var(--ink);background:var(--panel);border:1px solid var(--line);border-radius:6px;padding:4px 10px;cursor:pointer}
+.tog button[aria-pressed="true"]{background:var(--ink);color:var(--paper);border-color:var(--ink)}
+.vt[data-etat="ferme"] .ouv,.vt:not([data-etat="ferme"]) .fer{display:none}
+.dorm{fill:var(--panel);stroke:var(--ink);stroke-width:.6}
+.seuil{stroke:var(--muted);stroke-width:.7;stroke-dasharray:3 2}
+.slid{fill:var(--wood);fill-opacity:.55;stroke:var(--wood);stroke-width:.6}
+.pivot{fill:var(--paper);stroke:var(--ink);stroke-width:.8}
+.leafd{stroke:var(--ink);stroke-width:3;stroke-linecap:round}
+.leafg{stroke:var(--muted);stroke-width:1.5;stroke-opacity:.45;stroke-dasharray:3 2}
+.move{stroke:var(--tri);stroke-width:1;stroke-dasharray:2.5 2;fill:none}.flm{fill:var(--tri)}
+.diag{stroke:var(--tri);stroke-width:1;stroke-dasharray:4 2}.diagt{font:600 8px "JetBrains Mono",monospace;fill:var(--tri)}
+.celsol{fill:var(--ink);fill-opacity:.1}
+.shelf,.shelfd{fill:var(--wood);fill-opacity:.3;stroke:var(--wood);stroke-width:.6}
+.shelfc{fill:var(--wood);stroke:var(--ink);stroke-width:.6}
+.trappe{fill:var(--wood);fill-opacity:.12;stroke:var(--ink);stroke-width:.8;stroke-dasharray:3 2}
+.frame{fill:none;stroke:var(--line);stroke-width:.8}
 td.num,th.num{text-align:right;font-family:"JetBrains Mono",ui-monospace,monospace;white-space:nowrap}
 tfoot td{font-weight:700}
 .upper{fill:none;stroke:var(--ink);stroke-width:.8;stroke-dasharray:3 2}
@@ -455,12 +551,33 @@ def table_rangement(lignes):
             f'</tfoot></table>')
 
 
+def texte_cellier():
+    petit, grand = M.CELLIER_VANTAUX
+    nord = M.RAYON_NORD
+    return (f"<b>Porte du cellier</b> ({M.PORTE_TITRE}) : la cloison va du mur nord à y {f(M.CLOISON_Y1)} ; un montant "
+            f"de {f(M.MONTANT)} toute hauteur contre la joue du frigo (y {f(M.BAIE_Y1)} → {M.JOUE_C2}) reçoit le dormant ; "
+            f"baie de {f(M.BAIE_Y1 - M.BAIE_Y0)} × 204 sous un linteau. Bloc-porte : dormant "
+            f"{str(M.DORMANT).replace('.', ',')} × 7 (blanc), petit vantail de {f(petit['w'])} côté cloison, grand vantail "
+            f"de {f(grand['w'])} côté frigo, vantaux de {M.EP_VANTAIL} d'épaisseur détalonnés de 1, 3 paumelles par vantail "
+            f"côté cellier (point). Les deux s'ouvrent vers le cellier (côté cuisine, ils heurteraient le plan de "
+            f"travail de B5) ; les boutons au-dessus du plan les ouvrent et les ferment. Passage libre ≈ "
+            f"{f(M.PASSAGE_CELLIER)} par le grand vantail, ≈ {f(sum(M.VANTAUX_L) - 8)} en ouvrant aussi le petit. "
+            f"<b>Organisation du cellier</b> : deux <b>balais</b> accrochés sur le flanc nord du frigo (joue de C2), "
+            f"derrière le grand vantail ouvert, qui les cache (crochets à h 150, têtes à plat contre la joue, 6 de "
+            f"profondeur) ; un seul <b>rayonnage toute hauteur P{nord['y1']}</b> contre le mur nord, de la "
+            f"cloison jusqu'au mur de l'alcôve (x {nord['x0']} → {nord['x1']}, {len(nord['zs'])} tablettes "
+            f"de {M.L_NORD}, la première à h {nord['zs'][0]} au-dessus des tuyaux). Plus rien devant le ballon : nourrice, "
+            f"groupe de sécurité et chute restent accessibles directement. "
+            f"<b>Finitions</b> : joues de 2 sur les flancs visibles des colonnes (nord de C2, "
+            f"sud de C1 jusqu'au décroché) et des meubles hauts (ouest de H1, est de H{M.N_HAUTS}), fileurs de 7 jusqu'au "
+            f"plafond au-dessus des hauts et des colonnes.")
+
+
 def contenu():
     v11 = sum(v for _, v, _ in M.RANGEMENT_V11)
     p9a = sum(v for _, v, _ in M.RANGEMENT_P9A)
     caissons = [b for b in M.MEUBLES if b.role == "caisson" and b.y0 == 0]
     x0, x1 = caissons[0].x0, caissons[-1].x1
-    chute = next(b for b in M.ENVELOPPE if b.nom == "coffrage_chute")
     hauts = [b for b in M.MEUBLES if b.role == "caisson_haut"]
     cols = [b for b in M.MEUBLES if b.role == "colonne" and b.nom.startswith("caisson_c")]
     tp = M.TRIANGLE
@@ -473,8 +590,8 @@ def contenu():
 <p class="pitch">Nouveau départ depuis la pièce vide. Le plan et la coupe sont générés depuis le modèle 3D : une seule source, aucune cote reportée à la main.</p>
 
 <h2>Plan</h2>
-<div class="fig"><div class="scroll">{plan_svg()}</div>
-<p class="cap">Échelle : 1 unité = 1 cm. Pièce vide : chambre et ancien cellier ouverts, sans cloison. Restent la fenêtre coulissante du mur ouest (y 58 → 200), la porte d'entrée (baie x 228 → 306), le décroché de l'angle sud-est, le coffrage de la chute, le ballon et le WC. <b>Sols</b> : parquet chêne en bâtons rompus dans l'ancienne chambre (x 0 → 325), gris ciment dans l'ancien cellier et l'ancien placard (à partir de x 325) ; les cloisons déposées du relevé d'origine sont en tireté (chambre / cellier x 325 → 335, cellier / placard y 100 → 110). <b>Mur nord</b> : {len(caissons)} meubles bas de 60 (x {f(x0)} → {f(x1)}), à {f(M.ECART_OUEST)} du mur ouest ; caisson P{M.P_CAISSON} + façade {M.FACADE}, profondeur {M.P_CAISSON + M.FACADE}, sous un plan de travail de 4 (P62, débord de 2). <b>Induction</b> 60 à aspiration intégrée sur B{M.B_PLAQUE} (x {f(M.sur_bas(M.B_PLAQUE)[0])} → {f(M.sur_bas(M.B_PLAQUE)[1])}) ; <b>évier</b> inox 1 bac 56 × 50 (bac 40 × 40) sur B{M.B_EVIER} (x {f(M.sur_bas(M.B_EVIER)[0])} → {f(M.sur_bas(M.B_EVIER)[1])}), mitigeur derrière le bac ; le LV (B{M.B_LV}) entre les deux, sous 60 de plan. Il reste {f(chute.x0 - x1)} entre le dernier meuble et le coffrage de la chute (x {f(chute.x0)}). <b>Mur sud</b> : colonnes C1 (four) et C2 (frigo) de 60, P60, x {f(cols[0].x0)} → {f(cols[-1].x1)}, alignées sur le bord ouest du vantail d'entrée fermé (x {f(M.COL_X1)}, 2 avant le montant de la baie) ; elles sont avancées de 12 (façades y {f(M.COL_Y0)}, contre le mur sud). <b>Porte d'entrée</b> : battante, vantail {f(M.ENTREE["vantail"])} × {M.ENTREE["h"]}, charnières à l'est (elle pousse à droite vue du couloir) ; ouverte à 90°, elle se range le long de l'aplomb du montant est (x {f(M.ENTREE["charniere"][0])}, jusqu'à y {f(M.ENTREE["charniere"][1] - M.ENTREE["vantail"])}), à {f(M.X_MUR_EST - M.P_EST - M.FACADE - M.ENTREE["charniere"][0])} de E2. <b>Mur est</b> : deux meubles bas de 60 en profondeur réduite (caisson P{M.P_EST} + façade 2, P40), E1 y 120 → 180 et E2 y 180 → 240, contre le mur du WC, du décroché vers le nord, sous un plan de travail de 4 (P42). Devant eux, il reste {f(M.X_MUR_EST - M.P_EST - M.FACADE - 2 - M.ENTREE["x1"])} entre le plan et l'aplomb du montant est de la porte d'entrée (x 306). <b>Équipements</b> : poubelles de tri sous l'évier (B{M.B_EVIER}), lave-vaisselle 60 tout intégrable (B{M.B_LV}). <b>Triangle d'activité</b> (rouge ; centres de la plaque et de l'évier, milieu de la façade du frigo) : {tri}, total {f(round(sum(cotes_tri)))} cm. <b>Réseaux</b> (bleu, dans le vide technique derrière les caissons) : alimentation EF/EC en trait plein depuis la nourrice sous le ballon, le long du mur nord, avec un piquage pour le LV ; évacuations en tireté de l'évier (siphon, axe x {f(M.SIPHON[0])}) et du LV vers la chute (cercle, coffrage x 418 → 434), longueur ≈ {f(M.EVAC_LONGUEUR)} : à 2 cm/m, 5 cm de pente, par exemple de h 45 sous le siphon à h 40 à la chute. Les réseaux traversent la cloison du cellier dans son trumeau nord. <b>Cellier</b> : cloison de 7 à {f(M.BAIE_CELLIER["x0"] - x1)} de B5 (x {f(M.BAIE_CELLIER["x0"])} → {f(M.BAIE_CELLIER["x1"])}), du mur nord à y 120, puis retour vers l'est contre le nord de E1 (y 113 → 120) jusqu'au mur du WC ; baie de {f(M.BAIE_CELLIER["y1"] - M.BAIE_CELLIER["y0"])} face ouest (y {f(M.BAIE_CELLIER["y0"])} → {f(M.BAIE_CELLIER["y1"])}, h {M.BAIE_CELLIER["h"]}), juste au sud du plan de travail (y 62), porte à définir ; trumeau nord de {f(M.BAIE_CELLIER["y0"])}, où passent les réseaux. Une porte battante de 50 côté cuisine balaierait le devant de B5 : coulissante, pliante ou battante vers le cellier à étudier. <b>Coin repas</b> : banquette du mur ouest jusqu'à C1 (x 0 → {f(M.COL_X0)}, 50 de profondeur : assise 45 à h 45 avec coffre, dossier 5 à h 85), table ronde Ø {f(2 * M.TABLE["r"])} à pied tulipe devant (centre x {f(M.TABLE["cx"])}, y {f(M.TABLE["cy"])}), qui recouvre l'assise de 15 ; une chaise en face, glissée de {M.GLISSE}, avec un recul de {f(M.CHAISE_Y0 - M.P_CAISSON - M.FACADE)} jusqu'au front de B1. La banquette s'arrête à y {f(M.BANQ["y0"])}, au sud de la fenêtre (y 200). <b>Ouvertures</b> : porte du LV abattue (y 60 → 132), porte du four abattue (x {f(M.COL_X0)} → {f(M.COL_X0 + 60)}, y {f(M.COL_Y0 - 60)} → {f(M.COL_Y0)}), porte du frigo à 90°, charnières à l'est, côté porte d'entrée, ouverte vers l'ouest. Elle touche la porte du four abattue à x {f(M.COL_X0 + 60)} : on ne les ouvre pas en même temps. <b>Meubles hauts</b> (tireté) : {len(hauts)} de 60, x {f(hauts[0].x0)} → {f(hauts[-1].x1)}, décalés d'un demi-meuble par rapport aux bas (ils partent du milieu du meuble 1) ; caisson P{M.P_HAUT} + façade {M.FACADE}.</p></div>
+<div class="fig"><div class="tog"><span>Porte du cellier</span>{"".join(f'<button type="button" data-vt="{k}" aria-pressed="true">battant {f(v["w"])} : ouvert</button>' for k, v in enumerate(M.CELLIER_VANTAUX))}</div><div class="scroll">{plan_svg()}</div>
+<p class="cap">Échelle : 1 unité = 1 cm. Pièce vide : chambre et ancien cellier ouverts, sans cloison. Restent la fenêtre coulissante du mur ouest (y 58 → 200), la porte d'entrée (baie x 228 → 306), le décroché de l'angle sud-est, la chute (sous le ballon), le ballon et le WC. <b>Sols</b> : parquet chêne en bâtons rompus dans l'ancienne chambre (x 0 → 325), gris ciment dans l'ancien cellier et l'ancien placard (à partir de x 325) ; les cloisons déposées du relevé d'origine sont en tireté (chambre / cellier x 325 → 335, cellier / placard y 100 → 110). <b>Mur nord</b> : {len(caissons)} meubles bas de 60 (x {f(x0)} → {f(x1)}), à {f(M.ECART_OUEST)} du mur ouest ; caisson P{M.P_CAISSON} + façade {M.FACADE}, profondeur {M.P_CAISSON + M.FACADE}, sous un plan de travail de 4 (P62, débord de 2). <b>Induction</b> 60 à aspiration intégrée sur B{M.B_PLAQUE} (x {f(M.sur_bas(M.B_PLAQUE)[0])} → {f(M.sur_bas(M.B_PLAQUE)[1])}) ; <b>évier</b> inox 1 bac 56 × 50 (bac 40 × 40) sur B{M.B_EVIER} (x {f(M.sur_bas(M.B_EVIER)[0])} → {f(M.sur_bas(M.B_EVIER)[1])}), mitigeur derrière le bac ; le LV (B{M.B_LV}) entre les deux, sous 60 de plan ; B5 libre, 60 de plan à l'est de l'évier. <b>Mur est</b> : colonnes C2 (frigo, y {f(M.COL_Y0)} → {f(M.COL_Y0 + 60)}) et C1 (four, micro-ondes au-dessus, y {f(M.COL_Y0 + 60)} → {f(M.COL_Y1)}) de 60, P60, contre le mur du WC (x {f(M.X_MUR_EST)}), du décroché vers le nord, façades vers l'ouest (x {f(M.COL_X)}). Le mur sud est libre entre la banquette et le caisson du galandage. <b>Porte d'entrée</b> : à galandage, vantail {f(M.ENTREE["vantail"])} × {M.ENTREE["h"]} (trait plein, fermé) ; ouverte, elle rentre vers l'ouest dans un caisson de galandage (ocre, x {f(M.ENTREE["poche"][0])} → {f(M.ENTREE["poche"][1])}) logé dans un doublage de 10 contre le mur sud (y 242 → 252), avec un montant de 4 à l'est de la baie. Le passage reste de {f(M.ENTREE["x1"] - M.ENTREE["x0"])} ; rien ne bat dans la cuisine. Face cuisine du caisson : <b>tableau noir</b> (peinture ardoise, h 120 → 200) et <b>zone aimantée</b> en dessous (h 70 → 118), sur 81 de large (coupe B-B). <b>Équipements</b> : poubelles de tri sous l'évier (B{M.B_EVIER}), lave-vaisselle 60 tout intégrable (B{M.B_LV}). <b>Triangle d'activité</b> (rouge ; centres de la plaque et de l'évier, milieu de la façade du frigo) : {tri}, total {f(round(sum(cotes_tri)))} cm. <b>Passage</b> (cote oblique) : {math.dist((x1, 62), (M.COL_X, M.JOUE_C2)):.0f} du coin du plan de travail au bout de la rangée (x {f(x1)}, y 62) au coin nord-ouest du frigo (joue, y {M.JOUE_C2}), devant la porte du cellier. <b>Réseaux</b> (bleu, dans le vide technique derrière les caissons) : tout <b>longe les murs</b>, en partie basse. Alimentation EF/EC en trait plein, à 3 des murs, depuis la <b>nourrice</b> (petit point, sous le ballon) : le long du retour sud de l'alcôve (y 44), de sa face ouest (x 434), puis du mur nord jusqu'à l'évier, avec un piquage pour le LV. Évacuations en tireté de l'évier (siphon, axe x {f(M.SIPHON[0])}) et du LV, à 12 des murs pour passer au-delà de la nourrice : le long du mur nord, de l'alcôve, du mur est (x 484) puis du mur nord du WC jusqu'à la <b>chute</b> (cercle contre le mur du WC, sous le ballon : la colonne d'eaux usées existante, x à confirmer). Contre l'alcôve, ils passent sous la première tablette du rayonnage du mur nord ; sous le ballon (h 90), ils passent dessous ; longueur ≈ {f(M.EVAC_LONGUEUR)} : à 2 cm/m, {M.EVAC_LONGUEUR * 0.02:.1f} cm de pente, par exemple de h 45 sous le siphon à h {45 - M.EVAC_LONGUEUR * 0.02:.0f} à la chute. Les réseaux traversent la cloison du cellier. <b>Cellier</b> : cloison de 7 à {f(320 - x1)} de B5 (x 320 → 327), où passent les réseaux . {texte_cellier()} <b>Coin repas</b> : banquette du mur ouest (x 0 → {f(M.BANQ["x1"])}, 50 de profondeur : assise 45 à h 45 avec coffre, dossier 5 à h 85), table ronde Ø {f(2 * M.TABLE["r"])} à pied tulipe devant (centre x {f(M.TABLE["cx"])}, y {f(M.TABLE["cy"])}), qui recouvre l'assise de 15 ; une chaise à l'est de la table, glissée de {M.GLISSE}, dos vers l'est. La banquette s'arrête à y {f(M.BANQ["y0"])}, au sud de la fenêtre (y 200). <b>Ouvertures</b> : porte du LV abattue (y 60 → 132), porte du four abattue (x {f(M.COL_X - 60)} → {f(M.COL_X)}, y {f(M.COL_Y1 - 60)} → {f(M.COL_Y1)}), porte du frigo à 90°, charnières au sud : elle se rabat vers le sud et on accède au frigo par le nord, côté évier. Elle touche la porte du four abattue à y {f(M.COL_Y0 + 60)} : on ne les ouvre pas en même temps. <b>Meubles hauts</b> (tireté) : {len(hauts)} de 60, x {f(hauts[0].x0)} → {f(hauts[-1].x1)}, décalés d'un demi-meuble par rapport aux bas (ils partent du milieu du meuble 1) ; caisson P{M.P_HAUT} + façade {M.FACADE}.</p></div>
 
 <h2>Coupe A-A · mur nord</h2>
 <div class="fig"><div class="scroll">{coupe_a()}</div>
@@ -482,18 +599,18 @@ def contenu():
 
 <h2>Coupe B-B · mur sud</h2>
 <div class="fig"><div class="scroll">{coupe_b()}</div>
-<p class="cap">Coupe à y {COUPE_B}, regard vers le sud : l'est est à gauche. <b>Porte d'entrée</b> : baie {f(M.ENTREE["x1"] - M.ENTREE["x0"])} × {M.ENTREE["h"]}, porte battante, vantail {f(M.ENTREE["vantail"])} × {M.ENTREE["h"]} dans une huisserie, charnières à l'est (à gauche sur la coupe), ouverture vers la cuisine. Colonnes P{M.P_CAISSON + M.FACADE}, socle {M.SOCLE}, dessus à {M.COL_Z1} comme les meubles hauts, fileur de {M.H - M.COL_Z1} jusqu'au plafond. <b>C1</b> : deux tiroirs (h 15 → 86), four 60 (h 88 → 148), porte de rangement au-dessus. <b>C2</b> : réfrigérateur intégrable (niche 178, porte h 15 → 193), porte de rangement au-dessus. À droite, la fenêtre coupée ; au centre, la baie d'entrée et son vantail fermé.</p></div>
+<p class="cap">Coupe à y {COUPE_B}, regard vers le sud : l'est est à gauche. <b>Porte d'entrée</b> : baie {f(M.ENTREE["x1"] - M.ENTREE["x0"])} × {M.ENTREE["h"]}, porte à galandage, vantail {f(M.ENTREE["vantail"])} × {M.ENTREE["h"]} (fermé), qui rentre à droite dans le caisson du doublage (poche {f(M.ENTREE["poche"][1] - M.ENTREE["poche"][0])}). Sur le caisson, <b>tableau noir</b> h 120 → 200 et <b>zone aimantée</b> h 70 → 118. Banquette, table et chaise coupées ; à gauche, la colonne C2 coupée (C1 derrière). À droite, la fenêtre coupée ; au centre, la baie d'entrée et son vantail fermé.</p></div>
 
 <h2>Coupe C-C · mur est</h2>
 <div class="fig"><div class="scroll">{coupe_c()}</div>
-<p class="cap">Coupe à x {COUPE_C}, regard vers l'est : le nord est à gauche. Au fond, la cloison du cellier (x 320 → 327) et sa baie de {f(M.BAIE_CELLIER["y1"] - M.BAIE_CELLIER["y0"])} (h {M.BAIE_CELLIER["h"]}) ; on y voit le ballon. Puis, contre le mur du WC (x 382), <b>E1</b> (bas P40 sous plan de travail, h {M.SOCLE} → {M.CAISSON_H} + 4) et <b>E2</b> (placard toute hauteur P40, h {M.SOCLE} → {M.COL_Z1}, fileur jusqu'au plafond) ; à droite, le décroché et le mur sud coupé.</p></div>
+<p class="cap">Coupe à x {COUPE_C}, regard vers l'est : le nord est à gauche. Au fond, la cloison du cellier (x 320 → 327), et dans son prolongement la porte du cellier fermée, vue de face ({M.PORTE_TITRE}), dans son dormant, sous son linteau, puis le montant de {M.MONTANT} contre la joue du frigo. Puis, contre le mur du WC (x {f(M.X_MUR_EST)}), les colonnes P{M.P_CAISSON + M.FACADE}, socle {M.SOCLE}, dessus à {M.COL_Z1} comme les meubles hauts, fileur de {M.H - M.COL_Z1} jusqu'au plafond : <b>C2</b> réfrigérateur intégrable (niche 178, porte h 15 → 193), porte de rangement au-dessus ; <b>C1</b> deux tiroirs (h 15 → 86), four 60 (h 88 → {M.MO_Z0}), micro-ondes encastrable (niche 38, h {M.MO_Z0} → {M.MO_Z1}), porte de rangement au-dessus ; à droite, le décroché et le mur sud coupé.</p></div>
 
 <h2>Rangement : V11 et proposition 9 A</h2>
 <div class="grid2">
 <div class="fig"><h3>V11</h3>{table_rangement(M.RANGEMENT_V11)}</div>
 <div class="fig"><h3>Proposition 9, variante A</h3>{table_rangement(M.RANGEMENT_P9A)}</div>
 </div>
-<p class="cap">Volume brut des caissons fermés : largeur × profondeur du caisson × hauteur des façades de rangement ; électroménager, socles, niches et sous-évier exclus. <b>V11 : {f(round(v11))} L contre {f(round(p9a))} L, soit {f(round(v11 - p9a)):s} L ({(v11 - p9a) / p9a * 100:+.0f} %)</b>. Le sous-évier est le même dans les deux ({f(round(M.SOUS_EVIER["v11"]))} L, poubelles). La V11 gagne surtout par les hauts, la colonne du four plus haute et les deux meubles du mur est ; elle perd le vaisselier de la colonne LV (le LV passe sous le plan), le meuble café et l'abattant au-dessus du micro-ondes. <b>Rangements ouverts</b> : la proposition 9 A en a {f(sum(v for _, v in M.OUVERT_P9A))} cm linéaires ({"; ".join(n.lower() for n, _ in M.OUVERT_P9A)}), dont le cellier ; la V11 n'en a pas encore : le cellier (≈ 45 × 100 utiles, chute dans l'angle nord-est, ballon dans la niche) reste à aménager. Avec des étagères P30 sur sa longueur (100) et 6 niveaux, il en apporterait ≈ 600.</p>
+<p class="cap">Volume brut des rangements fermés : caissons (largeur × profondeur du caisson × hauteur des façades de rangement) et cellier, fermé par ses portes (largeur utile × profondeur × hauteur, de la première tablette au haut du rayonnage ; le dessous de la première tablette n'est pas compté) ; électroménager, socles, niches et sous-évier exclus. Le cellier de la proposition 9 A est compté de la même façon. <b>V11 : {f(round(v11))} L contre {f(round(p9a))} L, soit {f(round(v11 - p9a)):s} L ({(v11 - p9a) / p9a * 100:+.0f} %)</b>. Le sous-évier est le même dans les deux ({f(round(M.SOUS_EVIER["v11"]))} L, poubelles). La V11 gagne surtout par le cellier (rayonnages toute hauteur et étagères des portes), les hauts et la colonne du four plus haute ; elle perd le vaisselier de la colonne LV (le LV passe sous le plan), le meuble café et l'abattant au-dessus du micro-ondes. <b>Rangements ouverts</b> : la proposition 9 A en a {f(sum(v for _, v in M.OUVERT_P9A))} cm linéaires ({"; ".join(n.lower() for n, _ in M.OUVERT_P9A)}), dont le cellier ; la V11 en a {f(sum(v for _, v in M.OUVERT_V11))}, toutes dans le cellier ({"; ".join(n.lower() for n, _ in M.OUVERT_V11)}).</p>
 
 <p class="note">Repère : x vers l'est depuis le mur ouest, y vers le sud depuis le mur nord, z depuis le sol fini, en cm. Source : <span class="mono">3d/v11/modele.py</span> ; plan : <span class="mono">3d/v11/plan.py</span> ; 3D : <span class="mono">3d/v11/cad.py</span>.</p>
 
@@ -539,6 +656,14 @@ def page(figees, racine=""):
     try {{ localStorage.setItem("cuisine-v11-version", v); }} catch (e) {{}}
   }}
   bs.forEach(function (b) {{ b.addEventListener("click", function () {{ montre(b.dataset.v); }}); }});
+  document.querySelectorAll(".tog button").forEach(function (b) {{
+    b.addEventListener("click", function () {{
+      var fig = b.closest(".fig"), ouvert = b.getAttribute("aria-pressed") !== "true";
+      fig.querySelectorAll('.vt[data-vt="' + b.dataset.vt + '"]').forEach(function (g) {{ g.dataset.etat = ouvert ? "ouvert" : "ferme"; }});
+      b.setAttribute("aria-pressed", ouvert);
+      b.textContent = b.textContent.replace(/: .*/, ": " + (ouvert ? "ouvert" : "fermé"));
+    }});
+  }});
   var v0 = "courante";
   try {{ v0 = localStorage.getItem("cuisine-v11-version") || v0; }} catch (e) {{}}
   if (location.hash) v0 = decodeURIComponent(location.hash.slice(1));
