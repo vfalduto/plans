@@ -55,7 +55,8 @@ for b in M.ENVELOPPE + M.MEUBLES:
             s = s.cut(solid(c.x0 - 0.6, c.x1 + 0.6, c.y0 - 0.6, c.y1 + 0.6, c.z0, b.z1 + 1))
     add(f"{b.role}__{b.nom}", s)
 c = M.BALLON
-add(f"{c.role}__{c.nom}", Part.makeCylinder(c.r * 10, (c.z1 - c.z0) * 10, V(c.cx * 10, -c.cy * 10, c.z0 * 10)))
+add(f"{c.role}__{c.nom}", Part.makeCylinder(c.r * 10, (c.z1 - c.z0) * 10, V(c.cx * 10, -c.cy * 10, c.z0 * 10))
+    if isinstance(c, M.Cyl) else solid(c.x0, c.x1, c.y0, c.y1, c.z0, c.z1))
 # réseaux d'eau : un cylindre par tronçon
 for role, nom, p, z, r in M.RESEAUX:
     for k, (a, b) in enumerate(zip(p, p[1:])):
