@@ -451,10 +451,10 @@ def nuit(sc, oui):
 # Vues : yeux à 163 debout, 120 assis ; visée horizontale et décentrement vertical (verticales droites).
 DEBOUT, ASSIS = R.DEBOUT, R.ASSIS
 COUPES_ISO = (r"^(mur__(ouest_nord|ouest_sud|sud_ouest|sud_est)|allege__|linteau__(linteau_fenetre|linteau_entree|"
-              r"linteau_galandage)|cloison__galandage|porte__entree|ardoise__|aimant__|peinture__|plafond__|verre__|alu__|ext_)")
+              r"linteau_galandage)|cloison__galandage|porte__entree|ardoise__|aimant__|peinture__|socle__plinthe_|plafond__|verre__|alu__|ext_)")
 # isométrique depuis le nord-ouest : murs nord et ouest, plafond ET rangée nord coupés (vue de dos, elle masquait la
 # pièce ; elle se voit dans la vue A)
-COUPES_ISO_NO = (r"^(mur__(nord|nord_alcove|ouest_nord|ouest_sud)|allege__|linteau__linteau_fenetre|cloison__cloison_cellier|"
+COUPES_ISO_NO = (r"^(mur__(nord|nord_alcove|ouest_nord|ouest_sud)|allege__|socle__plinthe_fenetre|linteau__linteau_fenetre|cloison__cloison_cellier|"
                  r"linteau__linteau_cellier|plafond__|verre__|alu__|ext_|caisson__|caisson_haut__|plan__|plaque__|evier__|"
                  r"cuve__|mitigeur__|egouttoir__|hotte__|led__|credence__|four__facade_b|facade__facade_b|facade_haut__|"
                  r"socle__socle_(b|fileur)|joue__(joue_h|fileur_ouest)|fileur__fileur_hauts|etagere_haute__etagere_mur|"

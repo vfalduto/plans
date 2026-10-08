@@ -417,6 +417,12 @@ SUSPENSION = dict(d=35, z0=140, z1=160)
 # peint seventies essayé en V11.46 → V11.48 a été retiré en V11.49)
 PAPIER_PEINT = None
 MEUBLES.append(Bloc("peinture", "pan_banquette", BANQ["x0"], BANQ["x1"], Y_MUR_SUD - 0.3, Y_MUR_SUD, 0, H))
+# plinthe au pied du mur de la fenêtre, de la rangée nord à la banquette : couleur des murs, h 8, épaisseur 1,5
+PLINTHE = dict(h=8, ep=1.5)
+MEUBLES.append(Bloc("socle", "plinthe_fenetre", 0, PLINTHE["ep"], P_CAISSON + FACADE, BANQ["y0"], 0, PLINTHE["h"]))
+# et au pied du doublage de l'entrée, côté tableau noir, de la banquette à la baie
+MEUBLES.append(Bloc("socle", "plinthe_doublage", ENTREE["poche"][0], ENTREE["poche"][1], Y_MUR_SUD - 10 - PLINTHE["ep"],
+                    Y_MUR_SUD - 10, 0, PLINTHE["h"]))
 
 
 def chaise(nom, x0, y0, dossier):
@@ -618,7 +624,7 @@ MATERIAUX = [
      "Piste : Farrow & Ball Wimborne White (n° 239, LRV ≈ 90), blanc à sous-ton crème discret ; à peine plus chaud : "
      "Pointing (n° 2003). Teinte à l'écran approximative : à valider sur échantillon, au mur, à la lumière de la pièce.",
      ("#EFE9DC",)),
-    ("Plinthes (socles des meubles bas et des colonnes)", "Couleur des murs", "Même blanc que les murs.", ("#EFE9DC",)),
+    ("Plinthes (socles des meubles bas et des colonnes, pied du mur de la fenêtre et du doublage de l'entrée)", "Couleur des murs", "Même blanc que les murs.", ("#EFE9DC",)),
     ("Fileurs", "Canopée au mur ouest, couleur des murs au sud de C1",
      "Fileur de 5 entre B1 et le mur ouest (plan de travail prolongé jusqu'au mur) ; fileur de 10 entre C1 et le montant "
      "du galandage (mur sud), qui ferme la poche de l'angle.", ("#3C524C", "#EFE9DC")),
@@ -650,6 +656,9 @@ RENDUS = [
     ("iso", "A · Isométrique", "Depuis le sud-ouest, murs ouest et sud et plafond coupés (ils portent toujours ombres et lumière)."),
     ("iso_no", "A' · Isométrique, autre sens", "Depuis le nord-ouest, murs nord et ouest, plafond et rangée nord "
      "coupés (elle se voit dans la vue A) : la banquette, l'entrée, les colonnes et la porte du cellier."),
+    ("iso_no_hermione", "A'' · Essai papier peint Hermione", "Même vue que A', avec le papier peint intissé Hermione "
+     "(4murs, cerise noire et vert-de-gris) sur le pan derrière la banquette au lieu du vert profond : essai, pas retenu "
+     "dans le modèle. Motif estimé à 64 cm, répété en miroir dans la hauteur."),
     ("entree", "B · Depuis l'entrée", "Debout dans la baie d'entrée, vers la rangée nord et la fenêtre."),
     ("fenetre", "C · Depuis la fenêtre", "Debout devant la fenêtre, vers les colonnes, la porte du cellier ouverte et l'entrée."),
     ("banquette", "D · Assis sur la banquette", "Place est de la banquette, yeux à 120, vers la rangée nord et les colonnes."),
@@ -665,6 +674,7 @@ AVANT = dict(version="V11.34", lin_bas=300, lin_hauts=240, lin_col=120, modules=
              volume_cuisine=2055, volume_cellier=739)
 # version de chaque image de cuisine-v11-3d/ (rendus sur demande : `just v11-rendu`, ou une vue : `-- 256 iso`)
 RENDUS_VERSION = {v: "V11.50" for v in ("iso", "entree", "fenetre", "banquette", "cellier", "dos_cellier", "iso_nuit", "iso_no")}
+RENDUS_VERSION["iso_no_hermione"] = "V11.50"   # essai papier peint (rendu à part, scratchpad)
 
 # ------------------------------------------------------------------ historique (section Changements)
 CHANGEMENTS = [
@@ -674,7 +684,7 @@ CHANGEMENTS = [
      "Plaque à induction classique (plus d'aspiration intégrée) avec un four encastré dessous (B2) et une hotte "
      "intégrée dans un meuble haut au-dessus (nouveau H1, hauts x 25 → 265). Colonnes du nord au sud : C1 lave-vaisselle "
      "en hauteur + micro-ondes (à la place du four), C2 frigo, C3 tiroirs à l'anglaise (C1 et C3 inversés). B4 devient "
-     "un meuble à tiroirs (couverts, moules, boîtes). Réseaux du LV par le cellier, contre le dos de C1. Coussins de la banquette en velours ocre moutarde (mise à jour), rendus refaits. C3 : maxi tiroir coulissant (il se tire, ne pivote pas)."),
+     "un meuble à tiroirs (couverts, moules, boîtes). Réseaux du LV par le cellier, contre le dos de C1. Coussins de la banquette en velours ocre moutarde (mise à jour), rendus refaits. C3 : maxi tiroir coulissant (il se tire, ne pivote pas). Plinthe couleur des murs (h 8) au pied du mur de la fenêtre, entre la rangée nord et la banquette, et au pied du doublage de l'entrée ; rendus refaits. Essai de papier peint Hermione (4murs) sur le pan de la banquette : vue A'' ajoutée aux rendus."),
     ("V11.49", "08/10/2026",
      "Papier peint retiré : le pan de mur derrière la banquette revient à la peinture vert profond. Rendu F (dos à la "
      "porte du cellier) refait."),
