@@ -50,6 +50,7 @@ R.MATS.update({
     "v11_zellige_blanc_casse": ("#EDE6D8", 0.08, {"zellige": True}),
     "v11_zellige_gris_chaud":  ("#CFC7BA", 0.08, {"zellige": True}),
     "v11_zellige_greige":      ("#B9AE9D", 0.08, {"zellige": True}),
+    "v11_pan":       ("#3F5A4E", 0.85, {"enduit": True}),
     "v11_rose":      ("#D9BDBB", 0.35, {}),
     "v11_vitre":     ("#0B0B0C", 0.04, {}),
     "v11_four":      ("#1A1C1E", 0.08, {}),
@@ -61,7 +62,7 @@ R.MATS.update({
     "v11_sol_wc":    ("#D8D5CE", 0.5, {}),
 })
 BETONS = {"v11_plan": ("#D6D4CE", "#BDBBB5", 0.45), "v11_ciment": ("#BDBAB3", "#A9A69F", 0.6)}
-VELOURS = {"v11_velours": "#A4532F"}
+VELOURS = {"v11_velours": "#C08A2E"}   # ocre moutarde (V11.49 / V11.50)
 
 ROLES = {
     "mur": "v11_mur", "allege": "v11_mur", "linteau": "v11_mur", "cloison": "v11_mur", "dormant": "v11_mur",
@@ -71,10 +72,10 @@ ROLES = {
     "caisson_haut": "v11_chene", "colonne": "v11_chene", "facade_haut": "v11_chene", "facade_col": "v11_chene",
     "joue": "v11_chene", "fileur": "v11_chene_h", "poignee_bois": "v11_chene",
     "poignee_inox": "v11_inox", "plan": "v11_plan", "credence": "v11_zellige_greige",
-    "plaque": "vitro", "aspiration": "noir", "evier": "v11_inox", "cuve": "v11_bac", "mitigeur": "v11_inox",
+    "plaque": "vitro", "aspiration": "noir", "hotte": "v11_inox", "evier": "v11_inox", "egouttoir": "v11_inox", "cuve": "v11_bac", "mitigeur": "v11_inox",
     "four": "v11_four", "micro_onde": "v11_four", "led": "v11_led",
     "banquette": "v11_banquette", "coussin": "v11_velours", "etagere_haute": "v11_chene_h", "chaise": "v11_chene",
-    "table": "v11_rose", "pied": "epoxy_blanc", "lampe": "globe", "fil": "noir", "enceinte": "tissu_noir",
+    "table": "v11_rose", "chant": "noir", "peinture": "v11_pan", "pied": "epoxy_blanc", "lampe": "globe", "fil": "noir", "enceinte": "tissu_noir",
     "pot": "terre_cuite", "plante": "feuillage",
     "porte": "v11_porte", "paumelle": "v11_inox", "ardoise": "ardoise", "aimant": "v11_aimant",
     "etagere": "bois_clair", "montant": "bois_clair", "ballon": "electro_blanc",
@@ -113,6 +114,44 @@ def beton(key, c1, c2, rough):
     return m
 
 
+def papier_peint(key):
+    """Papier peint : image du motif (modele.PAPIER_PEINT) plaquée en vraie grandeur, répétée en miroir, papier mat."""
+    pp = M.PAPIER_PEINT
+    m = bpy.data.materials.new(key)
+    m.use_nodes = True
+    nt = m.node_tree
+    bsdf = nt.nodes["Principled BSDF"]
+    bsdf.inputs["Roughness"].default_value = 0.8
+    img = nt.nodes.new("ShaderNodeTexImage")
+    img.image = bpy.data.images.load(os.path.join(os.path.dirname(os.path.dirname(HERE)), pp["image"]), check_existing=True)
+    img.extension = "REPEAT"
+    w, h = img.image.size
+    tc = nt.nodes.new("ShaderNodeTexCoord")
+    mp = nt.nodes.new("ShaderNodeMapping")
+    mp.inputs["Scale"].default_value = (1.0, w / h, 1.0)   # UV en motifs (make_uvs, échelle = motif) ; image non carrée
+    # centre de fleur (point de tangence, angle bas-droit du motif) en u impair, v pair : placé au centre demandé
+    cx, cz = pp.get("centre", (0, 0))
+    mp.inputs["Location"].default_value = (1 - cx / pp["motif"], 2 - cz / pp["motif"] * w / h, 0.0)
+    nt.links.new(tc.outputs["UV"], mp.inputs["Vector"])
+    # miroir dans les deux sens : les quatre motifs autour d'un point de tangence forment une fleur
+    sep = nt.nodes.new("ShaderNodeSeparateXYZ")
+    nt.links.new(mp.outputs["Vector"], sep.inputs["Vector"])
+    pp_ = nt.nodes.new("ShaderNodeMath")
+    pp_.operation = "PINGPONG"
+    pp_.inputs[1].default_value = 1.0
+    nt.links.new(sep.outputs["X"], pp_.inputs[0])
+    fr = nt.nodes.new("ShaderNodeMath")
+    fr.operation = "PINGPONG"
+    fr.inputs[1].default_value = 1.0
+    nt.links.new(sep.outputs["Y"], fr.inputs[0])
+    comb = nt.nodes.new("ShaderNodeCombineXYZ")
+    nt.links.new(pp_.outputs[0], comb.inputs["X"])
+    nt.links.new(fr.outputs[0], comb.inputs["Y"])
+    nt.links.new(comb.outputs["Vector"], img.inputs["Vector"])
+    nt.links.new(img.outputs["Color"], bsdf.inputs["Base Color"])
+    return m
+
+
 def velours(key, col):
     m = bpy.data.materials.new(key)
     m.use_nodes = True
@@ -126,6 +165,8 @@ def velours(key, col):
 
 
 def materiau(key):
+    if key == "v11_pan" and getattr(M, "PAPIER_PEINT", None):
+        return papier_peint(key)
     if key in BETONS:
         return beton(key, *BETONS[key])
     if key in VELOURS:
@@ -165,6 +206,12 @@ def complements(sc):
                                       (y1 - 4, y1, z0, z1), (ym - 2.5, ym + 2.5, z0, z1)]):
         boite(sc, f"alu__fenetre_{k}", -13, -8, a, b, c, d)
     boite(sc, "alu__appui", -13, 1, y0, y1, z0 - 1.5, z0)
+    # porte pliante du cellier repliée (montrée quand la porte est ouverte) : deux vantaux côte à côte, côté cuisine
+    if M.PLIANTE:
+        a = M.PLIANTE
+        for k in range(2):
+            boite(sc, f"porte__pliante_replie_{k}", a["rail"] - a["l"], a["rail"], a["y0"] + k * (a["ep"] + 0.2),
+                  a["y0"] + k * (a["ep"] + 0.2) + a["ep"], 1, a["z1"])
     # extérieur (comme la variante A) : cuisine au 2e étage, rue à -560, immeuble en face à 12 m, mêmes fenêtres
     sol, fx = -560, -1200
     boite(sc, "ext_sol__rue", -2400, -20, -1600, 2000, sol - 2, sol)
@@ -203,7 +250,7 @@ def complements(sc):
             if pg == "tiroir":
                 boite(sc, f"poignee_bois__{b.nom}", b.x0 - 1.8, b.x0, b.y0 + 1, b.y1 - 1, b.z1 - 3, b.z1 - 0.8)
             else:                                    # porte : C2 (frigo) poignée au nord, C1 au sud
-                ya, yb = (b.y0 + 0.8, b.y0 + 3) if b.nom.endswith("_c2") else (b.y1 - 3, b.y1 - 0.8)
+                ya, yb = (b.y0 + 0.8, b.y0 + 3) if b.nom.endswith(("_c2", "_c3")) else (b.y1 - 3, b.y1 - 0.8)
                 boite(sc, f"poignee_bois__{b.nom}", b.x0 - 1.8, b.x0, ya, yb, b.z0 + 1, b.z1 - 1)
 
 
@@ -213,7 +260,7 @@ def bonde_et_balais(sc):
     xm, ym = (c.x0 + c.x1) / 2, (c.y0 + c.y1) / 2
     bpy.ops.mesh.primitive_cylinder_add(radius=0.045, depth=0.006, location=R.p(xm, ym, c.z0 + 0.8))
     bpy.context.object.name = "cuve__bonde"
-    # balais : tête = monture bois + soies, côté manche ; tête en bas (soies vers le sol) ou en haut (soies vers le haut)
+    # balais : tête = monture bois + soies ; tête en bas (soies vers le sol) ou en haut (soies vers le haut)
     for k, (xc, tete) in enumerate(M.BALAIS):
         b = next(o for o in M.MEUBLES if o.nom == f"tete_balai_{k + 1}")
         if tete == "bas":
@@ -245,7 +292,9 @@ def chaises(sc, mats):
     for o in list(sc.objects):
         if o.name.startswith("chaise__"):
             o.hide_render = True
-    a = next(b for b in M.MEUBLES if b.nom == "assise_chaise_1")
+    a = next((b for b in M.MEUBLES if b.nom == "assise_chaise_1"), None)
+    if a is None:          # plus de chaise dans le modèle
+        return
     x0, x1, y0, y1 = a.x0, a.x1, a.y0, a.y1          # dossier à l'est (x1)
     for c in ("chrome", "cannage", "v11_chene"):
         mats.setdefault(c, materiau(c))
@@ -268,10 +317,38 @@ def chaises(sc, mats):
             R.chanfreiner(o)
 
 
+def pieds_vera(sc, mats):
+    """Pieds de la table Véra : tube Ø 3 laqué blanc, vertical sous le plateau puis incliné vers l'extérieur."""
+    pieds = [b for b in M.MEUBLES if b.nom.startswith("pied_vera_")]
+    if not pieds:
+        return
+    for o in list(sc.objects):
+        if o.name.startswith("pied__pied_vera_"):
+            o.hide_render = True
+    mats.setdefault("epoxy_blanc", materiau("epoxy_blanc"))
+    cx, cy = M.TABLE["cx"], M.TABLE["cy"]
+    for k, b in enumerate(pieds):
+        px, py = (b.x0 + b.x1) / 2, (b.y0 + b.y1) / 2
+        dx, dy = (1 if px > cx else -1), (1 if py > cy else -1)
+        tube(sc, f"vera_pied_{k}", [(px, py, 73), (px, py, 55), (px + 4 * dx, py + 4 * dy, 0.5)], 1.5, mats["epoxy_blanc"])
+
+
 def porte_cellier(sc, ouverte):
-    """Porte du cellier ouverte à 90° vers l'est (paumelles côté cloison, au nord), ou fermée."""
-    pivot = R.p(325.5, 49, 0)
-    rot = Matrix.Translation(pivot) @ Matrix.Rotation(math.radians(90 if ouverte else 0), 4, "Z") @ Matrix.Translation(-pivot)
+    """Porte du cellier ouverte à son angle (charnière, sens et angle donnés par le modèle), ou fermée.
+    Porte pliante : vantaux dans la baie (fermée) ou repliés côté cuisine (ouverte)."""
+    if M.PLIANTE:
+        for o in sc.objects:
+            if o.name.startswith("porte__cellier_pliante"):
+                o.hide_render = ouverte
+            if o.name.startswith("porte__pliante_replie"):
+                o.hide_render = not ouverte
+        return
+    v = M.CELLIER_VANTAUX[0]
+    (hx, hy), (fx, fy), (ox, oy) = v["h"], v["ferme"], v["ouvert"]
+    a0 = math.atan2(-(fy - hy), fx - hx)            # repère Blender : Y = -y
+    a1 = math.atan2(-(oy - hy), ox - hx)
+    pivot = R.p(hx, hy, 0)
+    rot = Matrix.Translation(pivot) @ Matrix.Rotation(a1 - a0 if ouverte else 0, 4, "Z") @ Matrix.Translation(-pivot)
     for o in sc.objects:
         if re.match(r"(porte__cellier_vantail|paumelle__)", o.name):
             if "ferme" not in o:
@@ -301,6 +378,8 @@ def build_scene():
         o.data.materials.clear()
         o.data.materials.append(mats[key])
         opt = R.MATS.get(key, (None, None, {}))[2]
+        if key == "v11_pan" and getattr(M, "PAPIER_PEINT", None):
+            R.make_uvs(o, "h", M.PAPIER_PEINT["motif"] / 100)   # 1 unité UV = 1 motif
         if opt.get("tex"):
             sens = opt.get("sens", "bloc")
             if opt["tex"] == "noyer" and R.BOIS[R.ESSENCE][3] == "v" and sens in ("v", "h"):
@@ -319,6 +398,7 @@ def build_scene():
         if re.match(r"balai__tete_balai_", o.name):
             o.hide_render = True
     chaises(sc, mats)
+    pieds_vera(sc, mats)
     R.remplacer(sc, R.ARBRES)
     R.remplacer(sc, [dict(cacher=r"^(pot__pot_plante|plante__plante)", cadre=r"^(pot__pot_plante|plante__plante)",
                           modele="potted_plant_04")])
@@ -371,7 +451,14 @@ def nuit(sc, oui):
 # Vues : yeux à 163 debout, 120 assis ; visée horizontale et décentrement vertical (verticales droites).
 DEBOUT, ASSIS = R.DEBOUT, R.ASSIS
 COUPES_ISO = (r"^(mur__(ouest_nord|ouest_sud|sud_ouest|sud_est)|allege__|linteau__(linteau_fenetre|linteau_entree|"
-              r"linteau_galandage)|cloison__galandage|porte__entree|ardoise__|aimant__|plafond__|verre__|alu__|ext_)")
+              r"linteau_galandage)|cloison__galandage|porte__entree|ardoise__|aimant__|peinture__|plafond__|verre__|alu__|ext_)")
+# isométrique depuis le nord-ouest : murs nord et ouest, plafond ET rangée nord coupés (vue de dos, elle masquait la
+# pièce ; elle se voit dans la vue A)
+COUPES_ISO_NO = (r"^(mur__(nord|nord_alcove|ouest_nord|ouest_sud)|allege__|linteau__linteau_fenetre|cloison__cloison_cellier|"
+                 r"linteau__linteau_cellier|plafond__|verre__|alu__|ext_|caisson__|caisson_haut__|plan__|plaque__|evier__|"
+                 r"cuve__|mitigeur__|egouttoir__|hotte__|led__|credence__|four__facade_b|facade__facade_b|facade_haut__|"
+                 r"socle__socle_(b|fileur)|joue__(joue_h|fileur_ouest)|fileur__fileur_hauts|etagere_haute__etagere_mur|"
+                 r"tech__coffre_reseaux|poignee_(inox|bois)__facade_(b|h)|aspiration__)")
 ISO = dict(ortho=6.0, loc=(-380, 700, 640), target=(250, 120, 60), coupes=COUPES_ISO)
 VIEWS = {
     # A — isométrique depuis le sud-ouest, murs ouest et sud et plafond coupés (ils portent toujours ombres et lumière)
@@ -383,14 +470,17 @@ VIEWS = {
     # D — assis sur la banquette, place est, vers la rangée nord et les colonnes
     "banquette":   dict(loc=(78, 226, ASSIS), target=(300, 70, ASSIS), lens=20, shift=0.02),
     # E — entré dans le cellier, porte refermée derrière soi : rayonnage du mur nord, ballon, zone technique
-    "cellier":     dict(loc=(342, 112, DEBOUT), target=(440, 25, DEBOUT), lens=14, shift=-0.15, porte_fermee=True),
+    "cellier":     dict(loc=(334, 76, DEBOUT), target=(440, 25, DEBOUT), lens=14, shift=-0.15, porte_fermee=True),
     # F — dos à la porte du cellier (fermée), vers la table et la banquette
-    "dos_cellier": dict(loc=(314, 84, DEBOUT), target=(40, 215, DEBOUT), lens=18, shift=-0.15, porte_fermee=True),
+    "dos_cellier": dict(loc=(312, 44, DEBOUT), target=(40, 215, DEBOUT), lens=18, shift=-0.15, porte_fermee=True),
     # G — isométrique de nuit, tous les éclairages allumés
     "iso_nuit":    dict(ISO, nuit=True),
+    # A' — isométrique depuis le nord-ouest
+    "iso_no":      dict(ortho=6.0, loc=(-400, -470, 700), target=(220, 140, 60), coupes=COUPES_ISO_NO),
 }
 # Rendus temporaires (hors page) : crédence zellige chaud (3 teintes empilées), hauts en chêne fumé
 CREDENCE = dict(loc=(152, 235, 135), target=(152, 0, 135), lens=22, shift=0.0)
+COUSSINS = [("ocre-moutarde", "#C08A2E"), ("vieux-rose", "#C49690")]
 ZELLIGES = ["v11_zellige_blanc_casse", "v11_zellige_gris_chaud", "v11_zellige_greige"]
 
 
@@ -453,7 +543,7 @@ def materiau_de(sc, motif, mat):
 
 if __name__ == "__main__":
     sc = build_scene()
-    temporaires = [a for a in VUES_DEMANDEES if a in ("zellige", "fume")]
+    temporaires = [a for a in VUES_DEMANDEES if a in ("zellige", "fume", "coussins")]
     vues = [a for a in VUES_DEMANDEES if a not in temporaires]
     if not temporaires or vues:
         for name, v in VIEWS.items():
@@ -475,6 +565,10 @@ if __name__ == "__main__":
                 o.data.materials.clear()
                 o.data.materials.append(fume)
         rendre(sc, "banquette", VIEWS["banquette"], "v11-tmp-hauts-fume.png")
+    if "coussins" in temporaires:   # coussins de la banquette : autres teintes de velours, vue dos au cellier
+        for nom, col in COUSSINS:
+            materiau_de(sc, r"^coussin__", velours(f"v11_velours_{nom}", col))
+            rendre(sc, "dos_cellier", VIEWS["dos_cellier"], f"v11-tmp-coussins-{nom}.png")
     for o in sc.objects:
         if o.type in ("MESH", "CURVE"):
             o.visible_camera = True

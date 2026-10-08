@@ -48,6 +48,17 @@ for b in M.ENVELOPPE + M.MEUBLES:
         s.translate(V(b.a[0] * 10, -b.a[1] * 10, 0))
     else:
         s = solid(b.x0, b.x1, b.y0, b.y1, b.z0, b.z1)
+    if getattr(b, "arrondi", 0):   # angles arrondis : sud-ouest (x0, y1) seul, ou les quatre arêtes verticales
+        def verticale(e, x=None, y=None):
+            a, c = e.Vertexes[0].Point, e.Vertexes[-1].Point
+            if abs(a.x - c.x) > 0.01 or abs(a.y - c.y) > 0.01:
+                return False
+            return x is None or (abs(a.x - x) < 0.01 and abs(a.y - y) < 0.01)
+        if b.coins == "tous":
+            aretes = [e for e in s.Edges if verticale(e)]
+        else:
+            aretes = [e for e in s.Edges if verticale(e, b.x0 * 10, -b.y1 * 10)]
+        s = s.makeFillet(b.arrondi * 10, aretes)
     if b.role == "cuve":
         s = s.cut(solid(b.x0 + 0.5, b.x1 - 0.5, b.y0 + 0.5, b.y1 - 0.5, b.z0 + 0.5, b.z1 + 1))
     elif b.role in ("plan", "evier", "caisson"):   # caisson sous l'évier : creusé à l'emprise du bac

@@ -53,7 +53,7 @@ v11:
 v11-rendu echantillons="256":
     /Applications/Blender.app/Contents/MacOS/Blender -b --python 3d/v11/rendu.py -- {{echantillons}}
     mkdir -p cuisine-v11-3d
-    for v in iso entree fenetre banquette cellier dos_cellier iso_nuit; do sips -s format jpeg -s formatOptions 85 "3d/sortie/v11-rendu-$v.png" --out "cuisine-v11-3d/$v.jpg" >/dev/null; done
+    for v in iso iso_no entree fenetre banquette cellier dos_cellier iso_nuit; do sips -s format jpeg -s formatOptions 85 "3d/sortie/v11-rendu-$v.png" --out "cuisine-v11-3d/$v.jpg" >/dev/null; done
     python3 3d/v11/plan.py
 
 # Fige la version courante de la cuisine V11 (bouton de comparaison + archive/cuisine-v11.x.html)
