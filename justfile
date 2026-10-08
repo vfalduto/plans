@@ -30,7 +30,7 @@ pages-wait:
     echo "Délai dépassé, vérifier : https://github.com/{{repo}}/actions" >&2
     exit 1
 
-# Regénère le modèle 3D (FreeCAD) et les rendus (Blender), puis les copie en JPG pour cuisine-3d.html
+# Variante A (proposition 9 V2 A figée) : modèle 3D (FreeCAD) et rendus (Blender) → cuisine-3d/*.jpg
 rendu-3d echantillons="256":
     python3 3d/textures.py
     /Applications/FreeCAD.app/Contents/Resources/bin/freecadcmd 3d/cuisine_a.py
@@ -48,6 +48,13 @@ rendu-salon echantillons="256":
 v11:
     python3 3d/v11/plan.py
     /Applications/FreeCAD.app/Contents/Resources/bin/freecadcmd 3d/v11/cad.py
+
+# Cuisine V11 : rendus 3D (Blender) depuis le modèle FreeCAD → cuisine-v11-3d/*.jpg, puis regénère la page
+v11-rendu echantillons="256":
+    /Applications/Blender.app/Contents/MacOS/Blender -b --python 3d/v11/rendu.py -- {{echantillons}}
+    mkdir -p cuisine-v11-3d
+    for v in iso entree fenetre banquette cellier dos_cellier iso_nuit; do sips -s format jpeg -s formatOptions 85 "3d/sortie/v11-rendu-$v.png" --out "cuisine-v11-3d/$v.jpg" >/dev/null; done
+    python3 3d/v11/plan.py
 
 # Fige la version courante de la cuisine V11 (bouton de comparaison + archive/cuisine-v11.x.html)
 v11-figer:

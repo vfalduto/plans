@@ -35,7 +35,7 @@ def solid(x0, x1, y0, y1, z0, z1):
     return Part.makeBox((x1 - x0) * 10, (y1 - y0) * 10, (z1 - z0) * 10, V(x0 * 10, -y1 * 10, z0 * 10))
 
 
-# cuves : creuses, et percent le plan de travail et la plage de l'évier (jeu 0,6 : pas de faces confondues)
+# cuves : creuses, et percent le plan de travail, la plage de l'évier et le caisson dessous (jeu 0,6 : pas de faces confondues)
 cuves = [b for b in M.MEUBLES if b.role == "cuve"]
 for b in M.ENVELOPPE + M.MEUBLES:
     if isinstance(b, M.Cyl):
@@ -50,7 +50,7 @@ for b in M.ENVELOPPE + M.MEUBLES:
         s = solid(b.x0, b.x1, b.y0, b.y1, b.z0, b.z1)
     if b.role == "cuve":
         s = s.cut(solid(b.x0 + 0.5, b.x1 - 0.5, b.y0 + 0.5, b.y1 - 0.5, b.z0 + 0.5, b.z1 + 1))
-    elif b.role in ("plan", "evier"):
+    elif b.role in ("plan", "evier", "caisson"):   # caisson sous l'évier : creusé à l'emprise du bac
         for c in cuves:
             s = s.cut(solid(c.x0 - 0.6, c.x1 + 0.6, c.y0 - 0.6, c.y1 + 0.6, c.z0, b.z1 + 1))
     add(f"{b.role}__{b.nom}", s)

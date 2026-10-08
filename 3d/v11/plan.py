@@ -163,6 +163,11 @@ def plan_svg():
             o.append(text(x, y + 8 * k, ligne, "lbls muted"))
     o.append(f'<polygon class="wc" points="{pts(M.WC)}"/>')
     o.append(text(438, 185, "WC", "lbl muted"))
+    # fond opaque sous le plan de travail (semi-transparent) : le sol ne doit pas apparaître là où aucun caisson
+    # ne le porte (fileur du mur ouest)
+    for b in M.MEUBLES:
+        if b.role == "plan":
+            o.append(rect(b.x0, b.y0, b.x1, b.y1, "ptbase"))
     # volumes, du plus bas au plus haut (une seule emprise par pile de tablettes)
     vues = set()
     for b in sorted(M.ENVELOPPE + M.MEUBLES, key=lambda b: b.z1):
@@ -396,7 +401,15 @@ def coupe_svg(cut, regard, umin, umax, chaines, hauteurs, xh, extra=None, origin
             # poignée : tiroir en haut au centre, porte basse en haut sur le côté, porte haute en bas sur le côté,
             # relevable en bas au centre
             zt, zb, um = -b.z1 + 4, -b.z0 - 4, (u + v) / 2
-            if b.poignee == "tiroir":
+            if b.role in ("facade_haut", "facade_col"):
+                # façades bois : profilé toute longueur, même matière (tiroir : toute la largeur ; porte : toute la hauteur)
+                if b.poignee == "tiroir":
+                    o.append(f'<line class="poig bois" x1="{f(u + 2)}" y1="{f(-b.z1 + 1.5)}" x2="{f(v - 2)}" y2="{f(-b.z1 + 1.5)}"/>')
+                else:
+                    # C2 (frigo) : charnières au sud, poignée côté nord (à gauche en coupe C-C)
+                    xp = u + 1.5 if b.nom.endswith("_c2") else v - 1.5
+                    o.append(f'<line class="poig bois" x1="{f(xp)}" y1="{f(-b.z1 + 2)}" x2="{f(xp)}" y2="{f(-b.z0 - 2)}"/>')
+            elif b.poignee == "tiroir":
                 o.append(f'<line class="poig" x1="{f(um - 8)}" y1="{f(zt)}" x2="{f(um + 8)}" y2="{f(zt)}"/>')
             elif b.poignee == "relevable":
                 o.append(f'<line class="poig" x1="{f(um - 8)}" y1="{f(zb)}" x2="{f(um + 8)}" y2="{f(zb)}"/>')
@@ -553,12 +566,13 @@ svg text{font-family:Archivo,system-ui,sans-serif;fill:var(--ink)}
 .tech{fill:var(--tech);stroke:var(--ink);stroke-width:.7;stroke-dasharray:3 2}
 .cab{fill:var(--cab);stroke:var(--ink);stroke-width:.7}
 .fac{fill:var(--tall);stroke:var(--ink);stroke-width:.7}
-.plinth{fill:var(--tall);stroke:var(--ink);stroke-width:.6}
+.plinth{fill:#EFE9DC;stroke:var(--ink);stroke-width:.6}
 .ecs{fill:var(--panel);stroke:var(--water);stroke-width:1.2}
 .leaf{fill:var(--wood);stroke:var(--ink);stroke-width:.6}
 .ghost{fill:none;stroke:var(--muted);stroke-width:.8;stroke-dasharray:4 3}
 .dark{fill:var(--ink)}
 .pt{fill:var(--panel);fill-opacity:.55;stroke:var(--ink);stroke-width:1.1}
+.ptbase{fill:var(--panel);stroke:none}
 .vitro{fill:var(--ink);stroke:var(--ink);stroke-width:.6}
 .asp{fill:var(--muted)}
 .inox{fill:var(--tech);stroke:var(--ink);stroke-width:.6}
@@ -587,7 +601,8 @@ body:not(.explications) .cap{display:none}
 .plante{fill:#6E9B5A;fill-opacity:.8;stroke:#3F6B31;stroke-width:.6;stroke-dasharray:3 2}.pot{fill:#C2703D;stroke:var(--ink);stroke-width:.5}
 .aspi{fill:#8A97A3;stroke:var(--ink);stroke-width:.6}
 .led{fill:#F2C94C;stroke:#B8860B;stroke-width:.4}
-.poig{stroke:var(--ink);stroke-width:1.2;stroke-linecap:round}
+.poig{stroke:#8E8E8B;stroke-width:1.4;stroke-linecap:round}
+.poig.bois{stroke:#8A5A2B;stroke-width:2.2;stroke-linecap:butt}
 .orga td,.orga th{vertical-align:top}.orga .on{background:var(--cab)}
 .balai{fill:#C9A46A;stroke:var(--ink);stroke-width:.4}
 .tog{display:flex;flex-wrap:wrap;align-items:center;gap:6px;margin:0 0 10px;font-family:"JetBrains Mono",ui-monospace,monospace;font-size:12px}
@@ -716,6 +731,31 @@ def texte_cellier():
             f"plafond au-dessus des hauts et des colonnes.")
 
 
+def table_materiaux():
+    def ech(e):
+        if isinstance(e, str):
+            return f'<img src="{e}" alt="" style="width:120px;height:60px;object-fit:cover;border-radius:4px;display:block">'
+        return "".join(f'<span style="display:inline-block;width:{120 // len(e)}px;height:60px;background:{c};'
+                       f'{"border-radius:4px 0 0 4px;" if k == 0 else ""}{"border-radius:0 4px 4px 0;" if k == len(e) - 1 else ""}'
+                       f'{"border-radius:4px;" if len(e) == 1 else ""}"></span>' for k, c in enumerate(e))
+    corps = "".join(f"<tr><td>{ech(e)}</td><td>{escape(n)}</td><td><b>{escape(m)}</b><br>{escape(p)}</td></tr>"
+                    for n, m, p, e in M.MATERIAUX)
+    return ('<table class="orga"><thead><tr><th style="width:136px">Échantillon</th><th>Élément</th><th>Matériau</th>'
+            f'</tr></thead><tbody>{corps}</tbody></table>')
+
+
+def galerie_rendus():
+    vues = [(v, t, c) for v, t, c in M.RENDUS if os.path.exists(os.path.join(ROOT, "cuisine-v11-3d", f"{v}.jpg"))]
+    if not vues:
+        return ""
+    figs = "".join(f'<figure style="margin:0 0 18px"><img src="cuisine-v11-3d/{v}.jpg?v={M.VERSION}" alt="{escape(t)}" '
+                   f'loading="lazy" style="width:100%;border-radius:8px;display:block">'
+                   f'<figcaption class="cap"><b>{escape(t)}</b> — {escape(c)}</figcaption></figure>' for v, t, c in vues)
+    return (f'<h2>Rendus 3D</h2>\n<div class="fig">{figs}<p class="cap">Blender (Cycles) depuis le modèle FreeCAD de '
+            f'{M.VERSION} : 21 juin, 17 h, soleil réel par la fenêtre, suspension et LED allumées ; matériaux de la section '
+            'Matériaux (teintes indicatives).</p></div>\n')
+
+
 def table_contenu():
     corps = "".join(f"<tr><td>{escape(n)}</td><td>{escape(u)}</td></tr>" for n, u in M.CONTENU)
     return f'<table class="orga"><thead><tr><th>Meuble</th><th>Contenu</th></tr></thead><tbody>{corps}</tbody></table>'
@@ -737,7 +777,7 @@ def contenu():
 
 <h2>Plan</h2>
 <div class="fig"><div class="tog"><span>Portes</span><button type="button" data-vt="entree" aria-pressed="false" data-on="ouverte" data-off="fermée">entrée : fermée</button>{"".join(f'<button type="button" data-vt="{k}" aria-pressed="true" data-on="ouverte" data-off="fermée">cellier : ouverte</button>' for k, v in enumerate(M.CELLIER_VANTAUX))}</div><div class="scroll">{plan_svg()}</div>
-<p class="cap">Échelle : 1 unité = 1 cm. Pièce vide : chambre et ancien cellier ouverts, sans cloison. Restent la fenêtre coulissante du mur ouest (y 58 → 200), la porte d'entrée (baie x 228 → 306), le décroché de l'angle sud-est, la chute (sous le ballon), le ballon et le WC. <b>Sols</b> : parquet chêne en bâtons rompus dans l'ancienne chambre (x 0 → 325), gris ciment dans l'ancien cellier et l'ancien placard (à partir de x 325) ; les cloisons déposées du relevé d'origine sont en tireté (chambre / cellier x 325 → 335, cellier / placard y 100 → 110). <b>Mur nord</b> : {len(caissons)} meubles bas de 60 (x {f(x0)} → {f(x1)}), à {f(M.ECART_OUEST)} du mur ouest ; caisson P{M.P_CAISSON} + façade {M.FACADE}, profondeur {M.P_CAISSON + M.FACADE}, sous un plan de travail de 4 (P62, débord de 2). <b>Induction</b> 60 à aspiration intégrée sur B{M.B_PLAQUE} (x {f(M.sur_bas(M.B_PLAQUE)[0])} → {f(M.sur_bas(M.B_PLAQUE)[1])}) ; <b>évier</b> inox 1 bac 56 × 50 (bac 40 × 40) sur B{M.B_EVIER} (x {f(M.sur_bas(M.B_EVIER)[0])} → {f(M.sur_bas(M.B_EVIER)[1])}), mitigeur derrière le bac ; le LV (B{M.B_LV}) entre les deux, sous 60 de plan ; B5 libre, 60 de plan à l'est de l'évier. <b>Mur est</b> : colonnes C2 (frigo, y {f(M.COL_Y0)} → {f(M.COL_Y0 + 60)}) et C1 (four, micro-ondes au-dessus, y {f(M.COL_Y0 + 60)} → {f(M.COL_Y1)}) de 60, P60, contre le mur du WC (x {f(M.X_MUR_EST)}), du décroché vers le nord, façades vers l'ouest (x {f(M.COL_X)}). Le mur sud est libre entre la banquette et le caisson du galandage. <b>Porte d'entrée</b> : à galandage, vantail {f(M.ENTREE["vantail"])} × {M.ENTREE["h"]} (trait plein, fermé) ; ouverte, elle rentre vers l'ouest dans un caisson de galandage (ocre, x {f(M.ENTREE["poche"][0])} → {f(M.ENTREE["poche"][1])}) logé dans un doublage de 10 contre le mur sud (y 242 → 252), avec un montant de 4 à l'est de la baie. Le passage reste de {f(M.ENTREE["x1"] - M.ENTREE["x0"])} ; rien ne bat dans la cuisine. Face cuisine du caisson : <b>tableau noir</b> (peinture ardoise, h 120 → 200) et <b>zone aimantée</b> en dessous (h 70 → 118), sur 81 de large (coupe B-B). <b>Équipements</b> : poubelles de tri sous l'évier (B{M.B_EVIER}), lave-vaisselle 60 tout intégrable (B{M.B_LV}). <b>Triangle d'activité</b> (rouge ; centres de la plaque et de l'évier, milieu de la façade du frigo) : {tri}, total {f(round(sum(cotes_tri)))} cm. <b>Passage</b> (cote oblique) : {math.dist((x1, 62), (M.COL_X, M.JOUE_C2)):.0f} du coin du plan de travail au bout de la rangée (x {f(x1)}, y 62) au coin nord-ouest du frigo (joue, y {M.JOUE_C2}), devant la porte du cellier. <b>Réseaux</b> (bleu, dans le vide technique derrière les caissons) : tout <b>longe les murs</b>, en partie basse. Alimentation EF/EC en trait plein, à 3 des murs, depuis la <b>nourrice</b> (petit point, sous le ballon) : le long du retour sud de l'alcôve (y 44), de sa face ouest (x 434), puis du mur nord jusqu'à l'évier, avec un piquage pour le LV. Dans la niche du cellier, tout reste dans la zone technique des {M.ZONE_TECH} premiers cm (la chute est basse, dernier étage) : l'alimentation y passe à h 20 et remonte dans l'angle, l'évacuation descend à h 25 sous la première tablette du rayonnage nord ; un coffre technique (h 0 → {M.ZONE_TECH}) couvre l'angle. Évacuations en tireté de l'évier (siphon, axe x {f(M.SIPHON[0])}) et du LV, à 12 des murs pour passer au-delà de la nourrice : le long du mur nord, de l'alcôve, du mur est (x 484) puis du mur nord du WC jusqu'à la <b>chute</b> (cercle contre le mur du WC, sous le ballon : la colonne d'eaux usées existante, x à confirmer). Contre l'alcôve, ils passent sous la première tablette du rayonnage du mur nord ; sous le ballon (h 90), ils passent dessous ; longueur ≈ {f(M.EVAC_LONGUEUR)} : à 2 cm/m, {M.EVAC_LONGUEUR * 0.02:.1f} cm de pente, par exemple de h 45 sous le siphon à h {45 - M.EVAC_LONGUEUR * 0.02:.0f} à la chute. Les réseaux traversent la cloison du cellier. <b>Cellier</b> : cloison de 7 à {f(320 - x1)} de B5 (x 320 → 327), où passent les réseaux . {texte_cellier()} <b>Coin repas</b> : banquette du mur ouest (x 0 → {f(M.BANQ["x1"])}, 50 de profondeur : assise 45 à h 45 avec coffre, dossier 5 à h 85), table ronde Ø {f(2 * M.TABLE["r"])} à pied tulipe devant (centre x {f(M.TABLE["cx"])}, y {f(M.TABLE["cy"])}), qui recouvre l'assise de 15 ; une chaise à l'est de la table, glissée de {M.GLISSE}, dos vers l'est. La banquette s'arrête à y {f(M.BANQ["y0"])}, au sud de la fenêtre (y 200). <b>Suspension</b> (tireté jaune) : point lumineux au plafond centré sur la table, abat-jour Ø {M.SUSPENSION["d"]}, bas à h {M.SUSPENSION["z0"]}, soit {M.SUSPENSION["z0"] - 75} au-dessus du plateau (coupe B-B). <b>Places</b> : {M.PLACES_BANQUETTE} adultes sur la banquette ({f(M.BANQ["x1"] - M.BANQ["x0"])} de long, {M.LARGEUR_PLACE} par personne ; 50 à 60 par adulte), 3 enfants en se serrant ; avec la chaise, 3 personnes à table. <b>Sous la banquette</b> : deux tiroirs de 44 × 40 (façades h 6 → 40), de part et d'autre du pied de la table ; ils passent au-dessus de l'embase (tireté : tiroirs sortis de 35) ; pour ouvrir celui de l'est, on écarte la chaise. <b>Au-dessus</b> (tireté) : étagère P25 contre le mur sud, sur toute la longueur de la banquette, dessus à h {f(M.ETAGERE_BANQ["z1"])}, avec l'enceinte audio (22 × 18 × 30) à l'est (coupe B-B). <b>Ouvertures</b> : porte du LV abattue (y 60 → 132), porte du four abattue (x {f(M.COL_X - 60)} → {f(M.COL_X)}, y {f(M.COL_Y1 - 60)} → {f(M.COL_Y1)}), porte du frigo à 90°, charnières au sud : elle se rabat vers le sud et on accède au frigo par le nord, côté évier. Elle touche la porte du four abattue à y {f(M.COL_Y0 + 60)} : on ne les ouvre pas en même temps. <b>Meubles hauts</b> (tireté) : {len(hauts)} de 60, x {f(hauts[0].x0)} → {f(hauts[-1].x1)}, décalés d'un demi-meuble par rapport aux bas (ils partent du milieu du meuble 1) ; caisson P{M.P_HAUT} + façade {M.FACADE}.</p></div>
+<p class="cap">Échelle : 1 unité = 1 cm. Pièce vide : chambre et ancien cellier ouverts, sans cloison. Restent la fenêtre coulissante du mur ouest (y 58 → 200), la porte d'entrée (baie x 228 → 306), le décroché de l'angle sud-est, la chute (sous le ballon), le ballon et le WC. <b>Sols</b> : parquet chêne en bâtons rompus dans l'ancienne chambre (x 0 → 325), gris ciment dans l'ancien cellier et l'ancien placard (à partir de x 325) ; les cloisons déposées du relevé d'origine sont en tireté (chambre / cellier x 325 → 335, cellier / placard y 100 → 110). <b>Mur nord</b> : {len(caissons)} meubles bas de 60 (x {f(x0)} → {f(x1)}), à {f(M.ECART_OUEST)} du mur ouest ; caisson P{M.P_CAISSON} + façade {M.FACADE}, profondeur {M.P_CAISSON + M.FACADE}, sous un plan de travail de 4 (P62, débord de 2). <b>Induction</b> 60 à aspiration intégrée sur B{M.B_PLAQUE} (x {f(M.sur_bas(M.B_PLAQUE)[0])} → {f(M.sur_bas(M.B_PLAQUE)[1])}) ; <b>évier</b> inox 1 bac 56 × 50 (bac 40 × 40) sur B{M.B_EVIER} (x {f(M.sur_bas(M.B_EVIER)[0])} → {f(M.sur_bas(M.B_EVIER)[1])}), mitigeur derrière le bac ; le LV (B{M.B_LV}) entre les deux, sous 60 de plan ; B5 libre, 60 de plan à l'est de l'évier. <b>Mur est</b> : colonnes C2 (frigo, y {f(M.COL_Y0)} → {f(M.COL_Y0 + 60)}) et C1 (four, micro-ondes au-dessus, y {f(M.COL_Y0 + 60)} → {f(M.COL_Y1)}) de 60, P60, contre le mur du WC (x {f(M.X_MUR_EST)}), du décroché vers le nord, façades vers l'ouest (x {f(M.COL_X)}). Le mur sud est libre entre la banquette et le caisson du galandage. <b>Porte d'entrée</b> : à galandage, vantail {f(M.ENTREE["vantail"])} × {M.ENTREE["h"]} (trait plein, fermé) ; ouverte, elle rentre vers l'ouest dans un caisson de galandage (ocre, x {f(M.ENTREE["poche"][0])} → {f(M.ENTREE["poche"][1])}) logé dans un doublage de 10 contre le mur sud (y 242 → 252), avec un montant de 4 à l'est de la baie. Le passage reste de {f(M.ENTREE["x1"] - M.ENTREE["x0"])} ; rien ne bat dans la cuisine. Face cuisine du caisson : <b>tableau noir</b> (peinture ardoise, h 120 → 200) et <b>zone aimantée</b> en dessous (h 70 → 118), sur 81 de large (coupe B-B). <b>Équipements</b> : poubelles de tri sous l'évier (B{M.B_EVIER}), lave-vaisselle 60 tout intégrable (B{M.B_LV}). <b>Triangle d'activité</b> (rouge ; centres de la plaque et de l'évier, milieu de la façade du frigo) : {tri}, total {f(round(sum(cotes_tri)))} cm. <b>Passage</b> (cote oblique) : {math.dist((x1, 62), (M.COL_X, M.JOUE_C2)):.0f} du coin du plan de travail au bout de la rangée (x {f(x1)}, y 62) au coin nord-ouest du frigo (joue, y {M.JOUE_C2}), devant la porte du cellier. <b>Réseaux</b> (bleu ; pose type IKEA METOD, sans vide technique : 1 cm de jeu derrière les caissons). Le <b>LV est repiqué sur l'évier</b> : vidange sur le siphon, robinet d'arrêt dans B{M.B_EVIER}, aucun tuyau derrière sa niche. À l'est de l'évier, les tuyaux passent <b>derrière les tiroirs de B5</b>, raccourcis à P{M.P_TIROIRS_B5}, dans le fond du caisson découpé sur {M.FOND_B5} : tout <b>longe les murs</b>, en partie basse. Alimentation EF/EC en trait plein, à 3 des murs, depuis la <b>nourrice</b> (petit point, sous le ballon) : le long du retour sud de l'alcôve (y 44), de sa face ouest (x 434), puis du mur nord jusqu'à l'évier, avec un piquage pour le LV. Dans la niche du cellier, tout reste dans la zone technique des {M.ZONE_TECH} premiers cm (la chute est basse, dernier étage) : l'alimentation y passe à h 20 et remonte dans l'angle, l'évacuation descend à h 25 sous la première tablette du rayonnage nord ; un coffre technique (h 0 → {M.ZONE_TECH}) couvre l'angle. Évacuation en tireté depuis le siphon de l'évier (axe x {f(M.SIPHON[0])}), qui reçoit aussi la vidange du LV, à 4 du mur nord dans la cuisine, puis à 12 des murs pour passer au-delà de la nourrice : le long du mur nord, de l'alcôve, du mur est (x 484) puis du mur nord du WC jusqu'à la <b>chute</b> (cercle contre le mur du WC, sous le ballon : la colonne d'eaux usées existante, x à confirmer). Contre l'alcôve, ils passent sous la première tablette du rayonnage du mur nord ; sous le ballon (h 90), ils passent dessous ; longueur ≈ {f(M.EVAC_LONGUEUR)} : de h {M.RESEAUX[3][3]} sous le siphon à h {M.RESEAUX[4][3]} à la chute, soit {(M.RESEAUX[3][3] - M.RESEAUX[4][3]) / M.EVAC_LONGUEUR * 100:.1f} cm/m de pente moyenne (hauteur d'arrivée sur la chute à confirmer). Les réseaux traversent la cloison du cellier. <b>Cellier</b> : cloison de 7 à {f(320 - x1)} de B5 (x 320 → 327), où passent les réseaux . {texte_cellier()} <b>Coin repas</b> : banquette du mur ouest (x 0 → {f(M.BANQ["x1"])}, 50 de profondeur : assise 45 à h 45 avec coffre, dossier 5 à h 85), table ronde Ø {f(2 * M.TABLE["r"])} à pied tulipe devant (centre x {f(M.TABLE["cx"])}, y {f(M.TABLE["cy"])}), qui recouvre l'assise de 15 ; une chaise à l'est de la table, glissée de {M.GLISSE}, dos vers l'est. La banquette s'arrête à y {f(M.BANQ["y0"])}, au sud de la fenêtre (y 200). <b>Suspension</b> (tireté jaune) : point lumineux au plafond centré sur la table, abat-jour Ø {M.SUSPENSION["d"]}, bas à h {M.SUSPENSION["z0"]}, soit {M.SUSPENSION["z0"] - 75} au-dessus du plateau (coupe B-B). <b>Places</b> : {M.PLACES_BANQUETTE} adultes sur la banquette ({f(M.BANQ["x1"] - M.BANQ["x0"])} de long, {M.LARGEUR_PLACE} par personne ; 50 à 60 par adulte), 3 enfants en se serrant ; avec la chaise, 3 personnes à table. <b>Sous la banquette</b> : deux tiroirs de 44 × 40 (façades h 6 → 40), de part et d'autre du pied de la table ; ils passent au-dessus de l'embase (tireté : tiroirs sortis de 35) ; pour ouvrir celui de l'est, on écarte la chaise. <b>Au-dessus</b> (tireté) : étagère P25 contre le mur sud, sur toute la longueur de la banquette, dessus à h {f(M.ETAGERE_BANQ["z1"])}, avec l'enceinte audio (22 × 18 × 30) à l'est (coupe B-B). <b>Ouvertures</b> : porte du LV abattue (y 60 → 132), porte du four abattue (x {f(M.COL_X - 60)} → {f(M.COL_X)}, y {f(M.COL_Y1 - 60)} → {f(M.COL_Y1)}), porte du frigo à 90°, charnières au sud : elle se rabat vers le sud et on accède au frigo par le nord, côté évier. Elle touche la porte du four abattue à y {f(M.COL_Y0 + 60)} : on ne les ouvre pas en même temps. <b>Meubles hauts</b> (tireté) : {len(hauts)} de 60, x {f(hauts[0].x0)} → {f(hauts[-1].x1)}, décalés d'un demi-meuble par rapport aux bas (ils partent du milieu du meuble 1) ; caisson P{M.P_HAUT} + façade {M.FACADE}.</p></div>
 
 {f"""<h2>Coupe D-D · niche du cellier</h2>
 <div class="fig"><div class="scroll">{coupe_d()}</div>
@@ -754,6 +794,10 @@ def contenu():
 <h2>Coupe C-C · mur est</h2>
 <div class="fig transp"><div class="tog"><span>Porte du cellier</span><button type="button" class="trbtn" aria-pressed="true">en transparence</button></div><div class="scroll">{coupe_c()}</div>
 <p class="cap">Coupe à x {COUPE_C}, regard vers l'est : le nord est à gauche. Au fond, la cloison du cellier (x 320 → 327), et dans son prolongement la porte du cellier fermée ({M.PORTE_TITRE}), dessinée en transparence (tireté) avec son dormant et son linteau (bouton au-dessus de la coupe : transparente ou normale), pour montrer le fond du cellier : {"le rayonnage ménage, l'aspirateur sur son plancher technique et le contenu des tablettes" if M.PLAT else "le ballon"}. Puis, contre le mur du WC (x {f(M.X_MUR_EST)}), les colonnes P{M.P_CAISSON + M.FACADE}, socle {M.SOCLE}, dessus à {M.COL_Z1} comme les meubles hauts, fileur de {M.H - M.COL_Z1} jusqu'au plafond : <b>C2</b> réfrigérateur intégrable (niche 178, porte h 15 → 193), porte de rangement au-dessus ; <b>C1</b> deux tiroirs (h 15 → 86), four 60 (h 88 → {M.MO_Z0}), micro-ondes encastrable (niche 38, h {M.MO_Z0} → {M.MO_Z1}), porte de rangement au-dessus ; à droite, le décroché et le mur sud coupé.</p></div>
+
+{galerie_rendus()}<h2>Matériaux</h2>
+<div class="fig">{table_materiaux()}
+<p class="cap">Teintes indicatives à l'écran : Canopée et chêne miel d'après le rendu 3D (laque mate Plum Living), parquet d'après la photo de référence. À valider sur échantillons.</p></div>
 
 <h2>Contenu des rangements</h2>
 <div class="fig">{table_contenu()}

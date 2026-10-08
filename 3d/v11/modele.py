@@ -12,7 +12,7 @@ import math
 import os
 from dataclasses import dataclass
 
-VERSION = "V11.26"
+VERSION = "V11.34"
 H = 250  # hauteur sous plafond
 
 
@@ -189,8 +189,8 @@ def meuble_haut_nord(nom, x0, largeur, contenu=""):
     MEUBLES.append(Bloc("led", f"led_{nom}", x0 + 2, x1 - 2, P_HAUT - 7, P_HAUT - 5, HAUT_Z0 - 0.8, HAUT_Z0))
 
 
-# mur nord : 5 meubles bas de 60, à 10 du mur ouest (x 10 → 310) ; plaque sur B2, LV en B3, évier sur B4
-ECART_OUEST = 10
+# mur nord : 5 meubles bas de 60, à 5 du mur ouest (x 5 → 305), fileur de 5 au mur ; plaque sur B2, LV en B3, évier sur B4
+ECART_OUEST = 5
 N_BAS, N_HAUTS = 5, 4
 B_PLAQUE, B_LV, B_EVIER = 2, 3, 4
 for i in range(N_BAS):
@@ -222,7 +222,10 @@ def sur_bas(n):
 
 # plan de travail 4, P62 (débord 2 devant les façades), sur toute la rangée basse
 PT_Z1 = CAISSON_H + 4
-MEUBLES.append(Bloc("plan", "plan_nord", sur_bas(1)[0], sur_bas(N_BAS)[1], 0, 62, CAISSON_H, PT_Z1))
+MEUBLES.append(Bloc("plan", "plan_nord", 0, sur_bas(N_BAS)[1], 0, 62, CAISSON_H, PT_Z1))   # jusqu'au mur ouest
+# fileur Canopée de 5 entre B1 et le mur ouest (dans le plan des façades), socle prolongé dessous
+MEUBLES.append(Bloc("socle", "socle_fileur_ouest", 0, ECART_OUEST, 0, P_CAISSON - 3, 0, SOCLE))
+MEUBLES.append(Bloc("joue", "fileur_ouest", 0, ECART_OUEST, P_CAISSON, P_CAISSON + FACADE, SOCLE, CAISSON_H))
 
 # induction 60 à aspiration intégrée, 54 × 50, à 3 des chants
 x0, x1 = sur_bas(B_PLAQUE)
@@ -248,10 +251,14 @@ def equiper(n, texte):
 equiper(B_EVIER, "poubelles")  # sous l'évier : tri sélectif sur coulissant
 equiper(B_LV, "LV")            # lave-vaisselle 60 tout intégrable
 
-# ------------------------------------------------------------------ réseaux d'eau (dans le vide technique, derrière les caissons)
+# ------------------------------------------------------------------ réseaux d'eau
+# Pose type IKEA METOD : pas de vide technique (1 cm de jeu derrière les caissons). Le LV est repiqué sur l'évier
+# (vidange sur le siphon, robinet d'arrêt dans B4) : aucun tuyau derrière sa niche. À l'est de l'évier, les tuyaux
+# passent derrière les tiroirs de B5, raccourcis à P50, dans le fond du caisson découpé (y 0 → 8), puis traversent
+# la cloison du cellier.
 # Tout longe les murs, en partie basse. Alimentation EF/EC (à 3 des murs) : de la nourrice sous le ballon, le long du
 # retour sud du mur nord de l'alcôve (y 44), puis de sa face ouest (x 434), puis du mur nord jusqu'à l'évier.
-# Évacuation (à 12 des murs, au-delà de la nourrice) : le long du mur nord, de la face ouest et du retour sud de
+# Évacuation (à 4 du mur nord dans la cuisine, à 12 des murs au-delà de la nourrice) : le long du mur nord, de la face ouest et du retour sud de
 # l'alcôve, du mur est (x 484), puis du mur nord du WC (y 100) jusqu'à la chute existante (colonne d'eaux usées,
 # contre le mur du WC sous le ballon). Contre l'alcôve, ils passent sous la première tablette du rayonnage du mur
 # nord (h 60) ; sous le ballon (h 90), ils passent dessous.
@@ -267,16 +274,17 @@ SIPHON = (xe, 32)
 RESEAUX = [
     ("alim", "alim_niche", [NOURRICE, (NOURRICE[0], 47), (431, 47)], 20, 0.8),
     ("alim", "alim_evier", [(431, 47), (431, 3), (xe, 3), (xe, 8)], 50, 0.8),
-    ("alim", "alim_lv", [(xe, 3), (xl1 - 15, 3), (xl1 - 15, 20)], 50, 0.8),
-    ("evac", "evac_evier", [SIPHON, (xe, 10), (422, 10), (422, 38)], 43, 2),
+    ("alim", "alim_lv", [(xe, 3), (xl1 + 4, 3), (xl1 + 4, 20)], 50, 0.8),   # robinet d'arrêt du LV dans B4
+    ("evac", "evac_evier", [SIPHON, (xe, 4), (422, 4), (422, 38)], 43, 2),
     ("evac", "evac_niche", [(422, 38), (422, 56), (472, 56), (472, 88), (CHUTE[0], 88), CHUTE], 25, 2),
-    ("evac", "evac_lv", [(xl0 + 20, 30), (xl0 + 20, 10), (xe, 10)], 43, 2),
+    ("evac", "evac_lv", [(xl1 + 4, 30), SIPHON], 50, 1),   # vidange du LV sur le siphon de l'évier
 ]
 ZONE_TECH = 30
+P_TIROIRS_B5, FOND_B5 = 50, 8   # tiroirs de B5 raccourcis, fond du caisson découpé sur 8
 _ev = RESEAUX[3][2] + RESEAUX[4][2][1:]
 EVAC_LONGUEUR = round(sum(math.dist(a, b) for a, b in zip(_ev, _ev[1:])))
 
-# mur nord : 5 meubles hauts de 60, décalés d'un demi-meuble : ils partent du milieu du premier bas (x 40 → 340)
+# mur nord : 4 meubles hauts de 60, décalés d'un demi-meuble : ils partent du milieu du premier bas (x 35 → 275)
 DEPART_HAUTS = ECART_OUEST + 60 / 2
 for i in range(N_HAUTS):
     meuble_haut_nord(f"h{i + 1}", DEPART_HAUTS + 60 * i, 60, HAUTS_CONTENU[i])
@@ -325,6 +333,8 @@ colonne_est("c2", COL_Y0, 60, [
 # joues de finition de 2 sur les flancs visibles : nord de C2 (côté porte du cellier), sud de C1 jusqu'au décroché
 MEUBLES.append(Bloc("joue", "joue_c2", COL_X, COL_DOS, COL_Y0 - 2, COL_Y0, 0, COL_Z1))
 MEUBLES.append(Bloc("joue", "joue_c1", COL_X, 341, COL_Y1, COL_Y1 + 2, 0, COL_Z1))
+# fileur couleur des murs entre C1 et le mur sud (montant du galandage, x 312) : ferme la poche de l'angle sud-est
+MEUBLES.append(Bloc("joue", "fileur_c1", 312, COL_X, COL_Y1, COL_Y1 + 2, 0, H))
 MEUBLES.append(Bloc("fileur", "fileur_colonnes", COL_X, COL_X + FACADE, COL_Y0 - 2, COL_Y1 + 2, COL_Z1, H))
 
 # ------------------------------------------------------------------ triangle d'activité (centres de l'évier et de la plaque,
@@ -525,7 +535,8 @@ def litres(l, p, h):
 
 
 VOLUMES = dict(
-    v11=dict(cuisine=sum([2 * litres(60, P_CAISSON, CAISSON_H - SOCLE), litres(60, P_CAISSON, 46),
+    v11=dict(cuisine=sum([litres(60, P_CAISSON, CAISSON_H - SOCLE), litres(60, P_TIROIRS_B5, CAISSON_H - SOCLE),
+                          litres(60, P_CAISSON, 46),
                           N_HAUTS * litres(60, P_HAUT, HAUT_Z1 - HAUT_Z0),
                           litres(60, P_CAISSON, (86 - SOCLE) + (COL_Z1 - MO_Z1)), litres(60, P_CAISSON, COL_Z1 - 193),
                           2 * litres(40, 40, 30)]),
@@ -559,8 +570,85 @@ CONTENU = [
      if PLAT else []) + [
 ]
 
+# ------------------------------------------------------------------ matériaux (section Matériaux)
+# (élément, matériau, précision, échantillon : couleur(s) « #… » ou image)
+MATERIAUX = [
+    ("Sol, ancienne chambre", "Parquet chêne huilé en bâtons rompus",
+     "Lames 8 × 32, rangs horizontaux, pointes vers le nord.", "images/cuisine-sol-reference.png"),
+    ("Sol, ancien cellier et ancien placard", "Ciment (béton ciré gris)", "À partir du nu de l'ancienne cloison (x 325).",
+     ("#B9B6AF",)),
+    ("Murs", "Blanc légèrement chaud, à peine beige",
+     "Piste : Farrow & Ball Wimborne White (n° 239, LRV ≈ 90), blanc à sous-ton crème discret ; à peine plus chaud : "
+     "Pointing (n° 2003). Teinte à l'écran approximative : à valider sur échantillon, au mur, à la lumière de la pièce.",
+     ("#EFE9DC",)),
+    ("Plinthes (socles des meubles bas et des colonnes)", "Couleur des murs", "Même blanc que les murs.", ("#EFE9DC",)),
+    ("Fileurs", "Canopée au mur ouest, couleur des murs au sud de C1",
+     "Fileur de 5 entre B1 et le mur ouest (plan de travail prolongé jusqu'au mur) ; fileur de 10 entre C1 et le montant "
+     "du galandage (mur sud), qui ferme la poche de l'angle.", ("#3C524C", "#EFE9DC")),
+    ("Colonnes C1, C2 et meubles hauts H1 → H4", "Chêne miel, Plum Living", "Façades, joues et fileurs.", ("#A8743F",)),
+    ("Meubles bas B1 → B5", "Laque Canopée, Plum Living",
+     "Vert profond (nuancier Plum Living), posé sur caissons type IKEA METOD.", ("#3C524C",)),
+    ("Crédence", "Zellige greige", "Carreaux 10 × 10 émaillés à la main, h 91 → 153, sur toute la rangée.",
+     ("#C6BCAC", "#B9AE9D", "#A99D8B")),
+    ("Plan de travail", "Effet béton blanc-gris", "Matière à définir (compact, céramique, quartz…) ; elle décide du "
+     "type d'évier possible (sous plan ou à encastrer).", ("#D6D4CE", "#BDBBB5")),
+    ("Évier et robinetterie", "Inox brossé", "Bac et mitigeur.", ("#C9C9C7",)),
+    ("Poignées des façades bois (C1, C2, H1 → H4)", "Profilé toute longueur en chêne miel",
+     "Même matière que la façade : sur toute la largeur des tiroirs, sur toute la hauteur des portes.", ("#A8743F", "#8A5A2B")),
+    ("Poignées des meubles bas Canopée (B1 → B5)", "Barres en inox brossé",
+     "Comme l'évier et la robinetterie.", ("#3C524C", "#C9C9C7")),
+    ("Table", "Stratifié rose poudré à chant noir", "Celle du rendu 3D (type Véra), en ronde Ø 80, pied laqué blanc.",
+     ("#D9BDBB", "#18181A")),
+    ("Banquette", "Coffre couleur des murs, coussins velours terracotta", "Coffre, dossier et façades des tiroirs "
+     "dans le blanc des murs ; coussins d'assise et de dossier en velours côtelé terracotta (pour l'instant).",
+     ("#EFE9DC", "#A4532F")),
+]
+
+# ------------------------------------------------------------------ rendus 3D (3d/v11/rendu.py, Blender Cycles → cuisine-v11-3d/)
+RENDUS = [
+    ("iso", "A · Isométrique", "Depuis le sud-ouest, murs ouest et sud et plafond coupés (ils portent toujours ombres et lumière)."),
+    ("entree", "B · Depuis l'entrée", "Debout dans la baie d'entrée, vers la rangée nord et la fenêtre."),
+    ("fenetre", "C · Depuis la fenêtre", "Debout devant la fenêtre, vers les colonnes, la porte du cellier ouverte et l'entrée."),
+    ("banquette", "D · Assis sur la banquette", "Place est de la banquette, yeux à 120, vers la rangée nord et les colonnes."),
+    ("cellier", "E · Entrée du cellier", "Entré dans le cellier, porte refermée derrière soi : rayonnage nord, ballon, zone technique."),
+    ("dos_cellier", "F · Dos à la porte du cellier", "Debout devant la porte du cellier, vers la table et la banquette."),
+    ("iso_nuit", "G · Isométrique de nuit", "Même vue que A, de nuit, tous les éclairages allumés : suspension, LED sous les "
+     "hauts, cellier (pas de plafonnier dans le modèle)."),
+]
+
 # ------------------------------------------------------------------ historique (section Changements)
 CHANGEMENTS = [
+    ("V11.34", "08/10/2026",
+     "Crédence en zellige greige (retenu parmi blanc cassé, gris chaud et greige) ; hauts en chêne miel conservés "
+     "(chêne fumé écarté) ; rendus refaits. La proposition 9 V2 A figée reçoit ses rendus 3D Canopée."),
+    ("V11.33", "08/10/2026",
+     "Plan : le plan de travail, prolongé jusqu'au mur ouest en V11.32, est dessiné sur un fond opaque (le parquet "
+     "apparaissait à travers au droit du fileur de 5)."),
+    ("V11.32", "08/10/2026",
+     "Rangée nord à 5 du mur ouest (x 5 → 305) avec un fileur Canopée de 5, plan de travail prolongé jusqu'au mur ; "
+     "fileur couleur des murs entre C1 et le montant du galandage (mur sud), qui ferme la poche de l'angle sud-est ; "
+     "banquette couleur des murs, coussins terracotta. Rendus : chaise type Cesca (tube chromé, cadre chêne, cannage), "
+     "balais, bac de l'évier (inox brossé, bonde) ; vues F (dos à la porte du cellier) et G (isométrique de nuit)."),
+    ("V11.31", "08/10/2026",
+     "Rendus 3D (Blender Cycles, 3d/v11/rendu.py) : isométrique, depuis l'entrée, depuis la fenêtre, assis sur la "
+     "banquette, entrée du cellier ; matériaux de la section Matériaux, poignées, crédence, fenêtre et coussins "
+     "construits depuis les cotes du modèle ; 21 juin, 17 h, suspension et LED allumées."),
+    ("V11.30", "08/10/2026",
+     "Murs blanc légèrement chaud (piste Farrow & Ball Wimborne White) et plinthes de la couleur des murs : section "
+     "Matériaux, socles dessinés dans ce blanc dans les coupes."),
+    ("V11.29", "08/10/2026",
+     "Poignées : profilé toute longueur en chêne miel sur les façades bois (colonnes et hauts), barres en inox brossé sur "
+     "les bas Canopée ; dessinées ainsi dans les coupes et ajoutées à la section Matériaux. Coupe C-C : poignée du frigo "
+     "corrigée, côté nord (charnières au sud)."),
+    ("V11.28", "08/10/2026",
+     "Section Matériaux : parquet bâtons rompus (ancienne chambre), ciment (ancien cellier et placard), chêne miel "
+     "Plum Living (colonnes et hauts), laque Canopée Plum Living (bas), crédence zellige blanc / gris, plan effet béton "
+     "blanc-gris (matière à définir), évier et robinetterie inox brossé, table rose poudré ronde Ø 80, banquette à choisir."),
+    ("V11.27", "08/10/2026",
+     "Réseaux en pose type IKEA METOD (pas de vide technique, 1 cm de jeu derrière les caissons) : le LV est repiqué "
+     "sur l'évier (vidange sur le siphon, robinet d'arrêt dans B4), plus aucun tuyau derrière sa niche ; à l'est de "
+     "l'évier, évacuation (à 4 du mur) et alimentation passent derrière les tiroirs de B5, raccourcis à P50, dans le "
+     "fond du caisson découpé sur 8. Texte des réseaux corrigé (hauteurs du modèle : h 43 sous le siphon → h 25 à la chute)."),
     ("V11.26", "07/10/2026",
      "Coupe C-C : bouton pour afficher la porte du cellier normale ou en transparence."),
     ("V11.25", "07/10/2026",

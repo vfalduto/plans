@@ -87,6 +87,17 @@ for ident in set(re.findall(r'id="([^"]+)"', corps)):
     corps = corps.replace(f'id="{ident}"', f'id="{ident}{SUFFIXE}"').replace(f"url(#{ident})", f"url(#{ident}{SUFFIXE})")
     corps = corps.replace(f'href="#{ident}"', f'href="#{ident}{SUFFIXE}"')
 
+# rendus 3D de cette variante (FreeCAD + Blender, 3d/cuisine_a.py et 3d/rendu.py), teinte Canopée + chêne miel
+RENDUS = [("entree", "Depuis l'entrée, vers le nord-ouest"), ("fenetre", "Depuis la fenêtre, vers l'est"),
+          ("assis", "Assis à table"), ("cellier", "Depuis le seuil du cellier"), ("plongee", "Vue plongeante")]
+figs = "".join(f'<figure style="margin:0 0 18px"><img src="cuisine-3d/rendu-{v}-deco-canopee.jpg" alt="{t}" '
+               f'loading="lazy" style="width:100%;border-radius:8px;display:block"><figcaption>{t}</figcaption></figure>'
+               for v, t in RENDUS if os.path.exists(os.path.join(ROOT, "cuisine-3d", f"rendu-{v}-deco-canopee.jpg")))
+if figs:
+    corps += (f'<h2>Rendus 3D</h2><div class="fig">{figs}<p>Variante A modélisée dans FreeCAD et rendue dans Blender '
+              '(Cycles) : façades Canopée (Plum Living), colonnes en chêne miel, plan terrazzo gris clair, table type '
+              'Véra rose poudré, avec décoration.</p></div>')
+
 os.makedirs(os.path.dirname(OUT), exist_ok=True)
 with open(OUT, "w", encoding="utf-8") as fh:
     fh.write(f"<style>{portee(css)}</style>\n<div class=\"p9\">{corps}</div>\n")
