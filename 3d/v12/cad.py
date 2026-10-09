@@ -1,0 +1,87 @@
+# Construit le modèle FreeCAD de la cuisine V12 depuis modele.py.
+#
+#   /Applications/FreeCAD.app/Contents/Resources/bin/freecadcmd 3d/v12/cad.py
+#
+# Produit 3d/sortie/cuisine-v12.FCStd et .glb. Dans FreeCAD : X = x, Y = -y (nord en haut), Z = z, en mm.
+# Chaque objet s'appelle « rôle__nom » : le rendu Blender choisira le matériau d'après le préfixe.
+
+import math
+import os
+import sys
+
+import FreeCAD
+import Import
+import Part
+from FreeCAD import Vector as V
+
+HERE = os.path.dirname(os.path.abspath(__file__))
+sys.path.insert(0, HERE)
+import modele as M  # noqa: E402
+
+OUT = os.path.join(HERE, "..", "sortie")
+os.makedirs(OUT, exist_ok=True)
+
+doc = FreeCAD.newDocument("cuisine_v12")
+objs = []
+
+
+def add(nom, shape):
+    o = doc.addObject("Part::Feature", nom)
+    o.Shape = shape
+    objs.append(o)
+
+
+def solid(x0, x1, y0, y1, z0, z1):
+    return Part.makeBox((x1 - x0) * 10, (y1 - y0) * 10, (z1 - z0) * 10, V(x0 * 10, -y1 * 10, z0 * 10))
+
+
+# cuves : creuses, et percent le plan de travail, la plage de l'évier et le caisson dessous (jeu 0,6 : pas de faces confondues)
+cuves = [b for b in M.MEUBLES if b.role == "cuve"]
+for b in M.ENVELOPPE + M.MEUBLES:
+    if isinstance(b, M.Cyl):
+        s = Part.makeCylinder(b.r * 10, (b.z1 - b.z0) * 10, V(b.cx * 10, -b.cy * 10, b.z0 * 10))
+    elif isinstance(b, M.Pan):
+        # panneau en biais : boîte le long de x, centrée sur l'axe, tournée puis posée en a
+        lg = math.dist(b.a, b.b)
+        s = Part.makeBox(lg * 10, b.ep * 10, (b.z1 - b.z0) * 10, V(0, -b.ep * 5, b.z0 * 10))
+        s.rotate(V(0, 0, 0), V(0, 0, 1), math.degrees(math.atan2(-(b.b[1] - b.a[1]), b.b[0] - b.a[0])))
+        s.translate(V(b.a[0] * 10, -b.a[1] * 10, 0))
+    else:
+        s = solid(b.x0, b.x1, b.y0, b.y1, b.z0, b.z1)
+    if getattr(b, "arrondi", 0):   # angles arrondis : sud-ouest (x0, y1) seul, ou les quatre arêtes verticales
+        def verticale(e, x=None, y=None):
+            a, c = e.Vertexes[0].Point, e.Vertexes[-1].Point
+            if abs(a.x - c.x) > 0.01 or abs(a.y - c.y) > 0.01:
+                return False
+            return x is None or (abs(a.x - x) < 0.01 and abs(a.y - y) < 0.01)
+        if b.coins == "tous":
+            aretes = [e for e in s.Edges if verticale(e)]
+        else:
+            aretes = [e for e in s.Edges if verticale(e, b.x0 * 10, -b.y1 * 10)]
+        s = s.makeFillet(b.arrondi * 10, aretes)
+    if b.role == "cuve":
+        s = s.cut(solid(b.x0 + 0.5, b.x1 - 0.5, b.y0 + 0.5, b.y1 - 0.5, b.z0 + 0.5, b.z1 + 1))
+    elif b.role in ("plan", "evier", "caisson"):   # caisson sous l'évier : creusé à l'emprise du bac
+        for c in cuves:
+            s = s.cut(solid(c.x0 - 0.6, c.x1 + 0.6, c.y0 - 0.6, c.y1 + 0.6, c.z0, b.z1 + 1))
+    add(f"{b.role}__{b.nom}", s)
+c = M.BALLON
+add(f"{c.role}__{c.nom}", Part.makeCylinder(c.r * 10, (c.z1 - c.z0) * 10, V(c.cx * 10, -c.cy * 10, c.z0 * 10))
+    if isinstance(c, M.Cyl) else solid(c.x0, c.x1, c.y0, c.y1, c.z0, c.z1))
+# réseaux d'eau : un cylindre par tronçon
+for role, nom, p, z, r in M.RESEAUX:
+    for k, (a, b) in enumerate(zip(p, p[1:])):
+        d = V((b[0] - a[0]) * 10, -(b[1] - a[1]) * 10, 0)
+        add(f"{role}__{nom}_{k + 1}", Part.makeCylinder(r * 10, d.Length, V(a[0] * 10, -a[1] * 10, z * 10), d))
+
+for nom, poly in (("sol_parquet__chambre", M.SOL_PARQUET), ("sol_ciment__cellier_placard", M.SOL_CIMENT)):
+    sol = Part.Face(Part.makePolygon([V(x * 10, -y * 10, -20) for x, y in poly + poly[:1]]))
+    add(nom, sol.extrude(V(0, 0, 20)))
+
+doc.recompute()
+NOM = "cuisine-v12"
+doc.saveAs(os.path.join(OUT, f"{NOM}.FCStd"))
+for o in objs:
+    o.Shape.tessellate(0.5)  # sans interface : sinon le glTF sort vide
+Import.export(objs, os.path.join(OUT, f"{NOM}.glb"))
+print(f"{len(objs)} objets → {OUT}/{NOM}.glb")
