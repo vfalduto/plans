@@ -65,3 +65,11 @@ v12-apercu *vues:
 # Fige la version courante de la cuisine V12 (bouton de comparaison + archive/cuisine-v12.x.html)
 v12-figer:
     python3 3d/v12/plan.py --figer
+
+# Salon V4 : régénère salon-v4.html depuis 3d/salon/modele.py (source unique)
+salon:
+    python3 3d/salon/plan.py
+
+# Fige la version courante du salon (bouton de comparaison + archive/salon-v4.x.html)
+salon-figer:
+    python3 3d/salon/plan.py --figer
