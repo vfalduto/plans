@@ -1,7 +1,9 @@
 # Rendu Blender (Cycles) de la cuisine V12, à partir de 3d/sortie/cuisine-v12.glb (just v12).
 #
 #   /Applications/Blender.app/Contents/MacOS/Blender -b --python 3d/v12/rendu.py -- [échantillons] [vue ...]
-#   ex. : ... -- 16 iso      (aperçu rapide)
+#   ex. : ... -- 16 apercu iso   (aperçu : demi-résolution, 3d/sortie/v12-apercu-<vue>.png, page non touchée)
+# Le temps est proportionnel aux échantillons (~0,5 s/échantillon par vue sur M1 Pro) ; avec le débruiteur OIDN,
+# 64 est indiscernable de 256 (mesuré le 2026-10-09), d'où le défaut de `just v12-rendu`.
 # Vues : iso (isométrique, murs ouest et sud coupés), entree, fenetre, banquette, cellier.
 # Produit 3d/sortie/v12-rendu-<vue>.png et cuisine-v12.blend.
 #
@@ -25,7 +27,8 @@ import modele as M  # noqa: E402
 import rendu as R  # noqa: E402
 
 OUT = R.OUT
-VUES_DEMANDEES = [a for a in R.args if not a.isdigit()]
+APERCU = "apercu" in R.args
+VUES_DEMANDEES = [a for a in R.args if not a.isdigit() and a != "apercu"]
 
 # ------------------------------------------------------------------ matériaux V11 (section Matériaux de modele.py)
 MUR = "#EFE9DC"            # blanc légèrement chaud (piste Wimborne White) : murs et plinthes
@@ -543,12 +546,14 @@ def materiau_de(sc, motif, mat):
 
 if __name__ == "__main__":
     sc = build_scene()
+    if APERCU:
+        sc.render.resolution_percentage = 50
     temporaires = [a for a in VUES_DEMANDEES if a in ("zellige", "fume", "coussins")]
     vues = [a for a in VUES_DEMANDEES if a not in temporaires]
     if not temporaires or vues:
         for name, v in VIEWS.items():
             if not vues or name in vues:
-                rendre(sc, name, v, f"v12-rendu-{name}.png")
+                rendre(sc, name, v, f"v12-{'apercu' if APERCU else 'rendu'}-{name}.png")
     if "zellige" in temporaires:
         sc.render.resolution_y = 800
         for k, z in enumerate(ZELLIGES):
@@ -572,5 +577,5 @@ if __name__ == "__main__":
     for o in sc.objects:
         if o.type in ("MESH", "CURVE"):
             o.visible_camera = True
-    if not temporaires:
+    if not temporaires and not APERCU:
         bpy.ops.wm.save_as_mainfile(filepath=os.path.join(OUT, "cuisine-v12.blend"), compress=True)

@@ -12,7 +12,7 @@ import math
 import os
 from dataclasses import dataclass
 
-VERSION = "V12.2"
+VERSION = "V12.7"
 H = 250  # hauteur sous plafond
 
 
@@ -436,6 +436,8 @@ def chaise(nom, x0, y0, dossier):
 
 
 GLISSE = 0   # plus de chaise (V11.45)
+# chaise seule, ajoutée aux meubles à découper de la version imprimable (V12.4), pas posée dans le projet
+CHAISE = dict(l=42, p=42)
 
 # ------------------------------------------------------------------ cellier : rangements
 # La porte du cellier s'ouvre vers le cellier : rien n'est posé dans le balayage des vantaux.
@@ -651,6 +653,62 @@ MATERIAUX = [
      "terracotta et au vieux rose).", ("#EFE9DC", "#C08A2E")),
 ]
 
+# ------------------------------------------------------------------ électricité (V12.5, proposition ; section Électricité)
+# Position en plan (x, y) du boîtier, z : hauteur de son axe depuis le sol fini. Rien n'est dans le modèle 3D.
+# Points lumineux : (repère, nom, x, y, précision)
+LUMIERES = [
+    ("L1", "Plafonnier", 215, 145, "au plafond (boîtier DCL), centré sur la zone de travail (entre la rangée nord, les "
+     "colonnes et l'entrée) : éclairage général"),
+    ("L2", "LED sous les hauts", (DEPART_HAUTS + FIN_HAUTS) / 2, P_HAUT - 6,
+     f"rubans déjà prévus sous H1 → H{N_HAUTS} ; alimentation (driver 24 V) dans le haut de H4, au-dessus des assiettes"),
+    ("L3", "Suspension", TABLE["cx"], TABLE["cy"], "point de plafond déjà prévu (boîtier DCL), centré sur la table"),
+    ("L4", "Cellier", 400, 60, "hublot ou réglette LED au plafond entre les deux rayonnages, sans détecteur : "
+     "commandé par S2, à côté de la porte"),
+]
+# Interrupteurs : (repère, nom, x, y, z, emplacement, [(touche, lumière, fonctionnement)])
+INTERRUPTEURS = [
+    ("S1", "Entrée", 317, 240, 110,
+     "sur le fileur à droite de la baie (x 312 → 322, face nord), côté poignée de la porte : plaque verticale 3 postes "
+     "(le fileur fait 10 de large) ; le câble descend du plafond dans la poche fermée par le fileur",
+     [("haut", "L1", "simple allumage"), ("milieu", "L2", "va-et-vient avec S2"),
+      ("bas", "L3", "poussoir du variateur, avec S3")]),
+    ("S2", "Bout du plan", 274, 0, 110,
+     "mur nord entre H4 et la porte du cellier repliée (elle se range x 282 → 318), au-dessus du coffre des réseaux, à 45 de la porte du cellier : plaque verticale 2 postes (15 de mur libre)",
+     [("haut", "L2", "va-et-vient avec S1"),
+      ("bas", "L4", "simple allumage, à voyant : on voit la lumière restée allumée porte fermée")]),
+    ("S3", "Banquette", 0, 212, 105,
+     "mur ouest, au bout de la banquette, à portée de main assis ; sur la même plaque que P11",
+     [("", "L3", "poussoir du variateur, avec S1")]),
+]
+# Prises : (repère, x, y, z, socles, circuit, usage, emplacement) ; « dans » : au fond d'un meuble, invisible
+PRISES = [
+    ("P1", 12, 0, 110, 1, "plan", "petit électroménager", "crédence, à gauche de la plaque"),
+    ("P2", 100, 0, 110, 2, "plan", "bouilloire, grille-pain, robot", "crédence, au-dessus de B3"),
+    ("P3", 150, 0, 110, 2, "plan", "cafetière, mixeur", "crédence, à gauche de l'égouttoir"),
+    ("P4", 55, 0, 225, 1, "autres", "hotte", "dans H1, au-dessus du groupe filtrant"),
+    ("P5", 15, 0, 30, 1, "four", "four (sous la plaque)", "dans B1, au fond, sous les paniers"),
+    ("P6", 15, 0, 60, 1, "plaque", "induction (sortie de câble 32 A)", "dans B1, au fond"),
+    ("P7", COL_DOS, JOUE_C2 + 30, 40, 1, "lv", "lave-vaisselle", "dans C1, derrière le tiroir bas"),
+    ("P8", COL_DOS, JOUE_C2 + 30, 205, 1, "plan", "micro-ondes", "dans C1, derrière la porte haute"),
+    ("P9", COL_DOS, COL_Y0 + 30, 210, 1, "frigo", "réfrigérateur", "dans C2, derrière la porte haute"),
+    ("P10", BANQ["x1"] - 17, Y_MUR_SUD, 175, 1, "autres", "enceinte audio",
+     "mur sud, derrière l'enceinte posée sur l'étagère"),
+    ("P11", 0, 224, 105, 2, "autres", "téléphone, ordinateur (dont 1 USB)", "mur ouest, au bout de la banquette, avec S3"),
+    ("P12", 333, 0, 110, 1, "autres", "recharge de l'aspirateur balai, raclette, gaufrier",
+     "cellier, mur nord, à côté des balais"),
+]
+# Circuits proposés au tableau : (clé, nom, protection, contenu)
+CIRCUITS = [
+    ("eclairage", "Éclairage", "10 A, 1,5 mm²", "L1, L2, L3, L4"),
+    ("plan", "Prises de la cuisine (circuit dédié)", "20 A, 2,5 mm², 6 socles au plus", "P1, P2, P3 au-dessus du plan (5 socles), P8 (6 socles)"),
+    ("autres", "Autres prises", "20 A, 2,5 mm²", "P4, P10, P11, P12 (5 socles)"),
+    ("plaque", "Plaque à induction", "32 A, 6 mm²", "P6"),
+    ("four", "Four", "20 A, 2,5 mm², circuit spécialisé", "P5"),
+    ("lv", "Lave-vaisselle", "20 A, 2,5 mm², circuit spécialisé", "P7"),
+    ("frigo", "Réfrigérateur", "20 A, 2,5 mm², circuit dédié (conseillé)", "P9"),
+    ("ballon", "Ballon d'eau chaude", "existant, inchangé", "ballon du cellier (heures creuses)"),
+]
+
 # ------------------------------------------------------------------ rendus 3D (3d/v12/rendu.py, Blender Cycles → cuisine-v12-3d/)
 # groupes de rendus (titre, [(vue, libellé du bouton)]) : libellé vide = vues distinctes, sans bouton de variante
 RENDUS_GROUPES = [
@@ -685,6 +743,24 @@ RENDUS_VERSION["iso_no_hermione"] = "V11.50"   # essai papier peint (rendu à pa
 
 # ------------------------------------------------------------------ historique (section Changements)
 CHANGEMENTS = [
+    ("V12.7", "09/10/2026",
+     "Cellier : interrupteur au lieu du détecteur de présence ; S2 (mur nord, à côté de la porte) passe à 2 touches, "
+     "LED du plan de travail en haut, lumière du cellier en bas (à voyant)."),
+    ("V12.6", "09/10/2026",
+     "Électricité vérifiée (NF C 15-100, sources en note) : une prise double compte pour 2 socles (5 socles au-dessus "
+     "du plan, il en faut 4) ; le circuit dédié de la cuisine (20 A, 6 socles au plus) reçoit P1 → P3 et le micro-ondes "
+     "(P8) ; boîtiers DCL pour le plafonnier et la suspension ; raison du détecteur au cellier expliquée."),
+    ("V12.5", "09/10/2026",
+     "Section « Électricité » : proposition de points lumineux (plafonnier, LED sous les hauts, suspension, cellier à "
+     "détecteur), de prises (crédence, électroménager dans les meubles, banquette, enceinte, cellier) et "
+     "d'interrupteurs (entrée, bout du plan, banquette), avec un plan, une élévation du mur nord, le tableau « quel "
+     "interrupteur allume quoi » et les circuits proposés."),
+    ("V12.4", "09/10/2026",
+     "Version imprimable en noir et blanc (bouton à droite du titre « Plan ») : A4 paysage à l'échelle 1:20, pièce "
+     "meublée, pièce vide et meubles à part à découper pour essayer d'autres positions, avec une chaise 42 × 42."),
+    ("V12.3", "09/10/2026",
+     "Capacité : dépasser le haut d'un repère n'est plus une erreur ; seul ce qui est en dessous passe en rouge (aussi "
+     "dans les versions figées)."),
     ("V12.2", "09/10/2026",
      "Capacité : cellules en vert dans le repère d'une cuisine de 8 m², en rouge en dehors, et ligne « Meubles bas + "
      "hauts » (le repère porte sur la somme). Rendus 3D groupés avec un titre par groupe ; une même vue en variantes "

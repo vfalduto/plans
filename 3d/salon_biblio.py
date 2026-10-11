@@ -1,10 +1,10 @@
-# Rendu Blender (Cycles) de la bibliothèque du mur ouest du salon, trois systèmes (salon-bibliotheque.html).
+# Rendu Blender (Cycles) de la bibliothèque du mur ouest du salon, quatre systèmes et la version fait maison (salon-bibliotheque.html).
 # La scène est construite directement dans Blender à partir des cotes du plan (variante B du salon) ;
 # matériaux, ciel, soleil et réglages Cycles viennent de 3d/rendu.py.
 # Lancement (sans interface) :
-#   /Applications/Blender.app/Contents/MacOS/Blender -b --python 3d/salon_biblio.py -- [échantillons] [V S U]
+#   /Applications/Blender.app/Contents/MacOS/Blender -b --python 3d/salon_biblio.py -- [échantillons] [V S U M F]
 #   ex. : ... -- 32 U   (aperçu rapide de l'USM Haller)
-# Produit dans 3d/sortie/ : salon-biblio-<V|S|U>.png et salon-biblio-<V|S|U>.blend.
+# Produit dans 3d/sortie/ : salon-biblio-<V|S|U|M|F>.png et salon-biblio-<V|S|U|M|F>.blend.
 # Coordonnées du plan : x vers l'est depuis le mur ouest, y vers le sud depuis le mur nord, z depuis le sol (cm).
 
 import math
@@ -19,7 +19,7 @@ import rendu as R  # noqa: E402
 
 args = sys.argv[sys.argv.index("--") + 1:] if "--" in sys.argv else []
 SAMPLES = next((int(a) for a in args if a.isdigit()), 256)
-SYSTEMES = [a for a in args if a in ("V", "S", "U")] or ["V", "S", "U"]
+SYSTEMES = [a for a in args if a in ("V", "S", "U", "M", "F")] or ["V", "S", "U", "M", "F"]
 R.SAMPLES = SAMPLES
 R.ESSENCE = "chene"                        # bois du salon : chêne miel (étagères String, table, chaises)
 R.LAMPES = ("suspension",)
@@ -39,6 +39,7 @@ R.MATS.update({
     "livre_g":    ("#B4553A", 0.8, {}),
 })
 LIVRES = ["livre_a", "livre_b", "livre_c", "livre_d", "livre_e", "livre_f", "livre_g", "livre_d", "livre_c"]
+TRANSPARENTS = {"table": 0.3, "chaise": 0.3}                   # alpha des meubles devant la bibliothèque
 LISSES = {"chrome", "globe", "string_fil", "noir"}             # cylindres et sphères : lissés, sans chanfrein
 
 L, CEIL = 258, 250
@@ -264,7 +265,60 @@ def usm():
     ]
 
 
-SYS = {"V": vitsoe, "S": string, "U": usm}
+def moebe():
+    # 3 travées de 85 (77 entre axes, débord de 4 aux extrémités) : 239 × 200 × 35
+    axes = [4, 81, 158, 235]
+    for yc in axes:
+        for x in (4, 31):
+            box("noir", f"montant_{yc}_{x}", x - 0.6, x + 0.6, yc - 0.6, yc + 0.6, 0, 200)
+            box("noir", f"raccord_{yc}_{x}", x - 0.8, x + 0.8, yc - 0.8, yc + 0.8, 114, 116)
+    zs = [4, 38, 72, 106, 140, 172, 198]
+    for j in range(3):
+        y0 = 0 if j == 0 else axes[j] + 0.6
+        y1 = 239 if j == 2 else axes[j + 1] - 0.6
+        for i, z in enumerate(zs):
+            box("etagere", f"etagere_{j}_{i}", 0, 35, y0, y1, z - 1.8, z)
+            for yc in (axes[j], axes[j + 1]):     # cales en chêne sous l'étagère, contre les montants
+                for x in (4, 31):
+                    box("etagere", f"cale_{j}_{i}_{yc}_{x}", x - 1.5, x + 1.5, yc - 1.5, yc + 1.5, z - 4.8, z - 1.8)
+            if i < len(zs) - 1:
+                hmax = min(30, zs[i + 1] - z - 3)
+                livres(f"livre_m{j}{i}", 5, 25, axes[j] + 2, axes[j + 1] - 2, z, hmax, 0.55 + 0.13 * ((i + j) % 3), 400 + 10 * j + i)
+    return [
+        dict(cadre=(4, 30, 200, 235, 198.3, 230), modele="potted_plant_04"),
+        dict(cadre=(2, 18, 240, 257, 0, 70), modele="ceramic_vase_04", ajuste="hauteur"),
+    ]
+
+
+def fait_maison():
+    # crémaillères doubles de 130 (76 → 206), consoles de 27, tablettes continues 258 × 30
+    rails = [8, 94, 172, 250]
+    for t in rails:
+        box("noir", f"cremaillere_{t}", 0, 1.3, t - 0.8, t + 0.8, 76, 206)
+    # 3 caissons 86 × 33 × 64 sur socle en retrait, deux portes à poussoir chacun, dessus continu à 74
+    box("porte_peinte", "socle", 1, 30, 2, 256, 0, 8)
+    for j in range(3):
+        y0, y1 = 86 * j, 86 * (j + 1)
+        ym = (y0 + y1) / 2
+        box("etagere", f"caisson_{j}", 1, 32.2, y0, y1, 8, 72)
+        box("etagere", f"porte_{j}_a", 32.2, 34, y0 + 0.15, ym - 0.15, 8.2, 71.8)
+        box("etagere", f"porte_{j}_b", 32.2, 34, ym + 0.15, y1 - 0.15, 8.2, 71.8)
+    box("etagere", "dessus", 0, 35, 0, L, 72, 74)
+    for i, z in enumerate([106, 138, 170, 200]):
+        box("etagere", f"tablette_{i}", 1.3, 31.3, 0, L, z - 2, z)
+        for t in rails:
+            box("noir", f"console_{i}_{t}", 1.3, 27, t - 0.6, t + 0.6, z - 4.5, z - 2)
+        if z < 200:
+            livres(f"livre_f{i}", 3, 26, 2, L - 2, z, 29, 0.6 + 0.1 * (i % 3), 500 + i)
+        else:
+            livres(f"livre_f{i}", 3, 26, 2, 150, z, 29, 0.6, 500 + i)
+    return [
+        dict(cadre=(4, 30, 112, 140, 74, 104), modele="ceramic_vase_04"),
+        dict(cadre=(4, 30, 200, 240, 200, 232), modele="potted_plant_04"),
+    ]
+
+
+SYS = {"V": vitsoe, "S": string, "U": usm, "M": moebe, "F": fait_maison}
 
 
 # ------------------------------------------------------------------ scène et rendu
@@ -277,6 +331,8 @@ def habiller(sc):
         key = o.name.split("__")[0]
         if key not in mats:
             mats[key] = R.make_material(key)
+            if key in TRANSPARENTS:            # table et chaises en transparence : la bibliothèque reste lisible
+                mats[key].node_tree.nodes["Principled BSDF"].inputs["Alpha"].default_value = TRANSPARENTS[key]
         o.data.materials.clear()
         o.data.materials.append(mats[key])
         opt = R.MATS.get(key, (None, None, {}))[2]

@@ -150,24 +150,9 @@ def vantail(v, ouvert=True):
     return "".join(o)
 
 
-def plan_svg():
-    o = [f"<defs>{batons_rompus()}</defs>"]
-    o.append(f'<polygon class="floorbg" points="{pts(M.SOL_PARQUET)}"/>')
-    o.append(f'<polygon fill="url(#br)" points="{pts(M.SOL_PARQUET)}"/>')
-    o.append(f'<polygon class="ciment" points="{pts(M.SOL_CIMENT)}"/>')
-    for b in M.CLOISONS_DEPOSEES:
-        o.append(rect(b.x0, b.y0, b.x1, b.y1, "depose"))
-    for nom, x, y in M.ZONES:
-        for k, ligne in enumerate(nom.split("\n")):
-            o.append(text(x, y + 8 * k, ligne, "lbls muted"))
-    o.append(f'<polygon class="wc" points="{pts(M.WC)}"/>')
-    o.append(text(438, 185, "WC", "lbl muted"))
-    # fond opaque sous le plan de travail (semi-transparent) : le sol ne doit pas apparaître là où aucun caisson
-    # ne le porte (fileur du mur ouest)
-    for b in M.MEUBLES:
-        if b.role == "plan":
-            o.append(rect(b.x0, b.y0, b.x1, b.y1, "ptbase"))
-    # volumes, du plus bas au plus haut (une seule emprise par pile de tablettes)
+def volumes_plan():
+    """Volumes du modèle vus de dessus, du plus bas au plus haut (une seule emprise par pile de tablettes)."""
+    o = []
     vues = set()
     for b in sorted(M.ENVELOPPE + M.MEUBLES, key=lambda b: b.z1):
         cls = PLAN_CLS[b.role]
@@ -186,6 +171,27 @@ def plan_svg():
                      f'A{f(r)} {f(r)} 0 0 1 {f(b.x0)} {f(b.y1 - r)}Z"/>')
         elif cls:
             o.append(rect(b.x0, b.y0, b.x1, b.y1, cls))
+    return o
+
+
+def plan_svg():
+    o = [f"<defs>{batons_rompus()}</defs>"]
+    o.append(f'<polygon class="floorbg" points="{pts(M.SOL_PARQUET)}"/>')
+    o.append(f'<polygon fill="url(#br)" points="{pts(M.SOL_PARQUET)}"/>')
+    o.append(f'<polygon class="ciment" points="{pts(M.SOL_CIMENT)}"/>')
+    for b in M.CLOISONS_DEPOSEES:
+        o.append(rect(b.x0, b.y0, b.x1, b.y1, "depose"))
+    for nom, x, y in M.ZONES:
+        for k, ligne in enumerate(nom.split("\n")):
+            o.append(text(x, y + 8 * k, ligne, "lbls muted"))
+    o.append(f'<polygon class="wc" points="{pts(M.WC)}"/>')
+    o.append(text(438, 185, "WC", "lbl muted"))
+    # fond opaque sous le plan de travail (semi-transparent) : le sol ne doit pas apparaître là où aucun caisson
+    # ne le porte (fileur du mur ouest)
+    for b in M.MEUBLES:
+        if b.role == "plan":
+            o.append(rect(b.x0, b.y0, b.x1, b.y1, "ptbase"))
+    o += volumes_plan()
     # fenêtre coulissante : deux vantaux dans l'épaisseur du mur
     fe = M.FENETRE
     o.append(f'<line class="glass" x1="-7" y1="{fe["y0"]}" x2="-7" y2="{(fe["y0"] + fe["y1"]) / 2 + 2}"/>')
@@ -526,24 +532,187 @@ def coupe_c():
                      transparents=("cellier_pliante", "linteau_cellier"))
 
 
+# ------------------------------------------------------------------ électricité
+# position du symbole sur le plan quand elle diffère du boîtier (boîtiers groupés, au fond des meubles)
+POS_PLAN = {"P5": (15, 24), "P6": (15, 42), "P4": (55, 14), "P7": (372, 96), "P8": (372, 128), "P9": (372, 156)}
+
+
+def minus(nom):
+    """Première lettre en minuscule, sauf sigle (« LED »)."""
+    return nom if nom[1:2].isupper() else nom[0].lower() + nom[1:]
+
+
+def pos_plan(rep, x, y):
+    """Symbole devant le mur (5 vers l'intérieur de la pièce), sauf position imposée."""
+    if rep in POS_PLAN:
+        return POS_PLAN[rep]
+    if y == 0:
+        return x, 5
+    if x == 0:
+        return 5, y
+    return x, y - 5   # mur sud ou fileur de l'entrée (face nord)
+
+
+def sym_lumiere(x, y, r=6):
+    d = r * 0.7
+    return (f'<circle class="ell" cx="{f(x)}" cy="{f(y)}" r="{f(r)}"/>'
+            f'<path class="ellx" d="M{f(x - d)} {f(y - d)}L{f(x + d)} {f(y + d)}M{f(x - d)} {f(y + d)}L{f(x + d)} {f(y - d)}"/>')
+
+
+def sym_prise(x, y, socles, cache=False, dedie=False):
+    cls = "elp" + (" elpd" if dedie else "") + (" elc" if cache else "")
+    if socles == 1:
+        return f'<circle class="{cls}" cx="{f(x)}" cy="{f(y)}" r="3"/>'
+    return f'<rect class="{cls}" x="{f(x - 5.5)}" y="{f(y - 3)}" width="11" height="6" rx="3"/>'
+
+
+def sym_inter(x, y):
+    return (f'<circle class="eli" cx="{f(x)}" cy="{f(y)}" r="3.2"/>'
+            f'<line class="elil" x1="{f(x + 2.2)}" y1="{f(y - 2.2)}" x2="{f(x + 6)}" y2="{f(y - 6)}"/>')
+
+
+def plan_elec_svg():
+    o = [f'<polygon class="floorbg" points="{pts(M.SOL_PARQUET)}"/>', f'<polygon class="ciment" points="{pts(M.SOL_CIMENT)}"/>',
+         f'<polygon class="wc" points="{pts(M.WC)}"/>', text(438, 185, "WC", "lbl muted"),
+         '<g class="fade">'] + volumes_plan() + ["</g>"]
+    for b in M.MEUBLES:
+        if b.role in ("caisson", "colonne") and b.etiq:
+            nom = b.etiq.split(" ")[0]
+            y = 74 if b.role == "caisson" else (b.y0 + b.y1) / 2 + 3
+            o.append(text((b.x0 + b.x1) / 2, y, nom, "lbls muted"))
+    lum = {r: (x, y) for r, _, x, y, _ in M.LUMIERES}
+    inter = {r: pos_plan(r, x, y) for r, _, x, y, _, _, _ in M.INTERRUPTEURS}
+    # liaisons de commande : de chaque interrupteur à la lumière qu'il commande
+    for r, _, _, _, _, _, touches in M.INTERRUPTEURS:
+        sx, sy = inter[r]
+        for _, l, _ in touches:
+            lx, ly = lum[l]
+            mx, my = (sx + lx) / 2, (sy + ly) / 2
+            nx, ny = -(ly - sy), lx - sx
+            n = math.hypot(nx, ny) or 1
+            k = 0.18 * math.dist((sx, sy), (lx, ly))
+            o.append(f'<path class="elk" d="M{f(sx)} {f(sy)}Q{f(mx + nx / n * k)} {f(my + ny / n * k)} {f(lx)} {f(ly)}"/>')
+    for r, nom, x, y, _ in M.LUMIERES:
+        o.append(sym_lumiere(x, y))
+        o.append(text(x + 8, y - 5, f"{r} {minus(nom)}", "lbls elt", "start"))
+    for r, _, x, y, z, _, _ in M.INTERRUPTEURS:
+        px, py = inter[r]
+        o.append(sym_inter(px, py))
+        ty = py + 10 if y == 0 else py - 6
+        o.append(text(px + (5 if x == 0 else 0), ty, f"{r} h{z}", "lbls elt", "start" if x == 0 else "middle"))
+    for r, x, y, z, n, c, _, ou in M.PRISES:
+        px, py = pos_plan(r, x, y)
+        o.append(sym_prise(px, py, n, ou.startswith("dans"), c not in ("plan", "autres")))
+        if x == 0:
+            o.append(text(px + 8, py + 2, f"{r} h{z}", "lblx elpt", "start"))
+        elif x >= M.COL_DOS - 1:
+            o.append(text(px - 5, py + 2, f"{r} h{z}", "lblx elpt", "end"))
+        elif y == M.Y_MUR_SUD:
+            o.append(text(px, py - 6, f"{r} h{z}", "lblx elpt"))
+        else:
+            o.append(text(px + 6, py + 2, f"{r} h{z}", "lblx elpt", "start"))
+    # légende
+    y = 290
+    leg = [(sym_lumiere(0, y, 4.5), "point lumineux"), (sym_inter(0, y), "interrupteur"),
+           (sym_prise(0, y, 1), "prise"), (sym_prise(0, y, 2), "prise double"),
+           (sym_prise(0, y, 1, dedie=True), "circuit spécialisé"), (sym_prise(0, y, 1, cache=True), "dans un meuble")]
+    for k, (s, t) in enumerate(leg):
+        x = k * 70
+        o.append(f'<g transform="translate({x} 0)">{s}</g>' + text(x + 10, y + 2, t, "lbls", "start"))
+    o.append(f'<path class="elk" d="M{6 * 70} {y}h18"/>' + text(6 * 70 + 22, y + 2, "commande", "lbls", "start"))
+    return (f'<svg viewBox="-30 -15 545 320" role="img" aria-label="Plan électrique : points lumineux, prises et '
+            f'interrupteurs">{"".join(o)}</svg>')
+
+
+def coupe_elec_nord():
+    """Élévation du mur nord (coupe A-A) avec les boîtiers posés sur ce mur ou au fond des meubles de la rangée."""
+    def boitiers(X):
+        o = []
+        for r, x, y, z, n, c, _, ou in M.PRISES:
+            if y != 0:
+                continue
+            w = 7 if n == 1 else 13
+            cls = "elpe" + (" elpd" if c not in ("plan", "autres") else "") + (" elc" if ou.startswith("dans") else "")
+            o.append(rect(X(x) - w / 2, -z - 3.5, X(x) + w / 2, -z + 3.5, cls))
+            o.append(text(X(x), -z - 6, r, "lblx elpt"))
+        for r, _, x, y, z, _, touches in M.INTERRUPTEURS:
+            if y == 0:
+                h = 7 * len(touches)
+                o.append(rect(X(x) - 3.5, -z - h / 2, X(x) + 3.5, -z + h / 2, "elie"))
+                o.append(text(X(x), -z - h / 2 - 2.5, r, "lblx elt"))
+        o.append(text(X(145), -M.HAUT_Z0 + 7, "L2 · LED", "lblx elt"))
+        return o
+
+    return coupe_svg(COUPE_A, "nord", -20, 494, [], [M.PT_Z1, 110, M.HAUT_Z0], -50, boitiers)
+
+
+def tables_elec():
+    lum = {r: n for r, n, *_ in M.LUMIERES}
+    lignes = ""
+    for r, nom, x, y, z, ou, touches in M.INTERRUPTEURS:
+        for k, (t, l, mode) in enumerate(touches):
+            tete = (f'<td rowspan="{len(touches)}" class="mono">{r}</td><td rowspan="{len(touches)}"><b>{escape(nom)}</b>'
+                    f' · h {z}<br>{escape(ou)}</td>') if k == 0 else ""
+            lignes += f"<tr>{tete}<td>{escape(t) or '—'}</td><td><b>{l}</b> {escape(minus(lum[l]))}</td><td>{escape(mode)}</td></tr>"
+    lignes += ('<tr><td class="mono">—</td><td><b>Hotte</b></td><td>—</td><td>lumière de la hotte</td>'
+               '<td>touches de la hotte</td></tr>')
+    t1 = ('<table class="orga"><thead><tr><th>Inter.</th><th>Où</th><th>Touche</th><th>Allume</th><th>Fonctionnement</th>'
+          f'</tr></thead><tbody>{lignes}</tbody></table>')
+    circ = {k: n for k, n, *_ in M.CIRCUITS}
+    pts_ = "".join(f'<tr><td class="mono">{r}</td><td>{escape(n)}</td><td>{escape(p)}</td><td class="num">plafond</td>'
+                   f'<td>{circ["eclairage"]}</td></tr>' for r, n, _, _, p in M.LUMIERES)
+    pts_ += "".join(f'<tr><td class="mono">{r}</td><td>{"prise double" if n == 2 else "prise"} · {escape(u)}</td>'
+                    f'<td>{escape(ou)}</td><td class="num">{z}</td><td>{circ[c]}</td></tr>'
+                    for r, x, y, z, n, c, u, ou in M.PRISES)
+    t2 = ('<table class="orga"><thead><tr><th>Repère</th><th>Quoi</th><th>Où</th><th class="num">h</th><th>Circuit</th>'
+          f'</tr></thead><tbody>{pts_}</tbody></table>')
+    t3 = ('<table class="orga"><thead><tr><th>Circuit</th><th>Protection, section</th><th>Points</th></tr></thead><tbody>'
+          + "".join(f"<tr><td>{escape(n)}</td><td>{escape(p)}</td><td>{escape(c)}</td></tr>" for _, n, p, c in M.CIRCUITS)
+          + "</tbody></table>")
+    return t1, t2, t3
+
+
+def section_elec():
+    t1, t2, t3 = tables_elec()
+    return f"""<h2>Électricité</h2>
+<div class="fig"><div class="scroll">{plan_elec_svg()}</div>
+<p class="cap">Proposition. Les traits tiretés relient chaque interrupteur à la lumière qu'il commande. Hauteurs (h) à l'axe du boîtier, depuis le sol fini. Les prises au fond des meubles (contour tireté) sont placées à côté de l'appareil, jamais derrière lui, pour pouvoir le débrancher en ouvrant le meuble voisin : four et plaque dans B1, lave-vaisselle sous sa niche, micro-ondes et frigo au-dessus de la leur. Au-dessus du plan de travail, rien au-dessus de la plaque ni de l'évier ; les prises de crédence sont à h 110, à mi-hauteur entre le plan (h {M.PT_Z1}) et les hauts (h {M.HAUT_Z0}).</p></div>
+
+<h3>Quel interrupteur allume quoi</h3>
+<div class="fig">{t1}
+<p class="cap">En entrant, la main droite trouve S1 : en haut le plafonnier, au milieu les LED du plan de travail, en bas la suspension. On cuisine : S2, au bout du plan à côté de l'évier, allume ou éteint les LED sans revenir à l'entrée ; sa touche du bas allume le cellier en passant la porte (le voyant signale une lumière oubliée derrière la porte fermée). On passe à table : la suspension se règle depuis la banquette (S3) ; S1 et S3 sont deux poussoirs d'un même variateur (appui court : allume ou éteint, appui long : varie). En sortant, tout s'éteint depuis S1, sauf le cellier (S2).</p></div>
+
+<h2>Élévation du mur nord · électricité</h2>
+<div class="fig"><div class="scroll">{coupe_elec_nord()}</div>
+<p class="cap">Même coupe que A-A. Boîtiers de la crédence (P1 → P3) et S2 à h 110 ; au fond des meubles, en tireté : P4 (hotte, dans H1), P5 (four) et P6 (sortie de câble de la plaque) dans B1 ; à droite, P12 dans le cellier.</p></div>
+
+<h3>Points</h3>
+<div class="fig">{t2}</div>
+
+<h3>Circuits proposés</h3>
+<div class="fig">{t3}
+<p class="cap">NF C 15-100 (vérifié sur des guides, pas sur le texte de la norme ; à confirmer par l'électricien) : au moins 6 socles dans une cuisine de plus de 4 m², sur un circuit dédié 20 A de 6 socles au plus, dont 4 au-dessus du plan de travail ; une prise double compte pour 2 socles (ici 5 au-dessus du plan, plus le micro-ondes). Pas de prise au-dessus du bac de l'évier ni de la plaque ; 60 cm entre une prise et l'évier sont conseillés (P3 est à 65 du bac). Prises de crédence à 8 cm au moins au-dessus du plan (ici 19), prise de hotte à 1,80 m au moins (P4 : 2,25), sortie 32 A à 12 cm au moins du sol (P6 : 60). Circuits spécialisés pour la plaque (32 A, 6 mm², différentiel type A), le four et le lave-vaisselle. Point lumineux de plafond sur boîtier DCL. Le plafonnier suppose une boîte au plafond : à prévoir avec la suspension (dalle béton : en saillie ou par une saignée). Vérifier aussi la puissance de l'abonnement (plaque, four et LV ensemble).</p></div>
+"""
+
+
 # ------------------------------------------------------------------ page
 CSS = """
 :root{
   --paper:#F7F8F6; --ink:#1D2A33; --muted:#5E6B73; --line:#C9D0D4; --wood:#B07A45;
   --water:#2F7FB5; --tri:#C8412C; --panel:#FFFFFF; --cab:#ECE6DA; --tall:#D8CFBD;
-  --tech:#E1E6E9; --glass:#CFE4F2; --cement:#C9CBCA; color-scheme:light;
+  --tech:#E1E6E9; --glass:#CFE4F2; --cement:#C9CBCA; --elec:#A86F00; --prise:#7B4FBF; color-scheme:light;
 }
 @media (prefers-color-scheme: dark){
   :root:not([data-theme="light"]){
     --paper:#141A1F; --ink:#E4EAED; --muted:#9AA7AE; --line:#34414A; --wood:#C9925A;
     --water:#5AA8DE; --tri:#E8664F; --panel:#1B2329; --cab:#2A3338; --tall:#394449;
-    --tech:#26303A; --glass:#1F3A4E; --cement:#3A3E40; color-scheme:dark;
+    --tech:#26303A; --glass:#1F3A4E; --cement:#3A3E40; --elec:#E8B84A; --prise:#B597F0; color-scheme:dark;
   }
 }
 :root[data-theme="dark"]{
   --paper:#141A1F; --ink:#E4EAED; --muted:#9AA7AE; --line:#34414A; --wood:#C9925A;
   --water:#5AA8DE; --tri:#E8664F; --panel:#1B2329; --cab:#2A3338; --tall:#394449;
-  --tech:#26303A; --glass:#1F3A4E; --cement:#3A3E40; color-scheme:dark;
+  --tech:#26303A; --glass:#1F3A4E; --cement:#3A3E40; --elec:#E8B84A; --prise:#B597F0; color-scheme:dark;
 }
 *{box-sizing:border-box}
 html,body{margin:0}
@@ -665,6 +834,16 @@ tfoot td{font-weight:700}
 .pbar button{font:inherit;color:var(--ink);background:var(--panel);border:1px solid var(--line);border-radius:6px;padding:4px 10px;cursor:pointer}
 .pbar button[aria-pressed="true"]{background:var(--ink);color:var(--paper);border-color:var(--ink)}
 .vbar button[aria-pressed="true"]{background:var(--ink);color:var(--paper);border-color:var(--ink)}
+.h2b{display:flex;flex-wrap:wrap;align-items:center;gap:12px}
+.impr{font:12px "JetBrains Mono",ui-monospace,monospace;font-weight:400;color:var(--ink);background:var(--panel);border:1px solid var(--line);border-radius:6px;padding:4px 10px;text-decoration:none}
+.impr:hover{border-color:var(--ink)}
+.fade{opacity:.4}
+.ell{fill:#F2C94C;fill-opacity:.45;stroke:var(--elec);stroke-width:1}.ellx{stroke:var(--elec);stroke-width:1}
+.eli{fill:var(--panel);stroke:var(--elec);stroke-width:1.1}.elil{stroke:var(--elec);stroke-width:1.1}
+.elk{fill:none;stroke:var(--elec);stroke-width:.8;stroke-dasharray:3 2}
+.elp,.elpe{fill:var(--panel);stroke:var(--prise);stroke-width:1.1}.elpd{fill:var(--prise)}.elc{stroke-dasharray:2 1.2}
+.elie{fill:var(--panel);stroke:var(--elec);stroke-width:1.1}
+.elt{fill:var(--elec);font-weight:700}.elpt{fill:var(--prise);font-weight:600}
 @media (max-width:480px){ body{font-size:15px} }
 """
 
@@ -739,11 +918,11 @@ def nombre(t):
 
 
 def note(t, lo, hi=None):
-    """Classe de cellule : « ok » dans le repère, « ko » hors repère (hi None : minimum seul)."""
+    """Classe de cellule : « ok » à partir du bas du repère, « ko » en dessous (dépasser le haut n'est pas une erreur)."""
     x = nombre(t)
     if x is None:
         return ""
-    return ' class="ok"' if lo <= x and (hi is None or x <= hi) else ' class="ko"'
+    return ' class="ok"' if lo <= x else ' class="ko"'
 
 
 def section_capacite(version, rows, details):
@@ -770,9 +949,9 @@ def section_capacite(version, rows, details):
                   f"<td{c(p9)}>{p9}</td><td>{rp}</td></tr>")
     p, (i0, i1, n0, n1) = M.CAPACITE["p9a"], r["implantation"]
 
-    def impl(t):   # longueur 2,50 → 3 m et 6 ou 7 meubles
+    def impl(t):   # au moins 2,50 m et 6 meubles (au-delà du repère : pas une erreur)
         n = re.search(r"(\d+) meubles", t)
-        ok = i0 / 100 <= nombre(t) <= i1 / 100 and n and n0 <= int(n.group(1)) <= n1
+        ok = i0 / 100 <= nombre(t) and n and n0 <= int(n.group(1))
         return ' class="ok"' if ok else ' class="ko"'
     p9_impl = "2,49 m, 7 meubles + colonne LV"
     corps += "".join(f'<tr><td>{nom}</td><td></td><td colspan="2"{cx}>{x}</td><td{cy}>{y}</td><td>{z}</td></tr>'
@@ -786,7 +965,7 @@ def section_capacite(version, rows, details):
     return f"""<h2>Capacité : {av} → {version} et proposition 9 A</h2>
 <div class="fig"><div class="scroll"><table class="orga capa"><thead><tr><th>Mesure</th><th>{av} (avant)</th><th>{version}</th><th>Écart</th>
 <th>Proposition 9 A</th><th>Repère cuisine 8 m²</th></tr></thead><tbody>{corps}</tbody></table></div>
-<p class="cap">Mesurée comme le font les cuisinistes : mètres linéaires de meubles, nombre de meubles, tiroirs, plan de travail utile (hors évier et plaque) et implantation, sur la version figée {av}, la version affichée et la proposition 9 A, avec les repères d'une cuisine d'environ 8 m² (la pièce fait 3,25 × 2,52 = 8,2 m² hors cellier). <b>En vert</b> : dans le repère ; <b>en rouge</b> : en dehors (pour le volume, le repère est un minimum : au-delà de 2,5 m³, la cuisine est plus qu'optimisée). L'écart se lit par rapport à {av}. <b>Volume</b> (repère moins parlant, gardé pour comparer) : largeur × profondeur du caisson × hauteur des façades de rangement, électroménager, socles et sous-évier exclus ; cellier : largeur utile × profondeur × hauteur des rayonnages, de la première tablette au haut du rayonnage.</p></div>
+<p class="cap">Mesurée comme le font les cuisinistes : mètres linéaires de meubles, nombre de meubles, tiroirs, plan de travail utile (hors évier et plaque) et implantation, sur la version figée {av}, la version affichée et la proposition 9 A, avec les repères d'une cuisine d'environ 8 m² (la pièce fait 3,25 × 2,52 = 8,2 m² hors cellier). <b>En vert</b> : dans le repère ; <b>en rouge</b> : en dessous ; dépasser le haut du repère n'est pas une erreur. L'écart se lit par rapport à {av}. <b>Volume</b> (repère moins parlant, gardé pour comparer) : largeur × profondeur du caisson × hauteur des façades de rangement, électroménager, socles et sous-évier exclus ; cellier : largeur utile × profondeur × hauteur des rayonnages, de la première tablette au haut du rayonnage.</p></div>
 """
 
 
@@ -878,7 +1057,7 @@ def contenu():
 <h1>Plan de la cuisine V12</h1>
 <p class="pitch">Nouveau départ depuis la pièce vide. Le plan et la coupe sont générés depuis le modèle 3D : une seule source, aucune cote reportée à la main.</p>
 
-<h2>Plan</h2>
+<h2 class="h2b">Plan <a class="impr" href="cuisine-v12-imprimable.html">Version imprimable</a></h2>
 <div class="fig"><div class="tog"><span>Portes</span><button type="button" data-vt="entree" aria-pressed="false" data-on="ouverte" data-off="fermée">entrée : fermée</button>{"".join(f'<button type="button" data-vt="{k}" aria-pressed="true" data-on="ouverte" data-off="fermée"' + (' data-etats="ouvert|mi|ferme" data-libs="ouverte|mi-ouverte|fermée" data-i="1"' if M.PLIANTE else '') + '>cellier : ' + ('mi-ouverte' if M.PLIANTE else 'ouverte') + '</button>' for k in (["cellier"] if M.PLIANTE else range(len(M.CELLIER_VANTAUX))))}</div><div class="scroll">{plan_svg()}</div>
 <p class="cap">Échelle : 1 unité = 1 cm. Pièce vide : chambre et ancien cellier ouverts, sans cloison. Restent la fenêtre coulissante du mur ouest (y 58 → 200), la porte d'entrée (baie x 228 → 306), le décroché de l'angle sud-est, la chute (sous le ballon), le ballon et le WC. <b>Sols</b> : parquet chêne en bâtons rompus dans l'ancienne chambre (x 0 → 325), gris ciment dans l'ancien cellier et l'ancien placard (à partir de x 325) ; les cloisons déposées du relevé d'origine sont en tireté (chambre / cellier x 325 → 335, cellier / placard y 100 → 110). <b>Mur nord</b> : {len(caissons)} meubles bas de {' + '.join(f(w) for w in M.LARGEURS_BAS)} (x {f(x0)} → {f(x1)}), à {f(M.ECART_OUEST)} du mur ouest ; caisson P{M.P_CAISSON} + façade {M.FACADE}, profondeur {M.P_CAISSON + M.FACADE}, sous un plan de travail de 4 (P62, débord de 2). <b>Induction</b> 60 classique, four encastré dessous et hotte intégrée dans H1 au-dessus, sur B{M.B_PLAQUE} (x {f(M.sur_bas(M.B_PLAQUE)[0])} → {f(M.sur_bas(M.B_PLAQUE)[1])}) ; <b>évier</b> inox 1 bac 56 × 50 (bac 40 × 40) sur B{M.B_EVIER} (x {f(M.sur_bas(M.B_EVIER)[0])} → {f(M.sur_bas(M.B_EVIER)[1])}), mitigeur derrière le bac, égouttoir à gauche au-dessus de B4 ; la rangée s'arrête à l'évier. <b>Mur est</b> : colonne C3 (maxi tiroir coulissant, y {f(M.JOUE_C2)} → {f(M.COL_Y0)}), colonnes C2 (frigo, y {f(M.COL_Y0)} → {f(M.COL_Y0 + 60)}) et C1 (four, micro-ondes au-dessus, y {f(M.COL_Y0 + 60)} → {f(M.COL_Y1)}) de 60, P60, contre le mur du WC (x {f(M.X_MUR_EST)}), du décroché vers le nord, façades vers l'ouest (x {f(M.COL_X)}). Le mur sud est libre entre la banquette et le caisson du galandage. <b>Porte d'entrée</b> : à galandage, vantail {f(M.ENTREE["vantail"])} × {M.ENTREE["h"]} (trait plein, fermé) ; ouverte, elle rentre vers l'ouest dans un caisson de galandage (ocre, x {f(M.ENTREE["poche"][0])} → {f(M.ENTREE["poche"][1])}) logé dans un doublage de 10 contre le mur sud (y 242 → 252), avec un montant de 4 à l'est de la baie. Le passage reste de {f(M.ENTREE["x1"] - M.ENTREE["x0"])} ; rien ne bat dans la cuisine. Face cuisine du caisson : <b>tableau noir</b> (peinture ardoise, h 120 → 200) et <b>zone aimantée</b> en dessous (h 70 → 118), sur 81 de large (coupe B-B). <b>Équipements</b> : poubelles de tri sous l'évier (B{M.B_EVIER}), four sous la plaque (B{M.B_PLAQUE}), lave-vaisselle 60 tout intégrable en hauteur dans C1. <b>Triangle d'activité</b> (rouge ; centres de la plaque et de l'évier, milieu de la façade du frigo) : {tri}, total {f(round(sum(cotes_tri)))} cm. <b>Passage</b> (cote oblique) : {math.dist((x1, 62), (M.COL_X, M.JOUE_C2)):.0f} du coin du plan de travail au bout de la rangée (x {f(x1)}, y 62) au coin nord-ouest du frigo (joue, y {M.JOUE_C2}), devant la porte du cellier. <b>Réseaux</b> (bleu ; pose type IKEA METOD, sans vide technique : 1 cm de jeu derrière les caissons). Le <b>LV</b>, en hauteur dans C1, est raccordé par le cellier sans le traverser : alimentation depuis la nourrice le long du mur est puis du mur nord du WC, sous le rayonnage sud, jusqu'au dos de C1 ; vidange pompée par le LV le long du même mur, directement dans la chute. À l'est de l'évier, les tuyaux passent dans un <b>coffre bas</b> couleur des murs contre le mur nord (x {f(M.COFFRE_RESEAUX[0])} → {f(M.COFFRE_RESEAUX[1])}, P{M.COFFRE_RESEAUX[3]}, h {M.COFFRE_RESEAUX[5]}, dessus utilisable en tablette), puis dans le retour de cloison au nord de la porte du cellier : tout <b>longe les murs</b>, en partie basse. Alimentation EF/EC en trait plein, à 3 des murs, depuis la <b>nourrice</b> (petit point, sous le ballon) : le long du retour sud de l'alcôve (y 44), de sa face ouest (x 434), puis du mur nord jusqu'à l'évier ; une seconde ligne va au LV (C1) le long du mur nord du WC. Dans la niche du cellier, tout reste dans la zone technique des {M.ZONE_TECH} premiers cm (la chute est basse, dernier étage) : l'alimentation y passe à h 20 et remonte dans l'angle, l'évacuation descend à h 25 sous la première tablette du rayonnage nord ; un coffre technique (h 0 → {M.ZONE_TECH}) couvre l'angle. Évacuation en tireté depuis le siphon de l'évier (axe x {f(M.SIPHON[0])}), à 4 du mur nord dans la cuisine, puis à 12 des murs pour passer au-delà de la nourrice : le long du mur nord, de l'alcôve, du mur est (x 484) puis du mur nord du WC jusqu'à la <b>chute</b> (cercle contre le mur du WC, sous le ballon : la colonne d'eaux usées existante, x à confirmer). Contre l'alcôve, ils passent sous la première tablette du rayonnage du mur nord ; sous le ballon (h 90), ils passent dessous ; longueur ≈ {f(M.EVAC_LONGUEUR)} : de h {M.RESEAUX[3][3]} sous le siphon à h {M.RESEAUX[4][3]} à la chute, soit {(M.RESEAUX[3][3] - M.RESEAUX[4][3]) / M.EVAC_LONGUEUR * 100:.1f} cm/m de pente moyenne (hauteur d'arrivée sur la chute à confirmer). Les réseaux traversent la cloison du cellier. <b>Cellier</b> : cloison de 7 (x 320 → 327), à {f(320 - x1)} de B{M.N_BAS}. {texte_cellier()} <b>Coin repas</b> : banquette contre le mur sud, du mur ouest au retour du doublage de l'entrée (x 0 → {f(M.BANQ["x1"])}, 50 de profondeur : assise 45 à h 45 avec coffre, dossier 5 à h 85) ; table type Véra {M.TABLE["cote"]} × {M.TABLE["cote"]} aux angles arrondis (rose poudré, chant noir), sur un pied central à embase, devant, à 10 de l'assise (x {f(M.TABLE["x0"])} → {f(M.TABLE["x1"])}, y {f(M.TABLE["y0"])} → {f(M.TABLE["y1"])}) ; pas de chaise. Pan de mur derrière la banquette peint en vert profond (voir Matériaux). La banquette s'arrête à y {f(M.BANQ["y0"])}, au sud de la fenêtre (y 200). <b>Suspension</b> (tireté jaune) : point lumineux au plafond centré sur la table, abat-jour Ø {M.SUSPENSION["d"]}, bas à h {M.SUSPENSION["z0"]}, soit {M.SUSPENSION["z0"] - 75} au-dessus du plateau (coupe B-B). <b>Places</b> : {M.PLACES_BANQUETTE} adultes à l'aise sur la banquette ({f(M.BANQ["x1"] - M.BANQ["x0"])} de long, {M.LARGEUR_PLACE} par personne), 3 en se serrant ; un tabouret pliant côté nord en appoint. <b>Sous la banquette</b> : deux tiroirs (façades h 6 → 40), de part et d'autre du pied de la table ; ils passent au-dessus de l'embase (tireté : tiroirs sortis de 35). <b>Au-dessus</b> (tireté) : étagère P25 contre le mur sud, sur toute la longueur de la banquette, dessus à h {f(M.ETAGERE_BANQ["z1"])}, avec l'enceinte audio (22 × 18 × 30) à l'est et la plante à l'ouest (coupe B-B). <b>Ouvertures</b> : porte du LV abattue (y 60 → 132), porte du four abattue (x {f(M.COL_X - 60)} → {f(M.COL_X)}, y {f(M.COL_Y1 - 60)} → {f(M.COL_Y1)}), porte du frigo à 90°, charnières au sud : elle se rabat vers le sud et on accède au frigo par le nord, côté évier. Elle touche la porte du four abattue à y {f(M.COL_Y0 + 60)} : on ne les ouvre pas en même temps. <b>Meubles hauts</b> (tireté) : {len(hauts)} de {' + '.join(f(w) for w in M.LARGEURS_HAUTS)}, x {f(hauts[0].x0)} → {f(hauts[-1].x1)}, joints au droit de ceux des bas ; à leur gauche, étagères ouvertes jusqu'au mur ouest ; caisson P{M.P_HAUT} + façade {M.FACADE}.</p></div>
 
@@ -894,6 +1073,7 @@ def contenu():
 <div class="fig transp"><div class="tog"><span>Porte du cellier</span><button type="button" class="trbtn" aria-pressed="true">en transparence</button></div><div class="scroll">{coupe_c()}</div>
 <p class="cap">Coupe à x {COUPE_C}, regard vers l'est : le nord est à gauche. Au fond, la cloison du cellier (x 320 → 327), et dans son prolongement la porte du cellier fermée ({M.PORTE_TITRE}), dessinée en transparence (tireté) avec son dormant et son linteau (bouton au-dessus de la coupe : transparente ou normale), pour montrer le fond du cellier : le ballon. Puis, contre le mur du WC (x {f(M.X_MUR_EST)}), les colonnes P{M.P_CAISSON + M.FACADE}, socle {M.SOCLE}, dessus à {M.COL_Z1} comme les meubles hauts, fileur de {M.H - M.COL_Z1} jusqu'au plafond : <b>C2</b> réfrigérateur intégrable (niche 178, porte h 15 → 193), porte de rangement au-dessus ; <b>C1</b> un tiroir (h 15 → {M.LV_Z0}), lave-vaisselle intégré en hauteur (h {M.LV_Z0} → {M.MO_Z0}), micro-ondes encastrable (niche 38, h {M.MO_Z0} → {M.MO_Z1}), porte de rangement au-dessus ; à droite, le décroché et le mur sud coupé.</p></div>
 
+{section_elec()}
 {galerie_rendus()}<h2>Matériaux</h2>
 <div class="fig">{table_materiaux()}
 <p class="cap">Teintes indicatives à l'écran : Canopée et chêne miel d'après le rendu 3D (laque mate Plum Living), parquet d'après la photo de référence. À valider sur échantillons.</p></div>
@@ -1053,3 +1233,5 @@ if __name__ == "__main__":
     with open(OUT, "w", encoding="utf-8") as fh:
         fh.write(page(lire_figees()))
     print(OUT)
+    import imprimable
+    imprimable.ecrire()

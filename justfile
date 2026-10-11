@@ -38,23 +38,29 @@ rendu-3d echantillons="256":
     mkdir -p cuisine-3d
     for f in 3d/sortie/rendu-*.png; do sips -s format jpeg -s formatOptions 85 "$f" --out "cuisine-3d/$(basename "$f" .png).jpg" >/dev/null; done
 
-# Rendus 3D de la bibliothèque du salon (3 systèmes) → salon-3d/
+# Rendus 3D de la bibliothèque du salon (4 systèmes) → salon-3d/
 rendu-salon echantillons="256":
     /Applications/Blender.app/Contents/MacOS/Blender -b --python 3d/salon_biblio.py -- {{echantillons}}
     mkdir -p salon-3d
     for f in 3d/sortie/salon-biblio-*.png; do sips -s format jpeg -s formatOptions 85 "$f" --out "salon-3d/$(basename "$f" .png).jpg" >/dev/null; done
 
-# Cuisine V12 : régénère cuisine-v12.html et le modèle FreeCAD depuis 3d/v12/modele.py (source unique)
+# Cuisine V12 : régénère cuisine-v12.html, la version imprimable et le modèle FreeCAD depuis 3d/v12/modele.py (source unique)
 v12:
     python3 3d/v12/plan.py
     /Applications/FreeCAD.app/Contents/Resources/bin/freecadcmd 3d/v12/cad.py
 
 # Cuisine V12 : rendus 3D (Blender) depuis le modèle FreeCAD → cuisine-v12-3d/*.jpg, puis regénère la page
-v12-rendu echantillons="256":
-    /Applications/Blender.app/Contents/MacOS/Blender -b --python 3d/v12/rendu.py -- {{echantillons}}
+# (toutes les vues par défaut, ou seulement celles données : just v12-rendu 64 entree iso ; 64 échantillons ≈ 256 une fois débruité)
+v12-rendu echantillons="64" *vues:
+    /Applications/Blender.app/Contents/MacOS/Blender -b --python 3d/v12/rendu.py -- {{echantillons}} {{vues}}
     mkdir -p cuisine-v12-3d
-    for v in iso iso_no entree fenetre banquette cellier dos_cellier iso_nuit; do sips -s format jpeg -s formatOptions 85 "3d/sortie/v12-rendu-$v.png" --out "cuisine-v12-3d/$v.jpg" >/dev/null; done
+    for v in {{ if vues == "" { "iso iso_no entree fenetre banquette cellier dos_cellier iso_nuit" } else { vues } }}; do f="3d/sortie/v12-rendu-$v.png"; [ -f "$f" ] && sips -s format jpeg -s formatOptions 85 "$f" --out "cuisine-v12-3d/$v.jpg" >/dev/null || true; done
     python3 3d/v12/plan.py
+
+# Cuisine V12 : aperçu rapide (16 échantillons, demi-résolution) → 3d/sortie/v12-apercu-<vue>.png, page non touchée
+v12-apercu *vues:
+    /Applications/Blender.app/Contents/MacOS/Blender -b --python 3d/v12/rendu.py -- 16 apercu {{vues}}
+    @ls 3d/sortie/v12-apercu-*.png
 
 # Fige la version courante de la cuisine V12 (bouton de comparaison + archive/cuisine-v12.x.html)
 v12-figer:
