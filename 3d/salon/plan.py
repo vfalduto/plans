@@ -21,6 +21,11 @@ CLE = "salon-v4"          # préfixe des préférences mémorisées (localStorag
 COUPE_A = 70     # x, regard vers l'ouest : enfilade et étagères
 COUPE_B = 480    # x, regard vers l'est : desserte et baie
 COUPE_C = M.TABLE["cy"]  # y, regard vers le nord : à travers la table
+COUPE_D = 300    # y, regard vers le sud : meuble bas, écran, clim
+
+
+def virg(v, n=1):
+    return f"{v:.{n}f}".replace(".", ",")
 
 
 def f(v):
@@ -67,13 +72,16 @@ def degage(a, b, label=None, dt=(0, 0)):
 
 
 def cfg_cls(b):
-    return f" c{b.config}" if b.config else ""
+    return (f" c{b.config}" if b.config else "") + (" dz" if b.deco else "") + (f" a{b.assise}" if b.assise else "")
 
 
 # ------------------------------------------------------------------ plan vu de dessus
 PLAN_CLS = {"mur": "w", "linteau": None, "cadre": "cadre", "baie": "win", "caisson": "cab", "facade": "fac",
             "pied": None, "etagere": "upper", "canape": "sofa", "table": "tbl", "chaise": None, "desserte": "cab",
-            "vinyles": None, "platine": "dark", "lampe": "lampe"}
+            "vinyles": None, "platine": "dark", "lampe": "lampe", "volet": "dark", "table_basse": "tbl",
+            "chilienne": "chil", "tapis": "tapis", "lampe_pied": None, "plante": "plante", "pot": None,
+            "cadre_mur": "cadrem", "livres": None, "fauteuil": "dyv", "projection": "proj", "projecteur": "projr",
+            "clim": "clim", "papier_peint": None, "coussin": "coussin"}
 
 
 def chaise_plan(x, y, a, cls):
@@ -95,6 +103,10 @@ def volumes_plan():
             o.append(f'<circle class="{cls}" cx="{f(b.cx)}" cy="{f(b.cy)}" r="{f(b.r)}"/>')
         elif b.role == "table":
             o.append(rect(b.x0, b.y0, b.x1, b.y1, cls, M.TABLE["r"]))
+        elif b.role == "fauteuil":
+            o.append(rect(b.x0, b.y0, b.x1, b.y1, cls, 14))
+        elif b.role == "table_basse":
+            o.append(rect(b.x0, b.y0, b.x1, b.y1, cls, min(b.x1 - b.x0, b.y1 - b.y0) / 2))
         else:
             o.append(rect(b.x0, b.y0, b.x1, b.y1, cls))
     return o
@@ -116,8 +128,14 @@ def plan_svg():
     o.append(text(272, M.P + 38, "Chambre", "lbl muted"))
     sol = [(0, 0), (M.DECROCHE["x0"], 0), (M.DECROCHE["x0"], M.DECROCHE["y"]), (M.L, M.DECROCHE["y"]),
            (M.L, M.P), (0, M.P)]
+    ca = M.CARRELAGE["taille"]
+    o.append(f'<defs><pattern id="carreaux" width="{ca}" height="{ca}" patternUnits="userSpaceOnUse">'
+             f'<rect class="carreau" width="{ca}" height="{ca}"/></pattern></defs>')
     o.append(f'<polygon class="floorbg" points="{" ".join(f"{f(x)},{f(y)}" for x, y in sol)}"/>')
+    o.append(f'<polygon fill="url(#carreaux)" points="{" ".join(f"{f(x)},{f(y)}" for x, y in sol)}"/>')
     o += volumes_plan()
+    # papier peint : bande sur la face du mur derrière la desserte
+    o.append(rect(M.DECROCHE["x0"], M.DECROCHE["y"] - 2, M.L, M.DECROCHE["y"], "pp"))
     # baie coulissante : deux vantaux dans l'épaisseur du mur
     o.append(f'<line class="glass" x1="548" y1="{ba["y0"]}" x2="548" y2="{ba["milieu"] + 3}"/>')
     o.append(f'<line class="glass" x1="552" y1="{ba["milieu"] - 3}" x2="552" y2="{ba["y1"]}"/>')
@@ -148,13 +166,34 @@ def plan_svg():
     for k, (y0, y1) in enumerate(e["modules"]):
         o.append(text(9, (y0 + y1) / 2, f"M{k + 1}", "lblx muted", extra=f' transform="rotate(-90 9 {f((y0 + y1) / 2)})"'))
     xc = (c["x0"] + c["x1"]) / 2
-    o.append(text(xc, 52, f'③ Canapé {c["l"]} × {c["p"]}', "lbls"))
-    o.append(text((d["x0"] + d["x1"]) / 2 - 2, d["y1"] + 9, "④ Desserte", "lbls"))
-    o.append(text((d["x0"] + d["x1"]) / 2 - 2, d["y1"] + 16, "platine vinyle", "lblx"))
-    o.append(f'<g class="c4">{text(t["cx"], t["cy"] - 2, "⑤ Table Ø " + f(t["d"]), "lbls")}'
-             f'{text(t["cx"], t["cy"] + 6, "4 couverts", "lblx")}</g>')
-    o.append(f'<g class="c12">{text(t["cx"], t["cy"] - 2, "⑤ Table " + f(t["long"]) + " × " + f(t["d"]), "lbls")}'
-             f'{text(t["cx"], t["cy"] + 6, str(t["allonges"]) + " allonges de " + f(t["allonge"]) + " · 12 couverts", "lblx")}</g>')
+    o.append(text(xc, 52, f'③ SÖDERHAMN {c["l"]} × {c["p"]}', "lbls"))
+    yd = (d["y0"] + d["y1"]) / 2
+    xd = (d["x0"] + d["x1"]) / 2
+    o.append(text(xd, d["y1"] + 9, "④ Desserte · platine vinyle", "lbls"))
+    rx, ry = t["ronde"]
+    o.append(f'<g class="cf">{text(rx, ry - 10, "⑤ Table ronde Ø " + f(t["d"]), "lbls")}'
+             f'{text(rx, ry - 3, "4 couverts", "lblx")}</g>')
+    o.append(f'<g class="co">{text(t["cx"], t["cy"] - 14, "⑤ Table " + f(t["ouvert"]) + " × " + f(t["d"]), "lbls")}'
+             f'{text(t["cx"], t["cy"] - 7, "12 couverts · " + str(t["allonges"]) + " allonges de " + f(t["allonge"]), "lblx")}</g>')
+    tb, ch, dy, k = M.TABLE_BASSE, M.CHILIENNE, M.DYVLINGE, M.CONSOLE
+    for cfg, (x0, y0, x1, y1) in tb["pos"].items():
+        xm, ym = (x0 + x1) / 2, (y0 + y1) / 2
+        rot = f' transform="rotate(-90 {f(xm)} {f(ym)})"' if y1 - y0 > x1 - x0 else ""
+        o.append(f'<g class="c{cfg}">{text(xm, ym + 2, "⑥ Table basse", "lblx", extra=rot)}</g>')
+    for cfg, (x0, y0) in dy["pos"].items():
+        o.append(f'<g class="c{cfg} adyv">{text(x0 + dy["p"] / 2 - 8, y0 + dy["l"] / 2 - 1, "⑦ DYVLINGE", "lblx")}'
+                 f'{text(x0 + dy["p"] / 2 - 8, y0 + dy["l"] / 2 + 6, "pivotant", "lblx muted")}</g>')
+    o.append(f'<g class="cf achil">{text(ch["x0"] + 50, ch["y0"] + ch["l"] / 2 + 2, "⑦ Chilienne", "lblx")}</g>')
+    o.append(f'<g class="co achil">{text(60 + ch["l"] / 2, M.P - 18, "⑦ chilienne pliée", "lblx")}</g>')
+    o.append(text((k["x0"] + k["x1"]) / 2, k["y0"] + 14, f'⑧ Meuble bas {k["l"]} × {k["p"]}', "lbls"))
+    o.append(text((k["x0"] + k["x1"]) / 2, k["y0"] + 22, f'écran au-dessus : image {f(M.ECRAN["l"])} × {f(M.ECRAN["h"])}', "lblx"))
+    o.append(text((M.CLIM["x0"] + M.CLIM["x1"]) / 2, M.P - M.CLIM["p"] + 13, "clim (h 205)", "lblx"))
+    pj = M.PROJECTEUR
+    o.append(text(pj["cx"], pj["cy"] + pj["p"] / 2 + 7, "vidéoprojecteur (plafond)", "lblx"))
+    # décoration (bouton Déco)
+    dz = [text(M.TAPIS["x0"] + 6, M.TAPIS["y1"] - 4, "tapis", "lblx muted", "start"),
+          text(M.LAMPADAIRE["cx"], M.LAMPADAIRE["cy"] + 2, "lampadaire", "lblx")]
+    o.append(f'<g class="dz">{"".join(dz)}</g>')
     # cotes
     o.append(cote_h(0, M.L, -30))
     o.append(cote_v(0, M.P, -22))
@@ -162,19 +201,21 @@ def plan_svg():
     o.append(cote_h(e["p"], c["x0"], -18, f'{M.ALLEE_ENFILADE}'))
     o.append(cote_h(0, e["p"], -18, f'{e["p"]}'))
     o.append(cote_v(e["y0"], e["y1"], -14 + 0, f'{f(e["y1"] - e["y0"])} utiles'))
-    o.append(cote_v(d["y0"], d["y1"], d["x0"] - 8, f'{d["y1"] - d["y0"]}'))
+    o.append(cote_h(d["x0"], d["x1"], -18, f'{d["x1"] - d["x0"]}'))
     # dégagements
-    xr = t["cx"] + 22
-    o.append(f'<g class="c4">'
-             + degage((xr, c["p"]), (xr, t["cy"] - t["r"]), dt=(5, 1))
-             + degage((xr, t["cy"] + t["r"]), (xr, M.P), dt=(5, 1))
+    lo = t["ouvert"]
+    xo, xe = t["cx"] - lo / 2, t["cx"] + lo / 2
+    xb, yb, _, yb1 = tb["pos"]["f"]
+    o.append('<g class="cf">'
+             + degage((xb + 15, c["p"]), (xb + 15, yb), dt=(6, 2))
+             + degage((xb + 15, yb1), (xb + 15, k["y0"]), dt=(6, 2))
              + "</g>")
-    xo, xe = t["cx"] - t["r"] - t["s"], t["cx"] + t["r"] + t["s"]
-    o.append(f'<g class="c12">'
+    xr = t["cx"] - 35
+    o.append('<g class="co">'
+             + degage((xr, c["p"]), (xr, t["cy"] - t["r"]), dt=(0, -14))
+             + degage((xr, t["cy"] + t["r"]), (xr, k["y0"]), dt=(0, 16))
              + degage((e["p"], t["cy"]), (xo, t["cy"]), dt=(0, -2))
              + degage((xe, t["cy"]), (M.L, t["cy"]), dt=(0, -2))
-             + degage((266, c["p"]), (266, t["cy"] - t["r"]), dt=(0, -12))
-             + degage((266, t["cy"] + t["r"]), (266, M.P), dt=(0, 14))
              + "</g>")
     # traits de coupe
     for x, lab, sens in ((COUPE_A, "A", -1), (COUPE_B, "B", 1)):
@@ -183,6 +224,9 @@ def plan_svg():
             o.append(text(x + 8 * sens, y, lab, "sect"))
     o.append(f'<line class="sec" x1="-6" y1="{COUPE_C}" x2="{M.L + 6}" y2="{COUPE_C}"/>')
     o.append(text(-4, COUPE_C - 5, "C", "sect", "end"))
+    o.append(f'<line class="sec" x1="-6" y1="{COUPE_D}" x2="{M.L + 6}" y2="{COUPE_D}"/>')
+    o.append(text(-4, COUPE_D - 5, "D", "sect", "end"))
+    o.append(text(M.L + 4, COUPE_D - 5, "D", "sect", "start"))
     o.append(text(M.L + 4, COUPE_C - 5, "C", "sect", "start"))
     return (f'<svg viewBox="-150 -50 820 470" role="img" aria-label="Plan du salon">{"".join(o)}</svg>')
 
@@ -192,7 +236,12 @@ COUPE_CLS = {"mur": ("bgwall", "w"), "linteau": ("wallv", "w"), "cadre": ("cadre
              "caisson": ("cab", "cab"), "facade": ("fac", "fac"), "pied": ("dark", "dark"),
              "etagere": ("shelf", "shelfc"), "canape": ("sofa", "sofa"), "table": ("tbl", "tbl"),
              "chaise": ("stool", "stool"), "desserte": ("cab", "cab"), "vinyles": ("vinyl", "vinyl"),
-             "platine": ("dark", "dark"), "lampe": ("lampe", "lampe")}
+             "platine": ("dark", "dark"), "lampe": ("lampe", "lampe"), "volet": ("tbl", "tbl"),
+             "table_basse": ("tbl", "tbl"), "chilienne": ("chil", "chil"), "tapis": ("tapis", "tapis"),
+             "lampe_pied": ("dark", "dark"), "plante": ("plante", "plante"), "pot": ("pot", "pot"),
+             "cadre_mur": ("cadrem", "cadrem"), "livres": ("livre", "livre"), "fauteuil": ("dyv", "dyv"),
+             "projection": ("proj", "proj"), "projecteur": ("dark", "dark"), "clim": ("clim", "clim"),
+             "papier_peint": ("pp", "pp"), "coussin": ("coussin", "coussin")}
 
 # (axe coupé, sens du regard, miroir de l'axe horizontal)
 REGARDS = {"nord": ("y", -1, False), "sud": ("y", 1, True), "est": ("x", 1, False), "ouest": ("x", -1, True)}
@@ -225,7 +274,7 @@ def coupe_svg(cut, regard, umin, umax, cfg, hauteurs, extra=None):
         u0, u1, d0, d1 = uv(b, axe)
         coupe = d0 < cut < d1
         u, v = sorted((X(max(u0, umin)), X(min(u1, umax))))
-        o.append(rect(u, -b.z1, v, -b.z0, COUPE_CLS[b.role][1 if coupe else 0]))
+        o.append(rect(u, -b.z1, v, -b.z0, COUPE_CLS[b.role][1 if coupe else 0] + cfg_cls(b).replace(f" c{b.config}", "")))
         xm = (u + v) / 2
         if b.role == "baie" and coupe:
             o.append(text(xm + 7, -110, "baie", "lblx muted", extra=f' transform="rotate(-90 {f(xm + 7)} -110)"'))
@@ -250,11 +299,11 @@ def coupe_svg(cut, regard, umin, umax, cfg, hauteurs, extra=None):
 def coupe_configs(*args, **kw):
     """Une coupe par configuration de la table, ou une seule si la table et les chaises n'y paraissent pas."""
     cut, regard, umin, umax = args[:4]
-    v4, v12 = (visibles(cut, regard, umin, umax, c) for c in ("4", "12"))
+    v4, v12 = (visibles(cut, regard, umin, umax, c) for c in ("f", "o"))
     if [b.nom for b in v4 if b.config] == [] and [b.nom for b in v12 if b.config] == []:
-        return coupe_svg(cut, regard, umin, umax, "4", *args[4:], **kw)
+        return coupe_svg(cut, regard, umin, umax, "f", *args[4:], **kw)
     return "".join(f'<div class="c{c}">{coupe_svg(cut, regard, umin, umax, c, *args[4:], **kw)}</div>'
-                   for c in ("4", "12"))
+                   for c in ("f", "o"))
 
 
 def coupe_a():
@@ -294,11 +343,26 @@ def coupe_c():
     e, c, t = M.ENFILADE, M.CANAPE, M.TABLE
 
     def cotes(X):
-        return [cote_h(0, e["p"], 18), cote_h(c["x0"], c["x1"], 18, f'canapé {c["l"]}'),
-                cote_h(M.DESSERTE["x0"], M.L, 18)]
+        return [cote_h(0, e["p"], 18), cote_h(c["x0"], c["x1"], 18, f'canapé {c["l"]}')]
 
     return coupe_configs(COUPE_C, "nord", -20, M.L + 20,
                          [c["assise"], t["z1"], e["z1"], M.SUSPENSION["z0"]], extra=cotes)
+
+
+def coupe_d():
+    k, ec, cl = M.CONSOLE, M.ECRAN, M.CLIM
+
+    def cotes(X):
+        u0, u1 = sorted((X(ec["x0"]), X(ec["x1"])))
+        k0, k1 = sorted((X(k["x0"]), X(k["x1"])))
+        c0, c1 = sorted((X(cl["x0"]), X(cl["x1"])))
+        return [cote_h(k0, k1, 18, f'meuble bas {k["l"]}'),
+                cote_h(u0, u1, -(ec["bas"] + ec["h"]) - 6, f'image {f(ec["l"])} × {f(ec["h"])} (16/9)'),
+                text((u0 + u1) / 2, -(ec["bas"] + ec["h"] / 2), "écran (mur peint en blanc mat)", "lblc"),
+                cote_h(c0, c1, -cl["z1"] - 6, f'clim {cl["x1"] - cl["x0"]}')]
+
+    return coupe_configs(COUPE_D, "sud", -20, M.L + 20,
+                         [k["pieds"], k["z1"], ec["bas"], ec["bas"] + ec["h"], cl["z0"], cl["z1"]], extra=cotes)
 
 
 # ------------------------------------------------------------------ page
@@ -330,7 +394,7 @@ h2{font-size:22px;margin:44px 0 10px;font-weight:700}
 h3{font-size:15px;margin:18px 0 6px}
 .pitch{font-size:18px;max-width:780px}
 .fig{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:12px;margin:14px 0}
-.scroll svg{display:block;width:100%;height:auto}
+.scroll{overflow-x:auto}.scroll svg{display:block;width:100%;height:auto}.scroll>table{min-width:640px}
 .cap{font-size:13px;color:var(--muted);margin:8px 4px 2px}
 .note{font-size:13px;color:var(--muted)}
 table{border-collapse:collapse;width:100%;font-size:14px}
@@ -340,7 +404,10 @@ td.num,th.num{text-align:right;font-family:"JetBrains Mono",ui-monospace,monospa
 ul.pistes{padding-left:20px;max-width:860px}ul.pistes li{margin:6px 0}
 svg text{font-family:Archivo,system-ui,sans-serif;fill:var(--ink)}
 .room{fill:var(--line);fill-opacity:.25}
-.floorbg{fill:var(--wood);fill-opacity:.1}
+.floorbg{fill:#D9D2C6;fill-opacity:.35}
+.carreau{fill:none;stroke:#B5AC9C;stroke-width:.4;stroke-opacity:.7}
+.rendu img{display:block;width:100%;height:auto;border-radius:8px}
+.rendu figure{margin:0}
 .w{fill:var(--ink)}
 .bgwall{fill:var(--line);fill-opacity:.35}
 .wallv{fill:#D5DADD;stroke:var(--muted);stroke-width:.5}
@@ -361,6 +428,19 @@ svg text{font-family:Archivo,system-ui,sans-serif;fill:var(--ink)}
 .tbl{fill:var(--wood);fill-opacity:.5;stroke:var(--ink);stroke-width:.9}
 .stool{fill:var(--wood);fill-opacity:.28;stroke:var(--ink);stroke-width:.7}
 .stoold{fill:var(--wood);fill-opacity:.6;stroke:var(--ink);stroke-width:.5}
+.chil{fill:#C49A6C;fill-opacity:.35;stroke:var(--ink);stroke-width:.7;stroke-dasharray:5 1.5}
+.tapis{fill:#B4553A;fill-opacity:.12;stroke:#B4553A;stroke-opacity:.5;stroke-width:.8;stroke-dasharray:1 2}
+.plante{fill:#6E9B5A;fill-opacity:.7;stroke:#3F6B31;stroke-width:.6;stroke-dasharray:3 2}.pot{fill:#C2703D;stroke:var(--ink);stroke-width:.5}
+.cadrem{fill:#E9E2D2;stroke:var(--ink);stroke-width:.8}
+.livre{fill:#7C8A5E;fill-opacity:.55;stroke:var(--ink);stroke-width:.3}
+body:not(.deco) .dz{display:none}
+body.schil .adyv,body:not(.schil) .achil{display:none}
+.dyv{fill:#D9772B;fill-opacity:.55;stroke:var(--ink);stroke-width:.7}
+.proj{fill:#FFFFFF;fill-opacity:.6;stroke:var(--water);stroke-width:.8;stroke-dasharray:5 2}
+.projr{fill:var(--ink);fill-opacity:.15;stroke:var(--ink);stroke-width:.7;stroke-dasharray:3 2}
+.pp{fill:#4B2E3B;fill-opacity:.75;stroke:#7E9A86;stroke-width:.6;stroke-dasharray:2 2}
+.coussin{fill:#C08A2E;fill-opacity:.8;stroke:var(--ink);stroke-width:.5}
+.clim{fill:#F4F4F2;stroke:var(--ink);stroke-width:.7;stroke-dasharray:3 2}
 .vinyl{fill:#2B2B2E;fill-opacity:.75;stroke:var(--ink);stroke-width:.4}
 .lampe{fill:#F2C94C;fill-opacity:.35;stroke:#B8860B;stroke-width:.7;stroke-dasharray:3 2}
 .seuil{stroke:var(--muted);stroke-width:.7;stroke-dasharray:3 2}
@@ -375,7 +455,7 @@ svg text{font-family:Archivo,system-ui,sans-serif;fill:var(--ink)}
 .sect{fill:var(--tri);fill-opacity:.55;font-weight:800;font-size:11px}
 .floorl{stroke:var(--ink);stroke-width:2}
 .ceil{stroke:var(--muted);stroke-width:1;stroke-dasharray:6 4}
-body.t12 .c4,body:not(.t12) .c12{display:none}
+body.tor .cf,body:not(.tor) .co{display:none}
 body:not(.explications) .cap{display:none}
 body:not(.changements) section[id^="changements"]{display:none}
 .tog{display:flex;flex-wrap:wrap;align-items:center;gap:6px;margin:0 0 10px;font-family:"JetBrains Mono",ui-monospace,monospace;font-size:12px}
@@ -386,15 +466,18 @@ body:not(.changements) section[id^="changements"]{display:none}
 .vbar .back{color:var(--ink);text-decoration:none;font-weight:600;margin-right:14px}
 .vbar .back:hover{text-decoration:underline}
 .vbar span{color:var(--muted);text-transform:uppercase;letter-spacing:.08em;margin-right:4px}
-.vbar .expl{margin-left:auto}
+.vbar .deco{margin-left:auto}
 @media (max-width:480px){ body{font-size:15px} }
 """
 
 
 def tog_table():
     return ('<div class="tog"><span>Table</span>'
-            '<button type="button" data-t="4" aria-pressed="true">4 couverts</button>'
-            '<button type="button" data-t="12" aria-pressed="false">12 couverts</button></div>')
+            + "".join(f'<button type="button" data-t="{cfg}" aria-pressed="{str(cfg == "f").lower()}">'
+                      f'{k["nom"]}{" · " + str(k["chaises"]) if k["chaises"] else ""}</button>' for cfg, k in M.CONFIGS.items())
+            + '<span style="margin-left:14px">Siège</span>'
+            '<button type="button" data-a="dyv" aria-pressed="true">DYVLINGE</button>'
+            '<button type="button" data-a="chil" aria-pressed="false">chilienne</button></div>')
 
 
 def table_rangement():
@@ -403,12 +486,39 @@ def table_rangement():
         ("① Enfilade", f'{f(e["y1"] - e["y0"])} × {e["p"]} × {e["z1"]}, 3 modules de {f(e["modules"][0][1] - e["modules"][0][0])}',
          f"≈ {round(M.VOLUME_ENFILADE, -1):.0f} L"),
         ("② Étagères suspendues", f'{len(M.ETAGERES["zs"])} × {f(e["y1"] - e["y0"])}, P{M.ETAGERES["p"]}',
-         f'{M.METRES_ETAGERES:.1f} m · ≈ {M.METRES_ETAGERES * M.CHARGE_LIVRES:.0f} kg pleines'),
-        ("④ Desserte", f'{d["y1"] - d["y0"]} × {d["x1"] - d["x0"]} × {d["z1"]}, 2 niveaux pour vinyles',
+         f'{virg(M.METRES_ETAGERES)} m · ≈ {M.METRES_ETAGERES * M.CHARGE_LIVRES:.0f} kg pleines'),
+        ("④ Desserte", f'{d["x1"] - d["x0"]} × {d["y1"] - d["y0"]} × {d["z1"]}, 2 niveaux pour vinyles',
          f"≈ {round(M.VINYLES, -1):.0f} disques"),
     ]
     corps = "".join(f'<tr><td>{a}</td><td>{b}</td><td class="num">{c}</td></tr>' for a, b, c in lignes)
     return f'<table><thead><tr><th>Meuble</th><th>Dimensions</th><th class="num">Capacité</th></tr></thead><tbody>{corps}</tbody></table>'
+
+
+def table_repliables():
+    corps = "".join(
+        f'<tr><td>{escape(ty)}</td><td>{f"<a href={chr(34)}{escape(u)}{chr(34)}>{escape(m)}</a>" if u else escape(m)}</td>'
+        f'<td class="num">{escape(r)}</td><td>{escape(o)}</td><td>{escape(pl)}</td><td class="num">{escape(px)}</td></tr>'
+        for ty, m, r, o, pl, px, u in M.TABLES_REPLIABLES)
+    return ('<div class="scroll"><table><thead><tr><th>Type</th><th>Modèle</th><th class="num">Repliée</th><th>Ouverte</th>'
+            f'<th>Places</th><th class="num">Prix</th></tr></thead><tbody>{corps}</tbody></table></div>')
+
+
+def galerie():
+    """Rendus 3D présents dans salon-v4-3d/ (faits sur demande), avec un bouton par variante."""
+    blocs = []
+    for titre, version, variantes in M.RENDUS:
+        vus = [(v, n) for v, n in variantes if os.path.exists(os.path.join(ROOT, "salon-v4-3d", f"{v}.jpg"))]
+        if not vus:
+            continue
+        boutons = "".join(f'<button type="button" data-rv="{v}" aria-pressed="{str(i == 0).lower()}">{escape(n)}</button>'
+                          for i, (v, n) in enumerate(vus)) if len(vus) > 1 else ""
+        figs = "".join(
+            f'<figure data-rv="{v}"{" hidden" if i else ""}><img src="salon-v4-3d/{v}.jpg?v='
+            f'{int(os.path.getmtime(os.path.join(ROOT, "salon-v4-3d", f"{v}.jpg")))}" alt="{escape(titre)} · {escape(n)}" '
+            f'loading="lazy"></figure>' for i, (v, n) in enumerate(vus))
+        blocs.append(f'<div class="fig rendu rgrp">{f"<div class=tog><span>Bois</span>{boutons}</div>" if boutons else ""}'
+                     f'{figs}<p class="note">{escape(titre)} · modèle {version}</p></div>')
+    return f'<h2>Rendu 3D</h2>\n{"".join(blocs)}\n' if blocs else ""
 
 
 def contenu():
@@ -418,30 +528,47 @@ def contenu():
     modules = " ; ".join(f'M{k + 1} {escape(ct)}' for k, (_, ct) in enumerate(M._MODULES))
     return f"""<div class="kicker">Salon · {M.VERSION}</div>
 <h1>Salon V4</h1>
-<p class="pitch">La bibliothèque reste au mur ouest : une enfilade basse avec des étagères suspendues au-dessus, le canapé dans son angle. Devant la baie, une desserte pour la platine vinyle ; au milieu, une table ronde qui s'ouvre pour recevoir douze personnes.</p>
+<p class="pitch">La bibliothèque reste au mur ouest : une enfilade basse avec des étagères suspendues au-dessus, le canapé dans son angle avec une table basse et un siège pivotant, face à un meuble bas sous le mur de projection. Contre le mur nord, à côté de la baie, une desserte pour la platine vinyle. La table ronde du quotidien s'ouvre au milieu pour recevoir douze personnes.</p>
 
 <h2>Plan</h2>
 <div class="fig">{tog_table()}<div class="scroll">{plan_svg()}</div>
-<p class="cap">Échelle : 1 unité = 1 cm ; ouest à gauche, nord en haut. <b>① Enfilade</b> contre le mur ouest, du coin nord au cadre du passage ({f(e["y1"] - e["y0"])} utiles), profondeur {e["p"]} (caisson {e["p"] - e["facade"]} + façades {e["facade"]}), dessus à {e["z1"]}, sur pieds de {e["pieds"]} ; trois modules de {f(e["modules"][0][1] - e["modules"][0][0])} : {modules}. <b>② Étagères suspendues</b> (tireté) : {len(et["zs"])} tablettes {f(et["y1"] - et["y0"])} × {et["p"]} au-dessus de l'enfilade, sur toute sa longueur ; fixation à étudier (voir plus bas). <b>③ Canapé</b> {c["l"]} × {c["p"]} dos au mur nord, tourné vers le sud, à {M.ALLEE_ENFILADE} de l'enfilade : l'allée laisse ouvrir les portes du module nord. <b>④ Desserte</b> {d["y1"] - d["y0"]} × {d["x1"] - d["x0"]} contre le vantail nord de la baie (y {d["y0"]} → {d["y1"]}), platine sur le dessus, vinyles sur deux niveaux ; le vantail sud reste le passage quand la baie est ouverte. <b>⑤ Table</b> ronde Ø {f(t["d"])} centrée en ({t["cx"]}, {t["cy"]}), à 4 pieds, avec {t["allonges"]} allonges de {t["allonge"]} : {f(t["long"])} × {f(t["d"])} ouverte, est-ouest, seule direction où 12 couverts tiennent (nord-sud, il faudrait {f(t["long"] + 2 * 70)} pour {M.P}). Au quotidien, 4 chaises en biais ; à 12, 3 chaises par grand côté et 3 par bout (pas de 68). <b>Dégagements</b> (rouge) : {f(dg["canape_table"])} entre le canapé et la table, {f(dg["table_sud"])} au sud ; table ouverte, {f(dg["bout_ouest"])} entre son bout ouest et l'enfilade, {f(dg["bout_est"])} à l'est. À 12, les chaises du côté nord touchent presque le canapé et celles du sud le mur : on s'assoit, on ne circule plus derrière. Suspension (tireté jaune) au-dessus du centre de la table.</p></div>
+<p class="cap">Échelle : 1 unité = 1 cm ; ouest à gauche, nord en haut. <b>① Enfilade</b> contre le mur ouest, du coin nord au cadre du passage ({f(e["y1"] - e["y0"])} utiles), profondeur {e["p"]} (caisson {e["p"] - e["facade"]} + façades {e["facade"]}), dessus à {e["z1"]}, sur pieds de {e["pieds"]} ; trois modules de {f(e["modules"][0][1] - e["modules"][0][0])} : {modules}. <b>② Étagères suspendues</b> (tireté) : {len(et["zs"])} tablettes {f(et["y1"] - et["y0"])} × {et["p"]} au-dessus de l'enfilade, sur toute sa longueur ; fixation à étudier (voir plus bas). <b>③ Canapé</b> {c["nom"]} {c["l"]} × {c["p"]} dos au mur nord, tourné vers le sud, à {M.ALLEE_ENFILADE} de l'enfilade : l'allée laisse ouvrir les portes du module nord. <b>④ Desserte</b> {d["x1"] - d["x0"]} × {d["y1"] - d["y0"]} contre le mur nord, dans le décroché nord-est (x {d["x0"]} → {d["x1"]}), façade au sud : à côté de la baie, sans rien devant le vitrage. Platine au milieu du dessus, vinyles sur deux niveaux (≈ {round(M.VINYLES, -1):.0f}). <b>⑤ Table</b> à volets et allonges (type Louis-Philippe). Au quotidien, <b>ronde</b> Ø {f(t["d"])} (volets levés) dans l'angle sud-est, face à la baie, centrée en {t["ronde"]}, avec 4 chaises en biais et la suspension au-dessus. Pour recevoir, on la tire au milieu et on ajoute {t["allonges"]} allonges de {t["allonge"]} : <b>ouverte</b>, ovale de {f(t["ouvert"])} × {f(t["d"])} centrée en ({t["cx"]}, {t["cy"]}), est-ouest (nord-sud, il faudrait {f(t["ouvert"] + 2 * 70)} pour {M.P}), 12 chaises à pas de {M.PAS_CHAISES:.0f}, une à chaque bout ; les {M.CHAISES_PLIANTES} chaises de plus sont pliantes, rangées dans le kafoutche extérieur. <b>⑥ Table basse</b> ovale {M.TABLE_BASSE["l"]} × {M.TABLE_BASSE["p"]}, dessus à {M.TABLE_BASSE["z1"]} (sous l'assise), à {M.TABLE_BASSE["ecart"]} devant le canapé, centrée sur lui. <b>⑦ Siège</b> (bouton Siège) : <a href="{M.DYVLINGE["url"]}">IKEA DYVLINGE</a> pivotant ({M.DYVLINGE["l"]} × {M.DYVLINGE["p"]} × {M.DYVLINGE["h"]}, assise à {M.DYVLINGE["assise"]}, {M.DYVLINGE["prix"]} €) à l'est de la table basse, tourné vers le canapé ; il pivote vers l'écran ou la baie. Variante : chilienne {M.CHILIENNE["long"]} × {M.CHILIENNE["l"]}, tête à l'est. <b>⑧ Meuble bas</b> style enfilade scandinave {M.CONSOLE["l"]} × {M.CONSOLE["p"]} × {M.CONSOLE["z1"]} sur pieds, contre le mur sud en face du canapé, centré sur lui ; peu profond pour laisser passer la table ouverte. Le mur sud au-dessus sert d'<b>écran</b> : image {f(M.ECRAN["l"])} × {f(M.ECRAN["h"])} (16/9), bas à {M.ECRAN["bas"]}, vue du canapé à ≈ {M.PROJECTEUR["recul"]} (1,5 fois la largeur de l'image, le confort habituel) ; <b>vidéoprojecteur</b> au plafond au-dessus du canapé, à {M.PROJECTEUR["recul"]} du mur : il faut un rapport de projection de {virg(M.PROJECTEUR["rapport"], 2)} (zoom courant 1,2–1,6). <b>Clim</b> existante sur le mur sud, tout à l'est (x {M.CLIM["x0"]} → {M.CLIM["x1"]}, h {M.CLIM["z0"]} → {M.CLIM["z1"]}, à relever). Table ouverte : la table basse se range debout dans l'allée de l'enfilade (on n'ouvre pas le module nord pendant le dîner), le DYVLINGE recule contre le mur nord à côté de la desserte, la chilienne se plie contre le mur sud. <b>Dégagements</b> (rouge) : au quotidien, {f(dg["canape_basse"])} entre le canapé et la table basse, puis {f(M.CONSOLE["y0"] - M.TABLE_BASSE["pos"]["f"][3])} jusqu'au meuble bas ; ouverte, {f(dg["canape_table"])} entre le canapé et la table, {f(dg["table_sud"])} jusqu'au meuble bas, {f(dg["bout_ouest"])} entre son bout ouest et l'enfilade, {f(dg["bout_est"])} à l'est. À 12, il reste {f(dg["derriere_chaises"])} derrière les chaises côté canapé et côté meuble bas : on s'assoit, on ne circule plus derrière. <b>Déco</b> (bouton dans la barre du haut), proportions d'aménagement : un seul tapis, {M.TAPIS["l"]} × {M.TAPIS["p"]}, sous le coin canapé (25 de plus que le canapé de chaque côté, pieds avant du canapé et de la chilienne dessus), rien sous la table à manger ; lampadaire de lecture contre l'accoudoir est du canapé, derrière l'épaule de qui est dans le siège, hors du passage devant la desserte ; lampe à poser sur l'enfilade, sous la première tablette, et petite lampe au bout de la desserte ; plantes (vert : une grande à droite du meuble bas, hors de l'image et loin du souffle de la clim, des branches sur l'enfilade) ; paire de cadres 55 × 70 au-dessus du canapé (2/3 de sa largeur, bas à 20 du dossier), cadre 80 × 60 au-dessus de la desserte (bas à 135 : le capot de la platine s'ouvre) ; livres sur les étagères (coupes). Suspension Ø {M.SUSPENSION["d"]} (tireté jaune, la moitié de la table) au-dessus de la table ronde : table ouverte, elle n'est plus centrée (à prévoir : un second point lumineux ou une suspension déplaçable).</p></div>
 
 <h2>Coupe A-A · mur ouest</h2>
 <div class="fig"><div class="scroll">{coupe_a()}</div>
 <p class="cap">Coupe à x {COUPE_A}, regard vers l'ouest : le sud est à gauche. Enfilade sur pieds de {e["pieds"]}, dessus à {e["z1"]} ; tablettes de {et["ep"]} avec le dessus à {", ".join(str(z) for z in et["zs"])} (un premier vide de {et["zs"][0] - et["ep"] - e["z1"]} au-dessus de l'enfilade pour poser lampes et objets, puis {et["zs"][1] - et["zs"][0] - et["ep"]} de hauteur libre entre tablettes : les livres courants font 18 à 30). À gauche, le passage vers le couloir ({M.PASSAGE["y1"] - M.PASSAGE["y0"]} × {M.PASSAGE["h"]}) avec son cadre.</p></div>
 
-<h2>Coupe B-B · baie</h2>
+<h2>Coupe B-B · baie et desserte</h2>
 <div class="fig"><div class="scroll">{coupe_b()}</div>
-<p class="cap">Coupe à x {COUPE_B}, regard vers l'est : le nord est à gauche. Desserte h {d["z1"]} : deux niveaux de vinyles debout (pochettes 31,5) et la platine dessus, dont le plateau arrive vers {d["z1"] + 10}, à hauteur de main debout. Elle masque le bas du vantail nord de la baie (tireté au milieu = jonction des vantaux, à confirmer sur place).</p></div>
+<p class="cap">Coupe à x {COUPE_B}, regard vers l'est : le nord est à gauche. Desserte h {d["z1"]} : deux niveaux de vinyles debout (pochettes 31,5) et la platine dessus, dont le plateau arrive vers {d["z1"] + 10}, à hauteur de main debout. Elle est coupée à gauche, contre le mur nord, à côté de la baie qui reste entièrement dégagée (tireté au milieu = jonction des vantaux). Table ronde et ses chaises devant la baie ; grande plante et cadre (déco) à droite, contre le trumeau sud.</p></div>
 
 <h2>Coupe C-C · à travers la table</h2>
 <div class="fig">{tog_table()}<div class="scroll">{coupe_c()}</div>
-<p class="cap">Coupe à y {COUPE_C} (centre de la table), regard vers le nord : l'ouest est à gauche. Enfilade et étagères coupées à gauche, canapé contre le mur nord au fond, table coupée au milieu (plateau à {t["z1"]}), desserte et platine au fond à droite, baie coupée. Suspension Ø {M.SUSPENSION["d"]}, bas à {M.SUSPENSION["z0"]}, soit {M.SUSPENSION["z0"] - t["z1"]} au-dessus du plateau.</p></div>
+<p class="cap">Coupe à y {COUPE_C} (axe de la table ouverte), regard vers le nord : l'ouest est à gauche. Enfilade et étagères coupées à gauche, canapé contre le mur nord au fond, desserte et platine au fond à droite, baie coupée. Au quotidien : table basse devant le canapé, chilienne coupée, table ronde coupée à droite ; ouverte : table coupée au milieu (plateau à {t["z1"]}), table basse poussée au fond à côté du canapé. Suspension Ø {M.SUSPENSION["d"]}, bas à {M.SUSPENSION["z0"]}, soit {M.SUSPENSION["z0"] - t["z1"]} au-dessus du plateau.</p></div>
+
+<h2>Coupe D-D · mur sud, écran</h2>
+<div class="fig">{tog_table()}<div class="scroll">{coupe_d()}</div>
+<p class="cap">Coupe à y {COUPE_D}, regard vers le sud : l'est est à gauche. Meuble bas {M.CONSOLE["l"]} × {M.CONSOLE["p"]}, dessus à {M.CONSOLE["z1"]}, trois façades (deux portes, un abattant au milieu pour la box et les câbles) ; au-dessus, l'image {f(M.ECRAN["l"])} × {f(M.ECRAN["h"])} de {M.ECRAN["bas"]} à {f(M.ECRAN["bas"] + M.ECRAN["h"])}, sous la clim (h {M.CLIM["z0"]}) qui reste hors de l'image, à gauche. À droite, le passage vers le couloir. Table ronde et chaises coupées au premier plan à gauche ; ouverte, la table coupée au milieu.</p></div>
+
+{galerie()}<h2>Matériaux</h2>
+<div class="fig"><table><tbody>
+<tr><td>Sol</td><td>Carrelage {M.CARRELAGE["nom"]}, pose droite parallèle aux murs, joints fins ; teinte à choisir (rendu : {M.CARRELAGE["couleur"]}).</td></tr>
+<tr><td>Murs et plinthes</td><td>{M.MURS["nom"]}, {M.MURS["couleur"]} ; plinthes de la couleur des murs.</td></tr>
+<tr><td>Mur derrière la desserte</td><td>Papier peint {M.PAPIER_PEINT["nom"]} ; motif ≈ {M.PAPIER_PEINT["motif"]} cm, de la plinthe au plafond, sur le mur nord du décroché (violet sur le plan).</td></tr>
+<tr><td>Bois</td><td>Enfilade, étagères, desserte, table basse, meuble bas : chêne miel (comme les meubles hauts de la cuisine) ; table Louis-Philippe et chaises : noyer ou merisier anciens.</td></tr>
+<tr><td>Tissus</td><td>Canapé SÖDERHAMN housse Gunnared gris moyen ; coussins {M.COUSSINS["nom"]} ; DYVLINGE Kelinge orange ; tapis laine beige.</td></tr>
+</tbody></table></div>
 
 <h2>Rangements</h2>
 <div class="fig">{table_rangement()}
 <p class="cap">Volume utile de l'enfilade : intérieur des caissons, panneaux de {e["ep"]} déduits. Étagères : {M.CHARGE_LIVRES} kg par mètre pleine de livres (ordre de grandeur), d'où la question de la fixation. Vinyles : environ 3,5 mm par disque sous pochette, rangées de 31,5 de profondeur.</p></div>
 
+<h2>Tables qui se replient</h2>
+<div class="fig">{table_repliables()}
+<p class="cap">Recherche du 11/10/2026. Ronde Ø 90 : on n'en trouve pas qui dépasse ≈ 190 ouverte, soit 8 à 10 couverts ; pour 12, il faut au moins une Ø 100 et 4 allonges (280, serré : ≈ 62 par personne). Les consoles extensibles ont la plus petite emprise repliée (≈ 0,4 m²) mais sont rectangulaires et étroites (90) ; leurs rallonges se rangent dans la console ou à côté. Les tables à volets et allonges (Louis-Philippe) sont rondes volets levés et ovales avec leurs allonges, souvent anciennes, à chiner : c'est le type dessiné. Les tables à abattants seules (gateleg) se replient très bien mais plafonnent à 6 places. Dimensions et prix relevés sur les fiches : à revérifier avant achat.</p></div>
+
 <h2>Étagères suspendues : fixation à étudier</h2>
-<p>Charge à reprendre : jusqu'à {M.METRES_ETAGERES * M.CHARGE_LIVRES:.0f} kg sur {M.METRES_ETAGERES:.1f} m de tablettes, au-dessus d'un meuble qu'on ne veut pas faire porter. Le mur ouest est la cloison du cellier et du WC (nature à confirmer). Pistes à comparer :</p>
+<p>Charge à reprendre : jusqu'à {M.METRES_ETAGERES * M.CHARGE_LIVRES:.0f} kg sur {virg(M.METRES_ETAGERES)} m de tablettes, au-dessus d'un meuble qu'on ne veut pas faire porter. Le mur ouest est la cloison du cellier et du WC (nature à confirmer). Pistes à comparer :</p>
 <ul class="pistes">
 <li><b>Tiges ou câbles depuis le plafond</b>, tablettes accrochées dessous (vraie étagère suspendue, rien dans la cloison) : dépend du plafond (béton, hourdis, faux plafond ?) ; tiges filetées Ø 8–10 sous fourreau, ou câbles inox avec serre-câbles réglables ; un appui ponctuel au mur pour empêcher le balancement.</li>
 <li><b>Montants plafond–sol</b> en tension ou vissés au plafond, derrière l'enfilade (comme la String ou la Moebe de la page bibliothèque), tablettes sur consoles : rien de porté par la cloison.</li>
@@ -452,11 +579,12 @@ def contenu():
 
 <h2>Points à vérifier</h2>
 <ul class="pistes">
-<li><b>Baie</b> : quel vantail coulisse, et devant lequel on passe ; la desserte suppose qu'on sort par le vantail sud.</li>
-<li><b>Prises</b> : une prise près de la desserte (platine, ampli ou enceintes actives) ; une près du canapé pour une lampe.</li>
-<li><b>Chaises</b> : 4 au quotidien, 8 d'appoint pour recevoir à 12 (pliantes ou empilables) : où les ranger.</li>
-<li><b>Canapé</b> : dessiné en {c["l"]} × {c["p"]}. Un SÖDERHAMN 3 places (198 × 99) prendrait 9 cm de plus vers la table.</li>
-<li><b>Table</b> : Ø {f(t["d"])} à {t["allonges"]} allonges ({f(t["long"])} ouverte) ; à défaut, Ø 120 → 270 donne 10 couverts confortables, 12 serrés.</li>
+<li><b>Prises</b> : près de la desserte (platine, ampli ou enceintes actives), près du canapé (lampadaire), derrière le meuble bas (box), au plafond (vidéoprojecteur).</li>
+<li><b>Chaises</b> : 4 autour de la table ronde ; les {M.CHAISES_PLIANTES} pliantes de plus pour recevoir à 12 sont rangées dans le kafoutche extérieur.</li>
+<li><b>Canapé</b> : <a href="{c["url"]}">{c["nom"]}</a>, {c["l"]} × {c["p"]} × {c["dos"]} ; hauteur d'assise à relever en magasin (dessinée à {c["assise"]}, la table basse doit rester juste en dessous).</li>
+<li><b>Table</b> : ronde Ø {f(t["d"])} à volets et allonges, à chiner (les Louis-Philippe font souvent 105 à 120) ; il faut 4 allonges de 45 pour 280. Ø 90 : 10 couverts au plus.</li>
+<li><b>Clim</b> : position et dimensions à relever ; le souffle tombe sur la table ronde du quotidien (déflecteur orienté vers le haut).</li>
+<li><b>Vidéoprojecteur</b> : rapport de projection {virg(M.PROJECTEUR["rapport"], 2)} pour une image de {f(M.ECRAN["l"])} à {M.PROJECTEUR["recul"]} ; prise et câble HDMI au plafond, ou projecteur posé sur une tablette au-dessus du canapé. Mur sud peint en blanc mat (ou toile tendue).</li>
 </ul>
 
 <p class="note">Repère : x vers l'est depuis le mur ouest, y vers le sud depuis le mur nord, z depuis le sol fini, en cm. Source : <span class="mono">3d/salon/modele.py</span> ; page : <span class="mono">3d/salon/plan.py</span> (<span class="mono">just salon</span>). Rendus 3D sur demande.</p>
@@ -476,6 +604,7 @@ def page(figees, racine=""):
     versions = (f'<span>Version</span><button type="button" data-v="courante" aria-pressed="true">'
                 f'{M.VERSION} en cours</button>{boutons}')
     barre = (f'<div class="vbar"><a class="back" href="{racine}index.html">← Plans</a>{versions}'
+             f'<button type="button" class="deco" aria-pressed="false">Déco</button>'
              f'<button type="button" class="expl" aria-pressed="false">Explications</button>'
              f'<button type="button" class="chg" aria-pressed="false">Changements</button></div>')
     return f"""<!doctype html>
@@ -508,20 +637,37 @@ def page(figees, racine=""):
   }}
   bs.forEach(function (b) {{ b.addEventListener("click", function () {{ montre(b.dataset.v); }}); }});
   function table(t) {{
-    document.body.classList.toggle("t12", t === "12");
+    document.body.classList.toggle("tor", t === "o");
     document.querySelectorAll(".tog button[data-t]").forEach(function (b) {{ b.setAttribute("aria-pressed", b.dataset.t === t); }});
     garde("table", t);
   }}
   document.querySelectorAll(".tog button[data-t]").forEach(function (b) {{
     b.addEventListener("click", function () {{ table(b.dataset.t); }});
   }});
-  table(lit("table") === "12" ? "12" : "4");
+  table(lit("table") === "o" ? "o" : "f");
+  function siege(a) {{
+    document.body.classList.toggle("schil", a === "chil");
+    document.querySelectorAll(".tog button[data-a]").forEach(function (b) {{ b.setAttribute("aria-pressed", b.dataset.a === a); }});
+    garde("siege", a);
+  }}
+  document.querySelectorAll(".tog button[data-a]").forEach(function (b) {{
+    b.addEventListener("click", function () {{ siege(b.dataset.a); }});
+  }});
+  siege(lit("siege") === "chil" ? "chil" : "dyv");
   function bascule(sel, cls) {{
     var b = document.querySelector(sel);
     function pose(on) {{ document.body.classList.toggle(cls, on); b.setAttribute("aria-pressed", on); garde(cls, on ? "1" : ""); }}
     b.addEventListener("click", function () {{ pose(b.getAttribute("aria-pressed") !== "true"); }});
     pose(lit(cls) === "1");
   }}
+  document.querySelectorAll(".rgrp .tog button[data-rv]").forEach(function (b) {{
+    b.addEventListener("click", function () {{
+      var g = b.closest(".rgrp");
+      g.querySelectorAll(".tog button[data-rv]").forEach(function (x) {{ x.setAttribute("aria-pressed", x === b); }});
+      g.querySelectorAll("figure[data-rv]").forEach(function (f) {{ f.hidden = f.dataset.rv !== b.dataset.rv; }});
+    }});
+  }});
+  bascule(".vbar .deco", "deco");
   bascule(".vbar .expl", "explications");
   bascule(".vbar .chg", "changements");
   var v0 = lit("version") || "courante";

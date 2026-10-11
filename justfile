@@ -70,6 +70,21 @@ v12-figer:
 salon:
     python3 3d/salon/plan.py
 
+# Salon V4 : rendus 3D (Blender) depuis 3d/salon/modele.py → salon-v4-3d/*.jpg, puis regénère la page
+salon-rendu echantillons="64" *vues:
+    /Applications/Blender.app/Contents/MacOS/Blender -b --python 3d/salon/rendu.py -- {{echantillons}} {{vues}}
+    mkdir -p salon-v4-3d
+    for f in 3d/sortie/salon-v4-rendu-*.png; do sips -s format jpeg -s formatOptions 85 "$f" --out "salon-v4-3d/$(basename "$f" .png | sed 's/salon-v4-rendu-//').jpg" >/dev/null; done
+    python3 3d/salon/plan.py
+
 # Fige la version courante du salon (bouton de comparaison + archive/salon-v4.x.html)
 salon-figer:
     python3 3d/salon/plan.py --figer
+
+# Recherches Leboncoin : serveur local des pages achats/ (boutons ★ / ✕), voir .claude/skills/lbc/SKILL.md
+achats port="8765":
+    uv run .claude/skills/lbc/achats.py servir --port {{port}}
+
+# Recherches Leboncoin : tests (sans réseau)
+achats-tests:
+    cd .claude/skills/lbc && uv run -q --no-project --with pytest --with lbc==1.1.7 pytest -q tests
