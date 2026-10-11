@@ -4,6 +4,7 @@
 #   ex. : just salon-rendu 16 iso    (aperçu rapide)
 # Vues : iso (isométrique depuis le sud-est, murs sud et est et plafond coupés).
 # Configuration rendue : table ronde (quotidien), siège DYVLINGE, décoration affichée.
+# Modèles IKEA (3d/modeles/ikea/) : canapé SÖDERHAMN, siège DYVLINGE, table basse UGGLERUM.
 # Produit 3d/sortie/salon-v4-rendu-<vue>.png.
 #
 # Réutilise 3d/rendu.py (matériaux, soleil, ciel, réglages Cycles). Les volumes suivent le rôle des objets ;
@@ -26,7 +27,7 @@ import rendu as R  # noqa: E402
 
 OUT = R.OUT
 VUES_DEMANDEES = [a for a in R.args if not a.isdigit()]
-CONFIG, ASSISE = "f", "dyv"            # table ronde, siège DYVLINGE
+CONFIG, ASSISE = "f", "dyv"            # table du quotidien, siège DYVLINGE (CONFIG change selon la vue)
 
 # ------------------------------------------------------------------ matériaux
 MUR = "#EFE9DC"                         # même blanc chaud que la cuisine (piste Farrow & Ball Wimborne White)
@@ -49,7 +50,6 @@ R.MATS.update({
     "s_platine":    ("#1B1B1D", 0.3, {}),
     "s_clim":       ("#F4F4F2", 0.4, {}),
     "s_vinyle":     ("#2A2A2D", 0.5, {}),
-    "s_moutarde":   (M.COUSSINS["couleur"], 0.85, {}),
     "s_baie":       ("#3A3D40", 0.35, {"metal": True}),
 })
 ROLES = {
@@ -57,12 +57,12 @@ ROLES = {
     "etagere": "s_chene", "canape": "s_lin", "table": "s_noyer", "desserte": "s_chene", "vinyles": "s_vinyle",
     "platine": "s_platine", "lampe": "s_abat_jour", "table_basse": "s_chene", "fauteuil": "s_dyvlinge",
     "chilienne": "lin", "tapis": "s_tapis", "lampe_pied": "noir", "plante": "feuillage", "pot": "terre_cuite",
-    "cadre_mur": "s_cadre", "projecteur": "noir", "clim": "s_clim", "pied": "noir", "coussin": "s_moutarde",
-    "papier_peint": "s_papier",
+    "cadre_mur": "s_cadre", "projecteur": "noir", "clim": "s_clim", "pied": "noir",
+    "papier_peint": "s_papier", "objet": "ceramique", "livre": "livre_c", "rideau": "lin", "tringle": "noir", "poutre": "s_mur",
 }
 PIEDS_BOIS = r"^pied__(enfilade|console|table_pied)"     # pieds en bois (le reste en acier noir)
 LIVRES = ["livre_a", "livre_b", "livre_c", "lin", "tissu_noir", "s_chene", "ceramique_bleue"]
-SANS_CHANFREIN = {"tapis", "mur", "linteau", "sol", "plafond", "livres", "cadre_mur"}
+SANS_CHANFREIN = {"tapis", "mur", "linteau", "poutre", "sol", "plafond", "livres", "cadre_mur"}
 
 
 def carrelage():
@@ -212,9 +212,10 @@ def cacher(motif):
             o.hide_render = o.hide_viewport = True
 
 
-def ikea(nom, x0, x1, y0, y1, rot):
+def ikea(nom, x0, x1, y0, y1, rot, debout=False):
     """Importe 3d/modeles/ikea/<nom>.glb (dossier vers +Y, face vers -Y), le tourne de rot degrés et le centre sur
-    l'emprise du plan, posé au sol, à sa taille réelle (les modèles IKEA sont à l'échelle)."""
+    l'emprise du plan, posé au sol, à sa taille réelle (les modèles IKEA sont à l'échelle). debout : posé sur son grand
+    côté (couché de 90° autour de x)."""
     sc = bpy.context.scene
     avant = set(sc.objects)
     bpy.ops.import_scene.gltf(filepath=os.path.join(IKEA, nom + ".glb"))
@@ -224,6 +225,7 @@ def ikea(nom, x0, x1, y0, y1, rot):
     for o in nouveaux:
         if o.parent is None:
             o.parent = racine
+    racine.rotation_euler.x = math.radians(90 if debout else 0)
     racine.rotation_euler.z = math.radians(rot)
     bpy.context.view_layer.update()
     lo, hi = R.bbox(nouveaux)
@@ -269,8 +271,9 @@ def build_scene():
     boite("plinthe__nord", 0, M.DECROCHE["x0"], 0, ep, 0, pl, "s_plinthe", False)
     boite("plinthe__nord_decroche", M.DECROCHE["x0"], M.L, M.DECROCHE["y"], M.DECROCHE["y"] + ep, 0, pl, "s_plinthe", False)
     boite("plinthe__ouest_n", 0, ep, 0, M.PASSAGE["y0"] - M.PASSAGE["cadre"], 0, pl, "s_plinthe", False)
-    boite("plinthe__ouest_s", 0, ep, M.PASSAGE["y1"] + M.PASSAGE["cadre"], M.P, 0, pl, "s_plinthe", False)
-    boite("plinthe__sud", 0, M.L, M.P - ep, M.P, 0, pl, "s_plinthe", False)
+    boite("plinthe__coffre_n", 0, M.COFFRE["x1"], M.COFFRE["y0"] - ep, M.COFFRE["y0"], 0, pl, "s_plinthe", False)
+    boite("plinthe__coffre_e", M.COFFRE["x1"], M.COFFRE["x1"] + ep, M.COFFRE["y0"], M.P, 0, pl, "s_plinthe", False)
+    boite("plinthe__sud", M.COFFRE["x1"], M.L, M.P - ep, M.P, 0, pl, "s_plinthe", False)
     boite("plinthe__est_s", M.L - ep, M.L, M.BAIE["y1"], M.P, 0, pl, "s_plinthe", False)
     boite("plinthe__est_n", M.L - ep, M.L, M.DECROCHE["y"], M.BAIE["y0"], 0, pl, "s_plinthe", False)
     # fond du couloir vu par le passage
@@ -280,25 +283,18 @@ def build_scene():
         if not visible(b) or b.role in ("projection", "baie"):
             continue
         nom = f"{b.role}__{b.nom}"
-        if b.role == "table" and b.config == CONFIG:            # plateau rond (le modèle n'en a que l'emprise)
+        if b.role == "table" and CONFIG == "f":   # plateau rond (le modèle n'en a que l'emprise)
             cylindre(nom, (b.x0 + b.x1) / 2, (b.y0 + b.y1) / 2, (b.x1 - b.x0) / 2, b.z0, b.z1, "s_noyer", n=96)
             continue
-        if b.role == "table_basse":                             # plateau ovale
-            cylindre(nom, (b.x0 + b.x1) / 2, (b.y0 + b.y1) / 2, (b.y1 - b.y0) / 2, b.z0, b.z1, "s_chene",
-                     rx=(b.x1 - b.x0) / 2, n=64)
+        if b.role == "rideau":                                  # plis : cylindres serrés, en quinconce
+            n = round((b.y1 - b.y0) / 8)
+            r = (b.x1 - b.x0) / 3
+            for k in range(n):
+                cy = b.y0 + r + k * (b.y1 - b.y0 - 2 * r) / max(n - 1, 1)
+                cylindre(f"{nom}_{k}", (b.x0 + b.x1) / 2 + (r / 2 if k % 2 else -r / 2), cy, r, b.z0, b.z1, "lin", n=24)
             continue
-        if b.role == "coussin":                                 # coussin bombé, incliné contre le dossier
-            bpy.ops.mesh.primitive_cube_add(size=1, location=R.p((b.x0 + b.x1) / 2, (b.y0 + b.y1) / 2, (b.z0 + b.z1) / 2))
-            o = bpy.context.object
-            o.name = nom
-            o.scale = ((b.x1 - b.x0) / 100, (b.y1 - b.y0) / 100, (b.z1 - b.z0) / 100)
-            bpy.ops.object.transform_apply(scale=True)
-            bev = o.modifiers.new("arrondi", "BEVEL")          # carré aux bords bien arrondis, gonflé
-            bev.width, bev.segments, bev.limit_method = 0.065, 6, "NONE"
-            bev.use_clamp_overlap = True
-            o.rotation_euler.x = math.radians(-16)
-            bpy.ops.object.shade_smooth()
-            habiller(o, ROLES["coussin"])
+        if b.role == "livre":                                   # livres d'art à plat : couvertures de couleurs
+            boite(nom, b.x0, b.x1, b.y0, b.y1, b.z0, b.z1, "livre_c" if b.nom.endswith("1") else "ceramique_bleue")
             continue
         if b.role == "chaise":                                  # chaises construites plus bas, tournées
             continue
@@ -329,6 +325,9 @@ def build_scene():
     cacher(r"^canape__")
     sod = ikea("soderhamn-3", c["x0"], c["x1"], 0, c["p"], 0)
     reteindre(sod, 0.08, 0.6)          # Fridtuna beige clair → Gunnared gris moyen (pas de modèle 3D Gunnared)
+    x0, y0, x1, y1 = M.TABLE_BASSE["pos"][CONFIG]
+    cacher(rf"^(table_basse|pied)__table_basse_{CONFIG}")
+    ikea("ugglerum", x0, x1, y0, y1, 90 if CONFIG == "o" else 0, debout=CONFIG == "o")
     x0, y0 = d["pos"][CONFIG]
     cacher(rf"^(fauteuil|pied)__dyvlinge_{CONFIG}_")
     ikea("dyvlinge", x0, x0 + d["p"], y0, y0 + d["l"], -90)
@@ -342,7 +341,11 @@ def build_scene():
     boite("baie__vitre_s", M.L + 4.7, M.L + 5.3, ba["milieu"] + 3, ba["y1"] - 6, 4, ba["h"] - 5, "verre", False)
     # plantes : modèle Poly Haven à la place des cylindres
     R.remplacer(sc, [dict(cacher=rf"^(pot|plante)__(pot|plante)_{n}$", cadre=rf"^(pot|plante)__(pot|plante)_{n}$",
-                          modele="potted_plant_04") for n in ("sud",)])
+                          modele="potted_plant_04") for n in ("sud", "e1", "e3a", "e3b")])
+    # objets : vases en céramique et bols en bois (Poly Haven) dans l'emprise du modèle
+    R.remplacer(sc, [dict(cacher=rf"^objet__{n}$", cadre=rf"^objet__{n}$",
+                          modele="ceramic_vase_04" if n.startswith("vase") else "wooden_bowl_01")
+                     for n in ("vase_e0", "vase_e3", "vase_table", "bol_e2", "bol_tb")])
 
     sc.render.engine = "CYCLES"
     R.reglages_cycles(sc)
@@ -374,13 +377,17 @@ def build_scene():
 
 
 # ------------------------------------------------------------------ vues
-COUPES_ISO = r"^(mur__(mur_sud|mur_est_n|mur_est_s|couloir)|sol__couloir|linteau__linteau_baie|plafond__|clim__|plinthe__(sud|est_)|baie__)"
+COUPES_ISO = r"^(mur__(mur_sud|mur_est_n|mur_est_s|couloir)|sol__couloir|linteau__linteau_baie|poutre__|plafond__|clim__|plinthe__(sud|est_)|baie__|rideau__|tringle__)"
 VIEWS = {
     # isométrique depuis le sud-est : enfilade et étagères (ouest), canapé, cadres et desserte (nord)
     "iso": dict(ortho=8.2, loc=(272 + 640, 179 + 600, 600), target=(272, 179, 70), coupes=COUPES_ISO),
 }
 # variante : tout le chêne (enfilade, étagères, desserte, table basse, meuble bas) passe en noyer
 VIEWS["iso_noyer"] = dict(VIEWS["iso"], essence="noyer")
+
+
+def scene_de(v):
+    return v.get("essence", "chene"), v.get("config", "f")
 
 
 def camera(sc, name, v):
@@ -407,11 +414,11 @@ def rendre(sc, name, v, fichier):
 
 if __name__ == "__main__":
     vues = {n: v for n, v in VIEWS.items() if not VUES_DEMANDEES or n in VUES_DEMANDEES}
-    # la scène est reconstruite pour chaque essence (les matériaux bois en dépendent)
-    for essence in dict.fromkeys(v.get("essence", "chene") for v in vues.values()):
-        R.ESSENCE = essence
+    # la scène est reconstruite pour chaque essence (les matériaux bois en dépendent) et configuration
+    for cle in dict.fromkeys(scene_de(v) for v in vues.values()):
+        R.ESSENCE, CONFIG = cle
         _mats.clear()
         sc = build_scene()
         for name, v in vues.items():
-            if v.get("essence", "chene") == essence:
+            if scene_de(v) == cle:
                 rendre(sc, name, v, f"salon-v4-rendu-{name}.png")

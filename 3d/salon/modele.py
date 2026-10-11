@@ -9,9 +9,10 @@
 import math
 from dataclasses import dataclass
 
-VERSION = "V4.10"
-H = 250                 # hauteur sous plafond
-L, P = 544, 358         # salon : 544 (ouest → est) × 358 (nord → sud)
+VERSION = "V4.19"
+H = 254.5               # hauteur sous plafond (relevée)
+L, P = 547, 367         # salon : 547 (ouest → est) × 367 (nord → sud), relevé du client (V4.12)
+EP = 12                 # épaisseur dessinée des murs
 
 
 @dataclass
@@ -53,10 +54,20 @@ class Cyl:
 
 
 # ------------------------------------------------------------------ enveloppe (relevé)
-# Mur ouest : cloison du cellier et du WC, puis le passage sans porte vers le couloir (cadre de 10 de chaque côté).
-# Mur est : baie coulissante 2 vantaux de 202, sans allège (y 72 → 274, h 215). Décroché nord-est : à partir de
-# x 414, le mur nord est 3 cm plus au sud.
-PASSAGE = dict(y0=268, y1=343, h=204, cadre=10)
+# Cotes relevées par le client (V4.12 → V4.15) : G 547, M 367, C 10, D 62,5, F 90, L 257,6, J 82, coffre sud-ouest
+# 32 × 17, B 131, plafond 254,5, dessous de la poutre sud 231,7. Pas encore relevés : cadres du passage, clim.
+# Mur ouest : cloison du cellier et du WC, puis le passage sans porte vers le couloir, un cadre de chaque côté ; le
+# cadre sud est collé au coffre. Les cadres ne sont pas relevés : 257,6 + 82 + 2 cadres = 367 − 17 donne 10,4 pour
+# les deux, soit 5,2 chacun (supposés égaux).
+# Mur est : baie coulissante 2 vantaux, sans allège (y 72,5 → 277, soit 204,5 déduit de M − C − D − F, h 215).
+# Décroché nord-est : sur les 131 derniers cm (B relevé, x 416 → 547), le mur nord est 10 cm plus au sud.
+# Coffre plein dans l'angle sud-ouest : 32 le long du mur sud, 17 de saillie.
+PASSAGE = dict(h=204, cadre=(P - 17 - 257.6 - 82) / 2)
+PASSAGE["y0"] = 257.6 + PASSAGE["cadre"]
+PASSAGE["y1"] = PASSAGE["y0"] + 82
+COFFRE = dict(x1=32, y0=P - 17)
+# Poutre tout le long du mur sud, même saillie que le coffre (17, supposée), dessous à 231,7 (relevé).
+POUTRE = dict(y0=P - 17, z0=231.7)
 # sol : carrelage grès cérame grand format, pose droite parallèle aux murs, joints fins (teinte à choisir) ;
 # murs : même blanc chaud que la cuisine (piste Farrow & Ball Wimborne White), plinthes de la couleur des murs
 CARRELAGE = dict(taille=60, joint=0.3, couleur="#D9D2C6", nuance="#CFC7B9", couleur_joint="#BDB5A7",
@@ -66,22 +77,25 @@ MURS = dict(couleur="#EFE9DC", nom="Blanc chaud, comme la cuisine (piste Farrow 
 # intissé, cerise noire et vert-de-gris), motif ≈ 64 cm répété en miroir dans la hauteur
 PAPIER_PEINT = dict(nom="Hermione (4murs), intissé cerise noire et vert-de-gris, comme l'essai de la cuisine",
                     image="3d/textures/papier-hermione.png", motif=64, couleur="#4B2E3B")
-BAIE = dict(y0=72, y1=274, h=215, milieu=171)
-DECROCHE = dict(x0=414, y=3)
+DECROCHE = dict(x0=L - 131, y=10)
+BAIE = dict(y0=DECROCHE["y"] + 62.5, y1=P - 90, h=215)
+BAIE["milieu"] = (BAIE["y0"] + BAIE["y1"]) / 2
 
 ENVELOPPE = [
-    Bloc("mur", "mur_nord", -10, 556, -12, 0, 0, H),
-    Bloc("mur", "mur_nord_decroche", DECROCHE["x0"], 556, 0, DECROCHE["y"], 0, H),
-    Bloc("mur", "mur_sud", -10, 556, P, P + 12, 0, H),
+    Bloc("mur", "mur_nord", -10, L + EP, -12, 0, 0, H),
+    Bloc("mur", "mur_nord_decroche", DECROCHE["x0"], L + EP, 0, DECROCHE["y"], 0, H),
+    Bloc("mur", "mur_sud", -10, L + EP, P, P + 12, 0, H),
     Bloc("mur", "mur_ouest_n", -10, 0, 0, PASSAGE["y0"], 0, H),
     Bloc("mur", "mur_ouest_s", -10, 0, PASSAGE["y1"], P, 0, H),
+    Bloc("mur", "coffre_so", 0, COFFRE["x1"], COFFRE["y0"], P, 0, H),
+    Bloc("poutre", "poutre_sud", 0, L, POUTRE["y0"], P, POUTRE["z0"], H),
     Bloc("linteau", "linteau_passage", -10, 0, PASSAGE["y0"], PASSAGE["y1"], PASSAGE["h"], H),
     Bloc("cadre", "cadre_passage_n", -11, 1.5, PASSAGE["y0"] - PASSAGE["cadre"], PASSAGE["y0"], 0, PASSAGE["h"] + 10),
     Bloc("cadre", "cadre_passage_s", -11, 1.5, PASSAGE["y1"], PASSAGE["y1"] + PASSAGE["cadre"], 0, PASSAGE["h"] + 10),
-    Bloc("mur", "mur_est_n", L, 556, DECROCHE["y"], BAIE["y0"], 0, H),
-    Bloc("mur", "mur_est_s", L, 556, BAIE["y1"], P, 0, H),
-    Bloc("linteau", "linteau_baie", L, 556, BAIE["y0"], BAIE["y1"], BAIE["h"], H),
-    Bloc("baie", "baie_est", L, 556, BAIE["y0"], BAIE["y1"], 0, BAIE["h"]),
+    Bloc("mur", "mur_est_n", L, L + EP, DECROCHE["y"], BAIE["y0"], 0, H),
+    Bloc("mur", "mur_est_s", L, L + EP, BAIE["y1"], P, 0, H),
+    Bloc("linteau", "linteau_baie", L, L + EP, BAIE["y0"], BAIE["y1"], BAIE["h"], H),
+    Bloc("baie", "baie_est", L, L + EP, BAIE["y0"], BAIE["y1"], 0, BAIE["h"]),
     Bloc("papier_peint", "papier_desserte", DECROCHE["x0"], L, DECROCHE["y"], DECROCHE["y"] + 0.3, 0, H),
 ]
 
@@ -148,15 +162,20 @@ MEUBLES += [
 # ------------------------------------------------------------------ ④ desserte et platine vinyle, à côté de la baie
 # Contre le mur nord, dans le décroché nord-est (x 414 → 544), à côté de la baie : rien devant le vitrage (V4.3).
 # Façade vers le sud ; les vinyles sont rangés en rangées est-ouest, dos vers la pièce.
-DESSERTE = dict(x0=DECROCHE["x0"] + 1, x1=L - 1, y0=DECROCHE["y"] + 1, y1=DECROCHE["y"] + 46, z1=75, pieds=5,
-                niveaux=[7, 40], ep=2)
+# Sur 4 roulettes (Ø 5, 8 de haut, deux à frein côté façade) : on la tire pour le ménage ou pour la sortir du coin.
+# Deux niveaux de vinyles debout (pochettes 31,5 + 2 de jeu pour les attraper), platine sur le dessus.
+DESSERTE = dict(x0=DECROCHE["x0"] + 1, x1=L - 1, y0=DECROCHE["y"] + 1, y1=DECROCHE["y"] + 46, z1=82, roulettes=8,
+                niveaux=[10, 46], ep=2)
 _d = DESSERTE
 MEUBLES.append(Bloc("desserte", "desserte_dessus", _d["x0"], _d["x1"], _d["y0"], _d["y1"], _d["z1"] - _d["ep"], _d["z1"],
                     etiq="④"))
 for z in _d["niveaux"]:
     MEUBLES.append(Bloc("desserte", f"desserte_tablette_{z}", _d["x0"], _d["x1"], _d["y0"], _d["y1"], z - _d["ep"], z))
 for x in (_d["x0"], _d["x1"] - _d["ep"]):
-    MEUBLES.append(Bloc("desserte", f"desserte_joue_{x}", x, x + _d["ep"], _d["y0"], _d["y1"], 0, _d["z1"]))
+    MEUBLES.append(Bloc("desserte", f"desserte_joue_{x}", x, x + _d["ep"], _d["y0"], _d["y1"], _d["roulettes"], _d["z1"]))
+for x in (_d["x0"] + 5, _d["x1"] - 5):
+    for y in (_d["y0"] + 5, _d["y1"] - 5):
+        MEUBLES.append(Cyl("pied", f"desserte_roulette_{x}_{y}", x, y, 2.5, 0, _d["roulettes"]))
 for z0 in _d["niveaux"]:
     MEUBLES.append(Bloc("vinyles", f"vinyles_{z0}", _d["x0"] + _d["ep"] + 2, _d["x1"] - _d["ep"] - 2,
                         _d["y0"] + 6, _d["y0"] + 6 + 31.5, z0, z0 + 31.5, contenu="vinyles"))
@@ -201,8 +220,8 @@ MEUBLES += [
 ]
 
 # ------------------------------------------------------------------ climatisation (existante)
-# Unité murale sur le mur sud, tout à l'est (position et dimensions à relever).
-CLIM = dict(x0=L - 94, x1=L - 4, p=22, z0=205, z1=235)
+# Unité murale sur le mur sud, tout à l'est (position et dimensions à relever), sous la poutre (dessous à 231,7).
+CLIM = dict(x0=L - 94, x1=L - 4, p=22, z0=200, z1=230)
 ENVELOPPE.append(Bloc("clim", "clim", CLIM["x0"], CLIM["x1"], P - CLIM["p"], P, CLIM["z0"], CLIM["z1"]))
 
 # ------------------------------------------------------------------ ⑤ table ronde à volets et allonges
@@ -210,11 +229,14 @@ ENVELOPPE.append(Bloc("clim", "clim", CLIM["x0"], CLIM["x1"], P - CLIM["p"], P, 
 # sud-est, face à la baie ; pour recevoir, on la tire au milieu et on ajoute 4 allonges de 45 : ovale 280 × 100
 # est-ouest, entre le canapé et le meuble bas. Une Ø 90 plafonne vers 190 ouverte (8 à 10 couverts).
 # Les 8 chaises pliantes de plus sont rangées dans le kafoutche extérieur.
-TABLE = dict(cx=295, d=100, allonges=4, allonge=45, z1=75, ep=3, pied=(18, 18), ronde=(440, 262))
+# ouverte : centrée entre l'enfilade et le mur est ; ronde : à 104 du mur est et 96 du mur sud (V4.17, recalée sur
+# les murs relevés)
+TABLE = dict(cx=(ENFILADE["p"] + L) / 2, d=100, allonges=4, allonge=45, z1=75, ep=3, pied=(18, 18),
+             ronde=(L - 104, P - 96))
 TABLE["cy"] = (CANAPE["p"] + CONSOLE["y0"]) / 2                      # à égale distance du canapé et du meuble bas
 TABLE["r"] = TABLE["d"] / 2
 TABLE["ouvert"] = TABLE["d"] + TABLE["allonges"] * TABLE["allonge"]
-CONFIGS = {"f": dict(nom="ronde", chaises=4), "o": dict(nom="ouverte", chaises=12, long=TABLE["ouvert"])}
+CONFIGS = {"f": dict(nom="quotidien", chaises=4), "o": dict(nom="ouverte", chaises=12, long=TABLE["ouvert"])}
 _t = TABLE
 _rx, _ry = TABLE["ronde"]
 MEUBLES.append(Bloc("table", "table_plateau_f", _rx - _t["r"], _rx + _t["r"], _ry - _t["r"], _ry + _t["r"],
@@ -272,12 +294,13 @@ PAS_CHAISES = (4 * _s + 2 * math.pi * (TABLE["r"] + CHAISE["recul"])) / CONFIGS[
 
 def chaise_blocs(cx, cy, a, cfg, i):
     """Emprise d'une chaise tournée (assise, puis dossier côté extérieur) pour les coupes."""
+    n = f"chaise_{cfg}_{i}"
     c, s, h = math.cos(math.radians(a)), math.sin(math.radians(a)), CHAISE["l"] / 2
     ex, ey = h * (abs(c) + abs(s)), h * (abs(s) + abs(c))
     bx, by = cx + c * (h - 2), cy + s * (h - 2)                  # milieu du dossier
     dx, dy = h * abs(s) + 2, h * abs(c) + 2
-    return [Bloc("chaise", f"chaise_{cfg}_{i}", cx - ex, cx + ex, cy - ey, cy + ey, 0, CHAISE["assise"], config=cfg),
-            Bloc("chaise", f"chaise_{cfg}_{i}_dos", bx - dx, bx + dx, by - dy, by + dy, CHAISE["assise"], CHAISE["dos"],
+    return [Bloc("chaise", n, cx - ex, cx + ex, cy - ey, cy + ey, 0, CHAISE["assise"], config=cfg),
+            Bloc("chaise", n + "_dos", bx - dx, bx + dx, by - dy, by + dy, CHAISE["assise"], CHAISE["dos"],
                  config=cfg)]
 
 
@@ -285,27 +308,29 @@ for cfg, lst in CHAISES.items():
     for i, (x, y, a) in enumerate(lst):
         MEUBLES += chaise_blocs(x, y, a, cfg, i)
 
-# suspension au-dessus de la table ronde (place du quotidien) : Ø ≈ moitié de la table, 75 au-dessus du plateau
+# suspension au-dessus de la table du quotidien : Ø ≈ moitié de la table, 75 au-dessus du plateau
 SUSPENSION = dict(d=50, z0=150, z1=172)
-MEUBLES.append(Cyl("lampe", "suspension", _rx, _ry, SUSPENSION["d"] / 2, SUSPENSION["z0"],
-                   SUSPENSION["z1"]))
+MEUBLES.append(Cyl("lampe", "suspension", _rx, _ry, SUSPENSION["d"] / 2, SUSPENSION["z0"], SUSPENSION["z1"]))
 
 # ------------------------------------------------------------------ ⑥ table basse, ⑦ siège (DYVLINGE ou chilienne)
-# Ovale 105 × 55 (un peu plus de la moitié du canapé, angles adoucis pour circuler), dessus à 38, sous l'assise (42),
-# à 40 du canapé. Table ouverte, elle se range debout dans l'allée devant le module nord de l'enfilade.
-TABLE_BASSE = dict(l=105, p=55, z1=38, ecart=40)
+# IKEA UGGLERUM plaqué noyer, 130 × 65 × 43 (149 €, modèle 3D sur la fiche) : 2/3 du canapé, angles adoucis,
+# pieds effilés ; dessus à 43, à peine au-dessus de l'assise (40) ; à 40 du canapé.
+# Table ouverte, elle se range debout sur son grand côté dans l'allée devant le module nord de l'enfilade
+# (43 d'épaisseur, 65 de haut).
+TABLE_BASSE = dict(l=130, p=65, z1=43, ecart=40, nom="IKEA UGGLERUM plaqué noyer", prix=149,
+                   url="https://www.ikea.com/fr/fr/p/ugglerum-table-basse-plaque-noyer-60627980/")
 _tb = TABLE_BASSE
 _tbx = (CANAPE["x0"] + CANAPE["x1"]) / 2 - _tb["l"] / 2
 _tby = CANAPE["p"] + _tb["ecart"]
-_ax = ENFILADE["p"] + (ALLEE_ENFILADE - _tb["p"]) / 2
-TABLE_BASSE["pos"] = {"f": (_tbx, _tby, _tbx + _tb["l"], _tby + _tb["p"]), "o": (_ax, 2, _ax + _tb["p"], 2 + _tb["l"])}
-for cfg, (x0, y0, x1, y1) in TABLE_BASSE["pos"].items():
-    MEUBLES.append(Bloc("table_basse", f"table_basse_{cfg}", x0, x1, y0, y1, _tb["z1"] - 3, _tb["z1"], etiq="⑥",
-                        config=cfg))
-    for px in (x0 + 4, x1 - 6):
-        for py in (y0 + 4, y1 - 6):
-            MEUBLES.append(Bloc("pied", f"table_basse_{cfg}_pied_{px}_{py}", px, px + 2, py, py + 2, 0, _tb["z1"] - 3,
-                                config=cfg))
+_ax = ENFILADE["p"] + (ALLEE_ENFILADE - _tb["z1"]) / 2
+TABLE_BASSE["pos"] = {"f": (_tbx, _tby, _tbx + _tb["l"], _tby + _tb["p"]), "o": (_ax, 2, _ax + _tb["z1"], 2 + _tb["l"])}
+_x0, _y0, _x1, _y1 = TABLE_BASSE["pos"]["f"]
+MEUBLES.append(Bloc("table_basse", "table_basse_f", _x0, _x1, _y0, _y1, _tb["z1"] - 10, _tb["z1"], etiq="⑥", config="f"))
+for px in (_x0 + 20, _x1 - 23):
+    for py in (_y0 + 2, _y1 - 5):
+        MEUBLES.append(Bloc("pied", f"table_basse_f_pied_{px}_{py}", px, px + 3, py, py + 3, 0, _tb["z1"] - 10, config="f"))
+_x0, _y0, _x1, _y1 = TABLE_BASSE["pos"]["o"]
+MEUBLES.append(Bloc("table_basse", "table_basse_o", _x0, _x1, _y0, _y1, 0, _tb["p"], etiq="⑥", config="o"))
 # ⑦ siège pivotant IKEA DYVLINGE (63 × 75 × 68, assise 43), tourné vers le canapé, pieds avant sur le tapis ;
 # table ouverte, il recule contre le mur nord, à côté de la desserte.
 DYVLINGE = dict(l=63, p=75, h=68, assise=43, prix=189,
@@ -349,13 +374,6 @@ TAPIS["x1"] = TAPIS["x0"] + TAPIS["l"]
 TAPIS["y0"] = CANAPE["p"] - TAPIS["sous_canape"]
 TAPIS["y1"] = TAPIS["y0"] + TAPIS["p"]
 DECO.append(Bloc("tapis", "tapis_salon", TAPIS["x0"], TAPIS["x1"], TAPIS["y0"], TAPIS["y1"], 0, 1, deco=True))
-# coussins velours jaune moutarde sur le canapé : deux à l'ouest (50 et 45, décalés), un à l'est (45) ; posés sur
-# l'assise contre les coussins de dossier
-COUSSINS = dict(couleur="#C08A2E", nom="velours jaune moutarde (comme les coussins de la banquette de la cuisine)")
-for nom, x0, l, h in (("o1", CANAPE["x0"] + 10, 50, 50), ("o2", CANAPE["x0"] + 52, 45, 45),
-                      ("e1", CANAPE["x1"] - 10 - 45, 45, 45)):
-    DECO.append(Bloc("coussin", f"coussin_{nom}", x0, x0 + l, 57, 71, CANAPE["assise"] + 3, CANAPE["assise"] + 3 + h,
-                     deco=True))
 # luminaires : lampadaire de lecture contre l'accoudoir est du canapé, derrière l'épaule de qui est dans le siège
 # (hors du passage devant la desserte) ; lampe à poser sur l'enfilade (sous la 1re tablette) ; petite lampe au bout
 # est de la desserte
@@ -364,12 +382,12 @@ DECO += [Cyl("lampe_pied", "lampadaire_socle", LAMPADAIRE["cx"], LAMPADAIRE["cy"
          Cyl("lampe_pied", "lampadaire_tige", LAMPADAIRE["cx"], LAMPADAIRE["cy"], 1, 3, LAMPADAIRE["z"][0], deco=True),
          Cyl("lampe", "lampadaire_abat_jour", LAMPADAIRE["cx"], LAMPADAIRE["cy"], LAMPADAIRE["abat"], *LAMPADAIRE["z"],
              deco=True)]
-for nom, cx, cy, z0, h, r in (("enfilade", 22, 40, ENFILADE["z1"], 40, 14), ("desserte", DESSERTE["x1"] - 16, 22, DESSERTE["z1"], 35, 11)):
+for nom, cx, cy, z0, h, r in (("enfilade", 22, 40, ENFILADE["z1"], 40, 14), ("desserte", DESSERTE["x1"] - 16, DESSERTE["y0"] + 18, DESSERTE["z1"], 35, 11)):
     DECO += [Cyl("lampe_pied", f"lampe_{nom}_pied", cx, cy, 5, z0, z0 + h - 16, deco=True),
              Cyl("lampe", f"lampe_{nom}_abat_jour", cx, cy, r, z0 + h - 18, z0 + h, deco=True)]
 # plantes : une grande à droite du meuble bas, hors de l'image et loin de la clim (air froid et sec) ;
 # des branches sur l'enfilade
-for nom, cx, cy, r, h in (("sud", CONSOLE["x1"] + 52, 337, 16, 160),):
+for nom, cx, cy, r, h in (("sud", CONSOLE["x1"] + 52, P - 21, 16, 160),):
     DECO += [Cyl("pot", f"pot_{nom}", cx, cy, r, 0, 35, deco=True),
              Cyl("plante", f"plante_{nom}", cx, cy, r + 6, 35, h, deco=True)]
 DECO += [Cyl("pot", "vase_enfilade", 22, 205, 8, ENFILADE["z1"], ENFILADE["z1"] + 28, deco=True),
@@ -386,12 +404,51 @@ for i, (x0, x1, y, z0, z1) in enumerate(CADRES):
 _alea = [23, 27, 30, 21, 25, 28, 24, 22, 29, 26]
 for k, z in enumerate(ETAGERES["zs"][:-1]):
     y, n = ETAGERES["y0"] + 4, 0
-    while y < ETAGERES["y1"] - 30:
+    while y < ETAGERES["y1"] - 45:                        # le bout sud de chaque tablette reçoit un objet
         l = 30 + 12 * ((k + n) % 4)                       # longueur de la rangée
         h = _alea[(k * 3 + n) % len(_alea)]
         DECO.append(Bloc("livres", f"livres_{k}_{n}", 1, 22, y, min(y + l, ETAGERES["y1"] - 4), z, z + h, deco=True))
         y += l + (14 if (k + n) % 3 == 0 else 3)
         n += 1
+# objets sur les étagères (V4.19) : un par tablette au bout sud des livres, et la tablette du haut (24 sous le
+# plafond, trop basse pour des livres) garnie de deux petites plantes retombantes et d'un vase ; hauteurs ≤ 2/3 de
+# l'espace libre pour que les objets respirent
+_e, _yo = ETAGERES, ETAGERES["y1"] - 22
+_z = ETAGERES["zs"]
+DECO += [Cyl("objet", "vase_e0", 14, _yo, 7, _z[0], _z[0] + 22, deco=True),
+         Cyl("pot", "pot_e1", 14, _yo, 7, _z[1], _z[1] + 11, deco=True),
+         Cyl("plante", "plante_e1", 14, _yo, 10, _z[1] + 11, _z[1] + 24, deco=True),
+         Cyl("objet", "bol_e2", 14, _yo, 11, _z[2], _z[2] + 8, deco=True),
+         Cyl("objet", "vase_e3", 14, (_e["y0"] + _e["y1"]) / 2, 6, _z[3], _z[3] + 17, deco=True)]
+for nom, y in (("e3a", _e["y0"] + 35), ("e3b", _e["y1"] - 35)):
+    DECO += [Cyl("pot", f"pot_{nom}", 14, y, 8, _z[3], _z[3] + 11, deco=True),
+             Cyl("plante", f"plante_{nom}", 14, y, 12, _z[3] + 11, _z[3] + 21, deco=True)]
+# table basse : pile de deux livres d'art et un bol en bois (un tiers du plateau au plus, le reste libre pour poser)
+_tx0, _ty0, _tx1, _ty1 = TABLE_BASSE["pos"]["f"]
+_zt = TABLE_BASSE["z1"]
+DECO += [Bloc("livre", "livre_tb_1", _tx0 + 18, _tx0 + 50, _ty0 + 14, _ty0 + 39, _zt, _zt + 3, deco=True, config="f"),
+         Bloc("livre", "livre_tb_2", _tx0 + 21, _tx0 + 47, _ty0 + 17, _ty0 + 37, _zt + 3, _zt + 5.5, deco=True, config="f"),
+         Cyl("objet", "bol_tb", _tx1 - 35, (_ty0 + _ty1) / 2, 13, _zt, _zt + 8, deco=True, config="f")]
+# table ronde : un vase bas au centre (sous la suspension, ≤ 30 de haut pour se voir par-dessus)
+DECO.append(Cyl("objet", "vase_table", *TABLE["ronde"], 6, TABLE["z1"], TABLE["z1"] + 24, deco=True, config="f"))
+# baie : un seul rideau de lin écru, sur rail sous le plafond, tiré au sud sur le trumeau (au nord, la desserte) ;
+# replié, ≈ 60 de plis dont 15 sur le bord du vitrage ; déplié, il couvre toute la baie (≈ 2 fois sa largeur de tissu)
+RIDEAU = dict(y0=BAIE["y1"] - 15, y1=BAIE["y1"] + 45, p=12, rail=250, nom="lin écru lavé, sur rail au plafond")
+DECO += [Bloc("rideau", "rideau_baie", L - 2 - RIDEAU["p"], L - 2, RIDEAU["y0"], RIDEAU["y1"], 0.5, RIDEAU["rail"] - 1,
+              deco=True),
+         Bloc("tringle", "rail_rideau", L - 10, L - 6, BAIE["y0"] - 8, RIDEAU["y1"], RIDEAU["rail"] - 1, RIDEAU["rail"] + 1,
+              deco=True)]
+# pistes non dessinées (page, section Déco)
+PISTES_DECO = [
+    ("Plaid", "sur le dossier du DYVLINGE ou l'accoudoir ouest du canapé, laine ou lin épais, ton rouille ou olive pour "
+              "répondre à l'orange du siège"),
+    ("Enceintes", "pour la platine : une paire d'enceintes bibliothèque sur pieds de part et d'autre de la desserte, ou "
+                  "actives sur ses deux bouts (la petite lampe passe alors sur l'enfilade)"),
+    ("Pochette du moment", "une tablette porte-vinyles fine (≈ 4 cm) sur le papier peint, à côté du cadre, pour exposer "
+                           "l'album qui tourne"),
+    ("Panier", "un grand panier en osier pour les plaids, au pied du meuble bas, côté ouest"),
+    ("Bougies", "bougeoirs en laiton ou céramique sur l'enfilade et la table ronde, pour le soir"),
+]
 MEUBLES += DECO
 
 # ------------------------------------------------------------------ dégagements (cotés sur le plan)
@@ -422,14 +479,62 @@ TABLES_REPLIABLES = [
      "12", "789 € (soldé)", "https://www.kontedesign.com/fr/p/console-gaiole-en-bois-et-acier-oxyde-90x45-cm-extensible-a-90x295-cm/"),
     ("Console extensible", "Vente-unique Evolve (frêne blanc)", "90 × 42", "302 × 90 (5 rallonges de 52, rangées dans la console)",
      "12 à 14", "840 €", "https://www.vente-unique.com/p/console-extensible-90x42-302-cm-evolve-frene-blanc"),
+    ("Rectangulaire extensible", "IKEA TJÄRKIL (plaqué noyer, acier noir)", "180 × 100", "235 puis 290 × 100 (2 allonges)",
+     "8 annoncées (12 en serrant) ; essayée en V4.16, jugée moche", "599 €",
+     "https://www.ikea.com/fr/fr/p/tjaerkil-table-extensible-noir-plaque-noyer-70630454/"),
+    ("Rectangulaire extensible", "IKEA KARSKÄR (hévéa massif)", "240 × 100", "300 × 100", "6 à 10 annoncées", "499 €",
+     "https://www.ikea.com/fr/fr/p/karskaer-table-extensible-hevea-00611265/"),
+    ("Rectangulaire extensible", "IKEA STRANDTORP (brun, pieds acier)", "150 × 95", "205 puis 260 × 95", "4 à 10", "549 €",
+     "https://www.ikea.com/fr/fr/p/strandtorp-table-extensible-brun-80388587/"),
+    ("Ronde extensible", "IKEA SKANSNÄS (hêtre plaqué brun)", "Ø 115", "170 × 115", "4 à 6 (8 ouverte)", "699 €",
+     "https://www.ikea.com/fr/fr/p/skansnaes-table-extensible-brun-hetre-plaque-70563237/"),
     ("Table à abattants", "IKEA NORDEN", "26 × 80", "152 × 80", "2 à 4 (6 serrés)", "—",
      "https://www.dimensions.com/element/ikea-norden-gateleg-table"),
 ]
 # rendus 3D : (titre, version du modèle rendue, [(vue, nom de la variante)])
-RENDUS = [("Vue isométrique depuis le sud-est (murs sud et est coupés) : table ronde, DYVLINGE, déco", "V4.10",
+RENDUS = [("Vue isométrique depuis le sud-est (murs sud et est coupés) : table ronde, DYVLINGE, UGGLERUM, déco (rideau coupé avec le mur est)", "V4.19",
            [("iso", "Chêne"), ("iso_noyer", "Noyer")])]
 
 CHANGEMENTS = [
+    ("V4.19", "11/10/2026",
+     "Variante TJÄRKIL retirée (bouton Modèle et rendus) ; la page Relevé est supprimée, toutes ses cotes sont dans le "
+     "modèle. Passe déco : rideau de lin écru tiré au sud de la baie sur rail au plafond ; objets sur les étagères "
+     "(vase, petite plante, bol, et la tablette du haut garnie de deux plantes retombantes et d'un vase) ; deux livres "
+     "d'art et un bol sur la table basse ; vase au centre de la table ronde. Pistes non dessinées : plaid, enceintes, "
+     "pochette du moment, panier, bougies. Rendus refaits."),
+    ("V4.18", "11/10/2026",
+     "Rendus refaits avec les cotes relevées et le mobilier recalé (V4.12 → V4.17) : vue iso (chêne et noyer) et "
+     "variante TJÄRKIL (fermée et ouverte)."),
+    ("V4.17", "11/10/2026",
+     "Mobilier recalé sur les cotes relevées (547 × 367) : table ronde à 104 du mur est et 96 du mur sud, comme "
+     "avant (centre 443, 271, suspension au-dessus) ; table ouverte centrée entre l'enfilade et le mur est (296) ; "
+     "grande plante et lampe de la desserte recollées au mur. Le reste se calait déjà sur les murs."),
+    ("V4.16", "11/10/2026",
+     "Bouton Modèle : table Louis-Philippe ou IKEA TJÄRKIL (plaqué noyer, bouts arrondis, 599 €). TJÄRKIL fermée "
+     "180 × 100 nord-sud dans l'angle sud-est, 4 chaises ; ouverte 290 × 100 à la place de la Louis-Philippe ouverte, "
+     "12 chaises (5 par côté à pas de 52, une à chaque bout). Rendus de la variante (modèle 3D IKEA, fermée en "
+     "retirant les allonges) : fermée et ouverte. Les rendus iso et iso_noyer datent de la V4.11."),
+    ("V4.15", "11/10/2026",
+     "Hauteur sous plafond relevée : 254,5 (au lieu de 250). Poutre tout le long du mur sud, dessous à 231,7 (22,8 "
+     "de retombée), même saillie que le coffre sud-ouest (17, supposée). La clim (cotes toujours supposées) descend "
+     "sous la poutre : 200 → 230."),
+    ("V4.14", "11/10/2026",
+     "Décroché nord-est relevé : 131 de long (B), il commence à 416 du mur ouest (au lieu de 414). La desserte, "
+     "calée dans le décroché, passe à 129 de large."),
+    ("V4.13", "11/10/2026",
+     "Passage : un cadre de chaque côté, le cadre sud collé au coffre. Les deux cadres se partagent les 10,4 qui "
+     "restent (367 − 17 − 257,6 − 82), soit 5,2 chacun ; le passage de 82 va de 262,8 à 344,8."),
+    ("V4.12", "11/10/2026",
+     "Cotes de la pièce corrigées d'après le relevé du client (page Relevé) : 547 × 367 (au lieu de 544 × 358) ; "
+     "décroché nord-est de 10 (au lieu de 3) ; baie à 62,5 du décroché et 90 du coin sud, soit 204,5 de large ; "
+     "passage de 82 à 257,6 + 10 du coin nord, sans cadre au sud ; coffre plein 32 × 17 dans l'angle sud-ouest. "
+     "Le mobilier garde ses positions ; rendus non refaits."),
+    ("V4.11", "11/10/2026",
+     "Coussins jaunes retirés. Table basse = IKEA UGGLERUM plaqué noyer 130 × 65 × 43 (149 €), modèle 3D de la fiche "
+     "dans le rendu ; table ouverte, elle se range debout sur son grand côté dans l'allée de l'enfilade. Desserte "
+     "vinyle sur 4 roulettes (8 de haut) : dessus à 82, niveaux de vinyles à 10 et 46. Tables extensibles IKEA "
+     "ajoutées à la recherche (TJÄRKIL 180 → 290 × 100, KARSKÄR 240 → 300, STRANDTORP 150 → 260, SKANSNÄS ronde "
+     "Ø 115 → 170) : aucune ronde ne dépasse 170 ouverte, aucune n'est annoncée pour 12."),
     ("V4.10", "11/10/2026",
      "Rendu : variante noyer (vue iso_noyer) où tout le chêne (enfilade, étagères, desserte, table basse, meuble "
      "bas) passe en noyer ; bouton Chêne / Noyer sous le titre du rendu."),
