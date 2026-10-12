@@ -81,6 +81,16 @@ salon-rendu echantillons="64" *vues:
 salon-figer:
     python3 3d/salon/plan.py --figer
 
+# Meuble linge SDB V3 : régénère sdb-meuble-v3.html, la notice de montage et le modèle FreeCAD depuis 3d/sdb/modele.py
+sdb:
+    python3 3d/sdb/plan.py
+    python3 3d/sdb/montage.py
+    /Applications/FreeCAD.app/Contents/Resources/bin/freecadcmd 3d/sdb/cad.py
+
+# Fige la version courante du meuble SDB (bouton de comparaison + archive/sdb-meuble-v3.x.html)
+sdb-figer:
+    python3 3d/sdb/plan.py --figer
+
 # Recherches Leboncoin : serveur local des pages achats/ (boutons ★ / ✕), voir .claude/skills/lbc/SKILL.md
 achats port="8765":
     uv run .claude/skills/lbc/achats.py servir --port {{port}}
