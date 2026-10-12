@@ -9,7 +9,7 @@
 import math
 from dataclasses import dataclass
 
-VERSION = "V4.19"
+VERSION = "V4.20"
 H = 254.5               # hauteur sous plafond (relevée)
 L, P = 547, 367         # salon : 547 (ouest → est) × 367 (nord → sud), relevé du client (V4.12)
 EP = 12                 # épaisseur dessinée des murs
@@ -493,9 +493,15 @@ TABLES_REPLIABLES = [
 ]
 # rendus 3D : (titre, version du modèle rendue, [(vue, nom de la variante)])
 RENDUS = [("Vue isométrique depuis le sud-est (murs sud et est coupés) : table ronde, DYVLINGE, UGGLERUM, déco (rideau coupé avec le mur est)", "V4.19",
-           [("iso", "Chêne"), ("iso_noyer", "Noyer")])]
+           [("iso", "Chêne"), ("iso_noyer", "Noyer")]),
+          ("Vue isométrique opposée, depuis le nord-ouest (murs nord et ouest coupés, avec les cadres et le papier peint) : "
+           "écran et meuble bas, baie et rideau, table ronde", "V4.20",
+           [("iso_no", "Chêne"), ("iso_no_noyer", "Noyer")])]
 
 CHANGEMENTS = [
+    ("V4.20", "11/10/2026",
+     "Rendu 3D : vue isométrique opposée, depuis le nord-ouest (murs nord et ouest et plafond coupés), en chêne et en "
+     "noyer. Modèle inchangé."),
     ("V4.19", "11/10/2026",
      "Variante TJÄRKIL retirée (bouton Modèle et rendus) ; la page Relevé est supprimée, toutes ses cotes sont dans le "
      "modèle. Passe déco : rideau de lin écru tiré au sud de la baie sur rail au plafond ; objets sur les étagères "

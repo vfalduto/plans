@@ -2,7 +2,8 @@
 #
 #   /Applications/Blender.app/Contents/MacOS/Blender -b --python 3d/salon/rendu.py -- [échantillons] [vue ...]
 #   ex. : just salon-rendu 16 iso    (aperçu rapide)
-# Vues : iso (isométrique depuis le sud-est, murs sud et est et plafond coupés).
+# Vues : iso (isométrique depuis le sud-est, murs sud et est et plafond coupés) ;
+#        iso_no (vue opposée, depuis le nord-ouest, murs nord et ouest et plafond coupés).
 # Configuration rendue : table ronde (quotidien), siège DYVLINGE, décoration affichée.
 # Modèles IKEA (3d/modeles/ikea/) : canapé SÖDERHAMN, siège DYVLINGE, table basse UGGLERUM.
 # Produit 3d/sortie/salon-v4-rendu-<vue>.png.
@@ -384,6 +385,12 @@ VIEWS = {
 }
 # variante : tout le chêne (enfilade, étagères, desserte, table basse, meuble bas) passe en noyer
 VIEWS["iso_noyer"] = dict(VIEWS["iso"], essence="noyer")
+# vue opposée, depuis le nord-ouest : écran et meuble bas (sud), baie et rideau (est), table ronde ; le passage,
+# les cadres du mur nord et le papier peint partent avec leurs murs
+COUPES_ISO_NO = (r"^(mur__(mur_nord|mur_nord_decroche|mur_ouest_n|mur_ouest_s|couloir)|sol__couloir|papier_peint__"
+                 r"|linteau__linteau_passage|cadre__cadre_passage|cadre_mur__|plafond__|plinthe__(nord|ouest_n))")
+VIEWS["iso_no"] = dict(ortho=8.2, loc=(272 - 640, 179 - 600, 600), target=(272, 179, 70), coupes=COUPES_ISO_NO)
+VIEWS["iso_no_noyer"] = dict(VIEWS["iso_no"], essence="noyer")
 
 
 def scene_de(v):
