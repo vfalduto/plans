@@ -37,10 +37,11 @@ summary{cursor:pointer;color:var(--muted);font-size:14px;list-style:none}
 summary::before{content:"▸ ";display:inline-block;width:14px}
 details[open] summary::before{content:"▾ "}
 details h3{font-size:12px;text-transform:uppercase;letter-spacing:.08em;color:var(--muted);font-weight:600;margin:20px 0 8px}
-.arch{display:flex;flex-wrap:wrap;gap:6px}
-.arch a{display:inline-block;padding:4px 9px;border:1px solid var(--line);border-radius:6px;color:var(--muted);text-decoration:none;font-size:13px}
-.arch a:hover{color:var(--ink);border-color:var(--accent)}
-@media (max-width:540px){li a{margin-left:0}}
+.arch li{display:flex;flex-wrap:wrap;justify-content:space-between;align-items:baseline;gap:2px 16px;padding:6px 0;border-bottom:1px solid var(--line);font-size:14px}
+.arch li a{display:inline;padding:0;margin:0;border-radius:0;color:var(--ink)}
+.arch li a:hover{background:none;color:var(--accent);text-decoration:underline}
+.arch li span{display:inline;margin:0;font-size:13px;color:var(--muted);font-variant-numeric:tabular-nums}
+@media (max-width:540px){li a{margin-left:0}.arch li{flex-direction:column;align-items:flex-start}}
 </style>
 </head>
 <body>
@@ -91,72 +92,72 @@ details h3{font-size:12px;text-transform:uppercase;letter-spacing:.08em;color:va
     <summary>Archives</summary>
 
     <h3>Cuisine</h3>
-    <div class="arch">
-      <a href="archive/cuisine-v12.html">V12</a>
-      <a href="archive/cuisine-v12.7.html">V12.7</a>
-      <a href="archive/cuisine-v12-imprimable.html">V12 imprimable</a>
-      <a href="archive/cuisine-v12-banquette.html">Banquette en L (V12.3)</a>
-      <a href="archive/cuisine-v11.html">V11</a>
-      <a href="archive/cuisine-v11.9.html">V11.9</a>
-      <a href="archive/cuisine-v11.13.html">V11.13</a>
-      <a href="archive/cuisine-v11.26.html">V11.26</a>
-      <a href="archive/cuisine-v11.34.html">V11.34</a>
-      <a href="archive/cuisine-v11.49.html">V11.49</a>
-      <a href="archive/cuisine-v11.50.html">V11.50</a>
-      <a href="archive/cuisine-dispositions.html">Dispositions V2</a>
-      <a href="archive/cuisine-dispositions-v1.html">Dispositions V1</a>
-      <a href="cuisine-plan.html">Plan V3.6</a>
-      <a href="archive/cuisine-plan-avant-A2.html">Plan V3.5</a>
-      <a href="archive/cuisine-plan-v2.9-pre-banquette.html">Plan V2.9</a>
-      <a href="archive/cuisine-plan-v2.8.html">V2.8</a>
-      <a href="archive/cuisine-plan-v2.7.html">V2.7</a>
-      <a href="archive/cuisine-plan-v2.6.html">V2.6</a>
-      <a href="archive/cuisine-plan-v2.5.html">V2.5</a>
-      <a href="archive/cuisine-plan-v2.4.html">V2.4</a>
-      <a href="archive/cuisine-plan-avant-A-alignee.html">Plan V2</a>
-      <a href="archive/cuisine-cellier-options.html">Cellier : options</a>
-      <a href="cuisine-couleurs.html">Couleurs</a>
-      <a href="archive/cuisine-couleurs-avant-bois.html">Couleurs (avant bois)</a>
-      <a href="archive/cuisine-proposition-1.html">Prop. 1</a>
-      <a href="archive/cuisine-proposition-2-v1.html">2 v1</a>
-      <a href="archive/cuisine-proposition-2.html">2</a>
-      <a href="archive/cuisine-proposition-3.html">3</a>
-      <a href="archive/cuisine-proposition-4-v1.html">4 v1</a>
-      <a href="archive/cuisine-proposition-4.html">4</a>
-      <a href="archive/cuisine-proposition-5.html">5</a>
-      <a href="archive/cuisine-proposition-6.html">6</a>
-      <a href="archive/cuisine-proposition-6-v2.html">6 v2</a>
-      <a href="archive/cuisine-proposition-6-v2b.html">6 v2b</a>
-      <a href="archive/cuisine-proposition-6-v3.html">6 v3</a>
-      <a href="archive/cuisine-proposition-7.html">7</a>
-      <a href="archive/cuisine-proposition-8.html">8</a>
-      <a href="archive/cuisine-proposition-9.html">9</a>
-      <a href="archive/cuisine-sans-cellier-v1.html">Sans cellier V1</a>
-    </div>
+    <ul class="arch">
+      <li><a href="archive/cuisine-v12.html">Cuisine V12</a><span>créée <time>2026-10-09</time> · modifiée <time>2026-10-12</time></span></li>
+      <li><a href="archive/cuisine-v12.7.html">Cuisine V12.7 (figée)</a><span>créée <time>2026-10-08</time> · modifiée <time>2026-10-12</time></span></li>
+      <li><a href="archive/cuisine-v12-imprimable.html">Cuisine V12, version imprimable</a><span>créée <time>2026-10-11</time> · modifiée <time>2026-10-12</time></span></li>
+      <li><a href="archive/cuisine-v12-banquette.html">Banquette en L (V12.3)</a><span>créée <time>2026-10-11</time> · modifiée <time>2026-10-11</time></span></li>
+      <li><a href="archive/cuisine-v11.html">Cuisine V11</a><span>créée <time>2026-10-06</time> · modifiée <time>2026-10-09</time></span></li>
+      <li><a href="archive/cuisine-v11.50.html">Cuisine V11.50</a><span>créée <time>2026-10-08</time> · modifiée <time>2026-10-08</time></span></li>
+      <li><a href="archive/cuisine-v11.49.html">Cuisine V11.49</a><span>créée <time>2026-10-08</time> · modifiée <time>2026-10-08</time></span></li>
+      <li><a href="archive/cuisine-v11.34.html">Cuisine V11.34</a><span>créée <time>2026-10-08</time> · modifiée <time>2026-10-08</time></span></li>
+      <li><a href="archive/cuisine-v11.26.html">Cuisine V11.26</a><span>créée <time>2026-10-08</time> · modifiée <time>2026-10-08</time></span></li>
+      <li><a href="archive/cuisine-v11.13.html">Cuisine V11.13</a><span>créée <time>2026-10-07</time> · modifiée <time>2026-10-07</time></span></li>
+      <li><a href="archive/cuisine-v11.9.html">Cuisine V11.9</a><span>créée <time>2026-10-06</time> · modifiée <time>2026-10-06</time></span></li>
+      <li><a href="archive/cuisine-dispositions.html">Dispositions V2</a><span>créée <time>2026-10-06</time> · modifiée <time>2026-10-06</time></span></li>
+      <li><a href="archive/cuisine-dispositions-v1.html">Dispositions V1</a><span>créée <time>2026-10-06</time> · modifiée <time>2026-10-06</time></span></li>
+      <li><a href="cuisine-plan.html">Proposition 9, plan V3.6</a><span>créée <time>2026-10-01</time> · modifiée <time>2026-10-06</time></span></li>
+      <li><a href="archive/cuisine-plan-avant-A2.html">Proposition 9, plan V3.5</a><span>créée <time>2026-10-01</time> · modifiée <time>2026-10-06</time></span></li>
+      <li><a href="archive/cuisine-plan-v2.9-pre-banquette.html">Proposition 9, plan V2.9</a><span>créée <time>2026-10-01</time> · modifiée <time>2026-10-01</time></span></li>
+      <li><a href="archive/cuisine-plan-v2.8.html">Proposition 9, plan V2.8</a><span>créée <time>2026-10-01</time> · modifiée <time>2026-10-01</time></span></li>
+      <li><a href="archive/cuisine-plan-v2.7.html">Proposition 9, plan V2.7</a><span>créée <time>2026-10-01</time> · modifiée <time>2026-10-01</time></span></li>
+      <li><a href="archive/cuisine-plan-v2.6.html">Proposition 9, plan V2.6</a><span>créée <time>2026-10-01</time> · modifiée <time>2026-10-01</time></span></li>
+      <li><a href="archive/cuisine-plan-v2.5.html">Proposition 9, plan V2.5</a><span>créée <time>2026-10-01</time> · modifiée <time>2026-10-01</time></span></li>
+      <li><a href="archive/cuisine-plan-v2.4.html">Proposition 9, plan V2.4</a><span>créée <time>2026-10-01</time> · modifiée <time>2026-10-01</time></span></li>
+      <li><a href="archive/cuisine-plan-avant-A-alignee.html">Proposition 9, plan V2</a><span>créée <time>2026-10-01</time> · modifiée <time>2026-10-01</time></span></li>
+      <li><a href="archive/cuisine-cellier-options.html">Cellier : options d'aménagement</a><span>créée <time>2026-10-01</time> · modifiée <time>2026-10-01</time></span></li>
+      <li><a href="cuisine-couleurs.html">Couleurs</a><span>créée <time>2026-10-01</time> · modifiée <time>2026-10-05</time></span></li>
+      <li><a href="archive/cuisine-couleurs-avant-bois.html">Couleurs (avant bois)</a><span>créée <time>2026-10-01</time> · modifiée <time>2026-10-05</time></span></li>
+      <li><a href="archive/cuisine-proposition-1.html">Proposition 1</a><span>créée <time>2026-10-01</time> · modifiée <time>2026-10-05</time></span></li>
+      <li><a href="archive/cuisine-proposition-2-v1.html">Proposition 2 V1</a><span>créée <time>2026-10-01</time> · modifiée <time>2026-10-05</time></span></li>
+      <li><a href="archive/cuisine-proposition-2.html">Proposition 2</a><span>créée <time>2026-10-01</time> · modifiée <time>2026-10-05</time></span></li>
+      <li><a href="archive/cuisine-proposition-3.html">Proposition 3</a><span>créée <time>2026-10-01</time> · modifiée <time>2026-10-05</time></span></li>
+      <li><a href="archive/cuisine-proposition-4-v1.html">Proposition 4 V1</a><span>créée <time>2026-10-01</time> · modifiée <time>2026-10-05</time></span></li>
+      <li><a href="archive/cuisine-proposition-4.html">Proposition 4</a><span>créée <time>2026-10-01</time> · modifiée <time>2026-10-05</time></span></li>
+      <li><a href="archive/cuisine-proposition-5.html">Proposition 5</a><span>créée <time>2026-10-01</time> · modifiée <time>2026-10-05</time></span></li>
+      <li><a href="archive/cuisine-proposition-6.html">Proposition 6</a><span>créée <time>2026-10-01</time> · modifiée <time>2026-10-05</time></span></li>
+      <li><a href="archive/cuisine-proposition-6-v2.html">Proposition 6 V2</a><span>créée <time>2026-10-01</time> · modifiée <time>2026-10-05</time></span></li>
+      <li><a href="archive/cuisine-proposition-6-v2b.html">Proposition 6 V2b</a><span>créée <time>2026-10-01</time> · modifiée <time>2026-10-05</time></span></li>
+      <li><a href="archive/cuisine-proposition-6-v3.html">Proposition 6 V3</a><span>créée <time>2026-10-01</time> · modifiée <time>2026-10-05</time></span></li>
+      <li><a href="archive/cuisine-proposition-7.html">Proposition 7</a><span>créée <time>2026-10-01</time> · modifiée <time>2026-10-05</time></span></li>
+      <li><a href="archive/cuisine-proposition-8.html">Proposition 8</a><span>créée <time>2026-10-01</time> · modifiée <time>2026-10-05</time></span></li>
+      <li><a href="archive/cuisine-proposition-9.html">Proposition 9</a><span>créée <time>2026-10-01</time> · modifiée <time>2026-10-05</time></span></li>
+      <li><a href="archive/cuisine-sans-cellier-v1.html">Sans cellier V1</a><span>créée <time>2026-10-01</time> · modifiée <time>2026-10-05</time></span></li>
+    </ul>
 
     <h3>Salle de bain</h3>
-    <div class="arch">
-      <a href="archive/sdb-meuble-v1.html">Meuble linge V1</a>
-      <a href="archive/sdb-meuble-debit.html">Débit du meuble</a>
-    </div>
+    <ul class="arch">
+      <li><a href="archive/sdb-meuble-v1.html">Meuble linge V1</a><span>créée <time>2026-10-01</time> · modifiée <time>2026-10-09</time></span></li>
+      <li><a href="archive/sdb-meuble-debit.html">Débit du meuble</a><span>créée <time>2026-10-01</time> · modifiée <time>2026-10-09</time></span></li>
+    </ul>
 
     <h3>Entrée</h3>
-    <div class="arch">
-      <a href="archive/entree-amenagement-v1.html">V1</a>
-      <a href="archive/entree-amenagement-v2.html">V2</a>
-    </div>
+    <ul class="arch">
+      <li><a href="archive/entree-amenagement-v2.html">Aménagement V2</a><span>créée <time>2026-10-01</time> · modifiée <time>2026-10-05</time></span></li>
+      <li><a href="archive/entree-amenagement-v1.html">Aménagement V1</a><span>créée <time>2026-10-01</time> · modifiée <time>2026-10-05</time></span></li>
+    </ul>
 
     <h3>Salon</h3>
-    <div class="arch">
-      <a href="archive/salon-amenagement-v1.html">V1</a>
-      <a href="archive/salon-amenagement-v2.html">V2</a>
-      <a href="archive/salon-amenagement-v3.1.html">V3.1</a>
-    </div>
+    <ul class="arch">
+      <li><a href="archive/salon-amenagement-v3.1.html">Aménagement V3.1</a><span>créée <time>2026-10-01</time> · modifiée <time>2026-10-11</time></span></li>
+      <li><a href="archive/salon-amenagement-v2.html">Aménagement V2</a><span>créée <time>2026-10-01</time> · modifiée <time>2026-10-05</time></span></li>
+      <li><a href="archive/salon-amenagement-v1.html">Aménagement V1</a><span>créée <time>2026-10-01</time> · modifiée <time>2026-10-05</time></span></li>
+    </ul>
 
     <h3>Chambre</h3>
-    <div class="arch">
-      <a href="archive/chambre-amenagement-v1.2.html">V1.2</a>
-    </div>
+    <ul class="arch">
+      <li><a href="archive/chambre-amenagement-v1.2.html">Aménagement V1.2</a><span>créée <time>2026-10-04</time> · modifiée <time>2026-10-05</time></span></li>
+    </ul>
   </details>
 </main>
 </body>
