@@ -133,7 +133,7 @@ def dessin(blocs, neuves=(), murs=False, reperes=True, decale=None, extra=None, 
     etiq = {}
     for b in ordre(vis):
         neuve = b.nom in neuves
-        cls = "inew" if neuve else ("iapp" if b.role == "machine" else "ipc")
+        cls = "isac" if b.role == "sac" else "inew" if neuve else ("iapp" if b.role == "machine" else "ipc")
         for f, n in faces(b):
             if sum(a * c for a, c in zip(n, VUE)) <= 1e-6:
                 continue
@@ -183,11 +183,11 @@ ICONES = {
     "led": '<path d="M2 11h20v3H2zM6 12.5h0M10 12.5h0M14 12.5h0M18 12.5h0"/>',
     "silicone": '<path d="M4 8h12v8H4zM16 10h4l2 2-2 2h-4"/>',
     "tapis": '<path d="M3 9l9-4 9 4-9 4zM3 9v3l9 4 9-4V9"/>',
-    "sac": '<path d="M6 8h12l-1 12H7zM9 8a3 3 0 0 1 6 0"/>',
+    "sac": '<path d="M4 7h16M7 7l2 13h6l2-13"/>',
     "chant": '<path d="M4 14a5 5 0 1 1 10 0a5 5 0 1 1-10 0M14 14h7M9 14h0"/>',
 }
 ICONE = {"vis50": "vis", "vis40": "vis", "vis16": "vis", "confirmat": "confirmat", "colle": "colle",
-         "equerre": "equerre", "cheville": "cheville", "piano": "piano", "compas": "compas", "poignee": "poignee",
+         "equerre": "equerre", "cheville": "cheville", "piano": "piano", "compas": "compas", "poignee": "poignee", "vis30": "vis",
          "taquet": "taquet", "rails": "rails", "led": "led", "silicone": "silicone", "tapis": "tapis", "sac": "sac",
          "chant": "chant"}
 
@@ -254,27 +254,38 @@ def dessin_etape(c, n):
 
 
 def profil_bac():
-    """Petit schéma de côté : bac du bas fermé et basculé, axe de la charnière, compas."""
+    """Petit schéma de côté : case du bas, façade fermée et basculée, barres et sac (fermé, puis ouvert en tireté)."""
     c = "d"
-    blocs = [b for b in M.version(c) if b.groupe == "bac1" and b.rep in ("B1", "A6")]
-    caisson = [b for b in M.version(c) if b.nom in ("cb_dessous", "cb_tablette", "cb_cote_n")]
-    axe = M.BAC["axe1"]
+    axe, a = M.BAC["axe1"], M.BAC["angle"]
+    xf0, xr0, zb0, zb1 = M.BAC["barres1"]
+    bx = M.BAC["barre"][0]
+    tout = M.version(c)
+    caisson = [b for b in tout if b.nom in ("cb_dessous", "cb_tablette", "cb_cote_n")]
     o = []
     for b in caisson:
         o.append(PL.poly([(u, -z) for u, z in b.pts("y")], "cab"))
-    for b in blocs:
-        o.append(PL.poly([(u, -z) for u, z in b.pts("y")], "bac" if b.rep == "B1" else "fac"))
-        p = [M.bascule(x, z, axe, M.BAC["angle"]) for x, z in b.pts("y")]
-        o.append(PL.poly([(x, -z) for x, z in p], "swingp"))
+    for b in tout:
+        if b.groupe != "bac1" or b.y0 > M.CENTRE or b.role not in ("facade", "barre", "support", "sac"):
+            continue
+        cls = {"facade": "fac", "barre": "tas", "support": "cab", "sac": "sac"}[b.role]
+        o.append(PL.poly([(u, -z) for u, z in b.pts("y")], cls))
+        if b.role == "facade" or b.nom.endswith("_av") or "support_av" in b.nom:
+            p = [M.bascule(x, z, axe, a) for x, z in b.pts("y")]
+            o.append(PL.poly([(x, -z) for x, z in p], "swingp"))
+    fa = M.bascule(xf0 + bx, zb0 + 1, axe, a)
+    o.append(PL.poly([(fa[0], -fa[1]), (xr0, -(zb0 + 1)), (xr0 + bx - 1, -(axe[1] + 1)), (fa[0] + 4, -(axe[1] + 1))],
+                     "sacopen"))
     o.append(f'<circle class="axe" cx="{axe[0]}" cy="{-axe[1]:.2f}" r="1"/>')
-    a = M.bascule(M.FACE, M.FACADES[0][1], axe, M.BAC["angle"])
+    h = M.bascule(M.FACE, M.FACADES[0][1], axe, a)
     o.append(f'<path class="lead" d="M{M.FACE} {-M.FACADES[0][1]:.1f} A{M.FACADES[0][1] - axe[1]:.1f} '
-             f'{M.FACADES[0][1] - axe[1]:.1f} 0 0 0 {a[0]:.1f} {-a[1]:.1f}"/>')
-    o.append(PL.text(a[0] - 1, -a[1] - 2, f"{M.BAC['angle']}°", "lbls", "end"))
+             f'{M.FACADES[0][1] - axe[1]:.1f} 0 0 0 {h[0]:.1f} {-h[1]:.1f}"/>')
+    o.append(PL.text(h[0] - 1, -h[1] - 2, f"{a}°", "lbls", "end"))
     o.append(PL.text(axe[0] + 2, -axe[1] + 5, "charnière piano", "lblx", "start"))
+    o.append(PL.text(xr0 + bx + 1.5, -(zb1 - 1), "barre arrière", "lblx", "start"))
+    o.append(PL.text((xf0 + xr0) / 2 + 1, -(axe[1] + 16), "sac", "lblx"))
     x0, x1 = M.FACE - 30, M.CB["x1"] + 2
     return (f'<svg viewBox="{x0} {-(M.CASES[0][1] + 6):.1f} {x1 - x0} {M.CASES[0][1] + 14:.1f}" role="img" '
-            f'aria-label="Bac basculé, vu de côté">{"".join(o)}</svg>')
+            f'aria-label="Façade basculée et sac, vus de côté">{"".join(o)}</svg>')
 
 
 def puces_pieces(c, n):
@@ -282,7 +293,7 @@ def puces_pieces(c, n):
     if "E2" in cpt:
         cpt["E2"] = 1           # une cornière, modélisée en deux ailes
     r = "".join(f'<span class="pc"><b>{r}</b> × {q}</span>' for r, q in sorted(cpt.items(), key=lambda t: (t[0][0], int(t[0][1:]))))
-    return r + (f'<span class="pc muted">dessin : 1 bac sur {FOIS[n]}</span>' if n in FOIS else "")
+    return r + (f'<span class="pc muted">dessin : 1 case sur {FOIS[n]}</span>' if n in FOIS else "")
 
 
 def bloc_etape(n):
@@ -341,6 +352,7 @@ CSS = PL.CSS + """
 .imur2{fill:var(--line);fill-opacity:.18;stroke:var(--muted);stroke-width:.25}
 .ipc{fill:hsl(40 15% calc(var(--t) * 100% - 4%));stroke:var(--ink);stroke-width:.32;stroke-linejoin:round}
 .inew{fill:hsl(32 80% calc(var(--t) * 72% + 8%));stroke:var(--ink);stroke-width:.4;stroke-linejoin:round}
+.isac{fill:hsl(205 60% calc(var(--t) * 40% + 55%));fill-opacity:.8;stroke:var(--water);stroke-width:.35;stroke-dasharray:1.2 .8}
 .iapp{fill:hsl(200 10% calc(var(--t) * 100% - 2%));stroke:var(--ink);stroke-width:.35}
 .ihub{fill:none;stroke:var(--ink);stroke-width:.35}
 .ical{fill:var(--tri);fill-opacity:.35;stroke:var(--tri);stroke-width:.3}
@@ -383,7 +395,7 @@ CSS = PL.CSS + """
 @media (max-width:560px){ .etape{grid-template-columns:1fr} .etape .num{font-size:40px} }
 """
 
-OUTILS = ["perceuse-visseuse", "foret Ø 5 et gabarit à taquets", "foret pour les avant-trous des vis d'assemblage", "scie sauteuse (encoche du plan)",
+OUTILS = ["perceuse-visseuse", "foret Ø 5 et gabarit à taquets", "foret carrelage Ø 6 et ruban de masquage", "foret pour les avant-trous des vis d'assemblage", "scie sauteuse (encoche du plan)",
           "niveau à bulle", "mètre", "serre-joints", "pistolet à silicone", "deux personnes pour la machine et le caisson haut"]
 
 
@@ -398,7 +410,7 @@ def contenu():
 <h2>Le meuble</h2>
 <div class="deux">
 <div class="fig"><div class="vd">{vue_ensemble("d")}</div><div class="vg">{vue_ensemble("g")}</div><p class="note">Meuble monté, vu depuis la salle de bain.</p></div>
-<div class="fig"><div class="vd">{vue_eclatee("d")}</div><div class="vg">{vue_eclatee("g")}</div><p class="note">Vue éclatée : socle, caisson bas, deux bacs, supports et plan, caisson haut.</p></div>
+<div class="fig"><div class="vd">{vue_eclatee("d")}</div><div class="vg">{vue_eclatee("g")}</div><p class="note">Vue éclatée : socle, caisson bas, deux façades et leurs sacs, supports et plan, caisson haut.</p></div>
 </div>
 
 <h2>Pièces</h2>

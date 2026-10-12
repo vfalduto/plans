@@ -16,7 +16,7 @@ import modele as M  # noqa: E402
 
 TRAIT = 4               # trait de scie, mm
 MARGE = 0               # tablettes et plans : chants d'usine finis, pas de délignage
-ESSAIS = 400
+ESSAIS = 1500
 
 
 def pieces(debit):

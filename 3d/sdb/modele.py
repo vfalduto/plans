@@ -14,7 +14,7 @@
 import math
 from dataclasses import dataclass, field, replace
 
-VERSION = "V3.2"
+VERSION = "V3.5"
 H = 250                 # plafond (confirmé par le client)
 X0, X1 = 167, 234       # alcôve : bord ouest (ouverture) et mur du fond (est)
 Y0, Y1 = 0, 114         # alcôve : mur nord et mur sud
@@ -82,13 +82,14 @@ def miroir(b):
 
 
 # ------------------------------------------------------------------ hauteurs
-SOCLE_H = 20            # surélévation de la machine (demande V3)
+SOCLE_H = 10            # surélévation de la machine (V3 : 20 ; V3.5 : 10)
 LL = dict(l=60, p=60, h=85, nom="lave-linge 60 × 60 × 85 (pieds réglés)")
 JEU_PLAN = 1.5          # entre le dessus de la machine et le dessous du plan
-Z_PLAN = SOCLE_H + LL["h"] + JEU_PLAN          # dessous du plan : 106,5
-Z_DESSUS = Z_PLAN + PT                         # dessus du plan : 109,5
-Z_HAUT = 152            # dessous du caisson haut (niche de Z_DESSUS à Z_HAUT)
+Z_PLAN = SOCLE_H + LL["h"] + JEU_PLAN          # dessous du plan : 96,5
+Z_DESSUS = Z_PLAN + PT                         # dessus du plan : 99,3
 Z_HAUT1 = H - 2         # dessus du caisson haut ; fileur jusqu'au plafond
+H_HAUT = 90             # hauteur du caisson haut (V3.4 : 96 → 90)
+Z_HAUT = Z_HAUT1 - H_HAUT                      # dessous du caisson haut (niche de Z_DESSUS à Z_HAUT) : 158
 PLINTHE = 10
 
 # ------------------------------------------------------------------ plan de l'alcôve (version machine à droite)
@@ -135,8 +136,9 @@ P("caisson", "cb_cote_s", _c["x0"], _xi, _c["y1"] - T, _c["y1"], 0, Z_PLAN, rep=
 _yi0, _yi1 = _c["y0"] + T, _c["y1"] - T
 P("caisson", "cb_dessous", _c["x0"], _xi, _yi0, _yi1, PLINTHE, PLINTHE + T, rep="A2", etape=2, groupe="caisson_bas")
 _zt1 = Z_PLAN - T                       # dessous des traverses hautes
-_case = (_zt1 - (PLINTHE + T) - T) / 2  # hauteur libre de chaque case
-_ztab = PLINTHE + T + _case
+# tablette placée pour que les deux façades aient la même hauteur (la façade 1 couvre le dessous, la 2 la traverse)
+_ztab = (Z_PLAN + PLINTHE - T) / 2
+_case = _ztab - (PLINTHE + T)           # hauteur libre de la case du bas (celle du haut : 0,1 de plus)
 P("caisson", "cb_tablette", _c["x0"], _xi, _yi0, _yi1, _ztab, _ztab + T, rep="A3", etape=2, groupe="caisson_bas")
 P("caisson", "cb_traverse_av", _c["x0"], _c["x0"] + 10, _yi0, _yi1, _zt1, Z_PLAN, rep="A4", etape=2, groupe="caisson_bas")
 P("caisson", "cb_traverse_ar", _xi - 10, _xi, _yi0, _yi1, _zt1, Z_PLAN, rep="A4", etape=2, groupe="caisson_bas")
@@ -145,69 +147,83 @@ P("plinthe", "cb_plinthe", _c["x0"] + 3, _c["x0"] + 3 + T, _yi0, _yi1, 0, PLINTH
   groupe="caisson_bas")
 CASES = [(PLINTHE + T, _ztab), (_ztab + T, _zt1)]   # (fond de case = axe des charnières, plafond de case)
 
-# ------------------------------------------------------------------ ③ bacs basculants (contreplaqué 12)
-# Chaque bac est une caisse à côtés en trapèze, vissée derrière sa façade, qui pivote sur une charnière piano au bord
-# avant de sa case. Le dos est incliné : aucun point du bac n'est à plus de RAYON de l'axe, il ne touche donc jamais le
-# plafond de la case en basculant. Deux compas l'arrêtent à ANGLE. On jette le linge par le haut, dans un sac amovible.
-BAC = dict(jeu=0.5, charniere=0.2, h=38, d_bas=42, d_haut=21, angle=30, sac="sac à linge amovible 42 × 35 × 35 au plus")   # 44,3 de large entre les côtés de 18
+# ------------------------------------------------------------------ ③ sacs basculants (V3.3)
+# Plus de bac en bois : dans chaque case, un sac en tissu pend entre deux barres de bois (tasseau 20 × 40). La barre
+# avant repose dans deux supports entaillés vissés au dos de la façade, la barre arrière dans deux supports vissés aux
+# côtés du caisson. La façade pivote sur une charnière piano au bord avant de sa case ; deux compas l'arrêtent à ANGLE :
+# la barre avant suit la façade, la bouche du sac s'ouvre. Pour vider, on soulève les deux barres hors de leurs
+# entailles et on sort le sac par ses barres.
+BAC = dict(angle=30, prof=30, jeu=0.3, barre=(2.0, 4.0), entaille=2.0, sous_plafond=3.0,
+           sup=dict(x=4.5, z=6.0))          # barre : x × z ; support : bloc de 18 (x × z), entaille en U sur le dessus
 _b = BAC
-BAC["y0"], BAC["y1"] = _yi0 + _b["jeu"], _yi1 - _b["jeu"]
+_bx, _bz = _b["barre"]
 FACADES = []
+SACS = []
 for k, (zc, zp) in enumerate(CASES):
     g = f"bac{k + 1}"
-    z0 = zc + _b["charniere"]
-    xa, xb, xt = _c["x0"], _c["x0"] + _b["d_bas"], _c["x0"] + _b["d_haut"]
-    cote = [(xa, z0), (xb, z0), (xt, z0 + _b["h"]), (xa, z0 + _b["h"])]
-    for nom, y in (("n", _b["y0"]), ("s", _b["y1"] - B)):
-        PIECES.append(Profil("bac", f"bac{k + 1}_cote_{nom}", cote, y, y + B, rep="B1", etape=5, groupe=g))
-    P("bac", f"bac{k + 1}_devant", xa, xa + B, _b["y0"] + B, _b["y1"] - B, z0 + B, z0 + _b["h"], rep="B2", etape=5, groupe=g)
-    P("bac", f"bac{k + 1}_fond", xa, xb, _b["y0"] + B, _b["y1"] - B, z0, z0 + B, rep="B3", etape=5, groupe=g)
-    # dos incliné : bande de 12 le long de la pente, de (xb, z0 + B) à (xt, z0 + h)
-    n = math.hypot(xb - xt, _b["h"])
-    ox, oz = -B * _b["h"] / n, -B * (xb - xt) / n   # normale vers l'intérieur
-    dos = [(xb, z0 + B), (xt, z0 + _b["h"]), (xt + ox, z0 + _b["h"] + oz), (xb + ox, z0 + B + oz)]
-    PIECES.append(Profil("bac", f"bac{k + 1}_dos", dos, _b["y0"] + B, _b["y1"] - B, rep="B4", etape=5, groupe=g))
+    xa = _c["x0"]                                   # dos de la façade = bord avant de la case = axe
+    zb1 = zp - _b["sous_plafond"]                   # dessus des barres : place pour les sortir des entailles
+    zb0 = zb1 - _bz
+    zs0, zs1 = zb0 - (_b["sup"]["z"] - _b["entaille"]), zb0 + _b["entaille"]   # supports : la barre entre de 2
+    xf0 = xa + (_b["sup"]["x"] - _bx) / 2           # barre avant, centrée sur ses supports
+    xr0 = xa + _b["prof"]                           # barre arrière
+    # supports de la barre avant : au dos de la façade, aux deux bouts
+    for nom, y in (("n", _yi0 + _b["jeu"]), ("s", _yi1 - _b["jeu"] - T)):
+        P("support", f"bac{k + 1}_support_av_{nom}", xa, xa + _b["sup"]["x"], y, y + T, zs0, zs1, rep="B1", etape=6,
+          groupe=g)
+    # supports de la barre arrière : contre les côtés du caisson
+    for nom, y in (("n", _yi0), ("s", _yi1 - T)):
+        P("support", f"bac{k + 1}_support_ar_{nom}", xr0 - (_b["sup"]["x"] - _bx) / 2,
+          xr0 + (_b["sup"]["x"] + _bx) / 2, y, y + T, zs0, zs1, rep="B1", etape=5, groupe=g)
+    for nom, x in (("av", xf0), ("ar", xr0)):
+        P("barre", f"bac{k + 1}_barre_{nom}", x, x + _bx, _yi0 + _b["jeu"], _yi1 - _b["jeu"], zb0, zb1, rep="E4",
+          etape=5, groupe=g)
+    # sac (pas à découper) : pend entre les deux barres, jusqu'à 1 au-dessus du fond de la case
+    ys0, ys1 = _yi0 + T + 0.5, _yi1 - T - 0.5
+    sac = [(xf0, zb0 + 1), (xr0 + _bx, zb0 + 1), (xr0 + _bx - 1, zc + 1), (xf0 + 1, zc + 1)]
+    SACS.append(Profil("sac", f"bac{k + 1}_sac", sac, ys0, ys1, etape=5, groupe=g))
     # façade en applique : du bas de la case (bac 1 : couvre le dessous) au dessous de la tablette (bac 2 : de la tablette
     # au plan) ; jeu de 0,3 autour
     zf0 = (PLINTHE + 0.3) if k == 0 else (_ztab + T + 0.05)
     zf1 = (_ztab - 0.05) if k == 0 else (Z_PLAN - 0.3)
     FACADES.append((zf0, zf1))
     P("facade", f"bac{k + 1}_facade", FACE, FACE + T, _c["y0"] + 0.15, _c["y1"] - 0.15, zf0, zf1, rep="A6", etape=6,
-      groupe=g, etiq=f"Bac {k + 1}")
+      groupe=g, etiq=f"Sac {k + 1}")
     BAC[f"axe{k + 1}"] = (xa, zc)
     BAC[f"plafond{k + 1}"] = zp
-RAYON = max(math.dist((xa, 0), (x, z - CASES[0][0])) for x, z in
-            [(xa + _b["d_bas"], _b["charniere"]), (xa + _b["d_haut"], _b["charniere"] + _b["h"]), (xa, _b["charniere"] + _b["h"])])
+    BAC[f"barres{k + 1}"] = (xf0, xr0, zb0, zb1)
 CASE_H = _case
-assert RAYON < CASE_H - 0.5, (RAYON, CASE_H)   # le bac bascule sans toucher le plafond de sa case
+assert abs((FACADES[0][1] - FACADES[0][0]) - (FACADES[1][1] - FACADES[1][0])) < 1e-9, FACADES   # façades identiques
+assert BAC["prof"] + _bx < _xi - _c["x0"] - 1, "barre arrière dans le caisson"
 
 
 def bascule(x, z, axe, angle):
-    """Position d'un point du bac (x, z) une fois basculé de angle degrés vers la pièce autour de axe = (xa, za)."""
+    """Position d'un point (x, z) de la façade une fois basculée de angle degrés vers la pièce autour de axe = (xa, za)."""
     a = math.radians(angle)
     u, w = axe[0] - x, z - axe[1]                     # u : vers la pièce (ouest), w : vers le haut
     u2, w2 = u * math.cos(a) + w * math.sin(a), -u * math.sin(a) + w * math.cos(a)
     return axe[0] - u2, axe[1] + w2
 
 
-# volume utile d'un bac : intérieur du trapèze × largeur intérieure
-_li = (_b["y1"] - _b["y0"]) - 2 * B
-_hi = _b["h"] - B
-_dbi = _b["d_bas"] - 2 * B
-_dhi = _b["d_haut"] - 2 * B
-VOLUME_BAC = (_dbi + _dhi) / 2 * _hi * _li / 1000
-# bac ouvert : bord haut avant et bord haut arrière (intérieurs), avancée de la façade
 _ax = BAC["axe1"]
-_avant = bascule(_c["x0"] + B, _ax[1] + _b["charniere"] + _b["h"], _ax, _b["angle"])
-_arriere = bascule(_c["x0"] + _b["d_haut"] - B, _ax[1] + _b["charniere"] + _b["h"], _ax, _b["angle"])
+_xf0, _xr0, _zb0, _zb1 = BAC["barres1"]
 _haut_facade = bascule(FACE, FACADES[0][1], _ax, _b["angle"])
+_barre_ouverte = bascule(_xf0, _zb1, _ax, _b["angle"])          # coin arrière haut de la barre avant, façade ouverte
 # le bas de la façade du bac 2 descend en basculant : il doit rester au-dessus de la façade du bac 1
 _bas2 = bascule(FACE, FACADES[1][0], BAC["axe2"], _b["angle"])
 assert _bas2[1] > FACADES[0][1] + 0.3, (_bas2, FACADES[0])
-BAC["bouche"] = _arriere[0] - _avant[0]          # profondeur de l'ouverture une fois basculé
-BAC["bouche_hors"] = CB["x0"] - _arriere[0]      # le bord arrière sort du caisson de tant
+# la barre avant ne touche pas le plafond de la case pendant la bascule (elle s'en éloigne)
+assert _barre_ouverte[1] < BAC["plafond1"], _barre_ouverte
 BAC["avancee"] = FACE - _haut_facade[0]          # le haut de la façade avance de tant dans la pièce
-BAC["largeur_sac"] = _li
+BAC["bouche_fermee"] = _xr0 - (_xf0 + _bx)       # entre les barres, façade fermée
+BAC["bouche"] = _xr0 - _barre_ouverte[0]         # entre les barres, façade ouverte
+BAC["fente"] = _c["x0"] - _haut_facade[0] + 0  # passage entre le haut de la façade ouverte et le bord de la case
+BAC["largeur_sac"] = _yi1 - _yi0 - 2 * T - 1
+BAC["h_sac"] = _zb0 + 1 - (CASES[0][0] + 1)
+# tissu : bouche à façade ouverte (plus 4 de jeu) ; fourreaux de 14 de tour (barre 20 × 40)
+BAC["sac"] = (f"sac en tissu {BAC['largeur_sac']:.0f} de large, {BAC['h_sac']:.0f} de haut, "
+              f"{BAC['bouche'] + 4:.0f} de bouche, deux fourreaux de 14 de tour pour les barres")
+VOLUME_BAC = BAC["largeur_sac"] * BAC["h_sac"] * (BAC["bouche_fermee"] + _bx) / 1000
 
 # ------------------------------------------------------------------ ④ plan de travail filant (30) et supports
 # Tasseaux contre le mur du fond, cornière alu sur le mur latéral côté machine, le caisson bas de l'autre côté.
@@ -293,7 +309,7 @@ LAVABO = (82, 114, 165, 160)
 
 def version(c):
     """Pièces et équipements de la version c : "d" (machine à droite, au sud) ou "g" (à gauche, au nord)."""
-    t = PIECES + EQUIPEMENTS
+    t = PIECES + SACS + EQUIPEMENTS
     return t if c == "d" else [miroir(b) for b in t]
 
 
@@ -327,24 +343,25 @@ FIL = ()                # repères à ne pas tourner (aucun : mélaminé uni)
 MAGASIN = dict(nom="Weldom Marseille Saint-Barnabé", adresse="90 rue François Scaramelli, 13012 Marseille",
                tel="04 91 49 27 27", url="https://www.weldom.fr/m/weldom-marseille-saint-barnabe", releve="12/10/2026")
 NOMS = {
-    "A1": "Côté du caisson bas", "A2": "Dessous du caisson bas", "A3": "Tablette entre les bacs",
-    "A4": "Traverse sous le plan", "A5": "Plinthe", "A6": "Façade de bac", "A7": "Côté du caisson haut",
+    "A1": "Côté du caisson bas", "A2": "Dessous du caisson bas", "A3": "Tablette entre les sacs",
+    "A4": "Traverse sous le plan", "A5": "Plinthe", "A6": "Façade basculante", "A7": "Côté du caisson haut",
     "A8": "Dessus et dessous du caisson haut", "A9": "Montant central haut", "A10": "Étagère serviettes",
     "A11": "Étagère pharmacie et produits divers", "A12": "Porte coulissante", "A13": "Fileur de plafond",
-    "B1": "Côté de bac (trapèze)", "B2": "Devant de bac", "B3": "Fond de bac", "B4": "Dos incliné de bac",
+    "B1": "Support de barre", "E4": "Barre du sac",
     "E3": "Feuillure de la trappe (plat alu)", "C1": "Fond du caisson haut", "C2": "Fond du caisson bas",
     "D1": "Plan de travail", "D2": "Couvercle de trappe", "E1": "Tasseau du mur du fond", "E2": "Cornière alu",
     "S1": "Plateau du socle", "S2": "Longeron du socle", "S3": "Traverse du socle", "S4": "Rebord avant",
     "S5": "Rebord latéral",
 }
 USINAGES = {
-    "A1": "Charnière piano du bac 1 posée sur le dessous, du bac 2 sur la tablette ; descend jusqu'au sol",
+    "A1": "Charnière piano de la façade 1 sur le dessous, de la façade 2 sur la tablette ; descend jusqu'au sol",
     "A3": "Chant avant visible entre les deux façades (le chanter)",
-    "A6": "Poignée en haut, centrée ; vissée par l'intérieur sur le devant du bac",
+    "A6": "Poignée en haut, centrée ; deux supports de barre B1 vissés au dos, en haut, aux deux bouts",
     "A7": "Taquets Ø 5 pas 32 côté intérieur, à 6 cm du chant avant ; rails du kit coulissant",
     "A9": "En retrait de 6 derrière les rails ; taquets sur les deux faces",
-    "B1": f"Trapèze : {BAC['d_bas'] * 10:.0f} en bas, {BAC['d_haut'] * 10:.0f} en haut, {BAC['h'] * 10:.0f} de haut",
-    "B4": "Chants haut et bas coupés en biais",
+    "B1": f"Bloc de chute ; entaille en U de {(BAC['barre'][0] + 0.1) * 10:.0f} de large et {BAC['entaille'] * 10:.0f} "
+          "de profond sur le dessus, où la barre se pose",
+    "E4": "Tasseau raboté 20 × 40, arêtes arrondies ; glissé dans le fourreau du sac",
     "D1": "Recoupé de 1800 à 1134 ; encoche 300 × 100 au fond, centrée sur la largeur ; joint silicone sur les murs",
     "D2": "Taillé dans la chute de l'encoche ; trou de doigt Ø 25",
     "S1": "Tapis antivibration 60 × 60 dessus",
@@ -361,16 +378,17 @@ QUINCAILLERIE = {
     "confirmat": "vis d'assemblage Direkta Ø 6,3 × 50 (à la place du confirmat 7 × 50)",
     "colle": "colle à bois D3",
     "equerre": "équerre d'assemblage 60",
-    "cheville": "cheville + vis 6 × 60 (selon le mur)",
-    "piano": "charnière piano 600 × 32, recoupée à 455",
+    "cheville": "cheville + vis 6 × 60 (mur carrelé : percer au foret carrelage, dans les joints si possible)",
+    "piano": "charnière piano 600 × 32, recoupée à 490",
     "compas": "compas d'abattant Hettich L 250, réglé à 30°",
+    "vis30": "vis à bois 4 × 30",
     "poignee": "poignée de façade",
     "taquet": "taquet d'étagère Ø 5",
     "rails": "kit 2 portes coulissantes intérieures (rails haut et bas, portes de 18)",
     "led": "ruban LED 1,5 m 4000 K + profil alu",
     "silicone": "silicone sanitaire",
     "tapis": "tapis antivibration 60 × 60",
-    "sac": "sac à linge amovible",
+    "sac": BAC["sac"],
     "vérin": "patin réglable",
     "chant": "chant thermocollant blanc 20 mm (rouleau)",
 }
@@ -379,6 +397,7 @@ QUINCAILLERIE = {
 WELDOM = {
     "E1": ("Tasseau sapin nord raboté 240 × 4,4 × 2,7", 5.99, 1, 11, "9000477"),
     "E2": ("Cornière égale alu brut 1 m 29,5 × 29,5", 8.50, 1, 6, "9143660"),
+    "E4": ("Tasseau raboté sapin 1er choix 20 × 40, 1 m", 3.65, 2, 20, "5584231"),
     "confirmat": ("Lot de 16 vis Direkta Hettich 50 mm", 5.20, 2, 5, "1098014"),
     "equerre": ("Équerre d'assemblage Hettich 60 mm", 2.19, 4, None, "70207935"),
     "piano": ("Charnière piano inox Hettich 600 × 32", 8.35, 2, 6, "5575916"),
@@ -408,12 +427,15 @@ ETAPES = [
      "Visser le caisson au mur, le socle au caisson et au mur. Tasseaux E1 au mur du fond et cornière E2 au mur côté "
      "machine, le dessus à " + f"{Z_PLAN:g}".replace(".", ",") + " (au niveau du caisson).",
      {"equerre": 4, "cheville": 8, "vis40": 8}),
-    ("Bacs", "Assembler chaque bac : côtés B1, fond B3, devant B2, dos incliné B4. Coller et visser.",
-     {"vis40": 24, "colle": 1}),
-    ("Façades et charnières", "Visser la façade A6 sur le devant du bac. Charnière piano entre le bas du devant et le "
-     "bord avant de la case, deux compas de chaque côté : le bac doit s'arrêter à 30°. Poser les poignées et les sacs.",
-     {"piano": 2, "compas": 4, "vis16": 40, "poignee": 2, "sac": 2}),
-    ("Machine", "Poser le tapis sur le socle. À deux, monter la machine sur une cale de 20 placée devant, raccorder, "
+    ("Barres et sacs", "Dans chaque case, visser deux supports B1 contre les côtés, à " + f"{BAC['prof']}" + " du bord "
+     "avant, entaille en haut. Glisser les barres E4 dans les fourreaux des sacs ; poser la barre arrière dans ses "
+     "entailles.", {"vis40": 8, "sac": 2}),
+    ("Façades et charnières", "Visser deux supports B1 au dos de chaque façade A6, en haut, aux deux bouts. Charnière "
+     "piano entre le bas de la façade et le bord avant de la case, deux compas de chaque côté : la façade doit s'arrêter "
+     "à 30°. Poser la barre avant du sac dans ses entailles. Poser les poignées.",
+     {"piano": 2, "compas": 4, "vis16": 40, "vis30": 8, "poignee": 2}),
+    ("Machine", "Poser le tapis sur le socle. À deux, monter la machine sur une cale de " + f"{SOCLE_H}" + " placée devant, "
+     "raccorder, "
      "la pousser sur le socle et régler les pieds : 1,5 sous le plan.", {"tapis": 1}),
     ("Plan de travail", "Découper l'encoche de la trappe, visser les feuillures E3 dessous, poser le plan D1 sur le "
      "caisson, les tasseaux et la cornière. Joint silicone contre les murs. Ajuster le couvercle D2.",
@@ -428,6 +450,19 @@ ETAPES = [
 POSE_HAUT = 10          # étape où le caisson haut monte sur ses cales (pas de nouvelle pièce)
 
 CHANGEMENTS = [
+    ("V3.5", "12/10/2026",
+     f"Socle de la machine abaissé de 20 à {SOCLE_H} : plan de travail à " + f"{Z_DESSUS:.1f}".replace(".", ",") +
+     " (au lieu de 109,3), niche de " + f"{Z_HAUT - Z_DESSUS:.1f}".replace(".", ",") + ". Tablette du caisson bas "
+     "placée pour que les deux façades des sacs aient exactement la même hauteur (" +
+     f"{FACADES[0][1] - FACADES[0][0]:.1f}".replace(".", ",") + ")."),
+    ("V3.4", "12/10/2026",
+     f"Placards du haut réduits à {H_HAUT} de haut (au lieu de 96) : toujours jusqu'au plafond, le dessous remonte à "
+     f"{Z_HAUT} ; la niche passe à " + f"{Z_HAUT - Z_DESSUS:.1f}".replace(".", ",") + " de haut."),
+    ("V3.3", "12/10/2026",
+     "Les bacs en bois sont remplacés par des sacs en tissu : dans chaque case, un sac pend entre deux barres de bois "
+     "(tasseau 20 × 40), l'une posée dans des supports au dos de la façade, l'autre dans des supports aux côtés du "
+     f"caisson. La façade bascule toujours à {BAC['angle']}° et ouvre la bouche du sac ; pour vider, on prend les deux "
+     "barres et on sort le sac. Murs carrelés : perçage au foret carrelage (notice, à vérifier)."),
     ("V3.2", "12/10/2026", "Sommaire : chaque section a une ancre lisible (#plan, #debit, #achats…) ; un clic met l'adresse à "
      "jour, et une adresse avec ancre ouvre la page sur la section (plans et notice)."),
     ("V3.1", "12/10/2026",

@@ -85,7 +85,8 @@ CLS = {"socle": ("socle", "soclec"), "rebord": ("socle", "soclec"), "caisson": (
        "plinthe": ("plinthe", "cabc"), "bac": ("bac", "bacc"), "facade": ("fac", "facc"), "tasseau": ("tas", "tasc"),
        "corniere": ("alu", "alu"), "plan": ("top", "topc"), "trappe": ("trap", "trap"), "etagere": ("shelf", "shelfc"),
        "porte": ("porte", "portec"), "fileur": ("cab", "cabc"), "machine": ("appf", "appc"), "led": ("led", "led"),
-       "prise": ("plug", "plug")}
+       "prise": ("plug", "plug"),
+       "support": ("cab", "cabc"), "barre": ("tas", "tasc"), "sac": ("sac", "sacc")}
 
 
 # ------------------------------------------------------------------ plan vu de dessus (coupe horizontale à z 100)
@@ -129,7 +130,7 @@ def plan_svg(c):
     av = M.BAC["avancee"]
     bas = (M.FACE - av, ya + 0.15, M.FACE, yb - 0.15)
     o.append(rect(*bas, "swing"))
-    o.append(text(M.FACE - av / 2, (ya + yb) / 2 + 1.5, "bacs basculés", "lblx muted",
+    o.append(text(M.FACE - av / 2, (ya + yb) / 2 + 1.5, "façades basculées", "lblx muted",
                   extra=f' transform="rotate(-90 {f(M.FACE - av / 2)} {f((ya + yb) / 2 + 1.5)})"'))
     # hublot : charnière à gauche (face au meuble, donc au nord) ; 180° si rien ne l'arrête, 90° contre le mur nord
     m = [b for b in blocs if b.role == "machine"][0]
@@ -160,8 +161,8 @@ def plan_svg(c):
     o.append(f'<line class="upper" x1="{ch["x0"]}" y1="{M.CENTRE}" x2="{ch["x1"]}" y2="{M.CENTRE}"/>')
     # étiquettes
     xm = (M.CB["x0"] + M.CB["x1"]) / 2
-    o.append(text(xm, (ya + yb) / 2 - 2, "Bacs 1 et 2", "lbls"))
-    o.append(text(xm, (ya + yb) / 2 + 4, "superposés, basculants", "lblx"))
+    o.append(text(xm, (ya + yb) / 2 - 2, "Sacs 1 et 2", "lbls"))
+    o.append(text(xm, (ya + yb) / 2 + 4, "façades basculantes", "lblx"))
     o.append(text((m.x0 + m.x1) / 2, (m.y0 + m.y1) / 2 - 2, "LL", "lblb"))
     o.append(text((m.x0 + m.x1) / 2 - 8, (m.y0 + m.y1) / 2 + 8, f"sur socle de {M.SOCLE_H}", "lblx"))
     o.append(f'<path class="lead" d="M{f(tr["x0"])} {f(tr["y1"] - 4)} L{f(tr["x0"] - 9)} {f(tr["y1"] - 4)}"/>')
@@ -243,9 +244,9 @@ def elevation(c):
         ya, yb = bacs_y(c)
         for k, (z0, z1) in enumerate(M.FACADES):
             r.append(rect((ya + yb) / 2 - 6, -(z1 - 3), (ya + yb) / 2 + 6, -(z1 - 4.2), "handle"))
-            r.append(text((ya + yb) / 2, -(z0 + z1) / 2 + 6, f"≈ {M.VOLUME_BAC:.0f} L · bascule à {M.BAC['angle']}°", "lblx"))
+            r.append(text((ya + yb) / 2, -(z0 + z1) / 2 + 6, f"sac ≈ {M.VOLUME_BAC:.0f} L · bascule à {M.BAC['angle']}°", "lblx"))
         # niche
-        r.append(text(57, -(M.Z_DESSUS + 22), f"Niche {cm(M.Z_HAUT - M.Z_DESSUS)} : prises + USB, crochet sèche-cheveux, LED",
+        r.append(text(57, -(M.Z_HAUT - 10), f"Niche {cm(M.Z_HAUT - M.Z_DESSUS)} : prises + USB, crochet sèche-cheveux, LED",
                       "lblx"))
         r.append(f'<path class="hook" d="M6 {f(-(M.Z_HAUT - 5))} v6 q0 3 3 3"/>')
         # vantail ouvert (tireté rouge), devant
@@ -284,7 +285,7 @@ def coupe_b(c):
         m = [b for b in blocs if b.role == "machine"][0]
         r.append(text((m.x0 + m.x1) / 2, -(m.z0 + 30), f"LL {M.LL['l']} × {M.LL['p']} × {M.LL['h']}", "lbls"))
         r.append(text((m.x0 + m.x1) / 2, -(m.z0 + 24), f"jeu arrière {cm(M.X1 - m.x1)} · jeu sous le plan {cm(M.JEU_PLAN)}", "lblx"))
-        r.append(text((m.x0 + m.x1) / 2, -(M.SOCLE_H / 2) + 1.5, f"socle CP 22, h {M.SOCLE_H}", "lblx"))
+        r.append(text((m.x0 + m.x1) / 2, -(M.SOCLE_H / 2) + 1.5, f"socle en tablettes de 18, h {M.SOCLE_H}", "lblx"))
         r.append(text(M.CH["x0"] - 2, -(M.Z_HAUT + 50), "serviettes", "lblx", "end"))
         r.append(text(M.CH["x0"] - 2, -(M.Z_HAUT + 44), "(au nord, au fond)", "lblx muted", "end"))
         r.append(text(M.FACE + 4, -(M.Z_DESSUS + 32), "niche", "lblx", "start"))
@@ -303,22 +304,29 @@ def coupe_c_svg(c):
     def extra(blocs):
         r = []
         murs_coupe(r)
-        # bacs basculés : contour de chaque bac (côté en trapèze + façade) tourné autour de son axe
+        # façades basculées (tireté) : façade, supports et barre avant tournés autour de l'axe ; le sac ouvert va de la
+        # barre avant basculée à la barre arrière
         for k in (1, 2):
-            axe = M.BAC[f"axe{k}"]
+            axe, a = M.BAC[f"axe{k}"], M.BAC["angle"]
+            xf0, xr0, zb0, zb1 = M.BAC[f"barres{k}"]
+            bx = M.BAC["barre"][0]
             for b in blocs:
-                if b.groupe == f"bac{k}" and (b.rep in ("B1", "A6")) and b.y0 < yc:
-                    pts = [M.bascule(x, z, axe, M.BAC["angle"]) for x, z in b.pts("y")]
+                if b.groupe == f"bac{k}" and (b.role == "facade" or b.nom.endswith("_av") or "support_av" in b.nom):
+                    pts = [M.bascule(x, z, axe, a) for x, z in b.pts("y")]
                     r.append(poly([(x, -z) for x, z in pts], "swingp"))
+            fa = M.bascule(xf0 + bx, zb0 + 1, axe, a)
+            r.append(poly([(fa[0], -fa[1]), (xr0, -(zb0 + 1)), (xr0 + bx - 1, -(axe[1] + 1)),
+                           (fa[0] + 4, -(axe[1] + 1))], "sacopen"))
             r.append(f'<circle class="axe" cx="{f(axe[0])}" cy="{f(-axe[1])}" r="0.9"/>')
             z0, z1 = M.CASES[k - 1]
-            r.append(text(M.CB["x0"] + 22, -(z0 + 14), f"sac ≈ {M.VOLUME_BAC:.0f} L", "lblx"))
+            r.append(text(M.CB["x0"] + 16, -(z0 + 14), f"sac ≈ {M.VOLUME_BAC:.0f} L", "lblx"))
         r.append(text(M.FACE - 14, -(M.FACADES[1][1] - 2), f"basculé {M.BAC['angle']}°", "lblx muted"))
         r.append(f'<path class="lead" d="M{f(M.CB["x0"])} {f(-M.BAC["axe2"][1])} L{f(M.CB["x0"] + 16)} {f(-M.BAC["axe2"][1] + 7)}"/>')
         r.append(text(M.CB["x0"] + 17, -M.BAC["axe2"][1] + 9, "charnière piano (axe)", "lblx", "start"))
-        hb = M.bascule(M.CB["x0"] + M.BAC["d_haut"], M.BAC["axe1"][1] + M.BAC["charniere"] + M.BAC["h"], M.BAC["axe1"], M.BAC["angle"])
-        r.append(cote_h(hb[0] - M.BAC["bouche"], hb[0], -(hb[1] + 2), cm(M.BAC["bouche"])))
-        r.append(cote_h(M.CB["x0"], M.CB["x0"] + M.BAC["d_bas"], 12, cm(M.BAC["d_bas"])))
+        xf0, xr0, zb0, zb1 = M.BAC["barres2"]
+        r.append(f'<path class="lead" d="M{f(xr0 + 1)} {f(-zb1)} L{f(xr0 + 8)} {f(-(zb1 + 5))}"/>')
+        r.append(text(xr0 + 9, -(zb1 + 5.5), "barres 20 × 40", "lblx", "start"))
+        r.append(cote_h(M.CB["x0"], xr0, 12, cm(M.BAC["prof"])))
         r.append(cote_h(M.FACE - M.BAC["avancee"], M.FACE, 12, cm(M.BAC["avancee"])))
         r.append(cote_h(M.CH["x0"], M.CH["x1"], -(M.H + 4), "45"))
         return r
@@ -335,9 +343,7 @@ def debit():
     for b in M.PIECES:
         if not b.rep:
             continue
-        if isinstance(b, M.Profil) and b.rep == "B4":
-            dims = (abs(b.y1 - b.y0), ((M.BAC["d_bas"] - M.BAC["d_haut"]) ** 2 + (M.BAC["h"] - M.B) ** 2) ** .5, M.B)
-        elif isinstance(b, M.Profil):
+        if isinstance(b, M.Profil):
             dims = (b.x1 - b.x0, b.z1 - b.z0, b.y1 - b.y0)
         else:
             e = sorted((b.x1 - b.x0, b.y1 - b.y0, b.z1 - b.z0), reverse=True)
@@ -529,6 +535,8 @@ svg text{font-family:Archivo,system-ui,sans-serif;fill:var(--ink)}
 .hook{fill:none;stroke:var(--ink);stroke-width:.8}
 .upper{fill:none;stroke:var(--ink);stroke-width:.9;stroke-dasharray:4 2}
 .swing{fill:none;stroke:var(--muted);stroke-width:.6;stroke-dasharray:2 1.5}
+.sac{fill:var(--glass);fill-opacity:.55;stroke:var(--water);stroke-width:.35;stroke-dasharray:1.2 .8}.sacc{fill:var(--glass);stroke:var(--water);stroke-width:.4}
+.sacopen{fill:none;stroke:var(--water);stroke-width:.45;stroke-dasharray:2 1.2}
 .swingp{fill:var(--bac);fill-opacity:.12;stroke:var(--tri);stroke-width:.5;stroke-dasharray:2 1.2}
 .axe{fill:var(--tri)}
 .lead{fill:none;stroke:var(--muted);stroke-width:.4}
@@ -579,10 +587,10 @@ def comparatif():
     lf = leaf()
     rec_g = max(0, lf[3] - ya_g)
     lignes = [
-        ("Basculer les bacs porte d'entrée ouverte", "non (bacs derrière le vantail)",
+        ("Basculer les façades porte d'entrée ouverte", "non (façades derrière le vantail)",
          f"non : le bas de la façade recouvre le vantail sur {cm(rec_g)}"),
         ("Charger la machine porte ouverte", "non (hublot à 7 du vantail)", "non (machine dans la zone du vantail)"),
-        ("Hublot", "180°, rabattu contre les bacs", "90° (mur nord)"),
+        ("Hublot", "180°, rabattu contre les façades", "90° (mur nord)"),
         ("Distance de l'évacuation", "courte (côté lavabo)", "≈ 50 de plus"),
         ("Plan, niche, hauts, trappe", "identiques", "identiques"),
     ]
@@ -593,10 +601,12 @@ def comparatif():
 
 def capacites():
     ch = M.CH
+    _et = next(b for b in M.PIECES if b.nom == "ch_etagere_n1")
     lignes = [
-        ("Bacs à linge sale", f"2 bacs basculants {cm(M.BAC['largeur_sac'])} de large, trapèze {M.BAC['d_bas']} → "
-         f"{M.BAC['d_haut']} × {M.BAC['h']}", f"2 × ≈ {M.VOLUME_BAC:.0f} L"),
-        ("Serviettes (nord)", f"{ch['serviettes']} étagères, cases de {cm(ch['case_serviettes'])}, 54 × 37 utiles",
+        ("Linge sale", f"2 sacs en tissu {cm(M.BAC['largeur_sac'])} de large, {cm(M.BAC['h_sac'])} de haut, entre "
+         f"deux barres", f"2 × ≈ {M.VOLUME_BAC:.0f} L"),
+        ("Serviettes (nord)", f"{ch['serviettes']} étagères, cases de {cm(ch['case_serviettes'])}, "
+         f"{cm(_et.y1 - _et.y0)} × {cm(_et.x1 - _et.x0)} utiles",
          "≈ 30 serviettes de bain"),
         ("Pharmacie et produits divers (sud)", f"{ch['pharmacie']} étagères, cases de {cm(ch['case_pharmacie'])}",
          "10 bacs à tirer 16 × 16 × 35"),
@@ -614,30 +624,31 @@ def contenu():
                      for v, d, x in M.CHANGEMENTS)
     return f"""<div class="kicker">Salle de bain · alcôve 67 × 114 · {M.VERSION}</div>
 <h1>Meuble linge V3</h1>
-<p class="pitch">La machine monte de {M.SOCLE_H} cm sur un socle en bois : on charge sans se baisser. Le plan de travail filant passe au-dessus, à {cm(M.Z_DESSUS)}. À côté, deux bacs basculants superposés reçoivent le linge sale : on tire la façade, le bac s'incline, on jette le linge. Au-dessus : la niche avec les prises, puis les placards jusqu'au plafond. Le bouton <b>Machine</b> de la barre place la machine à droite ou à gauche, sur toutes les vues.</p>
+<p class="pitch">La machine monte de {M.SOCLE_H} cm sur un socle en bois : le hublot est un peu plus haut. Le plan de travail filant passe au-dessus, à {cm(M.Z_DESSUS)}. À côté, deux sacs en tissu superposés reçoivent le linge sale : on tire la façade, elle bascule et ouvre le sac, on jette le linge. Au-dessus : la niche avec les prises, puis les placards jusqu'au plafond. Le bouton <b>Machine</b> de la barre place la machine à droite ou à gauche, sur toutes les vues.</p>
 <p><a class="cta" href="{NOTICE}">Notice de montage, étape par étape →</a></p>
 
 <h2>Plan</h2>
 <div class="fig"><div class="scroll">{deux(plan_svg)}</div>
-<p class="cap">Coupe horizontale à {Z_COUPE_PLAN} cm, sous le plan de travail : pièces coupées en foncé. Façades à x {cm(M.FACE)}, à {cm(M.FACE - leaf()[2])} du vantail de la porte ouvert. Tireté : bacs basculés (la façade avance de {cm(b['avancee'])}) et hublot ouvert. Rouge plein : recouvrement avec le vantail ouvert. Trappe du robinet (hachurée) au fond du plan, centrée sur le meuble ; hauts de 45 en pointillé épais.</p></div>
+<p class="cap">Coupe horizontale à {Z_COUPE_PLAN} cm, sous le plan de travail : pièces coupées en foncé. Façades à x {cm(M.FACE)}, à {cm(M.FACE - leaf()[2])} du vantail de la porte ouvert. Tireté : façades basculées (elles avancent de {cm(b['avancee'])}) et hublot ouvert. Rouge plein : recouvrement avec le vantail ouvert. Trappe du robinet (hachurée) au fond du plan, centrée sur le meuble ; hauts de 45 en pointillé épais.</p></div>
 
 <h2>Élévation A · face au meuble</h2>
 <div class="fig"><div class="scroll">{deux(elevation)}</div>
-<p class="cap">Vue vers l'est : le nord (porte) à gauche, le sud (lavabo) à droite. Socle de {M.SOCLE_H}, machine de {M.SOCLE_H} à {M.SOCLE_H + M.LL['h']}, {cm(M.JEU_PLAN)} de jeu, plan de {cm(M.PT * 10)} mm de {cm(M.Z_PLAN)} à {cm(M.Z_DESSUS)}. Deux façades de bac égales ({cm(M.FACADES[0][1] - M.FACADES[0][0])}) séparées par le chant de la tablette ; poignée en haut de chaque façade. Niche de {cm(M.Z_HAUT - M.Z_DESSUS)}, caisson haut de {M.Z_HAUT} à {M.Z_HAUT1}, fileur jusqu'au plafond, deux portes coulissantes.</p></div>
+<p class="cap">Vue vers l'est : le nord (porte) à gauche, le sud (lavabo) à droite. Socle de {M.SOCLE_H}, machine de {M.SOCLE_H} à {M.SOCLE_H + M.LL['h']}, {cm(M.JEU_PLAN)} de jeu, plan de {cm(M.PT * 10)} mm de {cm(M.Z_PLAN)} à {cm(M.Z_DESSUS)}. Deux façades de sac identiques ({cm(M.FACADES[0][1] - M.FACADES[0][0])}) séparées par le chant de la tablette ; poignée en haut de chaque façade. Niche de {cm(M.Z_HAUT - M.Z_DESSUS)}, caisson haut de {M.Z_HAUT} à {M.Z_HAUT1}, fileur jusqu'au plafond, deux portes coulissantes.</p></div>
 
 <div class="grid2">
 <div class="fig"><h3>Coupe B-B · machine et trappe</h3><div class="scroll">{deux(coupe_b)}</div>
 <p class="cap">Coupe à y {COUPE_B}, regard vers le nord. Socle plein en tablettes de 18 (cadre et plateau, rebord de {s['rebord']} sur trois côtés, tapis antivibration). Le robinet d'arrêt, dans le jeu de {cm(M.X1 - M.FACE - M.LL['p'])} derrière la machine, s'atteint par la trappe du plan. Au fond, les hauts côté serviettes.</p></div>
-<div class="fig"><h3>Coupe C-C · bacs basculants</h3><div class="scroll">{deux(coupe_c_svg)}</div>
-<p class="cap">Coupe à travers les bacs, regard vers le nord. Chaque bac pivote sur une charnière piano au bord avant de sa case (point rouge) ; le dos incliné garde tout le bac à moins de {cm(M.RAYON)} de l'axe, sous le plafond de la case ({cm(M.CASE_H)}). Deux compas l'arrêtent à {b['angle']}° : la façade avance de {cm(b['avancee'])}, l'ouverture fait {cm(b['bouche'])} × {cm(b['largeur_sac'])} et sort du caisson. Le linge tombe dans un sac amovible qu'on emporte à la machine.</p></div>
+<div class="fig"><h3>Coupe C-C · sacs basculants</h3><div class="scroll">{deux(coupe_c_svg)}</div>
+<p class="cap">Coupe à travers les sacs, regard vers le nord. Dans chaque case, le sac pend entre deux barres de bois : l'avant posé dans deux supports au dos de la façade, l'arrière dans deux supports aux côtés du caisson, à {b['prof']} du bord avant. La façade pivote sur une charnière piano au bord avant de sa case (point rouge) ; deux compas l'arrêtent à {b['angle']}° : elle avance de {cm(b['avancee'])}, emmène la barre avant, et la bouche du sac passe de {cm(b['bouche_fermee'])} à {cm(b['bouche'])} (tireté bleu).</p></div>
 </div>
 
-<h2>Bacs basculants</h2>
+<h2>Sacs basculants</h2>
 <ul class="pistes">
-<li><b>Pourquoi basculants</b> : pas de fente, de volet ni de goulotte (V2) ; une main tire la façade, l'autre jette le linge. Le bac ne sort pas sur des coulisses : rien à aligner, rien qui se coince.</li>
-<li><b>Superposés sur toute la largeur</b> : {cm(b['largeur_sac'])} de large au lieu de 20, ≈ {M.VOLUME_BAC:.0f} L chacun (contre ≈ 39 L utiles en V2). Bac du haut à hauteur de main ({cm(M.CASES[1][0])} → {cm(M.CASES[1][1])}) ; bac du bas pour le linge qu'on trie moins souvent (couleurs, serviettes).</li>
-<li><b>Vider</b> : on bascule, on soulève le sac par ses anses. Sans sac, le bac se décroche en dévissant la charnière.</li>
-<li><b>Arrêt</b> : deux compas d'abattant à frein par bac ; le bac revient seul en place, sans claquer.</li>
+<li><b>Principe</b> : un sac en tissu tendu entre deux barres de bois, l'une suit la façade, l'autre reste dans le caisson. On tire la façade, le sac s'ouvre, on jette le linge. Plus de caisse en bois à porter.</li>
+<li><b>Vider</b> : façade basculée, on soulève la barre arrière de ses entailles, puis la barre avant, et on sort le sac en tenant les deux barres : il se ferme tout seul en les rapprochant. On l'emporte à la machine.</li>
+<li><b>Le sac</b> : {escape(b['sac'])} ; à coudre ou à faire coudre (toile de coton épaisse ou polyester lavable), absent du Weldom. Deux sacs par case permettent d'en laver un pendant que l'autre sert.</li>
+<li><b>Superposés sur toute la largeur</b> : ≈ {M.VOLUME_BAC:.0f} L chacun ; sac du haut à hauteur de main ({cm(M.CASES[1][0])} → {cm(M.CASES[1][1])}), sac du bas pour le linge qu'on trie moins souvent.</li>
+<li><b>Arrêt</b> : deux compas d'abattant à frein par façade ; elle revient seule en place, sans claquer.</li>
 </ul>
 
 <h2>Capacités</h2>
@@ -658,11 +669,12 @@ def contenu():
 <h2>À vérifier sur place</h2>
 <ul class="pistes">
 <li><b>Hauteur de la machine</b> : {M.LL['h']} pieds réglés au plus ; avec le socle, le dessus est à {M.SOCLE_H + M.LL['h']} et le plan à {cm(M.Z_PLAN)} dessous ({cm(M.JEU_PLAN)} de jeu, les feuillures de la trappe passent à {cm(M.Z_PLAN - M.FEUIL - M.SOCLE_H - M.LL['h'])} au-dessus).</li>
-<li><b>Plan à {cm(M.Z_DESSUS)}</b> : bonne hauteur pour plier debout, mais haute pour une personne de petite taille ; on ne peut pas descendre sans réduire le socle.</li>
+<li><b>Plan à {cm(M.Z_DESSUS)}</b> : hauteur d'un plan de cuisine haut, bonne pour plier debout ; elle suit le socle (socle + {M.LL['h']} + {cm(M.JEU_PLAN)} de jeu + {cm(M.PT)} de plan).</li>
 <li><b>Socle</b> : la machine doit être d'aplomb et ne pas « marcher » ; le socle est vissé au caisson bas et au mur. Pour une machine de plus de 1 400 tr/min, ajouter une traverse sous chaque pied.</li>
-<li><b>Porte d'entrée</b> : paumelles à x ≈ 157, vantail de 76 ; dans les deux versions, on bascule les bacs et on charge la machine porte fermée.</li>
+<li><b>Porte d'entrée</b> : paumelles à x ≈ 157, vantail de 76 ; dans les deux versions, on bascule les façades et on charge la machine porte fermée.</li>
 <li><b>Robinet</b> d'arrêt quart de tour encastré à {M.ROBINET['z']}, saillie ≤ 3 ; d'après la NF C 15-100 (de mémoire, non vérifié ; à valider par l'électricien), circuit 20 A spécialisé pour la machine et prises hors des volumes 1 et 2.</li>
 <li><b>Humidité</b> : les tablettes sont en aggloméré mélaminé non hydrofuge (comme la plupart des meubles de salle de bain en kit) ; tous les chants coupés sont plaqués, le plan est siliconé contre les murs. Le socle sous la machine est le point faible en cas de fuite : le tapis antivibration fait aussi bac ; sinon, dalle d'aggloméré hydrofuge 2050 × 610 × 22 en stock au même magasin (22,50 €).</li>
+<li><b>Murs carrelés</b> : tasseaux, cornière, caisson bas, socle et caisson haut se fixent dans le carrelage. Percer au foret carrelage (ou foret verre) à basse vitesse, sans percussion jusqu'au mur, ruban de masquage sur le carreau ; dans les joints quand c'est possible ; chevilles adaptées au mur derrière (à vérifier : brique, placo, béton ?). Joint silicone entre plan et carrelage.</li>
 <li><b>Alcôve</b> : mesurer la largeur en trois hauteurs ; au-delà de 5 mm d'écart, prévoir des fileurs.</li>
 </ul>
 
