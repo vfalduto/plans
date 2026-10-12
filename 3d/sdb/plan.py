@@ -13,6 +13,7 @@ from html import escape
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 import modele as M  # noqa: E402
+import calepinage as CAL  # noqa: E402
 
 ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", ".."))
 OUT = os.path.join(ROOT, "sdb-meuble-v3.html")
@@ -375,6 +376,66 @@ def table_debit():
             f'(compter 20 à 30 % de chute).</p>')
 
 
+# ------------------------------------------------------------------ achats (calepinage + liste de courses)
+def tablette_svg(p, k):
+    L, l = p.fmt["L"], p.fmt["l"]
+    o = [f'<rect class="tb" x="0" y="0" width="{L}" height="{l}"/>']
+    for rep, x, y, a, b in p.poses():
+        o.append(f'<rect class="pc m{rep[0]}" x="{x}" y="{y}" width="{a}" height="{b}"/>')
+        if b >= 60 and a >= 140:
+            o.append(f'<text class="pt" x="{x + a / 2}" y="{y + b / 2 - 8}">{rep}</text>'
+                     f'<text class="pd" x="{x + a / 2}" y="{y + b / 2 + 42}">{a} × {b}</text>')
+        elif b >= 40:
+            o.append(f'<text class="pt ps" x="{x + a / 2}" y="{y + b / 2 + 12}">{rep}</text>')
+    return (f'<div class="tab"><div class="tabt"><b>T{k}</b> · {L} × {l} · {p.taux():.0%} utilisés</div>'
+            f'<svg viewBox="-4 -4 {L + 8} {l + 8}" role="img" aria-label="Tablette {k}, {L} × {l}">{"".join(o)}</svg></div>')
+
+
+def achats():
+    cal = CAL.calepinage(debit())
+    t = cal["M18"]["retenu"]
+    d = cal["D"]["retenu"]
+    tabs = "".join(tablette_svg(p, k + 1) for k, p in enumerate(t["panneaux"]))
+    plan_ = "".join(tablette_svg(p, "P") for p in d["panneaux"])
+    essais = " ; ".join(f'{e["nom"]} : ' + (f'{e["n"]} tablettes, {euros(e["prix"])}' if e["n"] else "impossible")
+                        for e in cal["M18"]["essais"])
+    lignes = []
+    for fmt in M.PANNEAUX["M18"] + M.PANNEAUX["D"]:
+        stock = "M18" if fmt in M.PANNEAUX["M18"] else "D"
+        n = sum(1 for p in cal[stock]["retenu"]["panneaux"] if p.fmt is fmt)
+        if n:
+            lignes.append((fmt["nom"], fmt["ref"], n, fmt["prix"], fmt["stock"]))
+    tot = Counter()
+    for _, _, q in M.ETAPES:
+        tot.update(q)
+    manque = []
+    for code, w in M.WELDOM.items():
+        if w is None:
+            manque.append(M.QUINCAILLERIE[code])
+        else:
+            lignes.append((w[0], w[4], w[2], w[1], w[3]))
+    total = sum(n * px for _, _, n, px, _ in lignes)
+    corps = "".join(
+        f'<tr><td>{escape(nom)}</td><td class="mono">{ref}</td><td class="num">{n}</td><td class="num">{euros(px)}</td>'
+        f'<td class="num">{euros(n * px)}</td><td class="num">{"—" if st is None else st}</td></tr>'
+        for nom, ref, n, px, st in lignes)
+    mg = M.MAGASIN
+    return f"""<p>Tout le bois vient de <b>{escape(mg['nom'])}</b> ({escape(mg['adresse'])}, {mg['tel']}). Le magasin ne vend ni plaque entière, ni panneau de 12, ni contreplaqué ou MDF hydrofuge de 18 : les seuls panneaux de 18 sont les tablettes mélaminées blanches de 2500 de long. Le meuble entier est donc taillé dans {t['n']} tablettes de 18 et un plan de travail de 28. Prix et stock relevés en ligne le {mg['releve']}.</p>
+<div class="fig"><div class="tabs">{tabs}</div>
+<p class="cap">Calepinage des tablettes de 18 : refente en bandes sur la longueur, puis tronçonnage (trait de scie de {CAL.TRAIT} compté). Les chants longs d'usine sont déjà plaqués ; les chants coupés visibles reçoivent un chant thermocollant. Formats comparés : {essais}. Retenu : le mélange.</p></div>
+<div class="fig"><div class="tabs">{plan_}</div>
+<p class="cap">Plan de travail 1800 × 640 × 28 recoupé à {d['panneaux'][0].poses()[0][3]} ; le couvercle de trappe D2 est taillé dans la chute de l'encoche (dessiné ici à part).</p></div>
+<h3>Liste de courses · {escape(mg['nom'])}</h3>
+<div class="scroll"><table class="debit"><thead><tr><th>Article Weldom</th><th>Réf.</th><th class="num">Qté</th><th class="num">Prix</th><th class="num">Total</th><th class="num">Stock</th></tr></thead>
+<tbody>{corps}</tbody><tfoot><tr><td colspan="4"><b>Total Weldom</b></td><td class="num"><b>{euros(total)}</b></td><td></td></tr></tfoot></table></div>
+<p class="note">Stock : nombre affiché sur la fiche produit pour ce magasin le {mg['releve']} (« — » : en stock, nombre non lu). La découpe en magasin existe (service « découpe bois ») ; tarif et nombre de coupes non publiés : appeler avant. Vis, colle, chevilles et silicone : en rayon, non chiffrés.</p>
+<p><b>À acheter ailleurs</b> (absent du catalogue du magasin) : {escape(" ; ".join(manque))} ; profil alu pour le ruban LED.</p>"""
+
+
+def euros(v):
+    return f"{v:.2f}".replace(".", ",") + " €"
+
+
 def quincaillerie():
     tot = Counter()
     for _, _, q in M.ETAPES:
@@ -423,6 +484,15 @@ td.num,th.num{text-align:right;font-family:"JetBrains Mono",ui-monospace,monospa
 td.u{font-size:13px;color:var(--muted)}
 tr.mat td{background:var(--paper);font-weight:700;padding-top:12px}
 .debit{min-width:680px}
+.debit tfoot td{border-top:2px solid var(--ink)}
+.tabs{display:grid;gap:10px}
+.tab svg{display:block;width:100%;height:auto}
+.tabt{font-size:13px;color:var(--muted);margin-bottom:3px}.tabt b{color:var(--ink)}
+.tb{fill:var(--tile);stroke:var(--ink);stroke-width:3}
+.pc{stroke:var(--ink);stroke-width:2;fill:var(--cab)}.pc.mB{fill:var(--bac)}.pc.mC{fill:var(--tall)}.pc.mS{fill:var(--socle)}.pc.mD{fill:var(--wood)}
+.pt{font:700 64px "JetBrains Mono",ui-monospace,monospace;fill:var(--ink);text-anchor:middle}
+.pt.ps{font-size:40px}
+.pd{font:400 40px "JetBrains Mono",ui-monospace,monospace;fill:var(--muted);text-anchor:middle}
 .sw{display:inline-block;width:12px;height:12px;border-radius:3px;margin-right:8px;vertical-align:-1px;border:1px solid var(--ink)}
 .mA{background:var(--cab)}.mB{background:var(--bac)}.mC{background:var(--tall)}.mD{background:var(--wood)}.mS{background:var(--socle)}.mE{background:#B9C2C8}
 ul.pistes{padding-left:20px;max-width:860px}ul.pistes li{margin:6px 0}
@@ -530,7 +600,7 @@ def capacites():
          "≈ 30 serviettes de bain"),
         ("Pharmacie et produits divers (sud)", f"{ch['pharmacie']} étagères, cases de {cm(ch['case_pharmacie'])}",
          "10 bacs à tirer 16 × 16 × 35"),
-        ("Plan de travail", f"{cm(M.Y1 - 2 * M.J)} × {cm(M.X1 - 1 - M.FACE)} à {cm(M.Z_DESSUS)}", "pliage"),
+        ("Plan de travail", f"{cm(M.Y1 - 2 * M.J)} × {cm(M.PLAN_P)} à {cm(M.Z_DESSUS)}", "pliage"),
         ("Niche", f"{cm(M.Y1)} × {cm(M.Z_HAUT - M.Z_DESSUS)} de haut, {cm(M.CH['x0'] - M.FACE)} dégagés devant les hauts",
          "sèche-cheveux, brosse à dents"),
     ]
@@ -557,7 +627,7 @@ def contenu():
 
 <div class="grid2">
 <div class="fig"><h3>Coupe B-B · machine et trappe</h3><div class="scroll">{deux(coupe_b)}</div>
-<p class="cap">Coupe à y {COUPE_B}, regard vers le nord. Socle plein en contreplaqué 22 (cadre et plateau, rebord de {s['rebord']} sur trois côtés, tapis antivibration). Le robinet d'arrêt, dans le jeu de {cm(M.X1 - M.FACE - M.LL['p'])} derrière la machine, s'atteint par la trappe du plan. Au fond, les hauts côté serviettes.</p></div>
+<p class="cap">Coupe à y {COUPE_B}, regard vers le nord. Socle plein en tablettes de 18 (cadre et plateau, rebord de {s['rebord']} sur trois côtés, tapis antivibration). Le robinet d'arrêt, dans le jeu de {cm(M.X1 - M.FACE - M.LL['p'])} derrière la machine, s'atteint par la trappe du plan. Au fond, les hauts côté serviettes.</p></div>
 <div class="fig"><h3>Coupe C-C · bacs basculants</h3><div class="scroll">{deux(coupe_c_svg)}</div>
 <p class="cap">Coupe à travers les bacs, regard vers le nord. Chaque bac pivote sur une charnière piano au bord avant de sa case (point rouge) ; le dos incliné garde tout le bac à moins de {cm(M.RAYON)} de l'axe, sous le plafond de la case ({cm(M.CASE_H)}). Deux compas l'arrêtent à {b['angle']}° : la façade avance de {cm(b['avancee'])}, l'ouverture fait {cm(b['bouche'])} × {cm(b['largeur_sac'])} et sort du caisson. Le linge tombe dans un sac amovible qu'on emporte à la machine.</p></div>
 </div>
@@ -582,13 +652,17 @@ def contenu():
 <ul class="pistes">{quincaillerie()}</ul>
 <p><a class="cta" href="{NOTICE}">Notice de montage →</a></p>
 
+<h2 id="achats">Achats</h2>
+{achats()}
+
 <h2>À vérifier sur place</h2>
 <ul class="pistes">
-<li><b>Hauteur de la machine</b> : {M.LL['h']} pieds réglés au plus ; avec le socle, le dessus est à {M.SOCLE_H + M.LL['h']} et le plan à {cm(M.Z_PLAN)} dessous ({cm(M.JEU_PLAN)} de jeu, les feuillures de la trappe passent à {cm(M.Z_PLAN - M.B - M.SOCLE_H - M.LL['h'])} au-dessus).</li>
+<li><b>Hauteur de la machine</b> : {M.LL['h']} pieds réglés au plus ; avec le socle, le dessus est à {M.SOCLE_H + M.LL['h']} et le plan à {cm(M.Z_PLAN)} dessous ({cm(M.JEU_PLAN)} de jeu, les feuillures de la trappe passent à {cm(M.Z_PLAN - M.FEUIL - M.SOCLE_H - M.LL['h'])} au-dessus).</li>
 <li><b>Plan à {cm(M.Z_DESSUS)}</b> : bonne hauteur pour plier debout, mais haute pour une personne de petite taille ; on ne peut pas descendre sans réduire le socle.</li>
 <li><b>Socle</b> : la machine doit être d'aplomb et ne pas « marcher » ; le socle est vissé au caisson bas et au mur. Pour une machine de plus de 1 400 tr/min, ajouter une traverse sous chaque pied.</li>
 <li><b>Porte d'entrée</b> : paumelles à x ≈ 157, vantail de 76 ; dans les deux versions, on bascule les bacs et on charge la machine porte fermée.</li>
 <li><b>Robinet</b> d'arrêt quart de tour encastré à {M.ROBINET['z']}, saillie ≤ 3 ; d'après la NF C 15-100 (de mémoire, non vérifié ; à valider par l'électricien), circuit 20 A spécialisé pour la machine et prises hors des volumes 1 et 2.</li>
+<li><b>Humidité</b> : les tablettes sont en aggloméré mélaminé non hydrofuge (comme la plupart des meubles de salle de bain en kit) ; tous les chants coupés sont plaqués, le plan est siliconé contre les murs. Le socle sous la machine est le point faible en cas de fuite : le tapis antivibration fait aussi bac ; sinon, dalle d'aggloméré hydrofuge 2050 × 610 × 22 en stock au même magasin (22,50 €).</li>
 <li><b>Alcôve</b> : mesurer la largeur en trois hauteurs ; au-delà de 5 mm d'écart, prévoir des fileurs.</li>
 </ul>
 
@@ -657,14 +731,14 @@ SCRIPT = """
       var ver = document.querySelector(".ver:not([hidden])");
       hs = ver ? Array.prototype.slice.call(ver.querySelectorAll("h2")) : [];
       tol.innerHTML = "";
-      hs.forEach(function (h, i) {
-        if (!h.id) h.id = (ver.dataset.v + "-" + i).replace(/[^a-zA-Z0-9-]/g, "-");
+      hs.forEach(function (h) {
         var li = document.createElement("li"), a = document.createElement("a");
-        a.href = "#" + h.id; a.textContent = h.textContent.trim();
+        var id = ancre(h);
+        a.href = "#" + id; a.textContent = h.textContent.trim();
         a.addEventListener("click", function (e) {
           e.preventDefault();
-          if (h.closest('section[id^="changements"]')) chg(true);
-          h.scrollIntoView({behavior: "smooth"});
+          if (location.hash !== "#" + id) history.pushState(null, "", "#" + id);
+          va(h, true);
         });
         li.appendChild(a); tol.appendChild(li);
       });
@@ -676,10 +750,43 @@ SCRIPT = """
     }, {passive: true});
     window.addEventListener("resize", suivre);
   }
-  var v0 = lit("version") || "courante";
+  // ancres : chaque titre de section reçoit un id lisible (« plan », « debit », « achats »…), suffixé par la version
+  // pour les versions figées ; le sommaire et l'adresse (#ancre) pointent dessus.
+  function ancre(h) {       // titre d'une section qui a déjà un id (Changements) : l'ancre est celle de la section
+    return h.id || h.parentNode.id;
+  }
+  function slug(t) {
+    return t.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase().replace(/[^a-z0-9]+/g, "-")
+      .replace(/^-+|-+$/g, "");
+  }
+  vs.forEach(function (ver) {
+    var suffixe = ver.dataset.v === "courante" ? "" : "-" + slug(ver.dataset.v);
+    ver.querySelectorAll("h2").forEach(function (h) {
+      if (!h.id && !h.parentNode.id) h.id = slug(h.textContent) + suffixe;
+    });
+  });
+  function va(h, doux) {
+    if (h.closest('section[id^="changements"]')) chg(true);
+    h.scrollIntoView({behavior: doux ? "smooth" : "auto"});
+  }
+  function cible() {
+    var id = decodeURIComponent(location.hash.slice(1)), h = id && document.getElementById(id);
+    if (h && h.tagName === "SECTION") h = h.querySelector("h2");
+    return h && h.tagName === "H2" ? h : null;
+  }
+  window.addEventListener("hashchange", function () {
+    var h = cible();
+    if (!h) return;
+    var ver = h.closest(".ver");
+    if (ver && ver.hidden) montre(ver.dataset.v);
+    va(h, true);
+  });
+  var v0 = lit("version") || "courante", h0 = cible();
   if (location.hash && document.querySelector('.ver[data-v="' + decodeURIComponent(location.hash.slice(1)) + '"]'))
     v0 = decodeURIComponent(location.hash.slice(1));
+  if (h0 && h0.closest(".ver")) v0 = h0.closest(".ver").dataset.v;
   montre(v0);
+  if (h0) requestAnimationFrame(function () { va(h0, false); });
 })();
 """
 

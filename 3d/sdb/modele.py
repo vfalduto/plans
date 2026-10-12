@@ -14,13 +14,15 @@
 import math
 from dataclasses import dataclass, field, replace
 
-VERSION = "V3.0"
+VERSION = "V3.2"
 H = 250                 # plafond (confirmé par le client)
 X0, X1 = 167, 234       # alcôve : bord ouest (ouverture) et mur du fond (est)
 Y0, Y1 = 0, 114         # alcôve : mur nord et mur sud
 FACE = 168.1            # nu des façades (1 cm en retrait du bord de l'alcôve)
 
-T, F, B, PT, S = 1.9, 0.8, 1.2, 3.0, 2.2   # épaisseurs : panneau, fond, contreplaqué des bacs, plan, socle
+# V3.1 : tout le meuble en tablettes mélaminées de 18 (seul panneau de 12 à 18 vendu au Weldom Saint-Barnabé), plan
+# de travail de 28 (format du magasin 1800 × 640). Les lettres A, B, C, S gardent les familles de pièces.
+T, F, B, PT, S = 1.8, 1.8, 1.8, 2.8, 1.8   # épaisseurs : caissons, fonds, bacs, plan, socle
 
 
 @dataclass
@@ -107,7 +109,7 @@ def P(*a, **k):
 # ------------------------------------------------------------------ ① socle de la machine (contreplaqué 22)
 # Caisson plein : cadre (2 longerons, 3 traverses) sous un plateau, rebord sur trois côtés pour que la machine ne
 # « marche » pas à l'essorage. Vissé au caisson bas et au mur latéral.
-SOCLE = dict(x0=FACE, x1=FACE + 60, y0=LLZ["y0"] + 0.3, y1=Y1 - J, rebord=1.5)
+SOCLE = dict(x0=FACE, x1=FACE + 60, y0=LLZ["y0"] + 0.3, y1=Y1 - J, rebord=1.5)   # rebord : baguette 18 × 15 sur chant
 _s = SOCLE
 _zs = SOCLE_H - S
 P("socle", "socle_longeron_n", _s["x0"], _s["x1"], _s["y0"], _s["y0"] + S, 0, _zs, rep="S2", etape=1, groupe="socle")
@@ -115,10 +117,10 @@ P("socle", "socle_longeron_s", _s["x0"], _s["x1"], _s["y1"] - S, _s["y1"], 0, _z
 for k, x in enumerate((_s["x0"], (_s["x0"] + _s["x1"] - S) / 2, _s["x1"] - S)):
     P("socle", f"socle_traverse_{k + 1}", x, x + S, _s["y0"] + S, _s["y1"] - S, 0, _zs, rep="S3", etape=1, groupe="socle")
 P("socle", "socle_plateau", _s["x0"], _s["x1"], _s["y0"], _s["y1"], _zs, SOCLE_H, rep="S1", etape=1, groupe="socle")
-P("rebord", "socle_rebord_avant", _s["x0"], _s["x0"] + _s["rebord"], _s["y0"] + _s["rebord"], _s["y1"] - _s["rebord"],
+P("rebord", "socle_rebord_avant", _s["x0"], _s["x0"] + S, _s["y0"] + S, _s["y1"] - S,
   SOCLE_H, SOCLE_H + _s["rebord"], rep="S4", etape=1, groupe="socle")
-for nom, y in (("n", _s["y0"]), ("s", _s["y1"] - _s["rebord"])):
-    P("rebord", f"socle_rebord_{nom}", _s["x0"], _s["x1"], y, y + _s["rebord"], SOCLE_H, SOCLE_H + _s["rebord"],
+for nom, y in (("n", _s["y0"]), ("s", _s["y1"] - S)):
+    P("rebord", f"socle_rebord_{nom}", _s["x0"], _s["x1"], y, y + S, SOCLE_H, SOCLE_H + _s["rebord"],
       rep="S5", etape=1, groupe="socle")
 SOCLE["l"], SOCLE["p"] = _s["y1"] - _s["y0"], _s["x1"] - _s["x0"]
 
@@ -147,7 +149,7 @@ CASES = [(PLINTHE + T, _ztab), (_ztab + T, _zt1)]   # (fond de case = axe des ch
 # Chaque bac est une caisse à côtés en trapèze, vissée derrière sa façade, qui pivote sur une charnière piano au bord
 # avant de sa case. Le dos est incliné : aucun point du bac n'est à plus de RAYON de l'axe, il ne touche donc jamais le
 # plafond de la case en basculant. Deux compas l'arrêtent à ANGLE. On jette le linge par le haut, dans un sac amovible.
-BAC = dict(jeu=0.5, charniere=0.2, h=38, d_bas=42, d_haut=21, angle=30, sac="sac à linge amovible 45 × 35 × 35")
+BAC = dict(jeu=0.5, charniere=0.2, h=38, d_bas=42, d_haut=21, angle=30, sac="sac à linge amovible 42 × 35 × 35 au plus")   # 44,3 de large entre les côtés de 18
 _b = BAC
 BAC["y0"], BAC["y1"] = _yi0 + _b["jeu"], _yi1 - _b["jeu"]
 FACADES = []
@@ -210,20 +212,24 @@ BAC["largeur_sac"] = _li
 # ------------------------------------------------------------------ ④ plan de travail filant (30) et supports
 # Tasseaux contre le mur du fond, cornière alu sur le mur latéral côté machine, le caisson bas de l'autre côté.
 # Trappe 30 × 10 au fond du plan, centrée sur le meuble : on atteint le robinet d'arrêt derrière la machine.
-TRAPPE = dict(x0=X1 - 1 - 10, x1=X1 - 1, y0=CENTRE - 15, y1=CENTRE + 15)
+PLAN_P = 64             # profondeur du plan de travail du commerce (1800 × 640 × 28)
+PLAN_X1 = FACE + PLAN_P                        # 1,9 de jeu contre le mur du fond (joint silicone)
+FEUIL = 0.3             # feuillures de la trappe : plats alu tirés de la chute de cornière (passent dans le jeu de 1,5)
+TAS = dict(l=4.4, h=2.7)                       # tasseau sapin 44 × 27 posé à plat : 2,5 sous le plan
+TRAPPE = dict(x0=PLAN_X1 - 10, x1=PLAN_X1, y0=CENTRE - 15, y1=CENTRE + 15)
 ROBINET = dict(y=CENTRE, z=80)
-P("tasseau", "tasseau_fond_n", X1 - 2.7, X1, Y0 + J, TRAPPE["y0"] - 4, Z_PLAN - 4, Z_PLAN, rep="E1", etape=4,
+P("tasseau", "tasseau_fond_n", X1 - TAS["l"], X1, Y0 + J, TRAPPE["y0"] - 4, Z_PLAN - TAS["h"], Z_PLAN, rep="E1", etape=4,
   groupe="supports")
-P("tasseau", "tasseau_fond_s", X1 - 2.7, X1, TRAPPE["y1"] + 4, Y1 - J, Z_PLAN - 4, Z_PLAN, rep="E1", etape=4,
+P("tasseau", "tasseau_fond_s", X1 - TAS["l"], X1, TRAPPE["y1"] + 4, Y1 - J, Z_PLAN - TAS["h"], Z_PLAN, rep="E1", etape=4,
   groupe="supports")
-P("corniere", "corniere_aile_v", FACE + 2, X1 - 2.7, Y1 - 0.3, Y1, Z_PLAN - 3, Z_PLAN, rep="E2", etape=4, groupe="supports")
-P("corniere", "corniere_aile_h", FACE + 2, X1 - 2.7, Y1 - 3, Y1, Z_PLAN - 0.3, Z_PLAN, rep="E2", etape=4, groupe="supports")
-P("plan", "plan_travail", FACE, X1 - 1, Y0 + J, Y1 - J, Z_PLAN, Z_DESSUS, rep="D1", etape=8, groupe="plan",
+P("corniere", "corniere_aile_v", FACE + 2, X1 - TAS["l"], Y1 - 0.3, Y1, Z_PLAN - 3, Z_PLAN, rep="E2", etape=4, groupe="supports")
+P("corniere", "corniere_aile_h", FACE + 2, X1 - TAS["l"], Y1 - 3, Y1, Z_PLAN - 0.3, Z_PLAN, rep="E2", etape=4, groupe="supports")
+P("plan", "plan_travail", FACE, PLAN_X1, Y0 + J, Y1 - J, Z_PLAN, Z_DESSUS, rep="D1", etape=8, groupe="plan",
   miroir=False, encoche=(TRAPPE["x0"], TRAPPE["x1"], TRAPPE["y0"], TRAPPE["y1"]))
 P("trappe", "trappe_couvercle", TRAPPE["x0"] + 0.2, TRAPPE["x1"] - 0.2, TRAPPE["y0"] + 0.2, TRAPPE["y1"] - 0.2,
   Z_PLAN, Z_DESSUS, rep="D2", etape=8, groupe="plan", miroir=False)
-for nom, y in (("n", TRAPPE["y0"] - 4), ("s", TRAPPE["y1"])):
-    P("tasseau", f"feuillure_{nom}", TRAPPE["x0"], TRAPPE["x1"], y, y + 4, Z_PLAN - B, Z_PLAN, rep="B5", etape=8,
+for nom, y in (("n", TRAPPE["y0"] - 2), ("s", TRAPPE["y1"] - 1)):    # plats de 30 : 1 sous le couvercle, 2 sous le plan
+    P("corniere", f"feuillure_{nom}", TRAPPE["x0"], TRAPPE["x1"], y, y + 3, Z_PLAN - FEUIL, Z_PLAN, rep="E3", etape=8,
       groupe="plan", miroir=False)
 
 # ------------------------------------------------------------------ ⑤ caisson haut, P 45, jusqu'au plafond
@@ -245,7 +251,9 @@ H_("caisson", "ch_dessous", _h["x0"], _hx, _hy0, _hy1, _h["z0"], _hz0, rep="A8",
 H_("caisson", "ch_dessus", _h["x0"], _hx, _hy0, _hy1, _hz1, _h["z1"], rep="A8", etape=9)
 _ym = CENTRE
 H_("caisson", "ch_montant", _h["x0"] + _h["retrait"], _hx, _ym - T / 2, _ym + T / 2, _hz0, _hz1, rep="A9", etape=9)
-H_("fond", "ch_fond", _hx, _h["x1"], _h["y0"], _h["y1"], _h["z0"], _h["z1"], rep="C1", etape=9)
+# fond en deux moitiés (une tablette fait 600 de large), jointes derrière le montant central
+H_("fond", "ch_fond_n", _hx, _h["x1"], _h["y0"], CENTRE - 0.1, _h["z0"], _h["z1"], rep="C1", etape=9)
+H_("fond", "ch_fond_s", _hx, _h["x1"], CENTRE + 0.1, _h["y1"], _h["z0"], _h["z1"], rep="C1", etape=9)
 CH["serviettes"] = 2    # étagères côté serviettes (nord) : 3 cases
 CH["pharmacie"] = 4     # étagères côté pharmacie (sud) : 5 cases
 _hi_h = _hz1 - _hz0
@@ -293,20 +301,38 @@ VERSIONS = {"d": "Machine à droite · côté lavabo", "g": "Machine à gauche �
 
 # ------------------------------------------------------------------ matériaux, débit, quincaillerie
 MATERIAUX = {
-    "A": ("Panneau hydrofuge 19 mm", "MDF hydrofuge à peindre, ou mélaminé hydrofuge", T),
-    "B": ("Contreplaqué bouleau 12 mm", "bacs, feuillures de la trappe", B),
-    "C": ("Panneau hydrofuge 8 mm", "fonds", F),
-    "D": ("Plan de travail 30 mm", "contreplaqué, compact ou massif, hydrofuge (38 : ne passe plus)", PT),
-    "S": ("Contreplaqué 22 mm", "socle de la machine (CTBX, classe 3)", S),
-    "E": ("Tasseaux et cornière", "sapin raboté traité 27 × 40, cornière alu 30 × 30 × 3", 0),
+    "A": ("Tablette mélaminée blanche 18 mm", "caissons, façades, portes, étagères (aggloméré non hydrofuge : chants coupés à "
+          "recouvrir de chant thermocollant blanc)", T),
+    "B": ("Tablette mélaminée blanche 18 mm", "bacs basculants", B),
+    "C": ("Tablette mélaminée blanche 18 mm", "fonds (celui du caisson haut en deux moitiés)", F),
+    "D": ("Plan de travail stratifié 28 mm", "CPL blanc bords droits 1800 × 640 ; le couvercle de trappe vient de l'encoche", PT),
+    "S": ("Tablette mélaminée blanche 18 mm", "socle de la machine, rebords en baguettes refendues", S),
+    "E": ("Tasseaux et cornière", "sapin raboté 44 × 27 posé à plat, cornière alu 29,5 × 29,5 (1 m : support du "
+          "plan et feuillures de la trappe)", 0),
 }
+# Panneaux du commerce pour le calepinage, par matériau (Weldom Marseille Saint-Barnabé, relevé du 12/10/2026, prix TTC,
+# stock lu sur la fiche produit). Les tablettes ont leurs deux chants longs finis : pas de délignage.
+TABLETTES_18 = [
+    dict(L=2500, l=600, prix=16.50, stock=25, ref="9134941", nom="Tablette mélaminé 250 × 60 × 18 blanc"),
+    dict(L=2500, l=500, prix=13.59, stock=50, ref="9134940", nom="Tablette mélaminé 250 × 50 × 18 blanc"),
+    dict(L=2500, l=400, prix=12.50, stock=30, ref="9134939", nom="Tablette mélaminé 250 × 40 × 18 blanc"),
+    dict(L=2500, l=300, prix=11.50, stock=37, ref="9134938", nom="Tablette mélaminé 250 × 30 × 18 blanc"),
+]
+PANNEAUX = {
+    "M18": TABLETTES_18,
+    "D": [dict(L=1800, l=640, prix=36.50, stock=23, ref="9121132", nom="Plan de travail 1800 × 640 × 28 CPL blanc bords droits")],
+}
+STOCK = {"A": "M18", "B": "M18", "C": "M18", "S": "M18", "D": "D"}   # matériau → panneau acheté
+FIL = ()                # repères à ne pas tourner (aucun : mélaminé uni)
+MAGASIN = dict(nom="Weldom Marseille Saint-Barnabé", adresse="90 rue François Scaramelli, 13012 Marseille",
+               tel="04 91 49 27 27", url="https://www.weldom.fr/m/weldom-marseille-saint-barnabe", releve="12/10/2026")
 NOMS = {
     "A1": "Côté du caisson bas", "A2": "Dessous du caisson bas", "A3": "Tablette entre les bacs",
     "A4": "Traverse sous le plan", "A5": "Plinthe", "A6": "Façade de bac", "A7": "Côté du caisson haut",
     "A8": "Dessus et dessous du caisson haut", "A9": "Montant central haut", "A10": "Étagère serviettes",
     "A11": "Étagère pharmacie et produits divers", "A12": "Porte coulissante", "A13": "Fileur de plafond",
     "B1": "Côté de bac (trapèze)", "B2": "Devant de bac", "B3": "Fond de bac", "B4": "Dos incliné de bac",
-    "B5": "Feuillure de la trappe", "C1": "Fond du caisson haut", "C2": "Fond du caisson bas",
+    "E3": "Feuillure de la trappe (plat alu)", "C1": "Fond du caisson haut", "C2": "Fond du caisson bas",
     "D1": "Plan de travail", "D2": "Couvercle de trappe", "E1": "Tasseau du mur du fond", "E2": "Cornière alu",
     "S1": "Plateau du socle", "S2": "Longeron du socle", "S3": "Traverse du socle", "S4": "Rebord avant",
     "S5": "Rebord latéral",
@@ -319,46 +345,68 @@ USINAGES = {
     "A9": "En retrait de 6 derrière les rails ; taquets sur les deux faces",
     "B1": f"Trapèze : {BAC['d_bas'] * 10:.0f} en bas, {BAC['d_haut'] * 10:.0f} en haut, {BAC['h'] * 10:.0f} de haut",
     "B4": "Chants haut et bas coupés en biais",
-    "D1": "Encoche 300 × 100 au fond, centrée sur la largeur ; joint silicone sur les murs",
+    "D1": "Recoupé de 1800 à 1134 ; encoche 300 × 100 au fond, centrée sur la largeur ; joint silicone sur les murs",
     "D2": "Taillé dans la chute de l'encoche ; trou de doigt Ø 25",
     "S1": "Tapis antivibration 60 × 60 dessus",
+    "S4": "Baguette refendue dans une chute, posée sur chant (18 × 15)",
+    "S5": "Baguette refendue dans une chute, posée sur chant (18 × 15)",
+    "C1": "Deux moitiés, jointes derrière le montant central A9",
     "E2": "Aile horizontale sous le plan, sur le mur côté machine",
+    "E3": "Chute de la cornière E2, une aile sciée : plat de 3 qui dépasse de 1 sous le couvercle",
 }
 QUINCAILLERIE = {
     "vis50": "vis à bois 4 × 50",
     "vis40": "vis à bois 4 × 40",
     "vis16": "vis à bois 4 × 16",
-    "confirmat": "vis d'assemblage (confirmat) 7 × 50",
+    "confirmat": "vis d'assemblage Direkta Ø 6,3 × 50 (à la place du confirmat 7 × 50)",
     "colle": "colle à bois D3",
-    "equerre": "équerre d'assemblage 40 × 40",
+    "equerre": "équerre d'assemblage 60",
     "cheville": "cheville + vis 6 × 60 (selon le mur)",
-    "piano": "charnière piano 40 × 450 (inox)",
-    "compas": "compas d'abattant à frein, arrêt à 30°",
+    "piano": "charnière piano 600 × 32, recoupée à 455",
+    "compas": "compas d'abattant Hettich L 250, réglé à 30°",
     "poignee": "poignée de façade",
     "taquet": "taquet d'étagère Ø 5",
-    "rails": "kit 2 portes coulissantes intérieures (rails haut et bas, portes de 19)",
-    "led": "profil LED + alimentation",
+    "rails": "kit 2 portes coulissantes intérieures (rails haut et bas, portes de 18)",
+    "led": "ruban LED 1,5 m 4000 K + profil alu",
     "silicone": "silicone sanitaire",
     "tapis": "tapis antivibration 60 × 60",
     "sac": "sac à linge amovible",
     "vérin": "patin réglable",
+    "chant": "chant thermocollant blanc 20 mm (rouleau)",
 }
-
+# Achats au Weldom Saint-Barnabé (relevé du 12/10/2026) : code de quincaillerie ou de bois → (désignation Weldom, prix
+# unitaire, quantité achetée, stock, réf.) ; None : absent du catalogue du magasin, à acheter ailleurs.
+WELDOM = {
+    "E1": ("Tasseau sapin nord raboté 240 × 4,4 × 2,7", 5.99, 1, 11, "9000477"),
+    "E2": ("Cornière égale alu brut 1 m 29,5 × 29,5", 8.50, 1, 6, "9143660"),
+    "confirmat": ("Lot de 16 vis Direkta Hettich 50 mm", 5.20, 2, 5, "1098014"),
+    "equerre": ("Équerre d'assemblage Hettich 60 mm", 2.19, 4, None, "70207935"),
+    "piano": ("Charnière piano inox Hettich 600 × 32", 8.35, 2, 6, "5575916"),
+    "compas": ("Lot de 2 compas d'abattant Hettich L 250", 6.20, 2, 3, "9155214"),
+    "taquet": ("Lot de 20 taquets acier gris Ø 5", 5.35, 2, 4, "5567370"),
+    "tapis": ("Plaque anti-vibrations Noma Rub 60 × 60 × 1", 13.50, 1, 30, "9161504"),
+    "led": ("Kit ruban LED 1,5 m 4000 K (profil alu : absent)", 7.50, 1, 4, "87978094"),
+    "poignee": ("Lot de 6 poignées SOA plastique blanc entraxe 96", 3.99, 1, None, "90496580"),
+    "rails": None,
+    "sac": None,
+    "chant": None,
+}
 # Étapes de la notice : (titre, consigne courte, quincaillerie {code: quantité}). Les pièces de chaque étape sont celles
 # dont etape == numéro.
 ETAPES = [
     ("Avant de commencer", "Faire poser par le plombier le robinet d'arrêt encastré à 80 du sol, centré sur l'alcôve, et "
      "par l'électricien la prise de la machine (circuit 20 A spécialisé) et le bloc de prises de la niche à 126. "
      "Relever l'alcôve en trois hauteurs : garder la plus petite largeur.", {}),
-    ("Socle", "Visser le cadre (longerons S2, traverses S3) à la colle, poser le plateau S1, puis les rebords S4 et S5.",
-     {"vis50": 20, "colle": 1}),
+    ("Socle", "Au fer à repasser, plaquer le chant blanc sur tous les chants coupés qui resteront visibles (toutes les "
+     "pièces). Visser le cadre (longerons S2, traverses S3) à la colle, poser le plateau S1, puis les rebords S4 et S5.",
+     {"vis50": 20, "colle": 1, "chant": 1}),
     ("Caisson bas", "Assembler les côtés A1, le dessous A2 (sur la plinthe), la tablette A3 et les deux traverses A4.",
      {"confirmat": 16}),
     ("Fond et plinthe", "Visser le fond C2 au dos (il met le caisson d'équerre), puis la plinthe A5, en retrait de 3.",
      {"vis16": 14, "vis40": 4}),
     ("Pose dans l'alcôve", "Caisson bas contre le mur latéral côté bacs, socle de l'autre côté contre le caisson. "
      "Visser le caisson au mur, le socle au caisson et au mur. Tasseaux E1 au mur du fond et cornière E2 au mur côté "
-     "machine, le dessus à 106,5 (au niveau du caisson).",
+     "machine, le dessus à " + f"{Z_PLAN:g}".replace(".", ",") + " (au niveau du caisson).",
      {"equerre": 4, "cheville": 8, "vis40": 8}),
     ("Bacs", "Assembler chaque bac : côtés B1, fond B3, devant B2, dos incliné B4. Coller et visser.",
      {"vis40": 24, "colle": 1}),
@@ -367,19 +415,27 @@ ETAPES = [
      {"piano": 2, "compas": 4, "vis16": 40, "poignee": 2, "sac": 2}),
     ("Machine", "Poser le tapis sur le socle. À deux, monter la machine sur une cale de 20 placée devant, raccorder, "
      "la pousser sur le socle et régler les pieds : 1,5 sous le plan.", {"tapis": 1}),
-    ("Plan de travail", "Découper l'encoche de la trappe, visser les feuillures B5 dessous, poser le plan D1 sur le "
+    ("Plan de travail", "Découper l'encoche de la trappe, visser les feuillures E3 dessous, poser le plan D1 sur le "
      "caisson, les tasseaux et la cornière. Joint silicone contre les murs. Ajuster le couvercle D2.",
      {"vis16": 8, "silicone": 1}),
     ("Caisson haut", "Assembler les côtés A7, dessus et dessous A8, le montant A9 et le fond C1. Poser les rails du kit.",
      {"confirmat": 12, "vis16": 20, "rails": 1}),
-    ("Pose du caisson haut", "Poser le caisson haut sur deux cales de 42,5 sur le plan (niche), le visser dans les "
-     "trois murs.", {"cheville": 6}),
+    ("Pose du caisson haut", "Poser le caisson haut sur deux cales de " + f"{Z_HAUT - Z_DESSUS:.1f}".replace(".", ",") + " sur le plan "
+     "(niche), le visser dans les trois murs.", {"cheville": 6}),
     ("Finitions", "Étagères A10 et A11, portes A12, fileur A13 ajusté au plafond, profil LED sous le caisson.",
      {"taquet": 24, "led": 1, "silicone": 1}),
 ]
 POSE_HAUT = 10          # étape où le caisson haut monte sur ses cales (pas de nouvelle pièce)
 
 CHANGEMENTS = [
+    ("V3.2", "12/10/2026", "Sommaire : chaque section a une ancre lisible (#plan, #debit, #achats…) ; un clic met l'adresse à "
+     "jour, et une adresse avec ancre ouvre la page sur la section (plans et notice)."),
+    ("V3.1", "12/10/2026",
+     "Bois revu pour des panneaux du commerce, croisé avec le stock du Weldom Marseille Saint-Barnabé : pas de 12 ni de "
+     "contreplaqué au magasin, donc tout le meuble (caissons, bacs, fonds, socle) en tablettes mélaminées blanches de 18 "
+     "(2500 × 600 / 500 / 400 / 300) au lieu de 19, 12, 8 et 22 ; plan de travail 1800 × 640 × 28 au lieu de 30 "
+     f"(dessus à {Z_DESSUS:g}, 1,9 de jeu au fond) ; tasseaux 44 × 27 à plat ; fond du caisson haut en deux moitiés. "
+     "Nouvelle section Achats : calepinage des tablettes et liste de courses avec prix et stock."),
     ("V3.0", "12/10/2026",
      "Nouvelle page générée depuis 3d/sdb/modele.py (plan, élévation, coupes, débit, modèle FreeCAD, notice de montage). "
      f"Machine surélevée de {SOCLE_H} sur un socle plein en contreplaqué 22 ; plan de travail remonté de 90 à "

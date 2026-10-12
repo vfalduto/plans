@@ -184,10 +184,12 @@ ICONES = {
     "silicone": '<path d="M4 8h12v8H4zM16 10h4l2 2-2 2h-4"/>',
     "tapis": '<path d="M3 9l9-4 9 4-9 4zM3 9v3l9 4 9-4V9"/>',
     "sac": '<path d="M6 8h12l-1 12H7zM9 8a3 3 0 0 1 6 0"/>',
+    "chant": '<path d="M4 14a5 5 0 1 1 10 0a5 5 0 1 1-10 0M14 14h7M9 14h0"/>',
 }
 ICONE = {"vis50": "vis", "vis40": "vis", "vis16": "vis", "confirmat": "confirmat", "colle": "colle",
          "equerre": "equerre", "cheville": "cheville", "piano": "piano", "compas": "compas", "poignee": "poignee",
-         "taquet": "taquet", "rails": "rails", "led": "led", "silicone": "silicone", "tapis": "tapis", "sac": "sac"}
+         "taquet": "taquet", "rails": "rails", "led": "led", "silicone": "silicone", "tapis": "tapis", "sac": "sac",
+         "chant": "chant"}
 
 
 def icone(code):
@@ -381,7 +383,7 @@ CSS = PL.CSS + """
 @media (max-width:560px){ .etape{grid-template-columns:1fr} .etape .num{font-size:40px} }
 """
 
-OUTILS = ["perceuse-visseuse", "foret Ø 5 et gabarit à taquets", "mèche à confirmat", "scie sauteuse (encoche du plan)",
+OUTILS = ["perceuse-visseuse", "foret Ø 5 et gabarit à taquets", "foret pour les avant-trous des vis d'assemblage", "scie sauteuse (encoche du plan)",
           "niveau à bulle", "mètre", "serre-joints", "pistolet à silicone", "deux personnes pour la machine et le caisson haut"]
 
 
