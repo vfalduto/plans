@@ -111,11 +111,26 @@ body:not(.changements) section[id^="changements"]{display:none}
 .vbar .back:hover{text-decoration:underline}
 .vbar span{color:var(--muted);text-transform:uppercase;letter-spacing:.08em;margin-right:4px}
 .vbar .deco{margin-left:auto}
+h2{scroll-margin-top:60px}
+.toc{display:none}
+@media (min-width:1100px){
+.toc{display:block;position:fixed;left:0;top:42px;z-index:4;font-size:13px}
+.toc .tbtn{font:600 12px "JetBrains Mono",ui-monospace,monospace;color:var(--ink);background:var(--panel);border:1px solid var(--line);border-radius:0 6px 6px 0;border-left:none;padding:6px 10px;cursor:pointer}
+.toc ol{display:none;list-style:none;margin:0;padding:6px 0 24px}
+body.toc-on .toc{bottom:0;width:232px;overflow-y:auto;background:var(--paper);border-right:1px solid var(--line);padding:10px 0 0}
+body.toc-on .toc .tbtn{border:none;background:none;padding:2px 16px 8px;color:var(--muted);text-transform:uppercase;letter-spacing:.08em}
+body.toc-on .toc ol{display:block}
+.toc a{display:block;padding:5px 16px;color:var(--muted);text-decoration:none;border-left:3px solid transparent;line-height:1.35}
+.toc a:hover{color:var(--ink);background:var(--panel)}
+.toc a.on{color:var(--ink);border-left-color:var(--ink);font-weight:600}
+body.toc-on .wrap{margin-left:max(248px,calc((100vw - 1120px) / 2))}
+}
 @media (max-width:480px){ body{font-size:15px} }
 </style>
 </head>
 <body>
 <div class="vbar"><a class="back" href="index.html">← Plans</a><span>Version</span><button type="button" data-v="courante" aria-pressed="true">V4.20 en cours</button><button type="button" class="deco" aria-pressed="false">Déco</button><button type="button" class="expl" aria-pressed="false">Explications</button><button type="button" class="chg" aria-pressed="false">Changements</button></div>
+<nav class="toc" aria-label="Sommaire"><button type="button" class="tbtn" aria-expanded="true">Sommaire</button><ol></ol></nav>
 <main class="wrap">
 <div class="ver" data-v="courante"><div class="kicker">Salon · V4.20</div>
 <h1>Salon V4</h1>
@@ -198,12 +213,13 @@ body:not(.changements) section[id^="changements"]{display:none}
 (function () {
   function garde(k, v) { try { localStorage.setItem("salon-v4-" + k, v); } catch (e) {} }
   function lit(k) { try { return localStorage.getItem("salon-v4-" + k); } catch (e) { return null; } }
-  var bs = document.querySelectorAll(".vbar button[data-v]"), vs = document.querySelectorAll(".ver");
+  var bs = document.querySelectorAll(".vbar button[data-v]"), vs = document.querySelectorAll(".ver"), sommaire = function () {};
   function montre(v) {
     if (!document.querySelector('.ver[data-v="' + v + '"]')) v = "courante";
     vs.forEach(function (d) { d.hidden = d.dataset.v !== v; });
     bs.forEach(function (b) { b.setAttribute("aria-pressed", b.dataset.v === v); });
     garde("version", v);
+    sommaire();
   }
   bs.forEach(function (b) { b.addEventListener("click", function () { montre(b.dataset.v); }); });
   function table(t) {
@@ -240,6 +256,45 @@ body:not(.changements) section[id^="changements"]{display:none}
   bascule(".vbar .deco", "deco");
   bascule(".vbar .expl", "explications");
   bascule(".vbar .chg", "changements");
+  // sommaire (ordinateur) : les titres h2 de la version affichée, repliable, titre courant surligné
+  var toc = document.querySelector(".toc"), tol = toc.querySelector("ol"), tb = toc.querySelector(".tbtn"), hs = [];
+  function ouvert(on) {
+    document.body.classList.toggle("toc-on", on);
+    tb.setAttribute("aria-expanded", on);
+    tb.textContent = on ? "« Sommaire" : "Sommaire »";
+    garde("toc", on ? "1" : "0");
+  }
+  tb.addEventListener("click", function () { ouvert(!document.body.classList.contains("toc-on")); });
+  ouvert(lit("toc") !== "0");
+  function suivre() {
+    var haut = document.querySelector(".vbar").offsetHeight;
+    toc.style.top = haut + "px";
+    var k = -1;
+    hs.forEach(function (h, i) { if (h.offsetParent && h.getBoundingClientRect().top < haut + 80) k = i; });
+    tol.querySelectorAll("a").forEach(function (a, i) { a.classList.toggle("on", i === k); });
+  }
+  sommaire = function () {
+    var ver = document.querySelector(".ver:not([hidden])");
+    hs = ver ? Array.prototype.slice.call(ver.querySelectorAll("h2")) : [];
+    tol.innerHTML = "";
+    hs.forEach(function (h, i) {
+      if (!h.id) h.id = (ver.dataset.v + "-" + i).replace(/[^a-zA-Z0-9-]/g, "-");
+      var li = document.createElement("li"), a = document.createElement("a");
+      a.href = "#" + h.id; a.textContent = h.textContent.trim();
+      a.addEventListener("click", function (e) {
+        e.preventDefault();
+        if (h.closest('section[id^="changements"]')) document.querySelector(".vbar .chg").getAttribute("aria-pressed") === "true" || document.querySelector(".vbar .chg").click();
+        h.scrollIntoView({behavior: "smooth"});
+      });
+      li.appendChild(a); tol.appendChild(li);
+    });
+    suivre();
+  };
+  var attente = false;
+  window.addEventListener("scroll", function () {
+    if (!attente) { attente = true; requestAnimationFrame(function () { attente = false; suivre(); }); }
+  }, {passive: true});
+  window.addEventListener("resize", suivre);
   var v0 = lit("version") || "courante";
   if (location.hash && document.querySelector('.ver[data-v="' + decodeURIComponent(location.hash.slice(1)) + '"]'))
     v0 = decodeURIComponent(location.hash.slice(1));
