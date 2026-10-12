@@ -44,27 +44,27 @@ rendu-salon echantillons="256":
     mkdir -p salon-3d
     for f in 3d/sortie/salon-biblio-*.png; do sips -s format jpeg -s formatOptions 85 "$f" --out "salon-3d/$(basename "$f" .png).jpg" >/dev/null; done
 
-# Cuisine V12 : régénère cuisine-v12.html, la version imprimable et le modèle FreeCAD depuis 3d/v12/modele.py (source unique)
-v12:
-    python3 3d/v12/plan.py
-    /Applications/FreeCAD.app/Contents/Resources/bin/freecadcmd 3d/v12/cad.py
+# Cuisine V13 : régénère cuisine-v13.html, la version imprimable et le modèle FreeCAD depuis 3d/v13/modele.py (source unique)
+v13:
+    python3 3d/v13/plan.py
+    /Applications/FreeCAD.app/Contents/Resources/bin/freecadcmd 3d/v13/cad.py
 
-# Cuisine V12 : rendus 3D (Blender) depuis le modèle FreeCAD → cuisine-v12-3d/*.jpg, puis regénère la page
-# (toutes les vues par défaut, ou seulement celles données : just v12-rendu 64 entree iso ; 64 échantillons ≈ 256 une fois débruité)
-v12-rendu echantillons="64" *vues:
-    /Applications/Blender.app/Contents/MacOS/Blender -b --python 3d/v12/rendu.py -- {{echantillons}} {{vues}}
-    mkdir -p cuisine-v12-3d
-    for v in {{ if vues == "" { "iso iso_no entree fenetre banquette cellier dos_cellier iso_nuit" } else { vues } }}; do f="3d/sortie/v12-rendu-$v.png"; [ -f "$f" ] && sips -s format jpeg -s formatOptions 85 "$f" --out "cuisine-v12-3d/$v.jpg" >/dev/null || true; done
-    python3 3d/v12/plan.py
+# Cuisine V13 : rendus 3D (Blender) depuis le modèle FreeCAD → cuisine-v13-3d/*.jpg, puis regénère la page
+# (toutes les vues par défaut, ou seulement celles données : just v13-rendu 64 entree iso ; 64 échantillons ≈ 256 une fois débruité)
+v13-rendu echantillons="64" *vues:
+    /Applications/Blender.app/Contents/MacOS/Blender -b --python 3d/v13/rendu.py -- {{echantillons}} {{vues}}
+    mkdir -p cuisine-v13-3d
+    for v in {{ if vues == "" { "iso iso_no entree fenetre banquette cellier dos_cellier iso_nuit" } else { vues } }}; do f="3d/sortie/v13-rendu-$v.png"; [ -f "$f" ] && sips -s format jpeg -s formatOptions 85 "$f" --out "cuisine-v13-3d/$v.jpg" >/dev/null || true; done
+    python3 3d/v13/plan.py
 
-# Cuisine V12 : aperçu rapide (16 échantillons, demi-résolution) → 3d/sortie/v12-apercu-<vue>.png, page non touchée
-v12-apercu *vues:
-    /Applications/Blender.app/Contents/MacOS/Blender -b --python 3d/v12/rendu.py -- 16 apercu {{vues}}
-    @ls 3d/sortie/v12-apercu-*.png
+# Cuisine V13 : aperçu rapide (16 échantillons, demi-résolution) → 3d/sortie/v13-apercu-<vue>.png, page non touchée
+v13-apercu *vues:
+    /Applications/Blender.app/Contents/MacOS/Blender -b --python 3d/v13/rendu.py -- 16 apercu {{vues}}
+    @ls 3d/sortie/v13-apercu-*.png
 
-# Fige la version courante de la cuisine V12 (bouton de comparaison + archive/cuisine-v12.x.html)
-v12-figer:
-    python3 3d/v12/plan.py --figer
+# Fige la version courante de la cuisine V13 (bouton de comparaison + archive/cuisine-v13.x.html)
+v13-figer:
+    python3 3d/v13/plan.py --figer
 
 # Salon V4 : régénère salon-v4.html depuis 3d/salon/modele.py (source unique)
 salon:
