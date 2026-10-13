@@ -14,7 +14,7 @@
 import math
 from dataclasses import dataclass, field, replace
 
-VERSION = "V5.21"
+VERSION = "V5.23"
 H = 250                 # plafond (confirmé par le client)
 X0, X1 = 167, 234       # alcôve : bord ouest (ouverture) et mur du fond (est)
 Y0, Y1 = 0, 115         # alcôve : mur nord et mur sud (V5.6 : relevé client, fond 115 ; avant : 114)
@@ -153,11 +153,11 @@ PERCAGE = {
     "prise": ("mèche plate Ø 25 : percer jusqu'à ce que la pointe sorte, finir par l'autre face", "—"),
     "cheville": ("Ø 6 traversant", "dans le mur nu (au-dessus du carrelage), foret et cheville selon le mur, 50 de profondeur"),
     "insert": ("Ø 10, 25 de profondeur, dans le bout du montant ; vernir le trou, visser l'insert à fleur (clé six pans)", "—"),
-    "butee": ("Ø 3, 30 de profondeur dans la face intérieure de l'écharpe (ruban sur le foret)", "—"),
+    "butee": ("Ø 5, 35 de profondeur dans la face intérieure de l'écharpe (ruban sur le foret)", "—"),
 }
 VIS = {"vis60": "vis 5 × 60", "vis40": "vis 4 × 40", "vis40l": "vis 4 × 40", "vis16l": "vis 4 × 16",
        "vis16": "vis 4 × 16", "confirmat": "vis Direkta 6,3 × 50", "cuvette": "charnière invisible",
-       "prise": "trou de prise (pas de poignée)", "butee": "vis 5 × 60 laissée dépasser de 25 (butée)", "insert": "insert M8 + vérin", "depart": "départ de scie sauteuse", "doigt": "trou de doigt", "cheville": "cheville + vis 6 × 70"}
+       "prise": "trou de prise (pas de poignée)", "butee": "tire-fond 8 × 60 laissé dépasser de 25 (butée)", "insert": "insert M8 + vérin", "depart": "départ de scie sauteuse", "doigt": "trou de doigt", "cheville": "cheville + vis 6 × 70"}
 
 
 def _bornes(p):
@@ -430,11 +430,13 @@ assert _moment(0) > 0, "à vide, le L reste fermé"
 # et la barre arrière : les barres arrêtent le L (usage courant). À 20°, l'ouverture entre le haut de la porte et le
 # chant du plan est plus étroite que le fond du sac plein : pour le sortir, on lève la barre arrière et le L bascule
 # jusqu'à la butée, à BAC["angle_max"], le premier angle où l'ouverture dépasse le fond du sac de MARGE_SAC.
-# V5.21 (idée du client) : la butée est une vis 5 × 60 plantée dans la face intérieure de l'écharpe de chaque échelle du
-# bac, qui dépasse de VIS_BUTEE["depasse"] au-dessus du bord du plateau. Le plateau, en montant, vient s'appuyer
-# dessous à BAC["angle_max"]. Position : sur la droite qui part de l'axe, à VIS_BUTEE["r"] de lui ; plus près, elle
-# sort de l'écharpe par l'avant ; plus loin, la contrefiche la heurte en basculant (elle passe dans le triangle entre
-# plateau et contrefiche, au-dessus du plateau).
+# V5.21 (idée du client) : la butée est plantée dans la face intérieure de l'écharpe de chaque échelle du bac et dépasse
+# de VIS_BUTEE["depasse"] au-dessus du bord du plateau. Le plateau, en montant, vient s'appuyer dessous à
+# BAC["angle_max"]. V5.22 : passé l'équilibre (≈ 24°), le L à vide part seul et frappe la butée (≈ 0,7 J) : tire-fond
+# inox 8 × 60 au lieu de la vis 5 × 60 (≈ 4 fois plus résistant en flexion), et une mousse amortisseur collée sur le
+# plateau, là où il frappe. Position : sur la droite qui part de l'axe, à VIS_BUTEE["r"] de lui, cherchée pour la plus
+# grande marge : plus près, le trou sort de l'écharpe par l'avant ; plus loin, la contrefiche heurte la tête en
+# basculant (la butée passe dans le triangle entre plateau et contrefiche, au-dessus du plateau).
 MARGE_SAC = 3.0
 
 
@@ -450,44 +452,62 @@ BAC["ouverture_max"] = ouverture(BAC["angle_max"])
 BAC["avancee_max"] = FACE - bascule(FACE, PORTE_BAC.z1, AXE, BAC["angle_max"])[0]
 assert BAC["ouverture"] < BAC["fond_sac"], "à 20°, le sac plein ne sort pas : d'où la butée plus loin"
 assert BAC["angle_max"] > BAC["equilibre"]      # à vide, le L reste ouvert à la butée ; on le referme à la main
-VIS_BUTEE = dict(r=16.5, d=0.5, tete=0.9, depasse=2.5, dans=3.5)
+VIS_BUTEE = dict(d=0.8, tete=1.5, depasse=2.5, dans=3.5, mousse=0.3, avant_trou=0.5, marge_min=0.5,
+                 nom="tirefond inox tête 6 pans 8 × 60")   # mousse : épaisseur estimée (8 × 16, épaisseur non lue)
 _rv = VIS_BUTEE["d"] / 2
-_psi = math.radians(BAC["angle_max"]) + math.asin((T + _rv) / VIS_BUTEE["r"])
-_xv, _zv = AXE[0] + VIS_BUTEE["r"] * math.cos(_psi), AXE[1] + VIS_BUTEE["r"] * math.sin(_psi)
-Z_BUTEE = _zv
-BAC["z_butee"] = Z_BUTEE
-BAC["x_butee"] = _xv
-BUTEES = []
-for nom, y0, sy in (("n", _yi0, 1), ("c", _yi1, -1)):
-    e_ = next(c_ for c_ in ECHARPES if c_.nom == f"echarpe_{nom}")
-    (xa, za), (xa2, _), (xb2, zb2), (xb, zb) = e_.xz
-    av = xa + (_zv - za) / (zb - za) * (xb - xa)          # bord avant de l'écharpe à la hauteur de la vis
-    ar = xa2 + (_zv - za) / (zb2 - za) * (xb2 - xa2)      # bord arrière
-    assert av + 1 < _xv < ar - 1, "la vis est dans l'écharpe, à 1 au moins des bords"
-    y1 = y0 + sy * VIS_BUTEE["depasse"]
-    b_ = P("vis", f"butee_vis_{nom}", _xv - _rv, _xv + _rv, min(y0, y1), max(y0, y1), _zv - _rv, _zv + _rv, etape=2,
-           groupe="ossature")
-    BUTEES.append(b_)
-    trou(2, e_, None, "butee", (_xv, y0, _zv), (0, -sy, 0),
-         f"1 trou à {cm_(_zv)} du sol, à {cm_(_xv - XO0)} du nu avant des montants (au milieu de la largeur de l'écharpe à "
-         "cette hauteur), perpendiculaire à la face")
-    assert min(_yp1, max(y0, y1)) - max(_yp0, min(y0, y1)) >= 1.5, "la vis passe au-dessus du plateau sur 1,5 au moins"
-# la contrefiche (côté intérieur) ne touche pas la vis pendant la bascule : distance à l'axe le long de chaque direction
 _cf1, _cf2 = CONTREFICHES[0].xz[1], CONTREFICHES[0].xz[2]
 
 
 def _dist_cf(phi):
+    """Distance de l'axe au bord intérieur de la contrefiche, dans la direction phi (repère du L)."""
     x1, z1, x2, z2 = _cf1[0] - AXE[0], _cf1[1] - AXE[1], _cf2[0] - AXE[0], _cf2[1] - AXE[1]
     c, s_ = math.cos(phi), math.sin(phi)
     return (x1 * (z1 - z2) - z1 * (x1 - x2)) / (c * (z1 - z2) - s_ * (x1 - x2))
 
 
-_ph0 = math.asin((T + _rv) / VIS_BUTEE["r"])
-VIS_BUTEE["marge"] = (min(_dist_cf(_ph0 + k * (_psi - _ph0) / 50) for k in range(51)) - VIS_BUTEE["r"]
-                      - VIS_BUTEE["tete"] / 2)
-assert VIS_BUTEE["marge"] > 1, VIS_BUTEE
-# effort sur chaque vis, L à vide posé sur la butée (estimation, densités de mémoire)
+_e0 = next(c_ for c_ in ECHARPES if c_.nom == "echarpe_n")
+
+
+def _bords(e_, z):
+    (xa, za), (xa2, _), (xb2, zb2), (xb, zb) = e_.xz
+    return xa + (z - za) / (zb - za) * (xb - xa), xa2 + (z - za) / (zb2 - za) * (xb2 - xa2)
+
+
+def _butee(r):
+    """Position (x, z) de l'axe du tire-fond à r de l'axe du L, et ses marges (avant, arrière, contrefiche)."""
+    ph0 = math.asin((T + VIS_BUTEE["mousse"] + _rv) / r)
+    psi = math.radians(BAC["angle_max"]) + ph0
+    x, z = AXE[0] + r * math.cos(psi), AXE[1] + r * math.sin(psi)
+    av, ar = _bords(_e0, z)
+    mc = min(_dist_cf(ph0 + k * (psi - ph0) / 50) for k in range(51)) - r - VIS_BUTEE["tete"] / 2
+    return x, z, (x - av - _rv, ar - x - _rv, mc)
+
+
+VIS_BUTEE["r"] = max((r / 10 for r in range(100, 260)), key=lambda r: min(_butee(r)[2]))
+_xv, _zv, _mg = _butee(VIS_BUTEE["r"])
+VIS_BUTEE["marges"] = _mg
+VIS_BUTEE["marge"] = min(_mg)
+assert VIS_BUTEE["marge"] >= VIS_BUTEE["marge_min"], VIS_BUTEE
+Z_BUTEE = _zv
+BAC["z_butee"] = Z_BUTEE
+BAC["x_butee"] = _xv
+# la mousse, sur le dessus du plateau, au droit du tire-fond : à tant du dos de la porte, le long du plateau
+VIS_BUTEE["mousse_pos"] = math.sqrt(VIS_BUTEE["r"] ** 2 - (T + VIS_BUTEE["mousse"] + _rv) ** 2) - 0.0
+BUTEES = []
+for nom, y0, sy in (("n", _yi0, 1), ("c", _yi1, -1)):
+    e_ = next(c_ for c_ in ECHARPES if c_.nom == f"echarpe_{nom}")
+    y1 = y0 + sy * VIS_BUTEE["depasse"]
+    b_ = P("vis", f"butee_vis_{nom}", _xv - _rv, _xv + _rv, min(y0, y1), max(y0, y1), _zv - _rv, _zv + _rv, etape=2,
+           groupe="ossature")
+    BUTEES.append(b_)
+    trou(2, e_, None, "butee", (_xv, y0, _zv), (0, -sy, 0),
+         f"1 trou à {cm_(_zv)} du sol, à {cm_(_xv - XO0)} du nu avant des montants, perpendiculaire à la face "
+         f"(il reste {cm_(_mg[0] * 10)} mm de bois devant)")
+    assert min(_yp1, max(y0, y1)) - max(_yp0, min(y0, y1)) >= 1.5, "le tire-fond passe au-dessus du plateau sur 1,5 au moins"
+# effort sur chaque butée, L à vide posé dessus (estimation, densités de mémoire) ; énergie du choc depuis l'équilibre
 VIS_BUTEE["effort"] = -_moment(BAC["angle_max"]) * 1e-8 * 9.81 / (VIS_BUTEE["r"] / 100) / 2   # N
+VIS_BUTEE["choc"] = sum(-_moment(BAC["equilibre"] + k / 10) for k in
+                        range(int((BAC["angle_max"] - BAC["equilibre"]) * 10))) * 1e-8 * 9.81 * math.radians(0.1)  # J
 BUTEE = BUTEES[0]
 assert BAC["angle_max"] > BAC["equilibre"]      # à vide, le L reste ouvert à la butée ; on le referme à la main
 
@@ -642,64 +662,6 @@ DOUCHE = (5, 50, 78, 155)               # x0, y0, x1, y1
 LAVABO = (82, Y1, 165, 160)
 
 
-# ------------------------------------------------------------------ variante : caisson haut IKEA METOD (V5.2)
-# Deux structures METOD « rangement mural » 60 × 37 × 80 (panneaux de 18, dos en fibres, 36,6 de profondeur, 37,6 avec
-# le rail de suspension), accrochées à un rail METOD vissé au mur du fond. Celle du nord (serviettes) reste entière ;
-# celle du sud (pharmacie) est recoupée de 60 à 53 en largeur : dessus, dessous, dos et tablettes raccourcis de 7, un
-# côté remonté avec de nouveaux perçages. Dessous au même niveau que le caisson fait maison (niche identique), fileur
-# de 12 au-dessus. Portes coulissantes en applique devant les deux structures (kit de meuble à rails clipsés, deux
-# portes de 18 taillées dans une tablette mélaminée).
-METOD = dict(l=60, p=36.6, rail=1.0, h=80, coupe=Y1 - 1 - 60, rec=3.0, porte_e=T, bandeau=6.0, tablettes=(2, 3),
-             prix=dict(structure=30.0, rail=20.0, tablette=10.0, patins=6.20),
-             refs=dict(structure="302.055.28", rail="602.056.64", tablette="102.056.14"))
-_mx1 = X1 - METOD["rail"]
-_mx0 = _mx1 - METOD["p"]
-_mz0, _mz1 = Z_HAUT, Z_HAUT + METOD["h"]
-_my = [(Y0 + 0.5, Y0 + 0.5 + METOD["l"]), (Y0 + 0.5 + METOD["l"], Y1 - 0.5)]
-assert abs((_my[1][1] - _my[1][0]) - METOD["coupe"]) < 1e-9
-PIECES_METOD = []
-
-
-def _mb(*a, **k):
-    b = Bloc(*a, groupe="caisson_haut", miroir=False, etape=8, **k)
-    PIECES_METOD.append(b)
-    return b
-
-
-for k, (y0, y1) in enumerate(_my):
-    cote = ("n", "s")[k]
-    _mb("caisson", f"metod_cote_{cote}0", _mx0, _mx1 - 0.3, y0, y0 + T, _mz0, _mz1)
-    _mb("caisson", f"metod_cote_{cote}1", _mx0, _mx1 - 0.3, y1 - T, y1, _mz0, _mz1)
-    _mb("caisson", f"metod_dessous_{cote}", _mx0, _mx1 - 0.3, y0 + T, y1 - T, _mz0, _mz0 + T)
-    _mb("caisson", f"metod_dessus_{cote}", _mx0, _mx1 - 0.3, y0 + T, y1 - T, _mz1 - T, _mz1)
-    _mb("fond", f"metod_dos_{cote}", _mx1 - 0.3, _mx1, y0, y1, _mz0, _mz1)
-    n = METOD["tablettes"][k]
-    case = (_mz1 - _mz0 - 2 * T - n * T) / (n + 1)
-    METOD[f"case_{cote}"] = case
-    for j in range(n):
-        z = _mz0 + T + (j + 1) * case + j * T
-        _mb("etagere", f"metod_tablette_{cote}{j + 1}", _mx0 + 2, _mx1 - 0.5, y0 + T + 0.2, y1 - T - 0.2, z, z + T)
-# portes coulissantes en applique (V5.4) : deux bandeaux de mélaminé, vissés sous et sur les structures et débordant
-# devant, rainurés à la défonceuse comme le caisson fait maison ; les portes glissent dedans sur des patins PTFE
-_bx0 = _mx0 - METOD["bandeau"]
-_xr = [_bx0 + _rn["bord"] + k * (_rn["l"] + _rn["entre"]) for k in range(2)]
-assert _xr[1] + _rn["l"] <= _mx0 - 0.3, "rainures devant les structures"
-_mb("caisson", "metod_bandeau_bas", _bx0, _mx0 + 5, Y0 + 0.5, Y1 - 0.5, _mz0 - T, _mz0)
-_mb("caisson", "metod_bandeau_haut", _bx0, _mx0 + 5, Y0 + 0.5, Y1 - 0.5, _mz1, _mz1 + T)
-_lpm = (Y1 - 1 + METOD["rec"]) / 2
-for k, (nom, etiq) in enumerate((("n", "Serviettes"), ("s", "Pharmacie et produits divers"))):
-    xa = _xr[k] + (_rn["l"] - T) / 2
-    y0 = Y0 + 0.5 if k == 0 else Y1 - 0.5 - _lpm
-    _mb("porte", f"metod_porte_{nom}", xa, xa + T, y0, y0 + _lpm, _mz0 - _rn["bas"], _mz1 + _rn["prise"], etiq=etiq)
-_mb("fileur", "metod_fileur", _bx0, _bx0 + T, Y0 + 0.5, Y1 - 0.5, _mz1 + T, H)
-METOD["porte"] = (_lpm, _mz1 + _rn["prise"] - (_mz0 - _rn["bas"]))
-METOD["x0"] = _bx0
-METOD["z"] = (_mz0, _mz1)
-_nt = sum(METOD["tablettes"])
-METOD["total"] = (2 * METOD["prix"]["structure"] + METOD["prix"]["rail"] + _nt * METOD["prix"]["tablette"]
-                  + 2 * METOD["prix"]["patins"])
-
-
 # ------------------------------------------------------------------ variante : deux bacs à roulettes du commerce (V5.17)
 # Le L basculant, ses barres et ses sacs sont remplacés par deux paniers étroits à roulettes Wenko Corno (18,5 × 40 × 60,
 # 43 L, polyester, couvercle à cordon ; fiches La Redoute et Galaxus, à mesurer à réception) roulés côte à côte entre
@@ -726,9 +688,9 @@ VOLUME_ROUL = 2 * _co["litres"]
 
 
 def version(c="d"):
-    """Pièces et équipements de la version c : 1re lettre "d" (caisson haut fait maison) ou "m" (METOD) ; suivie de
-    "r" : linge sale en deux paniers à roulettes au lieu du L basculant."""
-    pieces = [b for b in PIECES if b.groupe != "caisson_haut"] + PIECES_METOD if c[0] == "m" else list(PIECES)
+    """Pièces et équipements de la version c : "d" (L basculant) ou "dr" (linge sale en deux paniers à roulettes).
+    V5.23 : la variante du caisson haut en IKEA METOD (V5.2) est retirée."""
+    pieces = list(PIECES)
     if c.endswith("r"):
         pieces = [b for b in pieces if b.nom not in RETIRES_ROUL] + PANIERS
     else:
@@ -736,8 +698,7 @@ def version(c="d"):
     return pieces + EQUIPEMENTS
 
 
-VERSIONS = {"d": "Caisson haut fait maison", "m": "Caisson haut IKEA METOD",
-            "dr": "Caisson haut fait maison, bacs à roulettes", "mr": "Caisson haut IKEA METOD, bacs à roulettes"}
+VERSIONS = {"d": "L basculant", "dr": "bacs à roulettes"}
 
 # ------------------------------------------------------------------ matériaux, débit, quincaillerie
 MATERIAUX = {
@@ -834,6 +795,8 @@ QUINCAILLERIE = {
     "fraise": "fraise droite Ø 20 pour défonceuse (ou Ø 10 en deux passes), rainures des portes coulissantes",
     "led": "ruban LED 1,5 m 4000 K + profil alu",
     "silicone": "silicone sanitaire",
+    "tirefond": "tire-fond inox 8 × 60, tête 6 pans (clé de 13) : butée du L, un par échelle du bac",
+    "mousse": "mousse amortisseur adhésive 8 × 16 mm, collée sur le plateau sous chaque tire-fond",
     "tapis": "tapis antivibration 60 × 60",
     "sac": "sac en tissu",
     "E4": "barres rondes Ø 20 à 25 : manche à balai (récupération) ou tringle de rideau de 2 m (non relevée au magasin)",
@@ -859,6 +822,8 @@ WELDOM = {
     "E4": None,
     "chant": None,
     "peinture": ("Peinture bois Luxens int./ext. blanc satiné 0,5 L (microporeuse, à l'eau)", 17.70, 1, 13, "5620869"),
+    "tirefond": ("Lot de 4 tirefonds inox tête 6 pans Standers 8 × 60", 5.60, 1, None, "5618626"),
+    "mousse": ("Lot de 20 mousses amortisseur adhésif blanc 8 × 16 mm", 3.49, 1, None, "85066295"),
 }
 # Étapes de la notice : (titre, consigne courte, quincaillerie {code: quantité}). Les pièces de chaque étape sont celles
 # dont etape == numéro ; les perçages, ceux de TROUS.
@@ -881,13 +846,13 @@ ETAPES = [
      "mettre le meuble de niveau.",
      {"vis60": _n(1, "vis60") + 4 * len(ECH), "insert": 2 * len(ECH), "verin": 2 * len(ECH)}),
     ("Pose, rails et butée", "Avant de dresser les échelles du bac (nord et milieu), planter dans la face intérieure "
-     "de leur écharpe la vis de butée : avant-trou Ø 3 de 30, à " + cm_(Z_BUTEE) + " du sol et à " +
-     cm_(BAC["x_butee"] - XO0) + " du nu avant des montants, puis une vis 5 × 60 enfoncée de 35 : elle dépasse de 25. "
-     "Dresser les échelles dans l'alcôve, contre le mur "
+     "de leur écharpe le tire-fond de butée : avant-trou Ø 5 de 35, à " + cm_(Z_BUTEE) + " du sol et à " +
+     cm_(BAC["x_butee"] - XO0) + " du nu avant des montants, perpendiculaire à la face, puis le tire-fond 8 × 60 vissé "
+     "à la clé de 13 jusqu'à ce qu'il dépasse de 25. Dresser les échelles dans l'alcôve, contre le mur "
      "du fond : une contre le mur nord, une à " + cm_(ECH["c"] - YM0) + " d'elle (place du bac), une contre le mur sud. "
      "Entre les deux premières, au sol, les rails G5 au droit des montants avant et arrière. Deux vis 5 × 60 à travers "
      "le montant du milieu dans chaque bout, et côté nord, contre le mur, une équerre plate sur les faces affleurantes "
-     "du montant et du tasseau. Rien ne se fixe aux murs.", {"vis60": _n(2, "vis60") + _n(2, "butee"), "equerre_p": RAIL_EQUERRES, "vis16": 4 * RAIL_EQUERRES}),
+     "du montant et du tasseau. Rien ne se fixe aux murs.", {"vis60": _n(2, "vis60"), "tirefond": _n(2, "butee"), "equerre_p": RAIL_EQUERRES, "vis16": 4 * RAIL_EQUERRES}),
     ("Le L", "Au fer à repasser, plaquer le chant blanc sur les chants coupés visibles de la porte et du plateau. Porte "
      "A6 à plat, face vers le sol : poser le plateau A3 debout contre son dos, le dessous du plateau 0,5 sous le bas de "
      "la porte, et le fixer par deux équerres d'assemblage. Couper les deux contrefiches G7 d'onglet, les poser aux "
@@ -899,9 +864,11 @@ ETAPES = [
      "une lame sous le plateau, l'autre sur le dessus du rail avant. Poser le L sur les rails, visser les lames dans le "
      "rail. Au dos de la porte, en haut, les quatre supports B1 des demi-barres de la porte, deux aux bouts et deux "
      "côte à côte au milieu (lamés, vis "
-     f"4 × 16). Essayer : sans les barres, le L bascule jusqu'à ce que le plateau s'appuie sous les vis de butée, "
+     f"4 × 16). Coller une mousse amortisseur sur le dessus du plateau, de chaque côté, à {cm_(VIS_BUTEE['mousse_pos'])} "
+     "du dos de la porte et à 1 du chant latéral, sous le tire-fond. Essayer : sans les barres, le L bascule jusqu'à ce "
+     "que le plateau s'appuie sous les tire-fonds, "
      f"à {BAC['angle_max']}° ; avec les sacs et les barres arrière en place (étape 7), il s'arrête à {BAC['angle']}°.",
-     {"charniere_p": CHARNIERES["n"], "vis16": 4 * CHARNIERES["n"] + _n(4, "vis16l")}),
+     {"charniere_p": CHARNIERES["n"], "vis16": 4 * CHARNIERES["n"] + _n(4, "vis16l"), "mousse": 2}),
     ("Barres et sacs", "Visser les deux supports B1 des barres arrière sur les lisses de barre G8, à " +
      f"{BAC['prof']}" + " du nu avant, demi-lune en haut. Coudre les deux sacs (voir la page des plans) et enfiler chacun "
      "sur ses deux demi-barres E4. Poser les demi-barres de la porte dans leurs supports. Les demi-barres arrière se posent "
@@ -947,11 +914,18 @@ QUINCAILLERIE["toile"] = (f"{cm_(TOILE['achat_m'])} m de {TOILE['nom'].lower()} 
                           f"relevé en ligne du {TOILE['releve']})")
 
 CHANGEMENTS = [
+    ("V5.23", "13/10/2026",
+     "Variante IKEA METOD du caisson haut retirée (demande client) : bouton, dessins, section et comparatif de prix ; "
+     "le caisson haut est fait maison."),
+    ("V5.22", "13/10/2026",
+     "Butée renforcée : passé ≈ " + f"{BAC['equilibre']:.0f}" + "°, le L à vide part seul et frappe la butée (≈ " +
+     cm_(VIS_BUTEE["choc"]) + " J à chaque fois) : tire-fond inox 8 × 60 (Weldom 5618626, lot de 4, 5,60 €) au lieu de "
+     "la vis 5 × 60, à " + cm_(VIS_BUTEE["r"]) + " de l'axe (" + cm_(Z_BUTEE) + " du sol), et une mousse amortisseur "
+     "adhésive sur le plateau à l'endroit du choc (Weldom 85066295, lot de 20, 3,49 €)."),
     ("V5.21", "13/10/2026",
      "Butée simplifiée (idée du client) : plus de taquets G6, une vis 5 × 60 plantée dans la face intérieure de chaque "
-     "écharpe du bac, qui dépasse de 25 au-dessus du bord du plateau ; à " + cm_(VIS_BUTEE["r"]) + " de l'axe, à " +
-     cm_(Z_BUTEE) + " du sol, le plateau s'y appuie à " + f"{BAC['angle_max']}" + "°. Effort estimé ≈ " +
-     f"{VIS_BUTEE['effort']:.0f}" + " N par vis, L à vide."),
+     "écharpe du bac, qui dépasse de 25 au-dessus du bord du plateau ; à 16,5 de l'axe, à 17,5 du sol, le plateau s'y "
+     "appuie à " + f"{BAC['angle_max']}" + "°. Effort estimé ≈ 17 N par vis, L à vide."),
     ("V5.20", "13/10/2026",
      "Sortie du sac plein vérifiée : à " + f"{BAC['angle']}" + "°, le passage entre le haut de la porte et le chant du "
      "plan fait " + cm_(BAC["ouverture"]) + " pour un fond de sac de " + cm_(BAC["fond_sac"]) + " : il ne passe pas. "

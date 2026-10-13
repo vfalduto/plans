@@ -211,7 +211,7 @@ ICONE = {"vis50": "vis", "vis40": "vis", "vis16": "vis", "confirmat": "confirmat
          "taquet": "taquet", "rails": "rails", "led": "led", "silicone": "silicone", "tapis": "tapis", "sac": "sac", "toile": "sac",
          "chant": "chant", "vis60": "vis", "vis50": "vis", "equerre_r": "equerre", "equerre_p": "plate", "charniere": "charniere",
          "vernis": "pinceau", "forstner": "foret", "equerre_a": "equerre", "charniere_p": "piano", "crochet": "poignee",
-         "elastique": "sac", "peinture": "pinceau", "patins": "taquet", "fraise": "foret", "verin": "taquet", "insert": "vis"}
+         "elastique": "sac", "peinture": "pinceau", "patins": "taquet", "fraise": "foret", "verin": "taquet", "insert": "vis", "tirefond": "vis", "mousse": "taquet"}
 
 
 def icone(code):
@@ -336,7 +336,7 @@ def profil_bac():
     o.append(PL.text(h[0] - 1, -h[1] - 2, f"{a}°", "lbls", "end"))
     o.append(PL.text(axe[0] + 2, -axe[1] + 5, "axe : charnières plates sur le rail avant", "lblx", "start"))
     bu = M.BUTEE
-    o.append(PL.text(bu.x1 + 1.5, -(bu.z0 + 1), f"vis de butée ({M.BAC['angle_max']}°)", "lblx", "start"))
+    o.append(PL.text(bu.x1 + 1.5, -(bu.z0 + 1), f"tire-fond de butée ({M.BAC['angle_max']}°)", "lblx", "start"))
     o.append(PL.text(xr0 + bx + 1.5, -(zb1 - 1), "barre arrière (amovible)", "lblx", "start"))
     o.append(PL.text((M.XO0 + M.XO1) / 2 + 4, -40, "sac", "lblx"))
     x0, x1 = M.FACE - 32, M.XO1 + 22
@@ -865,7 +865,7 @@ def contenu():
 <h2>Le meuble</h2>
 <div class="deux">
 <div class="fig"><div class="vd">{vue_ensemble("d")}</div><p class="note">Meuble monté, vu depuis la salle de bain.</p></div>
-<div class="fig"><div class="vd">{vue_eclatee("d")}</div><p class="note">Vue éclatée : échelles et vis de butée, rails, porte basculante en L, barres et sacs, plan, caisson haut.</p></div>
+<div class="fig"><div class="vd">{vue_eclatee("d")}</div><p class="note">Vue éclatée : échelles et tire-fonds de butée, rails, porte basculante en L, barres et sacs, plan, caisson haut.</p></div>
 </div>
 
 <h2>Pièces</h2>
