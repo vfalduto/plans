@@ -208,7 +208,7 @@ ICONES = {
 }
 ICONE = {"vis50": "vis", "vis40": "vis", "vis16": "vis", "confirmat": "confirmat", "colle": "colle",
          "equerre": "equerre", "cheville": "cheville", "piano": "piano", "compas": "compas", "poignee": "poignee", "vis30": "vis",
-         "taquet": "taquet", "rails": "rails", "led": "led", "silicone": "silicone", "tapis": "tapis", "sac": "sac",
+         "taquet": "taquet", "rails": "rails", "led": "led", "silicone": "silicone", "tapis": "tapis", "sac": "sac", "toile": "sac",
          "chant": "chant", "vis60": "vis", "vis50": "vis", "equerre_r": "equerre", "equerre_p": "plate", "charniere": "charniere",
          "vernis": "pinceau", "forstner": "foret", "equerre_a": "equerre", "charniere_p": "piano", "crochet": "poignee",
          "elastique": "sac", "peinture": "pinceau", "patins": "taquet", "fraise": "foret", "verin": "taquet", "insert": "vis"}
@@ -311,7 +311,7 @@ def profil_bac():
     tout = M.version("d")
     nom = {b.nom: b for b in tout}
     o = []
-    for n_ in ("rail_av", "rail_ar", "butee", "montant_av_n", "montant_ar_n", "lisse_basse_n", "lisse_haute_n",
+    for n_ in ("rail_av", "rail_ar", "butee_vis_n", "echarpe_n", "montant_av_n", "montant_ar_n", "lisse_basse_n", "lisse_haute_n",
                "lisse_barre_n", "plan_travail"):
         b = nom[n_]
         o.append(PL.poly([(u, -z) for u, z in b.pts("y")], "dg" if b.role == "bois" else "cab"))
@@ -336,7 +336,7 @@ def profil_bac():
     o.append(PL.text(h[0] - 1, -h[1] - 2, f"{a}°", "lbls", "end"))
     o.append(PL.text(axe[0] + 2, -axe[1] + 5, "axe : charnières plates sur le rail avant", "lblx", "start"))
     bu = M.BUTEE
-    o.append(PL.text(bu.x1 + 1.5, -(bu.z0 + 1), "butée", "lblx", "start"))
+    o.append(PL.text(bu.x1 + 1.5, -(bu.z0 + 1), f"vis de butée ({M.BAC['angle_max']}°)", "lblx", "start"))
     o.append(PL.text(xr0 + bx + 1.5, -(zb1 - 1), "barre arrière (amovible)", "lblx", "start"))
     o.append(PL.text((M.XO0 + M.XO1) / 2 + 4, -40, "sac", "lblx"))
     x0, x1 = M.FACE - 32, M.XO1 + 22
@@ -416,7 +416,7 @@ SOUS_ENSEMBLES = [
     ("bas", "Échelle nord (côté bac)", lambda b: b.groupe == "ossature" and b.nom.endswith("_n")),
     ("bas", "Échelle du milieu (entre bac et machine)", lambda b: b.groupe == "ossature" and b.nom.endswith("_c")),
     ("bas", "Échelle du mur sud", lambda b: b.groupe == "ossature" and b.nom.endswith("_s")),
-    ("bas", "Rails et butée", lambda b: b.nom.startswith("rail_") or b.nom == "butee"),
+    ("bas", "Rails", lambda b: b.nom.startswith("rail_")),
     ("bas", "Porte basculante (le L)", lambda b: b.groupe == "bac" and b.role in ("facade", "bac", "bois", "support")
      and not b.nom.startswith("support_fixe") and b.nom != "accroche_centrale"),
     ("bas", "Barres arrière et accroche centrale", lambda b: b.nom.startswith(("support_fixe", "barre_fixe")) or b.nom == "accroche_centrale"),
@@ -865,7 +865,7 @@ def contenu():
 <h2>Le meuble</h2>
 <div class="deux">
 <div class="fig"><div class="vd">{vue_ensemble("d")}</div><p class="note">Meuble monté, vu depuis la salle de bain.</p></div>
-<div class="fig"><div class="vd">{vue_eclatee("d")}</div><p class="note">Vue éclatée : échelles, rails et butée, porte basculante en L, barres et sacs, plan, caisson haut.</p></div>
+<div class="fig"><div class="vd">{vue_eclatee("d")}</div><p class="note">Vue éclatée : échelles et vis de butée, rails, porte basculante en L, barres et sacs, plan, caisson haut.</p></div>
 </div>
 
 <h2>Pièces</h2>

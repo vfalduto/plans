@@ -25,8 +25,14 @@ Z_COUPE_PLAN = 80       # le plan vu de dessus est une coupe horizontale sous le
 COUPE_B = 80            # y, regard vers le nord : machine, passe-tuyau, robinet
 
 
-def coupe_c(c):         # y, regard vers le nord : à travers le sac nord
-    y = (M.SACS[0].y0 + M.SACS[0].y1) / 2
+def roul(c):
+    """Variante V5.17 : linge sale en deux paniers à roulettes (code de version terminé par "r")."""
+    return c.endswith("r")
+
+
+def coupe_c(c):         # y, regard vers le nord : à travers le sac nord (variante : le panier nord)
+    s0 = M.PANIERS[0] if roul(c) else M.SACS[0]
+    y = (s0.y0 + s0.y1) / 2
     return y if c != "g" else M.Y1 - y
 
 
@@ -86,8 +92,9 @@ CLS = {"socle": ("socle", "soclec"), "rebord": ("socle", "soclec"), "caisson": (
        "plinthe": ("plinthe", "cabc"), "bac": ("bac", "bacc"), "facade": ("fac", "facc"), "tasseau": ("tas", "tasc"),
        "corniere": ("alu", "alu"), "plan": ("top", "topc"), "trappe": ("trap", "trap"), "etagere": ("shelf", "shelfc"),
        "porte": ("porte", "portec"), "fileur": ("cab", "cabc"), "machine": ("appf", "appc"), "led": ("led", "led"),
-       "prise": ("plug", "plug"), "pied": ("appf", "appc"),
-       "support": ("cab", "cabc"), "barre": ("tas", "tasc"), "sac": ("sac", "sacc"), "bois": ("dg", "dgc")}
+       "prise": ("plug", "plug"), "pied": ("appf", "appc"), "vis": ("alu", "alu"),
+       "support": ("cab", "cabc"), "barre": ("tas", "tasc"), "sac": ("sac", "sacc"), "bois": ("dg", "dgc"),
+       "panier": ("panier", "panierc")}
 
 
 # ------------------------------------------------------------------ plan vu de dessus (coupe horizontale à z 100)
@@ -126,13 +133,20 @@ def plan_svg(c):
     for b in sorted([b for b in blocs if b.z0 < Z_COUPE_PLAN and b.role not in ("prise", "trappe")], key=lambda b: b.z1):
         vu, coupe = CLS[b.role]
         o.append(rect(b.x0, b.y0, b.x1, b.y1, coupe if b.z1 > Z_COUPE_PLAN else vu))
-    # bacs basculés (tireté) : emprise de la façade avancée
     ya, yb = bacs_y(c)
-    av = M.BAC["avancee"]
-    bas = (M.FACE - av, ya + 0.15, M.FACE, yb - 0.15)
-    o.append(rect(*bas, "swing"))
-    o.append(text(M.FACE - av / 2, (ya + yb) / 2 + 1.5, "porte basculée", "lblx muted",
-                  extra=f' transform="rotate(-90 {f(M.FACE - av / 2)} {f((ya + yb) / 2 + 1.5)})"'))
+    if roul(c):
+        # V5.18 : pas de porte ; panier tiré (tireté) : il sort de toute sa profondeur
+        pa = M.PANIERS[0]
+        bas = (pa.x0 - (pa.x1 - pa.x0), pa.y0, pa.x0, pa.y1)
+        o.append(rect(*bas, "swing"))
+        o.append(text((bas[0] + bas[2]) / 2, (pa.y0 + pa.y1) / 2 + 1.2, "panier tiré", "lblx muted"))
+    else:
+        # bacs basculés (tireté) : emprise de la façade avancée
+        av = M.BAC["avancee"]
+        bas = (M.FACE - av, ya + 0.15, M.FACE, yb - 0.15)
+        o.append(rect(*bas, "swing"))
+        o.append(text(M.FACE - av / 2, (ya + yb) / 2 + 1.5, "porte basculée", "lblx muted",
+                      extra=f' transform="rotate(-90 {f(M.FACE - av / 2)} {f((ya + yb) / 2 + 1.5)})"'))
     # hublot : charnière à gauche (face au meuble, donc au nord) ; 180° si rien ne l'arrête, 90° contre le mur nord
     m = [b for b in blocs if b.role == "machine"][0]
     cx, r = M.MACHINE.x0 - 1.5, 23.5
@@ -158,7 +172,7 @@ def plan_svg(c):
     o.append(rect(tr["x0"], tr["y0"], tr["x1"], tr["y1"], "trap"))
     o.append(f'<circle class="valve" cx="{f(M.X1 - 1.5)}" cy="{f(M.ROBINET["y"])}" r="1.6"/>')
     ch = M.CH
-    if c == "m":
+    if c[0] == "m":
         ym = M.Y0 + 0.5 + M.METOD["l"]
         o.append(rect(M.METOD["x0"], ch["y0"], ch["x1"], ch["y1"], "upper"))
         o.append(f'<line class="upper" x1="{f(M.METOD["x0"])}" y1="{f(ym)}" x2="{ch["x1"]}" y2="{f(ym)}"/>')
@@ -167,8 +181,12 @@ def plan_svg(c):
         o.append(f'<line class="upper" x1="{ch["x0"]}" y1="{M.CENTRE}" x2="{ch["x1"]}" y2="{M.CENTRE}"/>')
     # étiquettes
     xm = (M.CB["x0"] + M.CB["x1"]) / 2
-    o.append(text(xm, (ya + yb) / 2 - 2, "Bac : 2 sacs", "lbls"))
-    o.append(text(xm, (ya + yb) / 2 + 4, "porte basculante", "lblx"))
+    if roul(c):
+        for k, pa in enumerate(M.PANIERS):
+            o.append(text((pa.x0 + pa.x1) / 2, (pa.y0 + pa.y1) / 2 + 1.5, f"panier {k + 1} · {M.CORNO['litres']} L", "lblx"))
+    else:
+        o.append(text(xm, (ya + yb) / 2 - 2, "Bac : 2 sacs", "lbls"))
+        o.append(text(xm, (ya + yb) / 2 + 4, "porte basculante", "lblx"))
     o.append(text((m.x0 + m.x1) / 2, (m.y0 + m.y1) / 2 - 2, "LL", "lblb"))
     o.append(text((m.x0 + m.x1) / 2 - 8, (m.y0 + m.y1) / 2 + 8, "au sol, sur tapis", "lblx"))
     o.append(f'<path class="lead" d="M{f(tr["x0"])} {f(tr["y1"] - 4)} L{f(tr["x0"] - 9)} {f(tr["y1"] - 4)}"/>')
@@ -247,10 +265,13 @@ def elevation(c):
         r.append(text(ym, -(m.z0 + 4), f"LL {M.LL['l']} × {M.LL['p']} × {M.LL['h']}", "lblx"))
         # trou de prise de la porte et sens de bascule
         ya, yb = bacs_y(c)
-        for k, (z0, z1) in enumerate(M.FACADES):
-            r.append(f'<circle class="handle" cx="{f((ya + yb) / 2)}" cy="{f(-(z1 - 3))}" r="1.25"/>')
-            r.append(text((ya + yb) / 2, -(z0 + z1) / 2 + 6, f"2 sacs ≈ {M.VOLUME_BAC:.0f} L", "lblx"))
-            r.append(text((ya + yb) / 2, -(z0 + z1) / 2 + 12, f"bascule à {M.BAC['angle']}°", "lblx"))
+        if roul(c):
+            r.append(text((ya + yb) / 2, -(M.CORNO["h"] + 8), f"2 paniers {M.CORNO['litres']} L, sans porte", "lblx"))
+        else:
+            for k, (z0, z1) in enumerate(M.FACADES):
+                r.append(f'<circle class="handle" cx="{f((ya + yb) / 2)}" cy="{f(-(z1 - 3))}" r="1.25"/>')
+                r.append(text((ya + yb) / 2, -(z0 + z1) / 2 + 6, f"2 sacs ≈ {M.VOLUME_BAC:.0f} L", "lblx"))
+                r.append(text((ya + yb) / 2, -(z0 + z1) / 2 + 12, f"bascule à {M.BAC['angle']}°", "lblx"))
         # niche
         r.append(text(57, -(M.Z_HAUT - 10), f"Niche {cm(M.Z_HAUT - M.Z_DESSUS)} : prises + USB, crochet sèche-cheveux, LED",
                       "lblx"))
@@ -265,7 +286,7 @@ def elevation(c):
         r.append(cote_h(*ly, 11, f"{cm(ly[1] - ly[0])} machine"))
         return r
 
-    hz = [M.Z_PLAN, M.Z_DESSUS, M.Z_HAUT, M.METOD["z"][1] if c == "m" else M.Z_HAUT1]
+    hz = [M.Z_PLAN, M.Z_DESSUS, M.Z_HAUT, M.METOD["z"][1] if c[0] == "m" else M.Z_HAUT1]
     return vue(c, "x", 150, +1, -6, 120, extra, hz, f"Élévation A, {M.VERSIONS[c]}")
 
 
@@ -296,7 +317,7 @@ def coupe_b(c):
         r.append(text(M.CH["x0"] - 2, -(M.Z_HAUT + 50), "serviettes", "lblx", "end"))
         r.append(text(M.CH["x0"] - 2, -(M.Z_HAUT + 44), "(au nord, au fond)", "lblx muted", "end"))
         r.append(text(M.FACE + 4, -(M.Z_DESSUS + 32), "niche", "lblx", "start"))
-        r.append(cote_h(M.METOD["x0"], M.X1, -(M.H + 4)) if c == "m" else cote_h(M.CH["x0"], M.CH["x1"], -(M.H + 4), "45"))
+        r.append(cote_h(M.METOD["x0"], M.X1, -(M.H + 4)) if c[0] == "m" else cote_h(M.CH["x0"], M.CH["x1"], -(M.H + 4), "45"))
         r.append(cote_h(M.FACE, M.X1, 12, cm(M.X1 - M.FACE)))
         r.append(cote_h(leaf()[2], M.FACE, 12, cm(M.FACE - leaf()[2])))
         return r
@@ -307,6 +328,21 @@ def coupe_b(c):
 
 def coupe_c_svg(c):
     yc = coupe_c(c)
+
+    def extra_r(blocs):
+        r = []
+        murs_coupe(r)
+        pa, co = M.PANIERS[0], M.CORNO
+        r.append(text((pa.x0 + pa.x1) / 2, -(pa.z1 / 2 + 3), "Wenko Corno", "lblx"))
+        r.append(text((pa.x0 + pa.x1) / 2, -(pa.z1 / 2 - 3), f"{co['litres']} L, à roulettes", "lblx"))
+        rr = M.RAILS[1]
+        r.append(f'<path class="lead" d="M{f(rr.x0 + 1)} {f(-rr.z1)} L{f(rr.x0 + 1)} {f(-(co["h"] + 4))}"/>')
+        r.append(text(rr.x0, -(co["h"] + 5), "rail arrière (seul rail)", "lblx", "end"))
+        r.append(text(M.FACE + 2, 6, "sans porte ni rail avant", "lblx", "start"))
+        r.append(cote_h(M.FACE, pa.x1, 12, cm(pa.x1 - M.FACE)))
+        r.append(cote_h(pa.x1, rr.x0, 12, cm(rr.x0 - pa.x1)))
+        r.append(cote_h(M.METOD["x0"], M.X1, -(M.H + 4)) if c[0] == "m" else cote_h(M.CH["x0"], M.CH["x1"], -(M.H + 4), "45"))
+        return r
 
     def extra(blocs):
         r = []
@@ -325,20 +361,30 @@ def coupe_c_svg(c):
         fb = M.bascule(M.XO1 - M.DL - 1, M.DL + M.T + 1, axe, a)
         fc = M.bascule(xf0 + 1, M.DL + M.T + 1, axe, a)
         r.append(poly([(fa[0], -fa[1]), (xr0, -(zb0 + 1)), (fb[0], -fb[1]), (fc[0], -fc[1])], "sacopen"))
+        am = M.BAC["angle_max"]
+        for b in blocs:
+            if b.nom in ("bac_porte", "plateau"):
+                pts = [M.bascule(x, z, axe, am) for x, z in b.pts("y")]
+                r.append(poly([(x, -z) for x, z in pts], "leafg"))
+        hm = M.bascule(M.FACE, M.FACADES[0][1], axe, am)
+        r.append(text(hm[0] - 1, -hm[1] + 6, f"{am}° : sortie du sac", "lblx rt", "end"))
         r.append(f'<circle class="axe" cx="{f(axe[0])}" cy="{f(-axe[1])}" r="0.9"/>')
         r.append(text(M.CB["x0"] + 22, -40, f"sac ≈ {M.VOLUME_BAC:.0f} L", "lblx"))
         r.append(text(M.FACE - 16, -(M.FACADES[0][1] - 6), f"basculé {M.BAC['angle']}°", "lblx muted"))
         r.append(text(axe[0] + 1, 6, "axe : charnières plates sur le rail", "lblx", "start"))
         bu = M.BUTEE
         r.append(f'<path class="lead" d="M{f(bu.x0)} {f(-(bu.z0 + 1))} L{f(bu.x0 - 6)} {f(-(bu.z0 + 12))}"/>')
-        r.append(text(bu.x0 - 7, -(bu.z0 + 13), "butée", "lblx", "end"))
+        r.append(text(bu.x0 - 7, -(bu.z0 + 13), "vis de butée", "lblx", "end"))
         r.append(f'<path class="lead" d="M{f(xr0 + 1)} {f(-zb1)} L{f(xr0 + 8)} {f(-(zb1 - 8))}"/>')
         r.append(text(xr0 + 9, -(zb1 - 9), f"barres Ø {bx * 10:.0f}", "lblx", "start"))
         r.append(cote_h(M.CB["x0"], xr0, 12, cm(M.BAC["prof"])))
         r.append(cote_h(M.FACE - M.BAC["avancee"], M.FACE, 12, cm(M.BAC["avancee"])))
-        r.append(cote_h(M.METOD["x0"], M.X1, -(M.H + 4)) if c == "m" else cote_h(M.CH["x0"], M.CH["x1"], -(M.H + 4), "45"))
+        r.append(cote_h(M.METOD["x0"], M.X1, -(M.H + 4)) if c[0] == "m" else cote_h(M.CH["x0"], M.CH["x1"], -(M.H + 4), "45"))
         return r
 
+    if roul(c):
+        return vue(c, "y", yc, -1, 140, 244, extra_r, [M.CORNO["h"], M.Z_PLAN, M.Z_DESSUS, M.Z_HAUT],
+                   f"Coupe C-C, {M.VERSIONS[c]}")
     return vue(c, "y", yc, -1, 140, 244, extra, [M.BAC["z_butee"], M.Z_PLAN, M.Z_DESSUS, M.Z_HAUT],
                f"Coupe C-C, {M.VERSIONS[c]}")
 
@@ -489,6 +535,42 @@ def comparatif_haut():
               f'par rapport au fait maison</td></tr>')
     return ('<div class="scroll"><table class="debit"><thead><tr><th>Poste</th><th class="num">Fait maison</th>'
             '<th>Détail</th><th class="num">IKEA METOD</th><th>Détail</th></tr></thead><tbody>' + corps +
+            '</tbody></table></div>')
+
+
+def comparatif_bac():
+    """V5.17 : ce qui change à l'achat entre le L basculant et les deux paniers à roulettes. Les tablettes du meuble bas
+    sont recalculées par le calepinage des pièces de la variante (V5.18 : sans porte, il n'en faut plus)."""
+    old = M.PIECES
+    M.PIECES = [b for b in M.version("dr") if b in old]
+    try:
+        cal_r = CAL.calepinage_meubles(debit())
+    finally:
+        M.PIECES = old
+    tab = lambda cal: sum(n * prix for _, _, n, prix, _ in ligne_panneaux(cal["M18"]["bas"]))  # noqa: E731
+    bois = (tab(calepinage()), tab(cal_r))
+    assert len(cal_r["M18"]["neufs"]) == len(calepinage()["M18"]["neufs"]), "caisson haut inchangé"
+    co, w = M.CORNO, M.WELDOM
+    lignes = [
+        ("Paniers", M.TOILE["prix"], f"toile des 2 sacs : {cm(M.TOILE['achat_m'])} m à {eur(M.TOILE['prix_m'])} "
+         "(Marseille Textiles) ; 4 demi-barres de récupération",
+         2 * co["prix"], f"2 × Wenko Corno 43 L à {eur(co['prix'])} ({co['source']})"),
+        ("Charnières", w["charniere_p"][1] * w["charniere_p"][2], f"{w['charniere_p'][2]} charnières plates Hettich",
+         0, "aucune (pas de porte)"),
+        ("Équerres", w["equerre_a"][1] + w["equerre_p"][1], "lot de 6 équerres (L, accroche) + 1 équerre plate (rail avant)",
+         0, "plus d'équerre d'assemblage ; 1 équerre plate (rail arrière)"),
+        ("Tablettes du meuble bas", bois[0], "porte et plateau du L, supports",
+         bois[1], "aucune : sans porte ni plateau, le meuble bas n'est qu'en tasseaux et plan"),
+    ]
+    t1 = sum(a for _, a, _, _, _ in lignes)
+    t2 = sum(b for _, _, _, b, _ in lignes)
+    corps = "".join(f'<tr><td>{escape(p)}</td><td class="num">{eur(a)}</td><td class="u">{escape(da)}</td>'
+                    f'<td class="num">{eur(b)}</td><td class="u">{escape(db)}</td></tr>' for p, a, da, b, db in lignes)
+    corps += (f'<tr class="tot"><td><b>Écart</b></td><td class="num"><b>{eur(t1)}</b></td><td></td>'
+              f'<td class="num"><b>{eur(t2)}</b></td><td class="u">{"+" if t2 >= t1 else "−"} {eur(abs(t2 - t1))} '
+              f'par rapport au L basculant</td></tr>')
+    return ('<div class="scroll"><table class="debit"><thead><tr><th>Poste</th><th class="num">L basculant</th>'
+            '<th>Détail</th><th class="num">Bacs à roulettes</th><th>Détail</th></tr></thead><tbody>' + corps +
             '</tbody></table></div>')
 
 
@@ -670,6 +752,9 @@ svg text{font-family:Archivo,system-ui,sans-serif;fill:var(--ink)}
 .floorl{stroke:var(--ink);stroke-width:1.4}
 .ceil{stroke:var(--muted);stroke-width:.6;stroke-dasharray:4 3}
 body.mg .vd,body:not(.mg) .vg{display:none}
+body.rb .vl,body:not(.rb) .vr{display:none}
+.panier{fill:var(--glass);fill-opacity:.7;stroke:var(--water);stroke-width:.45}.panierc{fill:var(--glass);stroke:var(--water);stroke-width:.6}
+.hinge{fill:var(--muted)}
 body:not(.explications) .cap{display:none}
 body:not(.changements) section[id^="changements"]{display:none}
 .vbar{position:sticky;top:0;z-index:5;display:flex;flex-wrap:wrap;align-items:center;gap:6px;padding:8px 16px;background:var(--paper);border-bottom:1px solid var(--line);font-family:"JetBrains Mono",ui-monospace,monospace;font-size:12px}
@@ -697,8 +782,10 @@ body.toc-on .wrap{margin-left:max(248px,calc((100vw - 1120px) / 2))}
 
 
 def deux(fn):
-    """V5.2 : deux variantes du caisson haut, fait maison (d) et IKEA METOD (m), basculées par le bouton du bandeau."""
-    return f'<div class="vd">{fn("d")}</div><div class="vg">{fn("m")}</div>'
+    """V5.2 : deux variantes du caisson haut, fait maison (d) et IKEA METOD (m) ; V5.17 : deux variantes du linge sale,
+    L basculant et paniers à roulettes (r). Quatre dessins, basculés par les boutons du bandeau."""
+    return "".join(f'<div class="{"vd" if c[0] == "d" else "vg"} {"vr" if roul(c) else "vl"}">{fn(c)}</div>'
+                   for c in ("d", "m", "dr", "mr"))
 
 
 def patron_svg():
@@ -745,7 +832,9 @@ def couture():
     etapes = [
         f"<b>Couper</b> deux bandes de {cm(bw)} × {cm(bl)} et quatre soufflets en trapèze de {cm(sh)} de haut, "
         f"{cm(pt['soufflet_haut'])} en haut et {cm(pt['soufflet_bas'])} en bas, dans "
-        f"{cm(pt['metrage'])} m de toile en {pt['tissu']} : coton épais (toile à transat, canevas) ou polyester lavable à 60°.",
+        f"{cm(M.TOILE['achat_m'])} m de toile en {pt['tissu']} : toile de transat "
+        f"polyester 420 g/m² chez {M.TOILE['magasin']}, {eur(M.TOILE['prix_m'])} le mètre, soit "
+        f"{eur(M.TOILE['prix'])} (relevé en ligne du {M.TOILE['releve']}) ; ou coton épais (canevas), lavable à 60°.",
         "<b>Surfiler</b> tous les bords au zigzag.",
         f"<b>Marquer</b> sur l'envers de chaque bande les deux plis du fond, à {cm(M.FOURREAU + pt['hauteur'])} de chaque "
         f"bout : entre eux, le fond ({cm(pt['fond'])}).",
@@ -765,8 +854,10 @@ def capacites():
     ch = M.CH
     _et = next(b for b in M.PIECES if b.nom == "ch_etagere_n1")
     lignes = [
-        ("Linge sale", f"2 sacs à soufflet côte à côte, {cm(M.BAC['largeur_sac'])} de large, {cm(M.BAC['h_sac'])} de "
-         f"haut, entre deux barres", f"2 × ≈ {M.VOLUME_BAC:.0f} L"),
+        ("Linge sale", f'<span class="vl">2 sacs à soufflet côte à côte, {cm(M.BAC["largeur_sac"])} de large, '
+         f'{cm(M.BAC["h_sac"])} de haut, entre deux barres</span><span class="vr">2 paniers Wenko Corno à roulettes, '
+         f'{cm(M.CORNO["l"])} × {cm(M.CORNO["p"])} × {cm(M.CORNO["h"])}</span>',
+         f'<span class="vl">2 × ≈ {M.VOLUME_BAC:.0f} L</span><span class="vr">2 × {M.CORNO["litres"]} L</span>'),
         ("Serviettes (nord)", f"{ch['serviettes']} étagères, cases de {cm(ch['case_serviettes'])}, "
          f"{cm(_et.y1 - _et.y0)} × {cm(_et.x1 - _et.x0)} utiles",
          "≈ 30 serviettes de bain"),
@@ -790,29 +881,30 @@ def contenu():
                      for v, d, x in M.CHANGEMENTS)
     return f"""<div class="kicker">Salle de bain · alcôve {cm(M.ALCOVE["nord"])} (nord) et {cm(M.ALCOVE["sud"])} (sud) × {cm(M.Y1)} · {M.VERSION}</div>
 <h1>Meuble linge V5</h1>
-<p class="pitch">En bas, trois échelles en tasseaux de sapin peints ou vernis, debout sur le carrelage ; le plan de travail filant est posé sur leur tête, à {cm(M.Z_DESSUS)}. La machine est posée au sol et passe sous le plan à {cm(M.JEU_PLAN * 10)} mm près. À côté, une seule porte basculante : la porte et un plateau forment un L qui pivote au pied ; deux sacs côte à côte pendent entre une barre sur la porte et une barre arrière sous le plan. On tire la porte, le L bascule jusqu'à sa butée, les sacs s'ouvrent, on jette le linge. Au-dessus : la niche avec les prises, puis les placards jusqu'au plafond.</p>
+<p class="pitch">En bas, trois échelles en tasseaux de sapin peints ou vernis, debout sur le carrelage ; le plan de travail filant est posé sur leur tête, à {cm(M.Z_DESSUS)}. La machine est posée au sol et passe sous le plan à {cm(M.JEU_PLAN * 10)} mm près. <span class="vl">À côté, une seule porte basculante : la porte et un plateau forment un L qui pivote au pied ; deux sacs côte à côte pendent entre une barre sur la porte et une barre arrière sous le plan. On tire la porte, le L bascule jusqu'à sa butée, les sacs s'ouvrent, on jette le linge.</span><span class="vr">À côté, sans porte, deux paniers à linge étroits à roulettes du commerce, côte à côte : on tire le panier et on le roule jusqu'à la machine.</span> Au-dessus : la niche avec les prises, puis les placards jusqu'au plafond.</p>
 <p><a class="cta" href="{NOTICE}">Notice de montage, avec les perçages →</a></p>
 
 <h2>Plan</h2>
 <div class="fig"><div class="scroll">{deux(plan_svg)}</div>
-<p class="cap">Coupe horizontale à {Z_COUPE_PLAN} cm, sous le plan de travail : pièces coupées en foncé (montants et lisses hautes en tasseaux). Portes à x {cm(M.FACE)}, à {cm(M.FACE - leaf()[2])} du vantail de la porte ouvert. Tireté : porte basculée (elle avance de {cm(b['avancee'])}) et hublot ouvert. Rouge plein : recouvrement avec le vantail ouvert. Passe-tuyau (hachuré) au chant arrière du plan, sous le robinet remonté dans la niche ; hauts de 45 en pointillé épais.</p></div>
+<p class="cap">Coupe horizontale à {Z_COUPE_PLAN} cm, sous le plan de travail : pièces coupées en foncé (montants et lisses hautes en tasseaux). Portes à x {cm(M.FACE)}, à {cm(M.FACE - leaf()[2])} du vantail de la porte ouvert. Tireté : <span class="vl">porte basculée (elle avance de {cm(b['avancee'])})</span><span class="vr">panier nord tiré (pas de porte)</span> et hublot ouvert. Rouge plein : recouvrement avec le vantail ouvert. Passe-tuyau (hachuré) au chant arrière du plan, sous le robinet remonté dans la niche ; hauts de 45 en pointillé épais.</p></div>
 
 <h2>Élévation A · face au meuble</h2>
 <div class="fig"><div class="scroll">{deux(elevation)}</div>
-<p class="cap">Vue vers l'est : le nord (porte) à gauche, le sud (lavabo) à droite. Machine au sol, de 0 à {cm(M.LL['h'])}, {cm(M.JEU_PLAN * 10)} mm de jeu sous le plan de {cm(M.PT * 10)} mm de {cm(M.Z_PLAN)} à {cm(M.Z_DESSUS)}. Une seule porte de {cm(M.FACADES[0][1] - M.FACADES[0][0])} de haut, au-dessus du rail avant (retrait de 1,8 au pied) ; un trou de prise Ø 25 en haut. Niche de {cm(M.Z_HAUT - M.Z_DESSUS)}, caisson haut de {M.Z_HAUT} à {M.Z_HAUT1}, fileur jusqu'au plafond, deux portes coulissantes.</p></div>
+<p class="cap">Vue vers l'est : le nord (porte) à gauche, le sud (lavabo) à droite. Machine au sol, de 0 à {cm(M.LL['h'])}, {cm(M.JEU_PLAN * 10)} mm de jeu sous le plan de {cm(M.PT * 10)} mm de {cm(M.Z_PLAN)} à {cm(M.Z_DESSUS)}. <span class="vl">Une seule porte de {cm(M.FACADES[0][1] - M.FACADES[0][0])} de haut, au-dessus du rail avant (retrait de 1,8 au pied) ; un trou de prise Ø 25 en haut.</span><span class="vr">Pas de porte : les deux paniers sont à nu, entre les échelles.</span> Niche de {cm(M.Z_HAUT - M.Z_DESSUS)}, caisson haut de {M.Z_HAUT} à {M.Z_HAUT1}, fileur jusqu'au plafond, deux portes coulissantes.</p></div>
 
 <div class="grid2">
 <div class="fig"><h3>Coupe B-B · machine</h3><div class="scroll">{deux(coupe_b)}</div>
 <p class="cap">Coupe à y {COUPE_B}, regard vers le nord. Machine posée au sol sur le tapis antivibration, reculée à {M.JEU_LL} du mur du fond ; le robinet d'arrêt est dans la niche, au-dessus du plan, le tuyau passe par une encoche au chant arrière ; entre les échelles du milieu et du mur sud. Au-dessus de la machine, le plan franchit les {cm(M.LL_ZONE)} entre les deux échelles. Au fond, les hauts côté serviettes.</p></div>
-<div class="fig"><h3>Coupe C-C · porte basculante</h3><div class="scroll">{deux(coupe_c_svg)}</div>
-<p class="cap">Coupe à travers le sac nord, regard vers le nord. Le L (porte et plateau, contrefiche en diagonale) repose fermé sur les deux rails au sol et pivote sur l'arête avant du rail avant (point rouge), où deux charnières plates relient le rail et le plateau. On tire la porte : l'arrière du plateau monte jusqu'à la butée, tasseau entre les montants arrière, à {b['angle']}° ; la porte avance de {cm(b['avancee'])} et emmène sa barre : la bouche des sacs passe de {cm(b['bouche_fermee'])} à {cm(b['bouche'])} (tireté bleu). La barre arrière, à {b['prof']} du nu avant, est posée dans deux supports sous le plan.</p></div>
+<div class="fig"><h3>Coupe C-C · linge sale</h3><div class="scroll">{deux(coupe_c_svg)}</div>
+<p class="cap"><span class="vl">Coupe à travers le sac nord, regard vers le nord. Le L (porte et plateau, contrefiche en diagonale) repose fermé sur les deux rails au sol et pivote sur l'arête avant du rail avant (point rouge), où deux charnières plates relient le rail et le plateau. On tire la porte jusqu'à {b['angle']}°, où les sacs tendus entre les barres l'arrêtent ; la porte avance de {cm(b['avancee'])} et emmène sa barre : la bouche des sacs passe de {cm(b['bouche_fermee'])} à {cm(b['bouche'])} (tireté bleu). La barre arrière, à {b['prof']} du nu avant, est posée dans deux supports sous le plan. Barres arrière levées, le L va jusqu'aux vis de butée, à {b['angle_max']}° (pointillé rouge) : le sac plein sort.</span><span class="vr">Coupe à travers le panier nord ; plus de L, de barres, de rail avant ni de porte : le panier affleure presque le nu du plan.</span></p></div>
 </div>
 
 <h2>Ossature</h2>
 <ul class="pistes">
 <li><b>Pas de socle</b> (V5) : la machine est posée au sol sur son tapis ; le plan descend à {cm(M.Z_DESSUS)} (93,7 en V4.4), la niche gagne d'autant.</li>
 <li><b>Échelles</b> : trois cadres verticaux (deux montants G3, une lisse basse au sol, une lisse haute sous le plan, une écharpe G11 en diagonale), debout sur le carrelage, vissés sans colle. L'écharpe, taillée dans les tasseaux en rab, rend chaque échelle indéformable d'avant en arrière.</li>
-<li><b>Rails et butée</b> : entre les deux échelles du bac, deux rails G5 au sol, au droit des montants avant et arrière, et la butée G6 entre les montants arrière, à {cm(M.Z_BUTEE)} du sol : ils lient les deux échelles et portent le L.</li>
+<li><b>Rails</b> : entre les deux échelles du bac, deux rails G5 au sol, au droit des montants avant et arrière : ils lient les deux échelles et portent le L.</li>
+<li><b>Vis de butée</b> : une vis 5 × 60 plantée dans la face intérieure de l'écharpe de chaque échelle du bac, enfoncée de 35, qui dépasse de 25 au-dessus du bord du plateau ; à {cm(M.Z_BUTEE)} du sol et à {cm(M.BAC['x_butee'] - M.XO0)} du nu avant des montants. Plus près de l'axe, elle sortirait de l'écharpe ; plus loin, la contrefiche la heurterait en basculant ({cm(M.VIS_BUTEE['marge'])} de marge). Effort estimé ≈ {M.VIS_BUTEE['effort']:.0f} N par vis, L à vide.</li>
 <li><b>Lisses de barre</b> : dans les deux échelles du bac, une lisse G8 sous la lisse haute porte les supports de la barre arrière.</li>
 <li><b>Plan</b> : posé sur la tête des échelles et vissé par-dessous dans les lisses hautes ; c'est lui qui relie le haut des trois échelles. Les murs nord, sud et est tiennent l'ensemble sur les côtés. Rien n'est fixé aux murs.</li>
 </ul>
@@ -821,9 +913,10 @@ def contenu():
 <ul class="pistes">
 <li><b>Le L</b> : la porte A6 et le plateau A3, tenus d'équerre par deux contrefiches G7 en tasseau à 45° (jambes de {b['contrefiche']}) aux bords du plateau ; vissées par-dessous à travers le plateau, une équerre contre la porte.</li>
 <li><b>Charnières plates</b> : deux charnières universelles entre le dessus du rail avant et le dessous du plateau, nœud à l'arête avant : pas de réglage, pas de Forstner.</li>
-<li><b>Butée</b> : en basculant, l'arrière du plateau monte ; il bute sous le tasseau G6 tendu entre les montants arrière. Sa hauteur ({cm(M.Z_BUTEE)} du sol) donne l'angle : {b['angle']}° ; plus haut, plus d'angle.</li>
+<li><b>Deux arrêts</b> : en usage courant, les barres arrêtent le L à {b['angle']}° : le haut des soufflets, coupé juste à la bouche, se tend entre la barre de la porte et la barre arrière. Barres arrière levées, le L bascule plus loin, jusqu'aux vis de butée : le plateau monte et s'appuie sous elles à {b['angle_max']}°.</li>
+<li><b>Sortie du sac plein</b> (vérifiée) : le sac sort entre le haut de la porte et le chant du plan. À {b['angle']}°, ce passage fait {cm(b['ouverture'])}, moins que le fond du sac ({cm(b['fond_sac'])}) : le sac plein ne passe pas. À {b['angle_max']}°, il fait {cm(b['ouverture_max'])} ({cm(M.MARGE_SAC)} de marge au moins) ; le haut de la porte avance alors de {cm(b['avancee_max'])} dans la pièce (porte d'entrée fermée).</li>
 <li><b>Sacs</b> : deux sacs à soufflet côte à côte, entre les contrefiches, enfilés sur deux barres rondes : la barre de la porte dans deux supports B1 au dos de la porte, la barre arrière, amovible, posée d'un bout dans un support B1 sur la lisse G8 et de l'autre dans le crochet de l'accroche centrale G10, sous le plan. Chaque sac a ses deux demi-barres. Le fond des sacs repose sur le plateau.</li>
-<li><b>Vider</b> : porte basculée, soulever la demi-barre arrière du sac de son support et la tirer hors du crochet, puis sa demi-barre de porte, et sortir le sac en tenant ses deux barres ; l'autre sac reste en place.</li>
+<li><b>Vider</b> : porte basculée à {b['angle']}°, soulever les deux demi-barres arrière de leur support et les tirer hors du crochet (tant qu'une est en place, son sac garde le L à {b['angle']}°) ; le L bascule jusqu'aux vis de butée, à {b['angle_max']}° ; sortir chaque sac en tenant ses deux demi-barres. À vide, le L reste ouvert à la butée (au-delà de son équilibre, ≈ {b['equilibre']:g}°) : le repousser fermé, puis reposer sacs et barres.</li>
 <li><b>Volume</b> : ≈ {M.VOLUME_BAC:.0f} L par sac, ≈ {M.VOLUME_CASE:.0f} L en tout (V4.4 : 2 × 43) ; les contrefiches prennent {cm(2 * M.DE)} de largeur.</li>
 <li><b>Équilibre</b> (estimation) : {equilibre}</li>
 </ul>
@@ -834,6 +927,19 @@ def contenu():
 <ol class="pistes">
 {couture()}
 </ol>
+
+<h2>Linge sale : variante bacs à roulettes</h2>
+<p>Le bouton « Linge sale » du bandeau bascule le plan, l'élévation et les coupes entre le L basculant et cette variante. La notice de montage reste celle du L.</p>
+<ul class="pistes">
+<li><b>Paniers</b> : deux paniers à linge étroits à roulettes Wenko Corno 43 L ({cm(M.CORNO['l'])} de large × {cm(M.CORNO['p'])} de profondeur × {cm(M.CORNO['h'])} de haut, polyester, 4 roulettes, poignées, couvercle à cordon ; coloris noir, gris, beige ou taupe), roulés côte à côte entre les échelles du bac : {M.VOLUME_ROUL} L en tout ({M.VOLUME_CASE:.0f} L avec les sacs du L). Dimensions d'après les fiches La Redoute et Galaxus ; Bricomarché en donne d'autres (sans doute le carton) : mesurer à réception.</li>
+<li><b>Place</b> : {cm(M.CORNO['place']['l'])} entre les échelles (2 × {cm(M.CORNO['l'])} + {cm(M.CORNO['entre'])} entre les paniers, {cm(M.CORNO['jeu_cote'])} de chaque côté), {cm(M.CORNO['place']['p'])} du nu du plan au rail arrière (paniers à {cm(M.CORNO['recul'])} en retrait du nu, {cm(M.CORNO['place']['p'] - M.CORNO['p'] - M.CORNO['recul'])} de rab derrière), {cm(M.CORNO['place']['h'])} sous les lisses de barre ({cm(M.CORNO['place']['h'] - M.CORNO['h'])} au-dessus des paniers : le couvercle s'ouvre en place).</li>
+<li><b>Retirés</b> : le rail avant G5 (les roulettes ne le passeraient pas), la butée G6, le plateau A3, la porte A6, les contrefiches G7, les supports B1, les barres E4, l'accroche G10, les sacs à coudre, les charnières plates et les équerres. Le rail arrière reste au sol derrière les paniers et lie le bas des deux échelles, le plan en lie le haut ; les écharpes et les lisses de barre G8 restent.</li>
+<li><b>Pas de porte</b> : les paniers restent visibles, couvercle à cordon fermé ; on les tire par la poignée. Plus de façade à couper ni de charnière : le meuble bas n'a plus besoin de tablette mélaminée.</li>
+<li><b>Porte d'entrée</b> : un panier tiré avance de {cm(M.CORNO['p'])} devant le meuble, dans le débattement du vantail : le sortir porte d'entrée fermée, comme pour charger la machine.</li>
+</ul>
+<h3>Prix : L basculant ou bacs à roulettes</h3>
+<p>Seuls les postes qui changent ; plan, lots de tasseaux et tablettes du caisson haut restent les mêmes (calepinage refait : une barre de tasseau en moins, toujours deux lots). Prix Weldom relevés le 13/10/2026 ; Corno au prix Amazon relevé par le client.</p>
+<div class="fig">{comparatif_bac()}</div>
 
 <h2>Caisson haut : variante IKEA METOD</h2>
 <p>Le bouton « Caisson haut » du bandeau bascule le plan, l'élévation et les coupes entre le caisson fait maison et cette variante.</p>
@@ -915,6 +1021,15 @@ SCRIPT = """
     b.addEventListener("click", function () { machine(b.dataset.m); });
   });
   machine(lit("caisson") === "m" ? "m" : "d");
+  function linge(c) {
+    document.body.classList.toggle("rb", c === "r");
+    document.querySelectorAll(".vbar button[data-r]").forEach(function (b) { b.setAttribute("aria-pressed", b.dataset.r === c); });
+    garde("linge", c);
+  }
+  document.querySelectorAll(".vbar button[data-r]").forEach(function (b) {
+    b.addEventListener("click", function () { linge(b.dataset.r); });
+  });
+  linge(lit("linge") === "r" ? "r" : "l");
   function bascule(sel, cls, def) {
     var b = document.querySelector(sel);
     if (!b) return function () {};
@@ -1013,7 +1128,9 @@ def barre(racine, figees=(), notice=True, cle=CLE):
     versions = (f'<span>Version</span><button type="button" data-v="courante" aria-pressed="true">{M.VERSION} en cours'
                 f'</button>{boutons}') if figees else ""
     mach = ('<span>Caisson haut</span><button type="button" data-m="d" aria-pressed="true">Fait maison</button>'
-            '<button type="button" data-m="m" aria-pressed="false">IKEA METOD</button>') if notice else ""
+            '<button type="button" data-m="m" aria-pressed="false">IKEA METOD</button>'
+            '<span>Linge sale</span><button type="button" data-r="l" aria-pressed="true">L basculant</button>'
+            '<button type="button" data-r="r" aria-pressed="false">Bacs à roulettes</button>') if notice else ""
     lien = (f'<a class="btn" href="{racine}{NOTICE}">Notice de montage</a>' if notice
             else f'<a class="btn" href="{racine}{os.path.basename(OUT)}">Plans</a>')
     return (f'<div class="vbar"><a class="back" href="{racine}index.html">← Plans</a>{versions}{mach}'
