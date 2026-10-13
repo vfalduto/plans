@@ -15,6 +15,8 @@ sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 import modele as M  # noqa: E402
 
 ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", ".."))
+ANCRES = open(os.path.join(ROOT, "3d", "ancres.js"), encoding="utf-8").read()   # ancres communes des pages à sommaire
+
 OUT = os.path.join(ROOT, "cuisine-v13.html")
 
 COUPE_A = 90   # plan de coupe A-A (y), regard vers le nord
@@ -1211,6 +1213,7 @@ def page(figees, racine=""):
 <div class="ver" data-v="courante">{contenu()}</div>
 {blocs}
 </main>
+<script>{ANCRES}</script>
 <script>
 (function () {{
   var bs = document.querySelectorAll(".vbar button[data-v]"), vs = document.querySelectorAll(".ver"), sommaire = function () {{}};

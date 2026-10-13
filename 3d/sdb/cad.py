@@ -1,4 +1,4 @@
-# Construit le modèle FreeCAD du meuble linge de la salle de bain V3 depuis modele.py, dans les deux versions.
+# Construit le modèle FreeCAD du meuble linge de la salle de bain (V3, V4) depuis modele.py, dans les deux versions.
 #
 #   /Applications/FreeCAD.app/Contents/Resources/bin/freecadcmd 3d/sdb/cad.py
 #
@@ -26,19 +26,25 @@ def boite(x0, x1, y0, y1, z0, z1):
     return Part.makeBox((x1 - x0) * 10, (y1 - y0) * 10, (z1 - z0) * 10, V(x0 * 10, -y1 * 10, z0 * 10))
 
 
+def cylindre(x0, x1, y0, y1, z0, z1):
+    return Part.makeCylinder((x1 - x0) * 5, (z1 - z0) * 10, V((x0 + x1) * 5, -(y0 + y1) * 5, z0 * 10))
+
+
 def forme(b):
     if isinstance(b, M.Profil):
         pts = [V(x * 10, -b.y0 * 10, z * 10) for x, z in b.xz]
         face = Part.Face(Part.makePolygon(pts + pts[:1]))
         return face.extrude(V(0, -(b.y1 - b.y0) * 10, 0))
     s = boite(b.x0, b.x1, b.y0, b.y1, b.z0, b.z1)
-    if b.encoche:
+    if b.encoche:               # trou de la trappe (V4.4 : carré)
         x0, x1, y0, y1 = b.encoche
+        s = s.cut(boite(x0, x1, y0, y1, b.z0 - 1, b.z1 + 1))
+    for x0, x1, y0, y1 in b.entailles:      # V4 : tablette entaillée autour des montants
         s = s.cut(boite(x0, x1, y0, y1, b.z0 - 1, b.z1 + 1))
     return s
 
 
-for c in ("d", "g"):
+for c in ("d",):          # V3.8 : machine à droite seulement
     nom = f"sdb-meuble-v3-{c}"
     doc = FreeCAD.newDocument(nom.replace("-", "_"))
     objs, groupes = [], {}

@@ -15,6 +15,8 @@ sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 import modele as M  # noqa: E402
 
 ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", ".."))
+ANCRES = open(os.path.join(ROOT, "3d", "ancres.js"), encoding="utf-8").read()   # ancres communes des pages à sommaire
+
 OUT = os.path.join(ROOT, "salon-v4.html")
 CLE = "salon-v4"          # préfixe des préférences mémorisées (localStorage)
 
@@ -649,6 +651,7 @@ def page(figees, racine=""):
 <div class="ver" data-v="courante">{contenu()}</div>
 {blocs}
 </main>
+<script>{ANCRES}</script>
 <script>
 (function () {{
   function garde(k, v) {{ try {{ localStorage.setItem("{CLE}-" + k, v); }} catch (e) {{}} }}

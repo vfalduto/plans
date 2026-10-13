@@ -7,6 +7,7 @@
 # moins cher qui reçoit la pièce suivante), et on garde le moins cher. Comme l'ordre de rangement compte, on rejoue chaque
 # essai sur ESSAIS ordres légèrement mélangés (tirage fixe : le résultat ne change pas d'une génération à l'autre).
 
+import copy
 import os
 import random
 import sys
@@ -76,10 +77,10 @@ class Panneau:
         return sum(a * b for _, _, _, a, b in self.poses()) / (self.fmt["L"] * self.fmt["l"])
 
 
-def range_(tri, formats, fil=()):
-    """Range les pièces dans l'ordre donné ; chaque nouveau panneau est le moins cher des formats qui reçoivent la pièce.
-    None si une pièce ne tient dans aucun format."""
-    panneaux = []
+def range_(tri, formats, fil=(), depart=()):
+    """Range les pièces dans l'ordre donné, d'abord dans les panneaux de depart (copiés) ; chaque nouveau panneau est le
+    moins cher des formats qui reçoivent la pièce. None si une pièce ne tient dans aucun format."""
+    panneaux = copy.deepcopy(list(depart))
     for rep, a, b in tri:
         f = rep in fil
         if any(p.place(rep, a, b, f) for p in panneaux):
@@ -94,6 +95,47 @@ def range_(tri, formats, fil=()):
     return panneaux
 
 
+def melanges(liste):
+    """Ordres de rangement : du plus grand au plus petit, puis ESSAIS variantes où l'on échange des voisins."""
+    tri = sorted(liste, key=lambda p: (-max(p[1], p[2]), -min(p[1], p[2])))
+    ordres = [tri]
+    hasard = random.Random(1)
+    for _ in range(ESSAIS if len(tri) > 1 else 0):
+        o = list(tri)
+        for _ in range(len(o) // 3):
+            i = hasard.randrange(len(o) - 1)
+            j = min(len(o) - 1, i + hasard.randint(1, 4))
+            o[i], o[j] = o[j], o[i]
+        ordres.append(o)
+    return ordres
+
+
+def calepinage_meubles(debit):
+    """V4.3 : deux achats. Le meuble bas d'abord (calepinage seul) ; puis le caisson haut, rangé d'abord dans les chutes
+    des panneaux du bas, puis dans des panneaux neufs. Par panneau acheté : panneaux du bas (avec les pièces du haut qui
+    y tiennent), panneaux neufs du haut, prix de chacun."""
+    bas = calepinage([p for p in debit if M.meuble(p["rep"]) == "bas"])
+    haut = pieces([p for p in debit if M.meuble(p["rep"]) == "haut"])
+    r = {}
+    for stock in set(bas) | set(haut):
+        depart = bas[stock]["retenu"]["panneaux"] if stock in bas else []
+        liste = haut.get(stock, [])
+        best = None
+        for o in melanges(liste) if liste else [[]]:
+            ps = range_(o, M.PANNEAUX[stock], M.FIL, depart)
+            if ps is None:
+                continue
+            neufs = ps[len(depart):]
+            cle = (sum(p.fmt["prix"] for p in neufs), len(neufs))
+            if best is None or cle < best[0]:
+                best = (cle, ps)
+        assert best, f"caisson haut impossible pour {stock}"
+        ps = best[1]
+        r[stock] = dict(bas=ps[:len(depart)], neufs=ps[len(depart):],
+                        essais=bas[stock]["essais"] if stock in bas else [])
+    return r
+
+
 def calepinage(debit):
     """Par panneau acheté : la solution retenue (la moins chère) et l'examen des formats proposés."""
     r = {}
@@ -103,16 +145,7 @@ def calepinage(debit):
         if len(formats) > 1:
             essais.append(("mélange de formats", formats))
         res = []
-        tri = sorted(liste, key=lambda p: (-max(p[1], p[2]), -min(p[1], p[2])))
-        ordres = [tri]
-        hasard = random.Random(1)
-        for _ in range(ESSAIS):         # du plus grand au plus petit, à peu près : on échange des voisins
-            o = list(tri)
-            for _ in range(len(o) // 3):
-                i = hasard.randrange(len(o) - 1)
-                j = min(len(o) - 1, i + hasard.randint(1, 4))
-                o[i], o[j] = o[j], o[i]
-            ordres.append(o)
+        ordres = melanges(liste)
         for nom, fmts in essais:
             best = None
             for o in ordres:
