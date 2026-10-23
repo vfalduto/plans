@@ -57,6 +57,19 @@ v13-rendu echantillons="64" *vues:
     for v in {{ if vues == "" { "iso iso_no entree fenetre banquette cellier dos_cellier iso_nuit" } else { vues } }}; do f="3d/sortie/v13-rendu-$v.png"; [ -f "$f" ] && sips -s format jpeg -s formatOptions 85 "$f" --out "cuisine-v13-3d/$v.jpg" >/dev/null || true; done
     python3 3d/v13/plan.py
 
+# Cuisine V13 : vidéo du tour à 360° en vue iso, mannequin au centre — aperçu EEVEE 960 × 540 pour valider l'animation
+# → 3d/sortie/v13-video-apercu-360.mp4
+v13-video-apercu:
+    /Applications/Blender.app/Contents/MacOS/Blender -b --python 3d/v13/video.py -- apercu
+
+# Cuisine V13 : la même vidéo en définitif (Cycles, 1920 × 1080) → 3d/sortie/v13-video-360.mp4
+v13-video echantillons="64":
+    /Applications/Blender.app/Contents/MacOS/Blender -b --python 3d/v13/video.py -- {{echantillons}}
+
+# Cuisine V13 : maquette 3D tournante de la page cuisine-v13-maquette.html (three.js) → cuisine-v13-maquette/modele.js
+v13-maquette:
+    /Applications/Blender.app/Contents/MacOS/Blender -b --python 3d/v13/maquette.py
+
 # Cuisine V13 : aperçu rapide (16 échantillons, demi-résolution) → 3d/sortie/v13-apercu-<vue>.png, page non touchée
 v13-apercu *vues:
     /Applications/Blender.app/Contents/MacOS/Blender -b --python 3d/v13/rendu.py -- 16 apercu {{vues}}

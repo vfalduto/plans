@@ -12,7 +12,7 @@ import math
 import os
 from dataclasses import dataclass
 
-VERSION = "V13.15"
+VERSION = "V13.16"
 H = 250  # hauteur sous plafond
 
 
@@ -848,6 +848,9 @@ RENDUS_VERSION.update({v: "V13.2" for v in ("iso", "entree", "fenetre", "banquet
 
 # ------------------------------------------------------------------ historique (section Changements)
 CHANGEMENTS = [
+    ("V13.16", "23/10/2026",
+     "Maquette 3D tournante (page à part, à la souris ou en rotation automatique, murs effacés côté caméra, "
+     "mannequin de 1,75 m) : lien à côté du titre « Plan » et du titre « Rendus 3D »."),
     ("V13.15", "12/10/2026",
      "Essai de porte roto retiré (page et plans détaillés) ; nouvelle section « Porte du cellier · Mantion Tango » "
      "après les coupes : principe, ouverture, pose, panneaux, ce qui reste à vérifier. Page « Porte du cellier » "
