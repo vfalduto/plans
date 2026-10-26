@@ -149,3 +149,28 @@ def test_changements_figes():
     assert "(103 du sol" in t["V5.7"]
     assert "plan à 88,1" in t["V5.0"] and "niche de 69,9" in t["V5.0"]
     assert "dessus à 88,1" in t["V4.3"]
+
+
+# ------------------------------------------------------------------ revue finale : achats qui changent le prix
+def test_chant_par_les_chants_visibles():
+    ch = PL.chants()
+    # un chant posé sur le chant d'usine de la tablette est déjà fini : la porte A6 est à y = 0 dans sa tablette
+    a6 = [x for x in ch["chants"] if x[0] == "A6"]
+    assert sorted(lg for _, _, lg in a6) == sorted([789 + M.CHANT["marge"], 493 + M.CHANT["marge"],
+                                                    493 + M.CHANT["marge"]])
+    assert ch["total"] == sum(lg for _, _, lg in ch["chants"])
+    assert ch["rouleaux"] * M.CHANT["rouleau"] >= ch["total"] and ch["rouleaux"] == 2
+    lignes = pages.lignes_achats()["lignes"]["commun"]
+    assert next(n for _, ref, n, _, _ in lignes if ref == M.WELDOM["chant"][4]) == ch["rouleaux"]
+
+
+def test_vis_du_caisson_haut():
+    v = M.VIS_MUR
+    assert v["L_min"] == M.TH * 10 + M.EP_CARRELAGE * 10 + v["cheville"] + v["d"]
+    assert v["L"] >= v["L_min"] and v["L"] == min(a["L"] for a in v["articles"] if a["L"] >= v["L_min"])
+    refs = [x[4] for x in M.WELDOM["cheville"]]
+    assert v["ref"] in refs and "5621168" not in refs
+    for h in (pages.page_meuble("haut"), pages.page_ensemble()):
+        h = re.sub(r'<section id="changements">.*?</section>', "", h, flags=re.S)
+        assert "6 × 70" not in h
+    assert f"6 × {v['L']}" in pages.page_meuble("haut")

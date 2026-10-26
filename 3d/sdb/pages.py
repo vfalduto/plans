@@ -61,8 +61,9 @@ def lignes_achats():
         m = PL.code_meuble(code)
         if w is None:
             manque[m].append(M.QUINCAILLERIE[code])
-        else:           # un article, ou une liste d'articles (chevilles, vis et rondelles)
-            quinc[m] += [(x[0], x[4], x[2], x[1], x[3]) for x in (w if isinstance(w, list) else [w])]
+        else:           # un article, ou une liste d'articles (chevilles et vis)
+            quinc[m] += [(x[0], x[4], PL.achat(code) if code == "chant" else x[2], x[1], x[3])
+                         for x in (w if isinstance(w, list) else [w])]
     non_chiffres = [f"{tot[c]} × {M.QUINCAILLERIE[c]}" for c in M.CONSOMMABLES if c not in M.WELDOM and tot[c]]
     bas_p = [p for st in ("G", "M18", "D") for p in cal[st]["bas"]]
     neufs = [p for st in cal for p in cal[st]["neufs"]]
@@ -325,7 +326,7 @@ def montage(meuble):
     quinc = sum((Counter(MO.quantites(n)) for n in n_), Counter())
     for k in M.EN_VOLUME:       # une cartouche ou un pot sert à plusieurs étapes : on compte l'achat, pas la somme
         if k in quinc:
-            quinc[k] = min(quinc[k], M.achat(k))
+            quinc[k] = min(quinc[k], PL.achat(k))
     outils = "".join(f"<li>{escape(o)}</li>" for o in MO.OUTILS[meuble])
     legende = ('<p class="note">Plans des sous-ensembles : vue éclatée, puis chaque pièce à plat, face par face, cotes '
                'en mm depuis le coin en bas à gauche. <span class="lg fta"></span> on perce à travers (passage, fraisure '
@@ -364,7 +365,7 @@ def decoupe(meuble):
         figs = f"""<div class="fig"><div class="tabs">{barres}</div>
 <p class="cap">Tasseaux de {M.PANNEAUX["G"][0]["L"]} : chaque barre est tronçonnée (trait de scie de {CAL.TRAIT} compté). Scier les montants G3 ensemble pour qu'ils aient la même longueur. Les coins de calage se taillent dans les chutes.</p></div>
 <div class="fig"><div class="tabs">{tabs}</div>
-<p class="cap">Tablettes mélaminées achetées avec le meuble bas : refente en bandes sur la longueur, puis tronçonnage.{chutes_bas} Chants coupés visibles plaqués de chant thermocollant.</p></div>
+<p class="cap">Tablettes mélaminées achetées avec le meuble bas : refente en bandes sur la longueur, puis tronçonnage.{chutes_bas} Chants coupés visibles plaqués de chant thermocollant : {cm(PL.chants()["metres"]["bas"])} m pour le meuble bas, coupes d'usine de la tablette tournées vers l'extérieur.</p></div>
 <div class="fig"><div class="tabs">{plan_}</div>
 <p class="cap">Plan de travail {pd["L"]} × {pd["l"]} × {mm(M.PT)} recoupé en longueur à {lg} : la profondeur reste celle de la tablette, chants d'usine devant et derrière. Chute de {pd["L"] - lg - CAL.TRAIT} × {pd["l"]} en chêne.</p></div>"""
     else:
@@ -376,7 +377,10 @@ def decoupe(meuble):
                   f'<a href="{PAGES["bas"]}#decoupe">Meuble bas</a>) :</p><ul class="pistes">{li}</ul>' if li else
                   '<p>Aucune pièce du caisson haut ne se prend dans les chutes du meuble bas.</p>')
         figs = (f'<div class="fig"><div class="tabs">{tabs}</div><p class="cap">Tablettes neuves du caisson haut : refente '
-                f'en bandes, puis tronçonnage (trait de scie de {CAL.TRAIT} compté).</p></div>{chutes}')
+                f'en bandes, puis tronçonnage (trait de scie de {CAL.TRAIT} compté). Chants coupés visibles plaqués de '
+                f'chant thermocollant : {cm(PL.chants()["metres"]["haut"])} m pour le caisson haut, chants d’usine des '
+                f'tablettes tournés vers l’extérieur ; {lettres(PL.chants()["rouleaux"])} rouleaux de '
+                f'{cm(M.CHANT["rouleau"] / 1000)} m pour les deux meubles.</p></div>{chutes}')
     return f"""<h2 id="decoupe">Découpe</h2>
 <div class="fig">{PL.table_debit(meuble)}</div>
 {leg}

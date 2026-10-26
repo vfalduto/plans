@@ -158,13 +158,13 @@ PERCAGE = {
     "depart": ("Ø 10 traversant, dans l'angle, à l'intérieur du trait", "—"),
     "doigt": ("mèche plate Ø 20 traversante (finir par l'autre face)", "—"),
     "prise": ("mèche plate Ø 25 : percer jusqu'à ce que la pointe sorte, finir par l'autre face", "—"),
-    "cheville": ("Ø 6 traversant", "dans le mur nu (au-dessus du carrelage), foret et cheville selon le mur, 50 de profondeur"),
+    # "cheville" : calculé avec VIS_MUR (revue finale)
     "insert": ("Ø 10, 25 de profondeur, dans le bout du montant ; vernir le trou, visser l'insert à fleur (clé six pans)", "—"),
     "butee": ("Ø 5, 35 de profondeur dans la face intérieure de l'écharpe (ruban sur le foret)", "—"),
 }
 VIS = {"vis60": "vis 5 × 60", "vis40": "vis 4 × 40", "vis40l": "vis 4 × 40", "vis16l": "vis 4 × 16",
        "vis16": "vis 4 × 16", "confirmat": "vis Direkta 6,3 × 50", "cuvette": "charnière invisible",
-       "prise": "trou de prise (pas de poignée)", "butee": "tire-fond 8 × 60 laissé dépasser de 25 (butée)", "insert": "insert M8 + vérin", "depart": "départ de scie sauteuse", "doigt": "trou de doigt", "cheville": "cheville + vis 6 × 70"}
+       "prise": "trou de prise (pas de poignée)", "butee": "tire-fond 8 × 60 laissé dépasser de 25 (butée)", "insert": "insert M8 + vérin", "depart": "départ de scie sauteuse", "doigt": "trou de doigt"}   # "cheville" : VIS_MUR
 
 
 def _bornes(p):
@@ -874,7 +874,7 @@ QUINCAILLERIE = {
     "equerre_p": "équerre plate 100 (rails côté nord, vis 4 × 16)",
     "equerre_a": "équerre d'assemblage 50 × 50 (porte ↔ plateau et contrefiches, accroche centrale sous le plan ; vis 4 × 16)",
     "charniere_p": "charnière plate (universelle) 60 × 35, acier",
-    "cheville": "cheville Ø 8 adaptée au mur + vis 6 × 70 et rondelle (mur nu, au-dessus du carrelage) + cale de l'épaisseur du carrelage derrière le fond",
+    # "cheville" : calculé avec VIS_MUR (revue finale)
     "taquet": "taquet d'étagère Ø 5",
     "patins": "patins glisseurs PTFE adhésifs 15 × 100, lot de 2 (sous les portes coulissantes)",
     "verin": "vérin de réglage M8 × 30, semelle plastique, 50 kg (un sous chaque montant)",
@@ -889,9 +889,38 @@ QUINCAILLERIE = {
     "tapis": "tapis antivibration 60 × 60",
     "sac": "sac en tissu",
     "E4": "barres rondes Ø 20 à 25 : manche à balai (récupération) ou tringle de rideau de 2 m (non relevée au magasin)",
-    "chant": "bande de chant thermocollante blanche de 23 mm, rouleau de 5 m (Primo)",
+    "chant": "bande de chant thermocollante blanche de 23 mm, rouleau de 5 m (Primo)",   # 5 m : CHANT["rouleau"]
     "peinture": "peinture bois blanche microporeuse 0,5 L, pour les tasseaux (deux couches)",
 }
+# Revue finale : vis du caisson haut au mur. Règle du fabricant (Fischer, fiche des chevilles SX Plus Green, relevée le
+# 26/10/2026) : longueur de vis ≥ longueur de la cheville + épaisseur à fixer + un diamètre de vis. Épaisseur à fixer :
+# le fond TH et la cale EP_CARRELAGE ; cheville Standers 8 × 50, perçage recommandé de 60 (fiche Weldom 5589927). On
+# prend la plus courte des vis Ø 6 du Weldom qui convient (prix relevés en ligne le 26/10/2026, stock non lu) ; tête
+# fraisée autoforeuse, noyée dans le fond, sans rondelle.
+VIS_MUR = dict(d=6, cheville=50, percage=60, releve="26/10/2026",
+               source="https://www.fischer.fr/fr-fr/produits/fixations-courantes/chevilles-en-nylon/chevilles-a-expansion-sx-plus-green",
+               articles=[
+                   dict(L=70, lot=10, prix=6.45, ref="5621168", nom="Lot de 10 vis acier tête plate Spax 6 × 70"),
+                   dict(L=90, lot=30, prix=11.75, ref="5618792", nom="Lot de 30 vis acier tête fraisée Standers 6 × 90"),
+                   dict(L=100, lot=10, prix=7.95, ref="5566898", nom="Lot de 10 vis acier tête fraisée bombée Torx Spax 6 × 100"),
+               ])
+N_CHEVILLES = sum(1 for t in TROUS if t["vis"] == "cheville")
+VIS_MUR["fixe"] = TH * 10 + EP_CARRELAGE * 10                       # mm traversés avant le mur nu
+VIS_MUR["L_min"] = VIS_MUR["fixe"] + VIS_MUR["cheville"] + VIS_MUR["d"]
+_vm = min((a for a in VIS_MUR["articles"] if a["L"] >= VIS_MUR["L_min"]), key=lambda a: (a["L"], a["prix"]))
+VIS_MUR.update(L=_vm["L"], ref=_vm["ref"], article=_vm)
+VIS_MUR["trou"] = max(VIS_MUR["percage"], 5 * math.ceil((VIS_MUR["L"] - VIS_MUR["fixe"] + 3) / 5))   # profondeur dans le mur
+PERCAGE["cheville"] = ("Ø 6 traversant + fraisure", f"dans le mur nu (au-dessus du carrelage), foret et cheville selon le "
+                       f"mur, {VIS_MUR['trou']} de profondeur")
+VIS["cheville"] = f"cheville + vis 6 × {VIS_MUR['L']}"
+QUINCAILLERIE["cheville"] = (f"cheville Ø 8 × {VIS_MUR['cheville']} adaptée au mur + vis 6 × {VIS_MUR['L']} tête fraisée "
+                             "(mur nu, au-dessus du carrelage) + cale de l'épaisseur du carrelage derrière le fond")
+# Revue finale : chant thermocollant compté sur les chants coupés visibles de chaque pièce (plan.chants : un chant posé
+# sur le chant d'usine de la tablette est déjà fini) ; visibles : (chants longs, chants courts) à plaquer, chacun
+# coupé de marge en plus (dépasse de chaque bout, arasé au cutter). Le fileur K7 (chants contre le plafond et le
+# dessus), le fond K8 et les supports B1 n'en ont pas.
+CHANT = dict(rouleau=5000, marge=20, visibles={"A6": (2, 2), "A3": (2, 2), "K1": (1, 1), "K2": (1, 0), "K3": (1, 0),
+                                                 "K4": (1, 0), "K5": (1, 0), "K6": (2, 2)})
 # Achats au Weldom Saint-Barnabé : code → (désignation Weldom, prix unitaire, quantité achetée, stock, réf.) ; None :
 # absent du catalogue du magasin, à acheter ailleurs. Relevé du 12/10/2026, quincaillerie de la V4 et de la V5 le 13/10/2026.
 WELDOM = {
@@ -909,7 +938,7 @@ WELDOM = {
     "sac": None,
     "toile": None,      # V5.19 : Marseille Textiles, prix dans QUINCAILLERIE["toile"]
     "E4": None,
-    "chant": ("Bande de chant thermocollante blanc Primo 500 × 2,3 cm", 9.50, 1, None, "5566191"),   # V6.0
+    "chant": ("Bande de chant thermocollante blanc Primo 500 × 2,3 cm", 9.50, 1, None, "5566191"),   # V6.0 ; quantité : plan.chants()
     "peinture": ("Peinture bois Luxens int./ext. blanc satiné 0,5 L (microporeuse, à l'eau)", 17.70, 1, 13, "5620869"),
     "tirefond": ("Lot de 4 tirefonds inox tête 6 pans Standers 8 × 60", 5.60, 1, None, "5618626"),
     "mousse": ("Lot de 20 mousses amortisseur adhésif blanc 8 × 16 mm", 3.49, 1, None, "85066295"),
@@ -917,10 +946,9 @@ WELDOM = {
     # V6.0 : consommables de la notice qui n'étaient pas chiffrés (relevé en ligne du RELEVE_V6, stock non lu)
     "vis16": ("Lot de 400 vis acier tête fraisée Standers 4 × 16", 7.95, 1, None, "5618694"),
     "silicone": ("Silicone d'étanchéité GEB 593350 blanc 310 ml (acétique, biocide)", 9.00, 1, None, "95216443"),
-    "cheville": [       # une ligne par article : chevilles, vis, rondelles
+    "cheville": [       # une ligne par article : chevilles, vis
         ("Cheville nylon multimatériaux Standers 8 × 50, sans vis, sachet de 8", 4.19, 1, None, "5589927"),
-        ("Lot de 10 vis acier tête plate Spax 6 × 70", 6.45, 1, None, "5621168"),
-        ("Lot de 26 rondelles acier zingué Standers Ø 6", 3.79, 1, None, "1094244"),
+        (_vm["nom"], _vm["prix"], -(-N_CHEVILLES // _vm["lot"]), None, _vm["ref"]),     # revue finale : 6 × 70 trop courte
     ],
 }
 RELEVE_V6 = "26/10/2026"
@@ -1020,7 +1048,7 @@ ETAPES = [
     ("Pose du caisson haut", "Poser le caisson haut sur deux cales de " + f"{Z_HAUT - Z_DESSUS:.1f}".replace(".", ",") +
      " sur le plan (niche). Les chevilles sont toutes au-dessus du carrelage (" + f"{CARRELAGE}" + ") : marquer à "
      "travers le fond, retirer le caisson, percer le mur nu (détecteur de câbles d'abord), cheviller selon le mur, "
-     "revisser le caisson (voir « Fixer le caisson haut au mur » en tête de notice).", {"cheville": 6}),
+     "revisser le caisson (voir « Fixer le caisson haut au mur » en tête de notice).", {"cheville": N_CHEVILLES}),
     ("Finitions", "Étagères K4 et K5, entaillées au coin arrière autour du tasseau de joint ; portes K6 : chant plaqué sur leurs quatre chants coupés, puis coller les patins sous leur chant bas, les soulever dans la rainure du haut et les laisser descendre dans celle du bas ; fileur K7 ajusté au plafond, profil LED sous le caisson.",
      {"taquet": 24, "led": 1, "silicone": 1, "patins": 2, "chant": 1}),
 ]
@@ -1096,7 +1124,10 @@ CHANGEMENTS = [
      "d'évacuation à " + cm_(TUYAUX["evacuation_z"]) + " du sol, arrivée à " + cm_(TUYAUX["arrivee_z"]) +
      " qui monte par l'encoche du plan ; aucune pièce dans leur zone. Fond du caisson haut vissé dans un tasseau de "
      "joint G12, taillé dans une barre en rab du meuble bas. Notice : saillie du siphon à mesurer, mise de niveau avant "
-     "les coins, méthode de perçage."),
+     "les coins, méthode de perçage. Revue finale : chant thermocollant compté sur les chants coupés visibles ("
+     "rouleaux de " + cm_(CHANT["rouleau"] / 1000) + " m), vis du caisson haut au mur de " + str(VIS_MUR["L"]) +
+     " (les 6 × 70 étaient trop courtes pour la cale et le fond), sans rondelle : le total change, à faire valider par "
+     "le client (budget de la page principale)."),
     # V6.0 : texte figé aux valeurs de la V5.24 (plan de 26, contreplaqué de 12, vernis du plan et du caisson haut)
     ("V5.24", "26/10/2026",
      "Matériaux revus après passage en magasin (client). Plan de travail en hêtre massif lamellé-collé abouté "

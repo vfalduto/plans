@@ -405,8 +405,13 @@ def puces_pieces(c, n):
 
 
 def quantites(n):
-    """Quincaillerie de l'étape n."""
-    return dict(M.ETAPES[n][2])
+    """Quincaillerie de l'étape n ; le chant en rouleaux, compté sur les chants visibles des pièces de l'étape."""
+    q = dict(M.ETAPES[n][2])
+    if "chant" in q:
+        q["chant"] = PL.chants()["par_etape"].get(n, 0)
+        if not q["chant"]:
+            del q["chant"]
+    return q
 
 
 def bloc_etape(n):
@@ -838,7 +843,7 @@ def fixation_svg():
         o.append(PL.rect(M.X1, -(z + 2), M.X1 + ep, -(z - 2), "dg"))     # cale de l'épaisseur du carrelage
         o.append(f'<line x1="{hx - 1.5}" y1="{-z}" x2="{M.X1 + ep + 6}" y2="{-z}" style="stroke:var(--ink);stroke-width:.6"/>')
         o.append(PL.rect(M.X1 + ep, -(z + 0.6), M.X1 + ep + 6, -(z - 0.6), "", ' style="fill:var(--tri);fill-opacity:.7"'))
-    o.append(PL.text(hx - 3, -zs[-1] - 3, "vis 6 × 70 + rondelle", "lblx", "end"))
+    o.append(PL.text(hx - 3, -zs[-1] - 3, f"vis 6 × {M.VIS_MUR['L']} tête fraisée", "lblx", "end"))
     o.append(PL.text(hx - 3, -zs[-1] + 8, f"cale de {PL.cm(ep)} (épaisseur du carrelage)", "lblx", "end"))
     o.append(PL.text(hx - 3, -zs[0] + 5, "cheville Ø 8 dans le mur nu", "lblx", "end"))
     o.append(PL.cote_h(ch["x0"], M.X1, -M.H - 3, "45"))
@@ -863,19 +868,22 @@ def fixation_haut():
         "carreau n'est jamais percé.",
         "<b>Le mur</b> : faire un trou d'essai dans la zone cachée par le caisson. Poussière rouge ou grise et dure : "
         "brique ou béton, chevilles nylon Ø 8 (ou chevilles « tout matériau ») ; ça traverse vite et sonne creux : placo "
-        "ou brique creuse, chevilles à expansion métalliques (type Molly) Ø 8 ou chevilles pour corps creux. Vis 6 × 70 "
-        "avec rondelle dans tous les cas.",
+        "ou brique creuse, chevilles à expansion métalliques (type Molly) Ø 8 ou chevilles pour corps creux. Vis "
+        f"6 × {M.VIS_MUR['L']} tête fraisée dans tous les cas, la tête noyée dans le fond (fraisure).",
         f"<b>L'épaisseur du carrelage</b> : le relevé est pris sur le carreau ; au-dessus de {M.CARRELAGE}, le mur nu est "
         f"en retrait d'environ {PL.cm(M.EP_CARRELAGE)} (carreau + colle, à mesurer au bord du carrelage). Le fond du "
         "caisson s'appuie sur le carreau en bas ; derrière chaque cheville, glisser une cale de cette épaisseur (cales "
         "de menuisier en plastique empilées, ou chute de bois) pour que le caisson reste d'aplomb et ne se tord pas "
-        "en serrant. Vis 6 × 70 au lieu de 6 × 60.",
+        f"en serrant. Longueur des vis (règle du fabricant de chevilles Fischer : cheville + épaisseur fixée + un "
+        f"diamètre de vis) : {M.VIS_MUR['cheville']} + {M.TH * 10:.0f} de fond + {M.EP_CARRELAGE * 10:.0f} de cale + "
+        f"{M.VIS_MUR['d']} = {M.VIS_MUR['L_min']:.0f} au moins, d'où des vis de {M.VIS_MUR['L']} et des trous de "
+        f"{M.VIS_MUR['trou']} dans le mur.",
         "<b>Les réseaux</b> : passer le détecteur sur toute la zone avant de percer ; les fils des prises de la niche "
         "et le tuyau du robinet montent souvent à la verticale au-dessus d'eux.",
         f"<b>Présenter</b> : à deux, poser le caisson sur deux cales de {PL.cm(M.Z_HAUT - M.Z_DESSUS)} posées sur le "
         "plan (le dessous du caisson tombe à la bonne hauteur), le plaquer au mur du fond, vérifier le niveau sur le "
         "dessus.",
-        "<b>Marquer et percer</b> : percer les six trous Ø 6 à travers le fond jusqu'au mur pour marquer, retirer le "
+        "<b>Marquer et percer</b> : percer les six trous Ø 6 à travers le fond jusqu'au mur pour marquer, les fraiser côté intérieur, retirer le "
         "caisson, percer le mur au foret du mur choisi (percussion seulement sur brique ou béton), poser les chevilles.",
         "<b>Visser</b> : remettre le caisson sur ses cales, visser d'abord les deux trous du haut aux coins, contrôler le "
         "niveau, puis les quatre autres. Retirer les cales.",

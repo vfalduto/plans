@@ -214,6 +214,61 @@ def calepinage():
 
 
 
+_CH = []
+
+
+def _rouleaux(longueurs):
+    """Nombre de rouleaux de chant : chaque chant d'un seul tenant, rangé dans le premier rouleau où il tient (du plus
+    long au plus court)."""
+    reste = []
+    for lg in sorted(longueurs, reverse=True):
+        k = next((i for i, r in enumerate(reste) if r >= lg), None)
+        if k is None:
+            reste.append(M.CHANT["rouleau"] - lg)
+        else:
+            reste[k] -= lg
+    return len(reste)
+
+
+def chants():
+    """Chant thermocollant à plaquer, d'après le calepinage : pour chaque pièce, ses chants coupés visibles
+    (M.CHANT["visibles"]) moins ceux qui tombent sur un chant long d'usine de la tablette (déjà fini ; on tourne ce chant
+    vers l'extérieur). Renvoie chants [(repère, étape, longueur mm)], total, rouleaux achetés, rouleaux par étape et
+    mètres par meuble."""
+    if _CH:
+        return _CH[0]
+    deb = {p["rep"]: p for p in debit()}
+    etape = {b.rep: b.etape for b in M.PIECES if b.rep}
+    cal = calepinage()
+    r = []
+    for st in cal:
+        for grp in ("bas", "neufs"):
+            for pn in cal[st][grp]:
+                for rep, x, y, a, b in pn.poses():
+                    if rep not in M.CHANT["visibles"]:
+                        continue
+                    L, l = deb[rep]["L"], deb[rep]["l"]
+                    usine = (y == 0) + (y + b == pn.fmt["l"])           # chants posés sur un chant long d'usine
+                    longs, courts = M.CHANT["visibles"][rep]
+                    if a == L and L != l:
+                        longs = max(0, longs - usine)
+                    else:
+                        courts = max(0, courts - usine)
+                    r += [(rep, etape[rep], L + M.CHANT["marge"])] * longs + [(rep, etape[rep], l + M.CHANT["marge"])] * courts
+    par_etape = {}
+    for e in sorted({e for _, e, _ in r}):
+        par_etape[e] = _rouleaux([lg for _, e2, lg in r if e2 == e])
+    metres = {m: sum(lg for rep, _, lg in r if M.meuble(rep) == m) / 1000 for m in ("bas", "haut")}
+    _CH.append(dict(chants=r, total=sum(lg for _, _, lg in r), rouleaux=_rouleaux([lg for _, _, lg in r]),
+                    par_etape=par_etape, metres=metres))
+    return _CH[0]
+
+
+def achat(code):
+    """Quantité achetée : celle du modèle, sauf le chant, compté sur le calepinage."""
+    return chants()["rouleaux"] if code == "chant" else M.achat(code)
+
+
 def euros(v):
     return f"{v:.2f}".replace(".", ",") + " €"
 
