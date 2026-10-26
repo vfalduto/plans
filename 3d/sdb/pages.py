@@ -22,7 +22,6 @@ import calepinage as CAL  # noqa: E402
 ENSEMBLE = "sdb-meuble-v4.html"
 PAGES = {"bas": "sdb-meuble-v4-bas.html", "haut": "sdb-meuble-v4-haut.html"}
 TITRES = {"bas": "Meuble bas", "haut": "Caisson haut"}
-BUDGET = 400.00         # € TTC, les deux meubles, consommables et achats faits ailleurs compris (client, V6.0)
 CLE = "sdb-v4"          # préfixe des préférences mémorisées (localStorage)
 BADGE = '<span class="badge">retenu</span>'
 COURANTE = ' aria-current="page"'
@@ -117,7 +116,6 @@ CSS = MO.CSS + """
 .carte2 b{display:block;font-size:18px}.carte2 span{font-size:14px;color:var(--muted)}
 .carte2.bas{box-shadow:inset 6px 0 var(--bas)}.carte2.haut{box-shadow:inset 6px 0 var(--haut)}
 .budget td.num{font-size:15px}.budget tr.tot td{border-top:2px solid var(--ink);font-weight:700}
-.ok{color:var(--water);font-weight:700}.ko{color:var(--tri);font-weight:700}
 tr.retenu td{background:var(--paper)}tr.retenu td:first-child{box-shadow:inset 5px 0 var(--water)}
 .badge{display:inline-block;font:700 11px "JetBrains Mono",ui-monospace,monospace;text-transform:uppercase;letter-spacing:.06em;border:1px solid var(--water);color:var(--water);border-radius:999px;padding:1px 8px;margin-left:6px}
 .choix{font-size:13px;color:var(--muted)}
@@ -197,11 +195,13 @@ def table_budget(p):
               ("Caisson haut", p["haut"]),
               (f"Ailleurs : toile des sacs ({M.TOILE['magasin'].split(',')[0]}) ; barres de récupération", p["ailleurs"])]
     corps = "".join(f'<tr><td>{escape(n)}</td><td class="num">{PL.euros(v)}</td></tr>' for n, v in lignes)
-    ok = p["total"] <= BUDGET
-    ecart = (f'<span class="ok">{PL.euros(BUDGET - p["total"])} sous le budget de {PL.euros(BUDGET)}</span>' if ok else
-             f'<span class="ko">{PL.euros(p["total"] - BUDGET)} au-dessus du budget de {PL.euros(BUDGET)}</span>')
+    bu = M.BUDGET
+    d = p["total"] - bu["cible"]
+    ecart = (f'Budget visé : {PL.euros(bu["cible"])} ; ' +
+             (f'le total le dépasse de {PL.euros(d)}' if d > 0.005 else f'le total reste {PL.euros(-d)} en dessous') +
+             f'. Décision du client, le {escape(bu["decision"])}')
     return (f'<table class="budget"><tbody>{corps}<tr class="tot"><td>Total TTC</td><td class="num">'
-            f'{PL.euros(p["total"])}</td></tr></tbody></table><p>{ecart}. Sans livraison : tout se retire en magasin, '
+            f'{PL.euros(p["total"])}</td></tr></tbody></table><p>{ecart}.</p><p>Sans livraison : tout se retire en magasin, '
             f'au Weldom et, pour la toile, chez {escape(M.TOILE["magasin"].split(",")[0])}. Le plombier n’est pas '
             'compté.</p>')
 
@@ -388,8 +388,8 @@ def achats(meuble):
                  f'{PL.euros(p["bas"])}, toile {PL.euros(p["ailleurs"])}).</p>')
     else:
         o.append(f'<p><b>Sous-total : {PL.euros(p["haut"])}</b>.</p>')
-    o.append(f'<p>Total des deux meubles : <b>{PL.euros(p["total"])}</b>, pour un budget de {PL.euros(BUDGET)} '
-             f'(<a href="{ENSEMBLE}#budget">détail</a>).</p>'
+    o.append(f'<p>Total des deux meubles : <b>{PL.euros(p["total"])}</b>, pour un budget visé de {PL.euros(M.BUDGET["cible"])}, '
+             f'total accepté par le client (<a href="{ENSEMBLE}#budget">détail</a>).</p>'
              f'<p class="note">Stock : nombre affiché sur la fiche produit pour ce magasin (« — » : non lu). Prix TTC '
              f'relevés en ligne le {M.MAGASIN["releve"]} et le {M.RELEVE_V6} (plan, vernis et consommables ajoutés en '
              f'{M.VERSION}).</p>')

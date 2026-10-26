@@ -914,10 +914,11 @@ WELDOM = {
         ("Lot de 10 vis acier tête plate Spax 6 × 70", 6.45, 1, None, "5621168"),
         ("Lot de 26 rondelles acier zingué Standers Ø 6", 3.79, 1, None, "1094244"),
     ],
-    "fraise": ("Coffret de 5 fraises droites pour défonceuse Tivoly Ø 4 à 12, queue 8 "
-               f"(Ø {RAINURE['l'] * 5:.0f} en deux passes) : si vous n'en avez pas", 34.90, 1, None, "79523976"),
 }
-RELEVE_V6 = "26/10/2026"    # V6.0 : relevé en ligne des prix Weldom (plan, matériaux du haut, vernis, consommables ajoutés)
+RELEVE_V6 = "26/10/2026"
+# V6.0 : budget TTC des deux meubles, consommables et achats faits ailleurs compris ; total accepté par le client
+BUDGET = dict(cible=400.00, accepte=417.32,
+              decision="26/10/2026 : le client garde tout sauf la fraise, dépassement accepté")    # V6.0 : relevé en ligne des prix Weldom (plan, matériaux du haut, vernis, consommables ajoutés)
 # Étapes de la notice : (titre, consigne courte, quincaillerie {code: quantité}). Les pièces de chaque étape sont celles
 # dont etape == numéro ; les perçages, ceux de TROUS.
 _n = lambda e, v: sum(1 for t in TROUS if t["etape"] == e and t["vis"] == v)   # noqa: E731
@@ -995,7 +996,7 @@ ETAPES = [
      "K1, dessus et dessous K2, le montant K3, puis les deux moitiés du fond K8, jointes derrière le montant (vis "
      "4 × 40, avant-trou Ø 2,5 dans l'axe du chant de " + f"{TH * 10:.0f}" + "). Avant l'assemblage, rainurer le dessous du dessus et le dessus du dessous K2 à la défonceuse : deux "
      f"rainures de {RAINURE['l'] * 10:.0f} de large, {RAINURE['haut'] * 10:.0f} de profondeur en haut, "
-     f"{RAINURE['bas'] * 10:.0f} en bas (règle de guidage, deux passes).", {"vis40": _n(8, "vis40"), "fraise": 1}),
+     f"{RAINURE['bas'] * 10:.0f} en bas (règle de guidage, deux passes).", {"vis40": _n(8, "vis40")}),   # fraise droite : outil du client (OUTILS)
     ("Pose du caisson haut", "Poser le caisson haut sur deux cales de " + f"{Z_HAUT - Z_DESSUS:.1f}".replace(".", ",") +
      " sur le plan (niche). Les chevilles sont toutes au-dessus du carrelage (" + f"{CARRELAGE}" + ") : marquer à "
      "travers le fond, retirer le caisson, percer le mur nu (détecteur de câbles d'abord), cheviller selon le mur, "
@@ -1050,7 +1051,8 @@ QUINCAILLERIE["vernis"] = (f"vernis marin incolore satiné, à l'eau : {cm_(VERN
 CHANGEMENTS = [
     ("V6.0", "26/10/2026",
      "Document V4 (demande client) : trois pages, la principale, le meuble bas et le caisson haut ; le reste est retiré. "
-     "Budget de 400 € au plus. Plan de travail en tablette chêne lamellé-collé brute FSC de " + cm_(PT * 10) +
+     "Budget : cible de " + _eu(BUDGET["cible"]) + " €, total de " + _eu(BUDGET["accepte"]) + " € accepté par le "
+     "client (tous les consommables de la notice chiffrés, sans la fraise de défonceuse, qu'il a déjà). Plan de travail en tablette chêne lamellé-collé brute FSC de " + cm_(PT * 10) +
      " (Weldom réf. " + _pd["ref"] + ", " + _eu(_pd["prix"]) + " €), recoupée en longueur seulement, au lieu du hêtre "
      "de 26 ; dessus à " + cm_(Z_DESSUS) + ". Caisson haut de nouveau en tablettes mélaminées blanches de " +
      cm_(TH * 10) + ", chants plaqués (bande Primo, Weldom réf. " + WELDOM["chant"][4] + "), fond en deux moitiés, rainures des portes de " +

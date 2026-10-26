@@ -739,10 +739,10 @@ OUTILS = {
     "haut": [
         "perceuse-visseuse et embouts cruciformes PZ2",
         "forets bois Ø 2,5 et 4 ; fraise à noyer",
-        f"défonceuse, fraise droite Ø {M.RAINURE['l'] * 10:.0f} (ou Ø {M.RAINURE['l'] * 5:.0f} en deux passes) et "
-        "règle de guidage : rainures des portes",
-        "scie circulaire et règle de guidage pour le contreplaqué (ou découpe en magasin)",
-        "ponceuse (grains 120 et 180), pinceau ou rouleau laqueur : vernis marin, trois couches",
+        "défonceuse et règle de guidage : rainures des portes",
+        f"fraise droite Ø {M.RAINURE['l'] * 10:.0f} (ou Ø {M.RAINURE['l'] * 5:.0f} en deux passes) : la vôtre",
+        "scie circulaire et règle de guidage pour les tablettes mélaminées (ou découpe en magasin)",
+        "fer à repasser (chant thermocollant) et cutter",
         "gabarit à taquets et foret Ø 5 avec butée (trous des étagères)",
         "perceuse à percussion ou perforateur, foret selon le mur (béton / maçonnerie Ø 8, ou foret bois-métal pour le placo)",
         "détecteur de câbles et de tuyaux (les prises de la niche et le robinet sont juste en dessous)",

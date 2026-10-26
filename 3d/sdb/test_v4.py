@@ -48,7 +48,7 @@ import plan as PL  # noqa: E402
 
 def test_budget():
     p = pages.prix()
-    assert p["total"] <= 400.00
+    assert p["total"] <= M.BUDGET["accepte"] + 0.005     # cible de 400 € dépassée, total accepté par le client
     lignes = sum(n * px for m in ("commun", "bas", "haut") for _, _, n, px, _ in p["lignes"][m])
     assert abs(p["total"] - (lignes + p["ailleurs"])) < 0.01
     assert abs(p["ailleurs"] - M.TOILE["prix"]) < 0.01
