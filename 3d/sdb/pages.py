@@ -84,19 +84,36 @@ def prix():
 _ECO = []
 
 
+def chutes_du_bas():
+    """Pièces du caisson haut taillées dans les panneaux achetés avec le meuble bas : (repère, panneau) où panneau est le
+    nom du dessin de découpe du bas (T1 : tablette 1, B8 : barre de tasseau 8)."""
+    cal = PL.calepinage()
+    return [(q[0], f'{"B" if p.fmt["l"] < 100 else "T"}{k + 1}') for st in cal for k, p in enumerate(cal[st]["bas"])
+            for q in p.poses() if M.meuble(q[0]) == "haut"]
+
+
 def economie_commune():
-    """Calculée une fois (le calepinage du caisson haut seul est long). Pièces du caisson haut rangées dans les chutes des panneaux du meuble bas, et euros gagnés par rapport au caisson
-    haut acheté seul (calepinage de ses seules pièces)."""
+    """Calculée une fois (le calepinage du caisson haut seul est long). Pièces du caisson haut rangées dans les chutes
+    des panneaux du meuble bas, euros gagnés par rapport au caisson haut acheté seul (calepinage de ses seules pièces),
+    et articles que le caisson haut seul achèterait en plus."""
     if _ECO:
         return _ECO[0]
     cal = PL.calepinage()
-    pieces = sum(1 for st in cal for p in cal[st]["bas"] for q in p.poses() if M.meuble(q[0]) == "haut")
     seul = CAL.calepinage([p for p in PL.debit() if M.meuble(p["rep"]) == "haut"])
-    cout = lambda ps: sum(n * px for _, _, n, px, _ in PL.ligne_panneaux(ps))  # noqa: E731
-    euros = cout([p for c in seul.values() for p in c["retenu"]["panneaux"]]) - cout([p for st in cal for p in cal[st]["neufs"]])
-    if not _ECO:
-        _ECO.append(dict(pieces=pieces, euros=round(euros, 2)))
+    l_seul = PL.ligne_panneaux([p for c in seul.values() for p in c["retenu"]["panneaux"]])
+    l_neufs = PL.ligne_panneaux([p for st in cal for p in cal[st]["neufs"]])
+    cout = lambda ls: sum(n * px for _, _, n, px, _ in ls)  # noqa: E731
+    deja = Counter({ref: n for _, ref, n, _, _ in l_neufs})
+    en_plus = [(nom, n - deja[ref]) for nom, ref, n, _, _ in l_seul if n > deja[ref]]
+    _ECO.append(dict(pieces=len(chutes_du_bas()), euros=round(cout(l_seul) - cout(l_neufs), 2), en_plus=en_plus))
     return _ECO[0]
+
+
+def liste_chutes():
+    """« K1 Côté du caisson haut (tablette T1), … » : pièces du haut prises dans les achats du bas."""
+    n = Counter(chutes_du_bas())
+    return " ; ".join(f'{r} {M.NOMS.get(r, "")}{" × " + str(q) if q > 1 else ""} ({"barre" if t[0] == "B" else "tablette"} {t})'
+                      for (r, t), q in sorted(n.items(), key=lambda x: (x[0][1], x[0][0])))
 
 
 def haut_dans_chutes():
@@ -199,7 +216,9 @@ def table_budget(p):
     d = p["total"] - bu["cible"]
     ecart = (f'Budget visé : {PL.euros(bu["cible"])} ; ' +
              (f'le total le dépasse de {PL.euros(d)}' if d > 0.005 else f'le total reste {PL.euros(-d)} en dessous') +
-             f'. Décision du client, le {escape(bu["decision"])}')
+             f'. Le {bu["date"]}, le client a accepté {PL.euros(bu["accepte"])} : {escape(bu["decision"])}' +
+             (f' ; le total a changé depuis, {PL.euros(p["total"])} à faire valider par le client'
+              if abs(p["total"] - bu["accepte"]) > 0.005 else ''))
     return (f'<table class="budget"><tbody>{corps}<tr class="tot"><td>Total TTC</td><td class="num">'
             f'{PL.euros(p["total"])}</td></tr></tbody></table><p>{ecart}.</p><p>Sans livraison : tout se retire en magasin, '
             f'au Weldom et, pour la toile, chez {escape(M.TOILE["magasin"].split(",")[0])}. Le plombier n’est pas '
@@ -218,20 +237,18 @@ def note_paniers():
 
 def materiaux_communs():
     e = economie_commune()
-    if e["euros"] > 0:
-        _, liste = PL.liste(lignes_achats()["lignes"]["commun"], "Consommables communs")
-        return (f'<p>Les deux meubles partagent les tablettes mélaminées : {e["pieces"]} pièce{"s" if e["pieces"] > 1 else ""} '
-                f'du caisson haut se taille{"nt" if e["pieces"] > 1 else ""} dans les chutes des tablettes du meuble bas, '
-                f'ce qui fait <b>{PL.euros(e["euros"])}</b> d’économie par rapport au caisson haut acheté seul. '
-                'Les consommables (vis, chant, silicone, vernis) servent aussi aux deux : on les achète une fois, avec le '
-                'meuble bas.</p>' + liste)
-    n = e["pieces"]
-    chutes = (f'{n} pièce{"s" if n > 1 else ""} du caisson haut se taille{"nt" if n > 1 else ""} bien dans les chutes '
-              'des tablettes du meuble bas, mais le caisson haut acheté seul reviendrait au même prix en tablettes neuves'
-              if n else 'les chutes du meuble bas ne reçoivent aucune pièce du caisson haut')
-    return (f'<p>Acheter les deux meubles ensemble ne fait aucune économie de panneau : {chutes}. On peut donc les '
-            'acheter séparément. Seuls les consommables (vis, chant, silicone, vernis) servent aux deux : on les achète une fois, '
-            'avec le meuble bas.</p>')
+    _, liste = PL.liste(lignes_achats()["lignes"]["commun"], "Consommables communs")
+    conso = ('Les consommables (vis, chant, silicone, vernis) servent aussi aux deux : on les achète une fois, avec le '
+             'meuble bas.')
+    if not e["pieces"]:
+        return (f'<p>Les chutes du meuble bas ne reçoivent aucune pièce du caisson haut : les deux listes de panneaux sont '
+                f'indépendantes. {conso}</p>' + liste)
+    plus = " et ".join(f'{n} × {escape(nom)}' for nom, n in e["en_plus"])
+    gain = (f'Acheté seul, le caisson haut coûterait <b>{PL.euros(e["euros"])}</b> de plus ({plus}).' if e["euros"] > 0
+            else 'Acheté seul, il reviendrait au même prix en panneaux neufs, mais sa liste ne les compte pas.')
+    return (f'<p>Des pièces du caisson haut se taillent dans les chutes des achats du meuble bas : {escape(liste_chutes())}. '
+            f'{gain} La liste du caisson haut ne les compte donc pas : <b>les deux listes s’achètent ensemble</b>. '
+            f'{conso}</p>' + liste)
 
 
 def page_ensemble():
@@ -305,7 +322,10 @@ def montage(meuble):
     n_ = etapes(meuble)
     deb = [p for p in PL.debit() if M.meuble(p["rep"]) == meuble]
     cartes = "".join(MO.carte_piece(p) for p in deb)
-    quinc = sum((Counter(M.ETAPES[n][2]) for n in n_), Counter())
+    quinc = sum((Counter(MO.quantites(n)) for n in n_), Counter())
+    for k in M.EN_VOLUME:       # une cartouche ou un pot sert à plusieurs étapes : on compte l'achat, pas la somme
+        if k in quinc:
+            quinc[k] = min(quinc[k], M.achat(k))
     outils = "".join(f"<li>{escape(o)}</li>" for o in MO.OUTILS[meuble])
     legende = ('<p class="note">Plans des sous-ensembles : vue éclatée, puis chaque pièce à plat, face par face, cotes '
                'en mm depuis le coin en bas à gauche. <span class="lg fta"></span> on perce à travers (passage, fraisure '
@@ -322,6 +342,8 @@ def montage(meuble):
 <h3>Quincaillerie</h3>
 <div class="hws">{MO.puces_quinc(quinc)}</div>
 {extra}
+<h3>Comment percer</h3>
+{MO.comment_percer()}
 {legende}
 {MO.plans_sous_ensembles(meuble)}
 {"".join(MO.bloc_etape(n) for n in n_)}"""
@@ -347,14 +369,10 @@ def decoupe(meuble):
 <p class="cap">Plan de travail {pd["L"]} × {pd["l"]} × {mm(M.PT)} recoupé en longueur à {lg} : la profondeur reste celle de la tablette, chants d'usine devant et derrière. Chute de {pd["L"] - lg - CAL.TRAIT} × {pd["l"]} en chêne.</p></div>"""
     else:
         tabs = "".join(PL.tablette_svg(p, nb + k + 1) for k, p in enumerate(cal["M18"]["neufs"]))
-        pris = Counter()
-        for k, p in enumerate(cal["M18"]["bas"]):
-            for q in p.poses():
-                if M.meuble(q[0]) == "haut":
-                    pris[(q[0], k + 1)] += 1
-        li = "".join(f'<li><b>{r}</b> {escape(M.NOMS.get(r, ""))} × {n}, tablette T{t}</li>'
-                     for (r, t), n in sorted(pris.items(), key=lambda x: (x[0][1], x[0][0][0], int(x[0][0][1:]))))
-        chutes = (f'<p>Pièces prises dans les chutes des tablettes du meuble bas (dessinées sur la page '
+        pris = Counter(chutes_du_bas())
+        li = "".join(f'<li><b>{r}</b> {escape(M.NOMS.get(r, ""))} × {n}, {"barre" if t[0] == "B" else "tablette"} {t}</li>'
+                     for (r, t), n in sorted(pris.items(), key=lambda x: (x[0][1], x[0][0])))
+        chutes = (f'<p>Pièces prises dans les chutes des achats du meuble bas (dessinées sur la page '
                   f'<a href="{PAGES["bas"]}#decoupe">Meuble bas</a>) :</p><ul class="pistes">{li}</ul>' if li else
                   '<p>Aucune pièce du caisson haut ne se prend dans les chutes du meuble bas.</p>')
         figs = (f'<div class="fig"><div class="tabs">{tabs}</div><p class="cap">Tablettes neuves du caisson haut : refente '
@@ -388,8 +406,18 @@ def achats(meuble):
                  f'{PL.euros(p["bas"])}, toile {PL.euros(p["ailleurs"])}).</p>')
     else:
         o.append(f'<p><b>Sous-total : {PL.euros(p["haut"])}</b>.</p>')
-    o.append(f'<p>Total des deux meubles : <b>{PL.euros(p["total"])}</b>, pour un budget visé de {PL.euros(M.BUDGET["cible"])}, '
-             f'total accepté par le client (<a href="{ENSEMBLE}#budget">détail</a>).</p>'
+        if chutes_du_bas():
+            o.append(f'<p><b>À acheter avec le meuble bas</b> : {escape(liste_chutes())} se taillent dans les '
+                     f'<a href="{PAGES["bas"]}#achats">achats du meuble bas</a>, qui ne sont pas recomptés ici.</p>')
+        com = [M.QUINCAILLERIE[c].split(" (")[0] for c in M.CONSOMMABLES
+               if c in M.WELDOM and any(c in M.ETAPES[n][2] for n in M.MEUBLE_HAUT_ETAPES)]
+        if com:
+            o.append(f'<p>Le caisson haut utilise aussi des consommables achetés avec le meuble bas : '
+                     f'{escape(" ; ".join(com))}.</p>')
+    o.append(f'<p>Total des deux meubles : <b>{PL.euros(p["total"])}</b>, pour un budget visé de {PL.euros(M.BUDGET["cible"])}, ' +
+             (f'total accepté par le client' if abs(p["total"] - M.BUDGET["accepte"]) <= 0.005 else
+              f'à faire valider par le client ({PL.euros(M.BUDGET["accepte"])} accepté le {M.BUDGET["date"]})') +
+             f' (<a href="{ENSEMBLE}#budget">détail</a>).</p>'
              f'<p class="note">Stock : nombre affiché sur la fiche produit pour ce magasin (« — » : non lu). Prix TTC '
              f'relevés en ligne le {M.MAGASIN["releve"]} et le {M.RELEVE_V6} (plan, vernis et consommables ajoutés en '
              f'{M.VERSION}).</p>')
@@ -411,7 +439,7 @@ def materiaux_haut():
 <p>Le caisson haut est au-dessus de la niche, loin des projections : il ne prend presque pas d'eau. Pas besoin de vernis marin ni de bois massif ; un panneau de {mm(min(m["ep"] for m in M.MATERIAUX_HAUT))} ou {mm(max(m["ep"] for m in M.MATERIAUX_HAUT))} mm suffit. Un panneau brut se peint (sous-couche, puis deux couches).</p>
 <div class="scroll"><table class="debit cmp"><thead><tr><th>Panneau</th><th class="num">Ép. (mm)</th><th>Format</th><th>Qualités</th><th>Défauts</th><th>Finition</th><th class="num">Prix</th><th>Magasin</th></tr></thead>
 <tbody>{corps}</tbody></table></div>
-<p><b>Retenu : {escape(r["nom"].lower())}</b>. Le moins cher qui convient : {escape(r["qualites"])}, rien à peindre{commun}. Son défaut ({escape(r["defauts"])}) compte peu si haut : {escape(r["finition"])}. <span class="choix">Choix laissé au constructeur.</span></p>
+<p><b>Retenu : {escape(r["nom"].lower())}</b>. Le moins cher qui convient : {escape(r["qualites"])}, rien à peindre{commun}. Son défaut ({escape(r["defauts"])}) compte peu à cette hauteur : {escape(r["finition"])}. <span class="choix">Choix laissé au constructeur.</span></p>
 <p class="note">Prix TTC du panneau entier relevés en ligne le {M.RELEVE_V6}, stock non lu.</p>"""
 
 

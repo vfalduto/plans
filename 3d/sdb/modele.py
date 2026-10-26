@@ -143,12 +143,13 @@ def P(*a, **k):
 TROUS = []
 BORD, PAS = 4, 25
 # vis → (passage dans la pièce traversée, avant-trou dans la pièce reçue) ; Ø en mm (usage courant, de mémoire)
+AVANT_TROU_PLAN = 12     # mm, avant-trou des vis du plan de travail (le chêne fait PT)
 PERCAGE = {
     "vis60": ("Ø 5 traversant + fraisure", "Ø 3, 30 de profondeur"),
     "vis40": ("Ø 4 traversant + fraisure", "Ø 2,5, 20 de profondeur"),
     "vis40l": ("lamage Ø 10, 10 de profondeur, puis Ø 4 traversant, ovalisé à 8 d'avant en arrière sauf le trou avant "
                "(le chêne massif travaille en largeur)",
-               f"Ø 3, 12 de profondeur dans le plan (ruban sur le foret) : la vis y entre de {40 - (DE * 10 - 10):.0f}"),
+               f"Ø 3, {AVANT_TROU_PLAN} de profondeur dans le plan (ruban sur le foret) : la vis y entre de {40 - (DE * 10 - 10):.0f}"),
     "vis16l": ("lamage Ø 10, 8 de profondeur, puis Ø 4 traversant",
                "Ø 2,5, 8 de profondeur dans la porte (ruban sur le foret) : la vis n'en traverse pas plus de 6"),
     "vis16": ("—", "Ø 2,5, 10 de profondeur (ruban sur le foret)"),
@@ -579,9 +580,14 @@ H_("caisson", "ch_cote_s", _h["x0"], _hx, _hy1, _h["y1"], _h["z0"], _h["z1"], re
 H_("caisson", "ch_dessous", _h["x0"], _hx, _hy0, _hy1, _h["z0"], _hz0, rep="K2", etape=8)
 H_("caisson", "ch_dessus", _h["x0"], _hx, _hy0, _hy1, _hz1, _h["z1"], rep="K2", etape=8)
 _ym = CENTRE
-H_("caisson", "ch_montant", _h["x0"] + _h["retrait"], _hx, _ym - TH / 2, _ym + TH / 2, _hz0, _hz1, rep="K3", etape=8)
 # V6.0 : fond de nouveau en deux moitiés (une tablette fait 600 de large), jointes derrière le montant central
-# (V5.24 : d'une pièce, dans la plaque de contreplaqué de 1220)
+# (V5.24 : d'une pièce, dans la plaque de contreplaqué de 1220). Revue finale : vissées dans le chant de 18 du montant,
+# les vis des deux moitiés tombaient à 4 mm de leur bord ; un tasseau de joint G12 (barre en rab des lots du meuble bas)
+# se met debout derrière le montant, à cheval sur la jonction, et chaque moitié s'y visse. Le montant s'arrête devant
+# lui (DE plus court) ; les étagères voisines sont entaillées à l'arrière pour le contourner.
+H_("caisson", "ch_montant", _h["x0"] + _h["retrait"], _hx - DE, _ym - TH / 2, _ym + TH / 2, _hz0, _hz1, rep="K3", etape=8)
+TASSEAU_JOINT = H_("bois", "ch_tasseau_joint", _hx - DE, _hx, CENTRE - DL / 2, CENTRE + DL / 2, _hz0, _hz1, rep="G12",
+                   etape=8)
 H_("fond", "ch_fond_n", _hx, _h["x1"], _h["y0"], CENTRE - 0.1, _h["z0"], _h["z1"], rep="K8", etape=8)
 H_("fond", "ch_fond_s", _hx, _h["x1"], CENTRE + 0.1, _h["y1"], _h["z0"], _h["z1"], rep="K8", etape=8)
 CH["serviettes"] = 2    # étagères côté serviettes (nord) : 3 cases
@@ -592,10 +598,14 @@ CH["case_pharmacie"] = (_hi_h - CH["pharmacie"] * TH) / (CH["pharmacie"] + 1)
 for cote, n, y0, y1, rep in (("n", CH["serviettes"], _hy0 + 0.2, _ym - TH / 2 - 0.2, "K4"),
                              ("s", CH["pharmacie"], _ym + TH / 2 + 0.2, _hy1 - 0.2, "K5")):
     case = (_hi_h - n * TH) / (n + 1)
+    # entaille arrière autour du tasseau de joint, 2 mm de jeu
+    ent = ((TASSEAU_JOINT.x0 - 0.2, _hx - 0.3, TASSEAU_JOINT.y0 - 0.2, y1) if cote == "n" else
+           (TASSEAU_JOINT.x0 - 0.2, _hx - 0.3, y0, TASSEAU_JOINT.y1 + 0.2))
     for k in range(n):
         z = _hz0 + (k + 1) * case + k * TH
         H_("etagere", f"ch_etagere_{cote}{k + 1}", _h["x0"] + _h["retrait"] + 0.5, _hx - 0.3, y0, y1, z, z + TH,
-           rep=rep, etape=10)
+           rep=rep, etape=10, entailles=(ent,))
+ENTAILLE_ETAGERE = (_hx - 0.3 - (TASSEAU_JOINT.x0 - 0.2), TASSEAU_JOINT.y1 + 0.2 - (_ym + TH / 2 + 0.2))   # profondeur × largeur
 # portes coulissantes intérieures, recouvrement 3 au milieu. V5.4 : pas de kit, deux rainures à la défonceuse dans le
 # dessous du dessus et le dessus du dessous (K2) ; les portes glissent dedans sur des patins PTFE. Rainure du haut plus
 # profonde : on soulève la porte dedans pour la dégager de celle du bas. V5.24 : dans du contreplaqué de 12, rainures
@@ -628,8 +638,9 @@ for cote in ("ch_cote_n", "ch_cote_s"):
         visser(_pc[cote], _pc[b_], "vis40", 8)
 for b_ in ("ch_dessous", "ch_dessus"):
     visser(_pc[b_], _pc["ch_montant"], "vis40", 8)
+    visser(_pc[b_], _pc["ch_tasseau_joint"], "vis40", 8)
 for f_ in ("ch_fond_n", "ch_fond_s"):
-    for b_ in ("ch_cote_n", "ch_cote_s", "ch_dessous", "ch_dessus", "ch_montant"):
+    for b_ in ("ch_cote_n", "ch_cote_s", "ch_dessous", "ch_dessus", "ch_montant", "ch_tasseau_joint"):
         if touche(_pc[f_], _pc[b_]):
             visser(_pc[f_], _pc[b_], "vis40", 8)
 # fixation au mur du fond : de l'intérieur, à travers le fond. V5.8 : le carrelage s'arrête à CARRELAGE (relevé
@@ -664,7 +675,8 @@ LED = Bloc("led", "profil_led", _h["x0"] + 2, _h["x0"] + 4, _hy0 + 2, _hy1 - 2, 
 PRISES = Bloc("prise", "prises_niche", X1 - 1, X1, 84, 104, 122, 130, miroir=False)   # bloc 2 prises + USB, mur du fond
 # V6.0 : tuyaux au mur du fond, à l'aplomb du robinet. L'évacuation passe par un siphon dans la lame entre l'ossature et le
 # mur (XO1 → X1) ; l'arrivée monte au robinet par l'encoche du plan (TRAPPE). Aucune pièce du meuble dans leur zone.
-TUYAUX = dict(zone=(XO1, X1, ROBINET["y"] - 8, ROBINET["y"] + 8, 50, Z_PLAN), evacuation_z=60, arrivee_z=80)
+TUYAUX = dict(zone=(XO1, X1, ROBINET["y"] - 8, ROBINET["y"] + 8, 50, Z_PLAN), evacuation_z=60, arrivee_z=80,
+              saillie_max=JEU_LL)   # revue finale : le siphon doit tenir entre le mur et le dos de la machine
 _tz = TUYAUX["zone"]
 assert not [b.nom for b in PIECES if b.x0 < _tz[1] and b.x1 > _tz[0] and b.y0 < _tz[3] and b.y1 > _tz[2]
             and b.z0 < _tz[5] and b.z1 > _tz[4]], "aucune pièce dans la zone des tuyaux"
@@ -679,7 +691,8 @@ EQUIPEMENTS = [MACHINE, LED, PRISES, SIPHON, ARRIVEE]
 # V6.0 : coins de calage taillés dans des chutes de tasseau, enfoncés au maillet entre les montants des deux échelles du
 # bord et le carreau des murs nord et sud, en bas et en haut ; chaque position vaut pour le montant avant et le montant
 # arrière. Pas de pièce de débit, pas de vis dans le mur.
-COINS = dict(n=8, pos=[(e, z) for e in ("n", "s") for z in (Z0 + 5, Z_PLAN - 5)])
+COINS = dict(n=8, pos=[(e, z) for e in ("n", "s") for z in (Z0 + 5, Z_PLAN - 5)], ep=(0.1, 1.0), long=15)
+# ep : épaisseur du coin, de la pointe au talon (cm) ; long : longueur taillée dans la chute
 assert COINS["n"] == 2 * len(COINS["pos"]), "un coin par montant avant et arrière à chaque position"
 
 # ------------------------------------------------------------------ salle de bain (pour le plan)
@@ -747,8 +760,8 @@ MATERIAUX = {
     "D": (f"Tablette chêne lamellé-collé brute FSC {PT * 10:.0f} mm", f"{_pd['L']} × {_pd['l']} : recoupée à "
           f"{(YM1 - YM0) * 10:.0f} de long, pas de recoupe en profondeur ; vernis marin, "
           "trois couches sur toutes les faces et les chants avant la pose", PT),
-    "G": ("Tasseau sapin brut 38 × 38, non traité", "ossature du meuble bas : échelles, rails, contrefiches "
-          "(non traité : poncer, puis peindre ou vernir toutes les faces, pieds compris)", DE),
+    "G": ("Tasseau sapin brut 38 × 38, non traité", "ossature du meuble bas : échelles, rails, contrefiches ; tasseau de "
+          "joint du fond du caisson haut (non traité : poncer, puis peindre ou vernir toutes les faces, pieds compris)", DE),
 }
 # V6.0 : matériaux possibles du caisson haut, relevés au Weldom le 26/10/2026 (en ligne, stock non lu) ; le mélaminé
 # est retenu (aucune finition à faire, le moins cher).
@@ -800,7 +813,7 @@ NOMS = {
     "A3": "Plateau du bac", "A6": "Porte du bac", "B1": "Support de barre", "E4": "Barre du sac (ronde)",
     "K1": "Côté du caisson haut", "K2": "Dessus et dessous du caisson haut", "K3": "Montant central haut",
     "K4": "Étagère serviettes", "K5": "Étagère pharmacie et produits divers", "K6": "Porte coulissante",
-    "K7": "Fileur de plafond",
+    "K7": "Fileur de plafond", "G12": "Tasseau de joint du fond",
     "K8": "Fond du caisson haut",
     "D1": "Plan de travail",
 }
@@ -832,18 +845,26 @@ USINAGES = {
     "E4": "Manche à balai coupé ou tringle de rideau de 2 m, Ø 20 à 25, en quatre demi-barres (une devant et une derrière "
           "par sac) ; glissées dans les fourreaux",
     "K1": "Taquets Ø 5 pas 32 côté intérieur, à 6 cm du chant avant",
+    "K4": f"Entaille de {ENTAILLE_ETAGERE[0] * 10:.0f} × {ENTAILLE_ETAGERE[1] * 10:.0f} au coin arrière, côté montant "
+          "central, autour du tasseau de joint G12 (scie sauteuse)",
+    "K5": f"Entaille de {ENTAILLE_ETAGERE[0] * 10:.0f} × {ENTAILLE_ETAGERE[1] * 10:.0f} au coin arrière, côté montant "
+          "central, autour du tasseau de joint G12 (scie sauteuse)",
     "K2": f"Deux rainures de {RAINURE['l'] * 10:.0f} de large à la défonceuse, sur toute la longueur, à "
           f"{RAINURE['bord'] * 10:.0f} et {(RAINURE['bord'] + RAINURE['l'] + RAINURE['entre']) * 10:.0f} du chant avant : "
           f"{RAINURE['haut'] * 10:.0f} de profondeur sous le dessus, {RAINURE['bas'] * 10:.0f} sur le dessous",
     "K6": f"Patins PTFE adhésifs sous le chant bas ; on la pose en la soulevant dans la rainure du haut "
            f"({RAINURE['haut'] * 10:.0f}) puis en la laissant descendre dans celle du bas ({RAINURE['bas'] * 10:.0f})",
-    "K3": "En retrait de 6 derrière les rails ; taquets sur les deux faces",
+    "K3": f"En retrait de {_h['retrait']:g} derrière le chant avant, arrêté devant le tasseau de joint G12 ; taquets sur les deux faces",
+    "G12": "Debout derrière le montant central, à cheval sur la jonction des deux moitiés du fond K8 : chaque moitié s'y "
+           "visse ; vissé en bout par le dessus et le dessous K2. Taillé dans une barre en rab des lots du meuble bas, peint "
+           "avec eux",
     "D1": f"Recoupé de {_pd['L']} à {(YM1 - YM0) * 10:.0f} de long ; la tablette fait déjà {_pd['l']} de profondeur : "
           f"pas de recoupe en profondeur (chants d'usine devant et derrière) ; au chant arrière, au-dessus du robinet, "
           f"une encoche de {PASSE['l']} × {PASSE['p']} pour le tuyau d'arrivée (scie sauteuse) ; vernis marin, trois "
           "couches sur toutes les faces, coupes et encoche comprises, avant la pose ; trous de vis ovalisés dans les "
           "lisses (le chêne bouge moins que le hêtre, mais il bouge) ; joint silicone sur les murs",
-    "K8": "Deux moitiés, jointes derrière le montant central K3 ; six trous Ø 6 pour les chevilles, au-dessus du carrelage",
+    "K8": "Deux moitiés, jointes derrière le montant central K3 et vissées dans le tasseau de joint G12 ; six trous Ø 6 "
+          "pour les chevilles, au-dessus du carrelage",
 }
 QUINCAILLERIE = {
     "vis60": "vis à bois 5 × 60 (assemblages des tasseaux)",
@@ -905,7 +926,7 @@ WELDOM = {
 RELEVE_V6 = "26/10/2026"
 # V6.0 : budget TTC des deux meubles, consommables et achats faits ailleurs compris ; total accepté par le client
 BUDGET = dict(cible=400.00, accepte=417.32,
-              decision="26/10/2026 : le client garde tout sauf la fraise, dépassement accepté")    # V6.0 : relevé en ligne des prix Weldom (plan, matériaux du haut, vernis, consommables ajoutés)
+              date="26/10/2026", decision="il garde tout sauf la fraise de défonceuse")    # V6.0 : relevé en ligne des prix Weldom (plan, matériaux du haut, vernis, consommables ajoutés)
 # Étapes de la notice : (titre, consigne courte, quincaillerie {code: quantité}). Les pièces de chaque étape sont celles
 # dont etape == numéro ; les perçages, ceux de TROUS.
 _n = lambda e, v: sum(1 for t in TROUS if t["etape"] == e and t["vis"] == v)   # noqa: E731
@@ -913,7 +934,9 @@ ETAPES = [
     ("Avant de commencer", "Faire remonter par le plombier le robinet d'arrêt dans la niche, au mur du fond, à " +
      cm_(ROBINET["z"]) + " du sol et à " + cm_(Y1 - ROBINET["y"]) + " du mur sud (relevé : 66 aujourd'hui) ; et par "
      "l'électricien la prise de la machine (circuit 20 A spécialisé) et le bloc de prises de "
-     "la niche à 126. Mesurer la machine pieds réglés au plus bas : les montants se coupent à sa hauteur plus "
+     "la niche à 126. Mesurer la saillie du siphon d'évacuation (à " + cm_(TUYAUX["evacuation_z"]) + " du sol) depuis le "
+     f"carreau du mur du fond : elle doit rester sous {TUYAUX['saillie_max'] * 10:.0f} mm, l'écart entre le dos de la "
+     "machine et le mur ; au-delà, faire poser par le plombier un siphon plus plat. Mesurer la machine pieds réglés au plus bas : les montants se coupent à sa hauteur plus "
      f"{JEU_PLAN * 10:.0f} mm. Relever l'alcôve en trois hauteurs : garder la plus petite largeur. Les tasseaux sont en "
      "sapin brut non traité : les couper, les poncer, puis les peindre en blanc (deux couches, le bout des pieds "
      "compris) avant l'assemblage. Le plan de travail en chêne est brut : le couper, le poncer (grain 120 puis 180), "
@@ -926,8 +949,7 @@ ETAPES = [
      "Vérifier l'équerrage (diagonales égales), puis caler l'écharpe G11 en diagonale, du pied avant au haut arrière, "
      "et la visser en biais à chaque bout (deux vis 5 × 60) : l'échelle ne se déforme plus. Sous chaque montant, "
      "percer Ø 10 au centre du bout sur 25, passer du vernis dans le trou, visser l'insert M8 à fleur (clé six pans), "
-     f"puis le vérin : régler à {PIED['h'] * 10:.0f} mm sous le bois. Les vérins se règlent ensuite sur place pour "
-     "mettre le meuble de niveau.",
+     f"puis le vérin : régler à {PIED['h'] * 10:.0f} mm sous le bois (réglage fin à l'étape 2, sur place).",
      {"vis60": _n(1, "vis60") + 4 * len(ECH), "insert": 2 * len(ECH), "verin": 2 * len(ECH)}),
     ("Pose, rails et butée", "Avant de dresser les échelles du bac (nord et milieu), planter dans la face intérieure "
      "de leur écharpe le tire-fond de butée : avant-trou Ø 5 de 35, à " + cm_(Z_BUTEE) + " du sol et à " +
@@ -936,9 +958,16 @@ ETAPES = [
      "du fond : une contre le mur nord, une à " + cm_(ECH["c"] - YM0) + " d'elle (place du bac), une contre le mur sud. "
      "Entre les deux premières, au sol, les rails G5 au droit des montants avant et arrière. Deux vis 5 × 60 à travers "
      "le montant du milieu dans chaque bout, et côté nord, contre le mur, une équerre plate sur les faces affleurantes "
-     "du montant et du tasseau. Rien ne se fixe aux murs : enfoncer au maillet un coin, taillé dans une chute de "
-     "tasseau, entre chaque montant des échelles du bord et le carreau, en bas et en haut, sans vis, avec un point de "
-     "silicone.", {"vis60": _n(2, "vis60"), "tirefond": _n(2, "butee"), "equerre_p": RAIL_EQUERRES, "vis16": 4 * RAIL_EQUERRES}),
+     "du montant et du tasseau. Mettre de niveau : une règle posée en travers sur la tête des trois échelles, le "
+     "niveau à bulle dessus, d'avant en arrière puis du nord au sud ; tourner les vérins (clé de 13) jusqu'à ce que la "
+     "bulle soit au milieu dans les deux sens et que la tête des échelles soit à " + cm_(Z_CADRE) + " du sol partout. "
+     "Ensuite seulement, caler : rien ne se fixe aux murs. Tailler " + str(COINS["n"]) + " coins dans les chutes de "
+     "tasseau, longs de " + cm_(COINS["long"]) + ", de " + f"{COINS['ep'][0] * 10:.0f} à {COINS['ep'][1] * 10:.0f}" +
+     " mm d'épaisseur, et les glisser entre chaque montant des échelles du bord (nord et sud) et le carreau, à " +
+     " et à ".join(cm_(z) for z in sorted({z for _, z in COINS["pos"]})) + " du sol : un point de silicone sur le coin, "
+     "puis le serrer au maillet sans forcer (le carreau casse ; le niveau ne doit pas bouger), sans vis.",
+     {"vis60": _n(2, "vis60"), "tirefond": _n(2, "butee"), "equerre_p": RAIL_EQUERRES, "vis16": 4 * RAIL_EQUERRES,
+      "silicone": 1}),
     ("Le L", "Au fer à repasser, plaquer le chant blanc sur les chants coupés visibles de la porte et du plateau. Porte "
      "A6 à plat, face vers le sol : poser le plateau A3 debout contre son dos, le dessous du plateau 0,5 sous le bas de "
      "la porte, et le fixer par deux équerres d'assemblage. Scier les deux contrefiches G7 d'onglet, les poser aux "
@@ -960,9 +989,11 @@ ETAPES = [
      "sur ses deux demi-barres E4. Poser les demi-barres de la porte dans leurs supports. Les demi-barres arrière se posent "
      "une fois le plan en place (étape 7), entre leur support et l'accroche centrale.",
      {"vis40": _n(5, "vis40"), "sac": 2, "toile": 1}),
-    ("Machine", "Poser le tapis au sol entre les échelles du milieu et du mur sud. Raccorder la machine (le tuyau "
-     f"d'arrivée monte au robinet par le passe-tuyau), la glisser sur le tapis jusqu'à {JEU_LL} du mur du fond et régler les pieds : {JEU_PLAN * 10:.0f} mm sous la tête des échelles, donc sous le plan (une cale "
-     "de 5 posée sur la machine doit passer juste sous une règle posée sur les échelles).", {"tapis": 1}),
+    ("Machine", "Poser le tapis au sol entre les échelles du milieu et du mur sud. Raccorder la machine : le tuyau de "
+     "vidange dans le siphon du mur du fond (coude de maintien, collier serré), le tuyau d'arrivée au robinet de la "
+     "niche par le passe-tuyau (robinet fermé, joint neuf). "
+     f"Puis la glisser sur le tapis jusqu'à {JEU_LL} du mur du fond et régler les pieds : {JEU_PLAN * 10:.0f} mm sous "
+     f"la tête des échelles, donc sous le plan (une cale de {JEU_PLAN * 10:.0f} mm posée sur la machine doit passer juste sous une règle posée sur les échelles).", {"tapis": 1}),
     ("Plan de travail", "Recouper le plan à " + f"{(YM1 - YM0) * 10:.0f}" + " de long (scie circulaire et rail, ou "
      "règle serrée, lame fine de 48 dents ou plus, face visible dessous pour un trait net dessus ; un ruban de masquage "
      "sur le trait limite les éclats) ; la tablette fait déjà " + f"{_pd['l']}" + " de profondeur, ses chants d'usine "
@@ -980,16 +1011,18 @@ ETAPES = [
      "à la butée.",
      {"vis40": _n(7, "vis40l"), "silicone": 1, "equerre_a": ACCROCHE_EQUERRES, "vis16": 4 * ACCROCHE_EQUERRES}),
     ("Caisson haut", "Au fer à repasser, plaquer le chant blanc sur les chants coupés visibles. Assembler les côtés "
-     "K1, dessus et dessous K2, le montant K3, puis les deux moitiés du fond K8, jointes derrière le montant (vis "
-     "4 × 40, avant-trou Ø 2,5 dans l'axe du chant de " + f"{TH * 10:.0f}" + "). Avant l'assemblage, rainurer le dessous du dessus et le dessus du dessous K2 à la défonceuse : deux "
+     "K1, dessus et dessous K2, le montant K3 et, derrière lui, le tasseau de joint G12 (peint avec les tasseaux du "
+     "meuble bas), vissés en bout à travers le dessus et le dessous ; puis les deux moitiés du fond K8, jointes au "
+     "milieu du tasseau : chacune s'y visse sur toute la hauteur (vis 4 × 40, avant-trou Ø 2,5 dans les chants de " +
+     f"{TH * 10:.0f}" + ", Ø 3 dans le tasseau). Avant l'assemblage, rainurer le dessous du dessus et le dessus du dessous K2 à la défonceuse : deux "
      f"rainures de {RAINURE['l'] * 10:.0f} de large, {RAINURE['haut'] * 10:.0f} de profondeur en haut, "
-     f"{RAINURE['bas'] * 10:.0f} en bas (règle de guidage, deux passes).", {"vis40": _n(8, "vis40")}),   # fraise droite : outil du client (OUTILS)
+     f"{RAINURE['bas'] * 10:.0f} en bas (règle de guidage, deux passes).", {"vis40": _n(8, "vis40"), "chant": 1}),   # fraise droite : outil du client (OUTILS)
     ("Pose du caisson haut", "Poser le caisson haut sur deux cales de " + f"{Z_HAUT - Z_DESSUS:.1f}".replace(".", ",") +
      " sur le plan (niche). Les chevilles sont toutes au-dessus du carrelage (" + f"{CARRELAGE}" + ") : marquer à "
      "travers le fond, retirer le caisson, percer le mur nu (détecteur de câbles d'abord), cheviller selon le mur, "
      "revisser le caisson (voir « Fixer le caisson haut au mur » en tête de notice).", {"cheville": 6}),
-    ("Finitions", "Étagères K4 et K5 ; portes K6 : coller les patins sous leur chant bas, les soulever dans la rainure du haut et les laisser descendre dans celle du bas ; fileur K7 ajusté au plafond, profil LED sous le caisson.",
-     {"taquet": 24, "led": 1, "silicone": 1, "patins": 2}),
+    ("Finitions", "Étagères K4 et K5, entaillées au coin arrière autour du tasseau de joint ; portes K6 : chant plaqué sur leurs quatre chants coupés, puis coller les patins sous leur chant bas, les soulever dans la rainure du haut et les laisser descendre dans celle du bas ; fileur K7 ajusté au plafond, profil LED sous le caisson.",
+     {"taquet": 24, "led": 1, "silicone": 1, "patins": 2, "chant": 1}),
 ]
 # V4.3 : les deux meubles s'achètent et se montent séparément ; les consommables forment une liste commune, achetée
 # avec le meuble bas
@@ -1032,9 +1065,22 @@ for _k, (_pv, _nv) in enumerate(VERNIS["achat"]):     # une ligne d'achat par fo
     if _k:
         CONSOMMABLES += (_code,)
         QUINCAILLERIE[_code] = _pv["nom"]
+# Consommables vendus au volume (cartouche, pot, rouleau) : un achat sert à plusieurs étapes ; la liste d'un meuble
+# compte l'achat, pas la somme des étapes
+EN_VOLUME = ("silicone", "vernis", "peinture", "chant")
+
+
+def achat(code):
+    """Quantité achetée d'un article du Weldom (première ligne s'il y en a plusieurs)."""
+    w = WELDOM[code]
+    return (w[0] if isinstance(w, list) else w)[2]
+
+
 QUINCAILLERIE["vernis"] = (f"vernis marin incolore satiné, à l'eau : {cm_(VERNIS['m2'])} m² (plan de travail seulement, "
                            f"faces et chants) × {VERNIS['couches']} couches ≈ {cm_(VERNIS['litres'])} L")
 
+# Les lignes des versions passées sont figées aux valeurs de l'archive (archive/sdb-meuble-v5.24.html) quand une cote
+# a bougé depuis ; les autres lisent encore le modèle, dont les cotes n'ont pas changé pour elles.
 CHANGEMENTS = [
     ("V6.0", "26/10/2026",
      "Document V4 (demande client) : trois pages, la principale, le meuble bas et le caisson haut ; le reste est retiré. "
@@ -1048,7 +1094,9 @@ CHANGEMENTS = [
      f"{VERNIS['achat'][0][0]['l']:g}".replace(".", ",") + " L). " + str(COINS["n"]) + " coins de calage, taillés dans les chutes de "
      "tasseau, entre les échelles du bord et les murs nord et sud. Tuyaux au mur du fond, sous le robinet : siphon "
      "d'évacuation à " + cm_(TUYAUX["evacuation_z"]) + " du sol, arrivée à " + cm_(TUYAUX["arrivee_z"]) +
-     " qui monte par l'encoche du plan ; aucune pièce dans leur zone."),
+     " qui monte par l'encoche du plan ; aucune pièce dans leur zone. Fond du caisson haut vissé dans un tasseau de "
+     "joint G12, taillé dans une barre en rab du meuble bas. Notice : saillie du siphon à mesurer, mise de niveau avant "
+     "les coins, méthode de perçage."),
     # V6.0 : texte figé aux valeurs de la V5.24 (plan de 26, contreplaqué de 12, vernis du plan et du caisson haut)
     ("V5.24", "26/10/2026",
      "Matériaux revus après passage en magasin (client). Plan de travail en hêtre massif lamellé-collé abouté "
@@ -1130,7 +1178,7 @@ CHANGEMENTS = [
      "nu (deux rangées à 210 et 240) ; plus aucun perçage dans le carrelage. Variante METOD : le rail de suspension, en "
      "haut des structures, est lui aussi au-dessus du carrelage."),
     ("V5.7", "13/10/2026",
-     "Robinet d'arrêt remonté dans la niche, au-dessus du plan (" + cm_(ROBINET["z"]) + " du sol, 41 du mur sud) : plus "
+     "Robinet d'arrêt remonté dans la niche, au-dessus du plan (103 du sol, 41 du mur sud) : plus "
      "de trappe ni de couvercle ; une encoche au chant arrière du plan laisse passer le tuyau. La machine recule à " +
      f"{JEU_LL}" + " du mur du fond."),
     ("V5.6", "13/10/2026",
@@ -1164,8 +1212,7 @@ CHANGEMENTS = [
      "repose sur le plateau. ≈ " + f"{VOLUME_BAC:.0f}" + " L par sac."),
     ("V5.0", "13/10/2026",
      "Contre-analyse du meuble bas (coûts et simplicité). Machine posée au sol : plus de socle (longerons, traverses, "
-     "plateau, tasseau d'embase), plan à " + cm_(Z_DESSUS) + " (93,7 en V4.4), niche de " + cm_(Z_HAUT - Z_DESSUS) +
-     ". Trois échelles debout sur le carrelage (lisse basse + lisse haute), deux rails au sol entre les échelles du "
+     "plateau, tasseau d'embase), plan à 88,1 (93,7 en V4.4), niche de 69,9. Trois échelles debout sur le carrelage (lisse basse + lisse haute), deux rails au sol entre les échelles du "
      "caisson. Un seul bac basculant au lieu de deux portes : porte et fond en L, deux côtés, un dos et une cloison, "
      "deux sacs souples côte à côte (≈ " + f"{VOLUME_BAC:.0f}" + " L chacun) ; deux charnières plates entre le rail "
      "avant et le fond au lieu de quatre charnières invisibles (plus de mèche Forstner) ; le dos s'arrête contre une "
@@ -1179,8 +1226,8 @@ CHANGEMENTS = [
      "découpée à la scie sauteuse derrière les sacs côté machine, couvercle taillé dans la chute du plan, posé sur deux "
      "tasseaux en feuillure, trou de doigt ; robinet déplacé dessous."),
     ("V4.3", "13/10/2026",
-     "Plus de cadre haut : le plan est posé sur la tête des trois échelles et vissé dans les lisses hautes (dessus à " +
-     cm_(Z_DESSUS) + "). Plus d'équerres renforcées au socle (assemblages collés et vissés, alcôve fermée sur trois "
+     "Plus de cadre haut : le plan est posé sur la tête des trois échelles et vissé dans les lisses hautes (dessus à "
+     "88,1). Plus d'équerres renforcées au socle (assemblages collés et vissés, alcôve fermée sur trois "
      "côtés). Trois sortes de vis seulement : 5 × 60 (tasseaux), 4 × 40 (panneaux, plan avec lamage), 4 × 16 "
      "(charnières, équerres plates, supports des portes avec lamage). Lisses de barre collées. Meubles bas et haut "
      "séparés : débit, achats (consommables communs, achat du bas, puis du haut dans les chutes du bas) et notice ; "

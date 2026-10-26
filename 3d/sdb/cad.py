@@ -1,8 +1,8 @@
-# Construit le modèle FreeCAD du meuble linge de la salle de bain (V3, V4) depuis modele.py, dans les deux versions.
+# Construit le modèle FreeCAD du meuble linge de la salle de bain (document V4) depuis modele.py.
 #
 #   /Applications/FreeCAD.app/Contents/Resources/bin/freecadcmd 3d/sdb/cad.py
 #
-# Produit 3d/sortie/sdb-meuble-v3-{d,g}.FCStd et .glb (d : machine à droite, g : machine à gauche).
+# Produit 3d/sortie/sdb-meuble-v4.FCStd et .glb (machine à droite, la seule version depuis la V3.8).
 # Dans FreeCAD : X = x, Y = -y (nord en haut), Z = z, en mm. Chaque objet s'appelle « repère__nom » (ou « rôle__nom »
 # pour la machine et les équipements) ; les pièces sont rangées dans un groupe par sous-ensemble.
 
@@ -45,7 +45,7 @@ def forme(b):
 
 
 for c in ("d",):          # V3.8 : machine à droite seulement
-    nom = f"sdb-meuble-v3-{c}"
+    nom = "sdb-meuble-v4"
     doc = FreeCAD.newDocument(nom.replace("-", "_"))
     objs, groupes = [], {}
     for k, b in enumerate(M.version(c)):

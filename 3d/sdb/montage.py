@@ -404,8 +404,14 @@ def puces_pieces(c, n):
     return r + (f'<span class="pc muted">dessin : 1 exemplaire sur {FOIS[n]}</span>' if n in FOIS else "")
 
 
+def quantites(n):
+    """Quincaillerie de l'étape n."""
+    return dict(M.ETAPES[n][2])
+
+
 def bloc_etape(n):
-    titre, texte, q = M.ETAPES[n]
+    titre, texte, _ = M.ETAPES[n]
+    q = quantites(n)
     par_cote = n not in SEUL
     if par_cote:
         fig = f'<div class="vd">{dessin_etape("d", n)}</div>'
@@ -720,7 +726,8 @@ OUTILS = {
         "scie circulaire et règle de guidage pour recouper le plan et les tablettes (ou découpe en magasin)",
         "ponceuse (grains 120 et 180), pinceau ou petit rouleau (peinture des tasseaux, vernis marin du plan)",
         "fer à repasser (chant thermocollant) et cutter",
-        "équerre de menuisier, niveau à bulle, mètre, crayon, serre-joints",
+        "équerre de menuisier, niveau à bulle et règle de 1,2 m (mise de niveau des échelles), mètre, crayon, serre-joints",
+        "maillet (coins de calage contre les murs)",
         "ruban adhésif (butée de profondeur sur les forets)",
         "pistolet à silicone",
         "machine à coudre (les deux sacs)",
@@ -742,6 +749,42 @@ OUTILS = {
     ],
 }
 
+
+
+def percage_type():
+    """Coupe d'un vissage type de l'ossature : tasseau traversé (passage + fraisure), tasseau reçu (avant-trou), vis
+    5 × 60. Cotes en mm, lues dans M.PERCAGE."""
+    passage, avant = M.PERCAGE["vis60"]
+    ep = M.DE * 10
+    o = [f'<rect class="dg" x="0" y="0" width="60" height="{ep:g}"/>',
+         f'<rect class="dg" x="0" y="{ep:g}" width="60" height="40" style="filter:brightness(.92)"/>',
+         f'<path class="pvide" d="M27.5 0 L32.5 0 L32.5 {ep:g} L27.5 {ep:g} Z M25 0 L35 0 L32.5 3 L27.5 3 Z"/>',
+         f'<path class="pvide" d="M28.5 {ep:g} L31.5 {ep:g} L31.5 {ep + 30:g} L28.5 {ep + 30:g} Z"/>',
+         '<path class="pvis" d="M25.2 0 L34.8 0 L32 2.8 L32 56 L30 60 L28 56 L28 2.8 Z"/>']
+    for y in range(6, 56, 4):
+        o.append(f'<line class="pfil" x1="27.6" y1="{y}" x2="32.4" y2="{y + 2}"/>')
+    for y, t in ((ep / 2, f"pièce traversée : {passage}"), (ep + 15, f"pièce reçue : avant-trou {avant}")):
+        o.append(f'<text class="ptx" x="64" y="{y:g}">{escape(t)}</text>')
+    o.append(f'<text class="ptx muted" x="64" y="{ep + 36:g}">ruban adhésif sur le foret = butée de profondeur</text>')
+    return f'<svg viewBox="-4 -6 240 {ep + 50:g}" role="img" aria-label="Perçage type">{"".join(o)}</svg>'
+
+
+def comment_percer():
+    """Méthode commune à tous les vissages de la notice (deux forets, perçage droit, profondeur)."""
+    pl = M.AVANT_TROU_PLAN
+    return (f'<div class="fig percage">{percage_type()}</div><ul class="pistes">'
+            '<li><b>Toujours deux forets</b> : dans la pièce qu’on traverse, un trou du diamètre de la vis (la vis serre '
+            'les pièces au lieu de les écarter), fraisé pour noyer la tête ; dans la pièce reçue, un avant-trou plus fin '
+            '(le bois massif ne fend pas, l’aggloméré n’éclate pas). Les diamètres de chaque vissage sont dans le tableau '
+            'Perçages de l’étape.</li>'
+            '<li><b>Où</b> : chaque étape dessine les trous (points noirs sur la face par où on perce). En bout de pièce, '
+            'les trous sont dans l’axe, répartis sur la section ; le long d’une pièce, un trou près de chaque bout puis '
+            f'au plus tous les {M.PAS} cm.</li>'
+            '<li><b>Percer droit</b> : serrer les deux pièces en place (serre-joint, équerre), percer à travers la '
+            'première jusque dans la seconde avec le foret fin, puis repercer la première au diamètre de la vis, fraiser, '
+            'visser (sans colle).</li>'
+            f'<li><b>Profondeur</b> : un ruban adhésif sur le foret ; indispensable sous le plan de travail ({pl} mm au '
+            'plus dans le chêne) et dans la porte (vis 4 × 16 des supports).</li></ul>')
 
 
 def fixation_svg():
