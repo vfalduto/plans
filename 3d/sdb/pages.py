@@ -37,6 +37,17 @@ def mm(v):
     return f"{v * 10:.0f}"
 
 
+def lettres(n, fem=False):
+    """Petit nombre en toutes lettres (compté dans le modèle) ; au-delà de dix, en chiffres."""
+    mots = ["zéro", "une" if fem else "un", "deux", "trois", "quatre", "cinq", "six", "sept", "huit", "neuf", "dix"]
+    return mots[n] if 0 <= n < len(mots) else str(n)
+
+
+N_ECHELLES = len(M.ECHELLES)
+N_SACS = len(M.SACS)
+N_PORTES_HAUT = sum(1 for b in M.PIECES if b.rep == "K6")
+
+
 # ------------------------------------------------------------------ achats et prix
 def lignes_achats():
     """Calcul des achats, sans le HTML (sert aussi à PL.achats) : lignes (nom, réf., quantité, prix, stock) des
@@ -51,8 +62,8 @@ def lignes_achats():
         m = PL.code_meuble(code)
         if w is None:
             manque[m].append(M.QUINCAILLERIE[code])
-        else:
-            quinc[m].append((w[0], w[4], w[2], w[1], w[3]))
+        else:           # un article, ou une liste d'articles (chevilles, vis et rondelles)
+            quinc[m] += [(x[0], x[4], x[2], x[1], x[3]) for x in (w if isinstance(w, list) else [w])]
     non_chiffres = [f"{tot[c]} × {M.QUINCAILLERIE[c]}" for c in M.CONSOMMABLES if c not in M.WELDOM and tot[c]]
     bas_p = [p for st in ("G", "M18", "D") for p in cal[st]["bas"]]
     neufs = [p for st in cal for p in cal[st]["neufs"]]
@@ -71,15 +82,30 @@ def prix():
     return r
 
 
+_ECO = []
+
+
 def economie_commune():
-    """Pièces du caisson haut rangées dans les chutes des panneaux du meuble bas, et euros gagnés par rapport au caisson
+    """Calculée une fois (le calepinage du caisson haut seul est long). Pièces du caisson haut rangées dans les chutes des panneaux du meuble bas, et euros gagnés par rapport au caisson
     haut acheté seul (calepinage de ses seules pièces)."""
+    if _ECO:
+        return _ECO[0]
     cal = PL.calepinage()
     pieces = sum(1 for st in cal for p in cal[st]["bas"] for q in p.poses() if M.meuble(q[0]) == "haut")
     seul = CAL.calepinage([p for p in PL.debit() if M.meuble(p["rep"]) == "haut"])
     cout = lambda ps: sum(n * px for _, _, n, px, _ in PL.ligne_panneaux(ps))  # noqa: E731
     euros = cout([p for c in seul.values() for p in c["retenu"]["panneaux"]]) - cout([p for st in cal for p in cal[st]["neufs"]])
-    return dict(pieces=pieces, euros=round(euros, 2))
+    if not _ECO:
+        _ECO.append(dict(pieces=pieces, euros=round(euros, 2)))
+    return _ECO[0]
+
+
+def haut_dans_chutes():
+    """Vrai si des pièces du caisson haut se taillent dans les chutes du bas, et si le panneau retenu pour le haut est
+    celui des tablettes du meuble bas (même panneau acheté)."""
+    r = next(m for m in M.MATERIAUX_HAUT if m["retenu"])
+    meme = M.STOCK["K"] == M.STOCK["A"] and r["ref"] in {f["ref"] for f in M.PANNEAUX[M.STOCK["K"]]}
+    return meme and economie_commune()["pieces"] > 0
 
 
 # ------------------------------------------------------------------ gabarit commun
@@ -204,7 +230,7 @@ def materiaux_communs():
               'des tablettes du meuble bas, mais le caisson haut acheté seul reviendrait au même prix en tablettes neuves'
               if n else 'les chutes du meuble bas ne reçoivent aucune pièce du caisson haut')
     return (f'<p>Acheter les deux meubles ensemble ne fait aucune économie de panneau : {chutes}. On peut donc les '
-            'acheter séparément. Seuls les consommables (vis, chant, vernis) servent aux deux : on les achète une fois, '
+            'acheter séparément. Seuls les consommables (vis, chant, silicone, vernis) servent aux deux : on les achète une fois, '
             'avec le meuble bas.</p>')
 
 
@@ -216,7 +242,7 @@ def page_ensemble():
                      for v, d, x in M.CHANGEMENTS)
     corps = f"""{kicker("document V4")}
 <h1>Meuble linge</h1>
-<p class="pitch">Deux meubles, achetés et montés séparément. En bas, trois échelles en tasseaux portent un plan de travail en chêne à {cm(M.Z_DESSUS)} ; la machine est posée au sol dessous, et à côté une porte basculante en L ouvre deux sacs à linge. En haut, au-dessus de la niche, un caisson en mélaminé blanc jusqu'au plafond.</p>
+<p class="pitch">Deux meubles, achetés et montés séparément. En bas, {lettres(N_ECHELLES, True)} échelles en tasseaux portent un plan de travail en chêne à {cm(M.Z_DESSUS)} ; la machine est posée au sol dessous, et à côté une porte basculante en L ouvre {lettres(N_SACS)} sacs à linge. En haut, au-dessus de la niche, un caisson en mélaminé blanc jusqu'au plafond.</p>
 <div class="cartes2">
 <a class="carte2 bas" href="{PAGES["bas"]}"><b>Meuble bas →</b><span>Échelles, porte basculante, plan de travail : notice, découpe, achats ({PL.euros(p["bas"])})</span></a>
 <a class="carte2 haut" href="{PAGES["haut"]}"><b>Caisson haut →</b><span>Caisson, étagères, portes coulissantes : notice, découpe, achats ({PL.euros(p["haut"])})</span></a>
@@ -234,7 +260,7 @@ def page_ensemble():
 
 <h2 id="budget">Budget</h2>
 {table_budget(p)}
-<p class="note">Prix TTC relevés en ligne : {escape(M.MAGASIN["nom"])} ({escape(M.MAGASIN["adresse"])}), toile chez {escape(M.TOILE["magasin"])} le {M.TOILE["releve"]}. Détail ligne à ligne dans les pages <a href="{PAGES["bas"]}#achats">Meuble bas</a> et <a href="{PAGES["haut"]}#achats">Caisson haut</a>.</p>
+<p class="note">Prix TTC relevés en ligne : {escape(M.MAGASIN["nom"])} ({escape(M.MAGASIN["adresse"])}) le {M.MAGASIN["releve"]} et le {M.RELEVE_V6}, toile chez {escape(M.TOILE["magasin"])} le {M.TOILE["releve"]}. Détail ligne à ligne dans les pages <a href="{PAGES["bas"]}#achats">Meuble bas</a> et <a href="{PAGES["haut"]}#achats">Caisson haut</a>.</p>
 
 <p class="note">Repère : origine à l'angle nord-ouest intérieur, x vers l'est, y vers le sud, z depuis le sol, cotes en cm (débit en mm). Source : <span class="mono">3d/sdb/modele.py</span> ; pages : <span class="mono">3d/sdb/pages.py</span> (<span class="mono">just sdb</span>).</p>
 
@@ -266,7 +292,7 @@ def sacs():
     bw, bl = pt["bande"]
     sw, sh = pt["soufflet"]
     return (f'<h3>Sacs à coudre</h3><div class="fig"><div class="scroll">{PL.patron_svg()}</div>'
-            f'<p class="cap">Deux sacs dans {cm(M.TOILE["achat_m"])} m de toile en {pt["tissu"]} de laize. Chaque sac : '
+            f'<p class="cap">{lettres(N_SACS).capitalize()} sacs dans {cm(M.TOILE["achat_m"])} m de toile en {pt["tissu"]} de laize. Chaque sac : '
             f'une bande de {cm(bw)} × {cm(bl)} (devant, fond et dos, un fourreau à chaque bout) et deux soufflets en '
             f'trapèze de {cm(sh)} de haut, {cm(pt["soufflet_haut"])} en haut et {cm(pt["soufflet_bas"])} en bas ; '
             f'coutures de {cm(c)} comprises.</p></div>'
@@ -311,11 +337,12 @@ def decoupe(meuble):
         tabs = "".join(PL.tablette_svg(p, k + 1) for k, p in enumerate(cal["M18"]["bas"]))
         plan_ = "".join(PL.tablette_svg(p, "P") for p in cal["D"]["bas"])
         pd = M.PANNEAUX["D"][0]
+        chutes_bas = " Les pièces du caisson haut (en bleu) se taillent dans leurs chutes." if haut_dans_chutes() else ""
         lg = cal["D"]["bas"][0].poses()[0][3]
         figs = f"""<div class="fig"><div class="tabs">{barres}</div>
 <p class="cap">Tasseaux de {M.PANNEAUX["G"][0]["L"]} : chaque barre est tronçonnée (trait de scie de {CAL.TRAIT} compté). Scier les montants G3 ensemble pour qu'ils aient la même longueur. Les coins de calage se taillent dans les chutes.</p></div>
 <div class="fig"><div class="tabs">{tabs}</div>
-<p class="cap">Tablettes mélaminées achetées avec le meuble bas : refente en bandes sur la longueur, puis tronçonnage. Les pièces du caisson haut (en bleu) se taillent dans leurs chutes. Chants coupés visibles plaqués de chant thermocollant.</p></div>
+<p class="cap">Tablettes mélaminées achetées avec le meuble bas : refente en bandes sur la longueur, puis tronçonnage.{chutes_bas} Chants coupés visibles plaqués de chant thermocollant.</p></div>
 <div class="fig"><div class="tabs">{plan_}</div>
 <p class="cap">Plan de travail {pd["L"]} × {pd["l"]} × {mm(M.PT)} recoupé en longueur à {lg} : la profondeur reste celle de la tablette, chants d'usine devant et derrière. Chute de {pd["L"] - lg - CAL.TRAIT} × {pd["l"]} en chêne.</p></div>"""
     else:
@@ -364,7 +391,8 @@ def achats(meuble):
     o.append(f'<p>Total des deux meubles : <b>{PL.euros(p["total"])}</b>, pour un budget de {PL.euros(BUDGET)} '
              f'(<a href="{ENSEMBLE}#budget">détail</a>).</p>'
              f'<p class="note">Stock : nombre affiché sur la fiche produit pour ce magasin (« — » : non lu). Prix TTC '
-             f'relevés en ligne.</p>')
+             f'relevés en ligne le {M.MAGASIN["releve"]} et le {M.RELEVE_V6} (plan, vernis et consommables ajoutés en '
+             f'{M.VERSION}).</p>')
     return "\n".join(o)
 
 
@@ -377,12 +405,14 @@ def materiaux_haut():
         f'<td class="u">{escape(m["magasin"])}{" réf. " + m["ref"] if m["ref"] else ""}</td></tr>'
         for m in M.MATERIAUX_HAUT)
     r = next(m for m in M.MATERIAUX_HAUT if m["retenu"])
+    commun = (", et le même panneau que la porte et le plateau du meuble bas, dont les chutes reçoivent une partie du "
+              "caisson" if haut_dans_chutes() else "")
     return f"""<h2 id="materiaux">Matériaux possibles</h2>
 <p>Le caisson haut est au-dessus de la niche, loin des projections : il ne prend presque pas d'eau. Pas besoin de vernis marin ni de bois massif ; un panneau de {mm(min(m["ep"] for m in M.MATERIAUX_HAUT))} ou {mm(max(m["ep"] for m in M.MATERIAUX_HAUT))} mm suffit. Un panneau brut se peint (sous-couche, puis deux couches).</p>
 <div class="scroll"><table class="debit cmp"><thead><tr><th>Panneau</th><th class="num">Ép. (mm)</th><th>Format</th><th>Qualités</th><th>Défauts</th><th>Finition</th><th class="num">Prix</th><th>Magasin</th></tr></thead>
 <tbody>{corps}</tbody></table></div>
-<p><b>Retenu : {escape(r["nom"].lower())}</b>. Le moins cher qui convient : {escape(r["qualites"])}, rien à peindre, et le même panneau que la porte et le plateau du meuble bas, dont les chutes reçoivent une partie du caisson. Son défaut ({escape(r["defauts"])}) compte peu si haut : {escape(r["finition"])}. <span class="choix">Choix laissé au constructeur.</span></p>
-<p class="note">Prix TTC du panneau entier relevés en ligne le 26/10/2026, stock non lu.</p>"""
+<p><b>Retenu : {escape(r["nom"].lower())}</b>. Le moins cher qui convient : {escape(r["qualites"])}, rien à peindre{commun}. Son défaut ({escape(r["defauts"])}) compte peu si haut : {escape(r["finition"])}. <span class="choix">Choix laissé au constructeur.</span></p>
+<p class="note">Prix TTC du panneau entier relevés en ligne le {M.RELEVE_V6}, stock non lu.</p>"""
 
 
 def essence_plan():
@@ -412,8 +442,8 @@ def essence_plan():
 def page_meuble(meuble):
     assert meuble in PAGES, meuble
     pitch = {
-        "bas": f"Trois échelles en tasseaux de sapin debout sur le carrelage, le plan de travail en chêne posé sur leur tête à {cm(M.Z_DESSUS)}, la machine au sol dessous, et à côté la porte basculante en L qui ouvre deux sacs à linge.",
-        "haut": f"Le caisson de {cm(M.Z_HAUT)} à {cm(M.Z_HAUT1)}, au-dessus de la niche : serviettes au nord, pharmacie au sud, deux portes coulissantes, fileur jusqu'au plafond. Chevillé au mur du fond, au-dessus du carrelage.",
+        "bas": f"{lettres(N_ECHELLES, True).capitalize()} échelles en tasseaux de sapin debout sur le carrelage, le plan de travail en chêne posé sur leur tête à {cm(M.Z_DESSUS)}, la machine au sol dessous, et à côté la porte basculante en L qui ouvre {lettres(N_SACS)} sacs à linge.",
+        "haut": f"Le caisson de {cm(M.Z_HAUT)} à {cm(M.Z_HAUT1)}, au-dessus de la niche : serviettes au nord, pharmacie au sud, {lettres(N_PORTES_HAUT, True)} portes coulissantes, fileur jusqu'au plafond. Chevillé au mur du fond, au-dessus du carrelage.",
     }[meuble]
     fin = essence_plan() if meuble == "bas" else materiaux_haut()
     corps = f"""{kicker(TITRES[meuble].lower())}

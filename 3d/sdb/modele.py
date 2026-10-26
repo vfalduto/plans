@@ -906,7 +906,18 @@ WELDOM = {
     "tirefond": ("Lot de 4 tirefonds inox tête 6 pans Standers 8 × 60", 5.60, 1, None, "5618626"),
     "mousse": ("Lot de 20 mousses amortisseur adhésif blanc 8 × 16 mm", 3.49, 1, None, "85066295"),
     "vernis": None,     # V5.24 : quantité et pots calculés plus bas (VERNIS)
+    # V6.0 : consommables de la notice qui n'étaient pas chiffrés (relevé en ligne du RELEVE_V6, stock non lu)
+    "vis16": ("Lot de 400 vis acier tête fraisée Standers 4 × 16", 7.95, 1, None, "5618694"),
+    "silicone": ("Silicone d'étanchéité GEB 593350 blanc 310 ml (acétique, biocide)", 9.00, 1, None, "95216443"),
+    "cheville": [       # une ligne par article : chevilles, vis, rondelles
+        ("Cheville nylon multimatériaux Standers 8 × 50, sans vis, sachet de 8", 4.19, 1, None, "5589927"),
+        ("Lot de 10 vis acier tête plate Spax 6 × 70", 6.45, 1, None, "5621168"),
+        ("Lot de 26 rondelles acier zingué Standers Ø 6", 3.79, 1, None, "1094244"),
+    ],
+    "fraise": ("Coffret de 5 fraises droites pour défonceuse Tivoly Ø 4 à 12, queue 8 "
+               f"(Ø {RAINURE['l'] * 5:.0f} en deux passes) : si vous n'en avez pas", 34.90, 1, None, "79523976"),
 }
+RELEVE_V6 = "26/10/2026"    # V6.0 : relevé en ligne des prix Weldom (plan, matériaux du haut, vernis, consommables ajoutés)
 # Étapes de la notice : (titre, consigne courte, quincaillerie {code: quantité}). Les pièces de chaque étape sont celles
 # dont etape == numéro ; les perçages, ceux de TROUS.
 _n = lambda e, v: sum(1 for t in TROUS if t["etape"] == e and t["vis"] == v)   # noqa: E731
