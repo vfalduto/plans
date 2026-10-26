@@ -953,8 +953,8 @@ WELDOM = {
 }
 RELEVE_V6 = "26/10/2026"
 # V6.0 : budget TTC des deux meubles, consommables et achats faits ailleurs compris ; total accepté par le client
-BUDGET = dict(cible=400.00, accepte=417.32,
-              date="26/10/2026", decision="il garde tout sauf la fraise de défonceuse")    # V6.0 : relevé en ligne des prix Weldom (plan, matériaux du haut, vernis, consommables ajoutés)
+BUDGET = dict(cible=400.00, accepte=428.33,
+              date="26/10/2026", decision="il garde tout sauf la fraise de défonceuse, avec le 2ᵉ rouleau de chant et les vis 6 × 90")    # V6.0 : relevé en ligne des prix Weldom (plan, matériaux du haut, vernis, consommables ajoutés)
 # Étapes de la notice : (titre, consigne courte, quincaillerie {code: quantité}). Les pièces de chaque étape sont celles
 # dont etape == numéro ; les perçages, ceux de TROUS.
 _n = lambda e, v: sum(1 for t in TROUS if t["etape"] == e and t["vis"] == v)   # noqa: E731
@@ -1126,8 +1126,7 @@ CHANGEMENTS = [
      "joint G12, taillé dans une barre en rab du meuble bas. Notice : saillie du siphon à mesurer, mise de niveau avant "
      "les coins, méthode de perçage. Revue finale : chant thermocollant compté sur les chants coupés visibles ("
      "rouleaux de " + cm_(CHANT["rouleau"] / 1000) + " m), vis du caisson haut au mur de " + str(VIS_MUR["L"]) +
-     " (les 6 × 70 étaient trop courtes pour la cale et le fond), sans rondelle : le total change, à faire valider par "
-     "le client (budget de la page principale)."),
+     " (les 6 × 70 étaient trop courtes pour la cale et le fond), sans rondelle : nouveau total accepté par le client."),
     # V6.0 : texte figé aux valeurs de la V5.24 (plan de 26, contreplaqué de 12, vernis du plan et du caisson haut)
     ("V5.24", "26/10/2026",
      "Matériaux revus après passage en magasin (client). Plan de travail en hêtre massif lamellé-collé abouté "
