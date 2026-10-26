@@ -14,7 +14,7 @@
 import math
 from dataclasses import dataclass, field, replace
 
-VERSION = "V5.23"
+VERSION = "V5.24"
 H = 250                 # plafond (confirmé par le client)
 X0, X1 = 167, 234       # alcôve : bord ouest (ouverture) et mur du fond (est)
 Y0, Y1 = 0, 115         # alcôve : mur nord et mur sud (V5.6 : relevé client, fond 115 ; avant : 114)
@@ -25,7 +25,10 @@ FACE = X1 - PROF        # nu des façades et du plan : 174 (avant : 168,1, meubl
 
 # V3.1 : tout le meuble en tablettes mélaminées de 18 (seul panneau de 12 à 18 vendu au Weldom Saint-Barnabé), plan
 # de travail de 28 (format du magasin 1800 × 640). Les lettres A, B, C, S gardent les familles de pièces.
-T, F, B, PT, S = 1.8, 1.8, 1.8, 2.8, 1.8   # épaisseurs : caissons, fonds, bacs, plan, socle
+T, F, B, PT, S = 1.8, 1.8, 1.8, 2.6, 1.8   # épaisseurs : caissons, fonds, bacs, plan, socle
+# V5.24 (client, après passage en magasin) : plan en hêtre massif lamellé-collé abouté de 26 (avant : stratifié de 28) ;
+# caisson haut en contreplaqué de 12, le 18 est trop épais.
+TH = 1.2                # épaisseur du caisson haut (contreplaqué de feuillus 12)
 
 
 @dataclass
@@ -99,7 +102,7 @@ LL = dict(l=59.5, p=53, h=85, nom="lave-linge 59,5 × 53 × 85 (relevé client)"
 JEU_PLAN = 0.5          # entre le dessus de la machine et le dessous du plan (elle l'effleure sans toucher)
 Z_PLAN = SOCLE_H + LL["h"] + JEU_PLAN          # dessous du plan, posé sur la tête des échelles : 85,5
 Z_CADRE = Z_PLAN                               # tête des échelles
-Z_DESSUS = Z_PLAN + PT                         # dessus du plan : 88,3
+Z_DESSUS = Z_PLAN + PT                         # dessus du plan : 88,1
 Z_HAUT1 = H - 2         # dessus du caisson haut ; fileur jusqu'au plafond
 H_HAUT = 90             # hauteur du caisson haut (V3.4 : 96 → 90)
 Z_HAUT = Z_HAUT1 - H_HAUT                      # dessous du caisson haut (niche de Z_DESSUS à Z_HAUT) : 158
@@ -141,8 +144,9 @@ BORD, PAS = 4, 25
 PERCAGE = {
     "vis60": ("Ø 5 traversant + fraisure", "Ø 3, 30 de profondeur"),
     "vis40": ("Ø 4 traversant + fraisure", "Ø 2,5, 20 de profondeur"),
-    "vis40l": ("lamage Ø 10, 10 de profondeur, puis Ø 4 traversant",
-               "Ø 3, 12 de profondeur dans le plan (ruban sur le foret) : la vis y entre de 14"),
+    "vis40l": ("lamage Ø 10, 10 de profondeur, puis Ø 4 traversant, ovalisé à 8 d'avant en arrière sauf le trou avant "
+               "(le hêtre massif travaille en largeur)",
+               f"Ø 3, 12 de profondeur dans le plan (ruban sur le foret) : la vis y entre de {40 - (DE * 10 - 10):.0f}"),
     "vis16l": ("lamage Ø 10, 8 de profondeur, puis Ø 4 traversant",
                "Ø 2,5, 8 de profondeur dans la porte (ruban sur le foret) : la vis n'en traverse pas plus de 6"),
     "vis16": ("—", "Ø 2,5, 10 de profondeur (ruban sur le foret)"),
@@ -559,50 +563,51 @@ for e in ECHELLES.values():
 # Identique dans les deux versions : serviettes au nord, pharmacie et produits divers au sud, deux portes coulissantes.
 CH = dict(x0=X1 - 45, x1=X1, y0=Y0 + 0.5, y1=Y1 - 0.5, z0=Z_HAUT, z1=Z_HAUT1, retrait=6)
 _h = CH
-_hx = _h["x1"] - F
-_hy0, _hy1 = _h["y0"] + T, _h["y1"] - T
-_hz0, _hz1 = _h["z0"] + T, _h["z1"] - T
+_hx = _h["x1"] - TH
+_hy0, _hy1 = _h["y0"] + TH, _h["y1"] - TH
+_hz0, _hz1 = _h["z0"] + TH, _h["z1"] - TH
 
 
 def H_(*a, **k):
     return P(*a, miroir=False, groupe="caisson_haut", **k)
 
 
-H_("caisson", "ch_cote_n", _h["x0"], _hx, _h["y0"], _hy0, _h["z0"], _h["z1"], rep="A7", etape=8)
-H_("caisson", "ch_cote_s", _h["x0"], _hx, _hy1, _h["y1"], _h["z0"], _h["z1"], rep="A7", etape=8)
-H_("caisson", "ch_dessous", _h["x0"], _hx, _hy0, _hy1, _h["z0"], _hz0, rep="A8", etape=8)
-H_("caisson", "ch_dessus", _h["x0"], _hx, _hy0, _hy1, _hz1, _h["z1"], rep="A8", etape=8)
+H_("caisson", "ch_cote_n", _h["x0"], _hx, _h["y0"], _hy0, _h["z0"], _h["z1"], rep="K1", etape=8)
+H_("caisson", "ch_cote_s", _h["x0"], _hx, _hy1, _h["y1"], _h["z0"], _h["z1"], rep="K1", etape=8)
+H_("caisson", "ch_dessous", _h["x0"], _hx, _hy0, _hy1, _h["z0"], _hz0, rep="K2", etape=8)
+H_("caisson", "ch_dessus", _h["x0"], _hx, _hy0, _hy1, _hz1, _h["z1"], rep="K2", etape=8)
 _ym = CENTRE
-H_("caisson", "ch_montant", _h["x0"] + _h["retrait"], _hx, _ym - T / 2, _ym + T / 2, _hz0, _hz1, rep="A9", etape=8)
-# fond en deux moitiés (une tablette fait 600 de large), jointes derrière le montant central
-H_("fond", "ch_fond_n", _hx, _h["x1"], _h["y0"], CENTRE - 0.1, _h["z0"], _h["z1"], rep="C1", etape=8)
-H_("fond", "ch_fond_s", _hx, _h["x1"], CENTRE + 0.1, _h["y1"], _h["z0"], _h["z1"], rep="C1", etape=8)
+H_("caisson", "ch_montant", _h["x0"] + _h["retrait"], _hx, _ym - TH / 2, _ym + TH / 2, _hz0, _hz1, rep="K3", etape=8)
+# V5.24 : fond d'une seule pièce (la plaque de contreplaqué fait 1220 de large ; avant : deux moitiés de tablette)
+H_("fond", "ch_fond", _hx, _h["x1"], _h["y0"], _h["y1"], _h["z0"], _h["z1"], rep="K8", etape=8)
 CH["serviettes"] = 2    # étagères côté serviettes (nord) : 3 cases
 CH["pharmacie"] = 4     # étagères côté pharmacie (sud) : 5 cases
 _hi_h = _hz1 - _hz0
-CH["case_serviettes"] = (_hi_h - CH["serviettes"] * T) / (CH["serviettes"] + 1)
-CH["case_pharmacie"] = (_hi_h - CH["pharmacie"] * T) / (CH["pharmacie"] + 1)
-for cote, n, y0, y1, rep in (("n", CH["serviettes"], _hy0 + 0.2, _ym - T / 2 - 0.2, "A10"),
-                             ("s", CH["pharmacie"], _ym + T / 2 + 0.2, _hy1 - 0.2, "A11")):
-    case = (_hi_h - n * T) / (n + 1)
+CH["case_serviettes"] = (_hi_h - CH["serviettes"] * TH) / (CH["serviettes"] + 1)
+CH["case_pharmacie"] = (_hi_h - CH["pharmacie"] * TH) / (CH["pharmacie"] + 1)
+for cote, n, y0, y1, rep in (("n", CH["serviettes"], _hy0 + 0.2, _ym - TH / 2 - 0.2, "K4"),
+                             ("s", CH["pharmacie"], _ym + TH / 2 + 0.2, _hy1 - 0.2, "K5")):
+    case = (_hi_h - n * TH) / (n + 1)
     for k in range(n):
-        z = _hz0 + (k + 1) * case + k * T
-        H_("etagere", f"ch_etagere_{cote}{k + 1}", _h["x0"] + _h["retrait"] + 0.5, _hx - 0.3, y0, y1, z, z + T,
+        z = _hz0 + (k + 1) * case + k * TH
+        H_("etagere", f"ch_etagere_{cote}{k + 1}", _h["x0"] + _h["retrait"] + 0.5, _hx - 0.3, y0, y1, z, z + TH,
            rep=rep, etape=10)
 # portes coulissantes intérieures, recouvrement 3 au milieu. V5.4 : pas de kit, deux rainures à la défonceuse dans le
-# dessous du dessus et le dessus du dessous (A8) ; les portes glissent dedans sur des patins PTFE. Rainure du haut plus
-# profonde : on soulève la porte dedans pour la dégager de celle du bas.
-RAINURE = dict(l=2.0, haut=1.2, bas=0.5, bord=0.5, entre=1.0, prise=0.6)   # largeur, profondeurs, retraits (cm)
+# dessous du dessus et le dessus du dessous (K2) ; les portes glissent dedans sur des patins PTFE. Rainure du haut plus
+# profonde : on soulève la porte dedans pour la dégager de celle du bas. V5.24 : dans du contreplaqué de 12, rainures
+# de 14 (porte de 12 + 2 de jeu), 8 en haut et 4 en bas : il reste 4 mm de bois au-dessus de la rainure du haut.
+RAINURE = dict(l=TH + 0.2, haut=0.8, bas=0.4, bord=0.5, entre=1.0, prise=0.3)   # largeur, profondeurs, retraits (cm)
 _rn = RAINURE
+assert TH - _rn["haut"] >= 0.4 - 1e-9, "il reste au moins 4 mm de bois derrière la rainure du haut"
 RAINURE["x"] = [_h["x0"] + _rn["bord"] + k * (_rn["l"] + _rn["entre"]) for k in range(2)]   # bord avant des rainures
 assert _rn["haut"] - _rn["prise"] >= _rn["bas"] + 0.1, "la porte se soulève hors de la rainure du bas"
 assert RAINURE["x"][1] + _rn["l"] < _h["x0"] + _h["retrait"], "rainures devant le montant central"
 _lp = (_hy1 - _hy0 + 3) / 2
 _zp0, _zp1 = _hz0 - _rn["bas"], _hz1 + _rn["prise"]
 for k, (nom, y0, etiq) in enumerate((("n", _hy0, "Serviettes"), ("s", _hy1 - _lp, "Pharmacie et produits divers"))):
-    xa = RAINURE["x"][k] + (_rn["l"] - T) / 2
-    H_("porte", f"ch_porte_{nom}", xa, xa + T, y0, y0 + _lp, _zp0, _zp1, rep="A12", etape=10, etiq=etiq)
-H_("fileur", "ch_fileur", _h["x0"], _h["x0"] + T, _h["y0"], _h["y1"], _h["z1"], H, rep="A13", etape=10)
+    xa = RAINURE["x"][k] + (_rn["l"] - TH) / 2
+    H_("porte", f"ch_porte_{nom}", xa, xa + TH, y0, y0 + _lp, _zp0, _zp1, rep="K6", etape=10, etiq=etiq)
+H_("fileur", "ch_fileur", _h["x0"], _h["x0"] + TH, _h["y0"], _h["y1"], _h["z1"], H, rep="K7", etape=10)
 CH["porte"] = (_lp, _zp1 - _zp0)
 
 
@@ -618,10 +623,8 @@ for cote in ("ch_cote_n", "ch_cote_s"):
         visser(_pc[cote], _pc[b_], "vis40", 8)
 for b_ in ("ch_dessous", "ch_dessus"):
     visser(_pc[b_], _pc["ch_montant"], "vis40", 8)
-for f_ in ("ch_fond_n", "ch_fond_s"):
-    for b_ in ("ch_cote_n", "ch_cote_s", "ch_dessous", "ch_dessus", "ch_montant"):
-        if touche(_pc[f_], _pc[b_]):
-            visser(_pc[f_], _pc[b_], "vis40", 8)
+for b_ in ("ch_cote_n", "ch_cote_s", "ch_dessous", "ch_dessus", "ch_montant"):
+    visser(_pc["ch_fond"], _pc[b_], "vis40", 8)
 # fixation au mur du fond : de l'intérieur, à travers le fond. V5.8 : le carrelage s'arrête à CARRELAGE (relevé
 # client) : toutes les chevilles au-dessus, dans le mur nu (plus de perçage du carrelage) ; deux rangées de trois
 CARRELAGE = 204
@@ -633,8 +636,7 @@ _zf = (CARRELAGE + 6, _hz1 - 6)
 assert _zf[0] < _zf[1] - 10, "deux rangées de chevilles au-dessus du carrelage"
 for z in _zf:
     for y in (10, CENTRE - 8 if z == _zf[1] else CENTRE + 8, Y1 - 10):
-        f_ = _pc["ch_fond_n" if y < CENTRE else "ch_fond_s"]
-        trou(9, f_, None, "cheville", (_hx, y, z), (-1, 0, 0), f"6 trous au-dessus du carrelage ({CARRELAGE}) : deux "
+        trou(9, _pc["ch_fond"], None, "cheville", (_hx, y, z), (-1, 0, 0), f"6 trous au-dessus du carrelage ({CARRELAGE}) : deux "
              f"rangées à {cm_(_zf[0])} et {cm_(_zf[1])} du sol, à 10 des côtés et près du montant")
 
 # meuble de chaque repère (code couleur des découpes) : le caisson haut, le reste est le meuble bas
@@ -702,12 +704,14 @@ VERSIONS = {"d": "L basculant", "dr": "bacs à roulettes"}
 
 # ------------------------------------------------------------------ matériaux, débit, quincaillerie
 MATERIAUX = {
-    "A": ("Tablette mélaminée blanche 18 mm", "plateau et porte du bac, caisson haut (aggloméré non hydrofuge : chants "
+    "A": ("Tablette mélaminée blanche 18 mm", "plateau et porte du bac (aggloméré non hydrofuge : chants "
           "coupés à recouvrir de chant thermocollant blanc)", T),
     "B": ("Tablette mélaminée blanche 18 mm", "supports des barres (chutes)", T),
     "E": ("Barres", "barres rondes Ø 22 des sacs", 0),
-    "C": ("Tablette mélaminée blanche 18 mm", "fond du caisson haut, en deux moitiés", F),
-    "D": ("Plan de travail stratifié 28 mm", "décor chêne clair (« oak »), bords droits, 1800 × 640, non hydrofuge", PT),
+    "K": ("Contreplaqué de feuillus 12 mm", "tout le caisson haut, fond d'une pièce ; brut : vernis marin sur toutes "
+          "les faces et les chants", TH),
+    "D": ("Plan de travail hêtre massif lamellé-collé abouté 26 mm", "2500 × 650, brut, FSC : recoupé à " + f"{(YM1 - YM0) * 10:.0f}" + " × 600 "
+          "(la bande de 50 enlevée à l'arrière), vernis marin sur toutes les faces et les chants avant la pose", PT),
     "G": ("Tasseau sapin brut 38 × 38, non traité", "ossature du meuble bas : échelles, rails, contrefiches "
           "(non traité : poncer, puis peindre ou vernir toutes les faces, pieds compris)", DE),
 }
@@ -722,11 +726,16 @@ TABLETTES_18 = [
 ]
 PANNEAUX = {
     "M18": TABLETTES_18,
-    "D": [dict(L=1800, l=640, prix=36.50, stock=3, ref="5634115", nom="Plan de travail 1800 × 640 × 28 décor chêne clair (oak), bords droits")],
+    # V5.24 : plan livré (vendeur Forestea sur Leroy Merlin, aussi sur Castorama ; livraison annoncée « dès 69 € », à
+    # vérifier au panier) ; contreplaqué au rayon Castorama (relevés en ligne du 26/10/2026, stock non lu)
+    "D": [dict(L=2500, l=650, prix=99.00, stock=None, ref="90122893", magasin="Leroy Merlin (Forestea, livré)",
+               nom="Plan de travail hêtre massif lamellé collé abouté 2500 × 650 × 26 FSC")],
+    "K12": [dict(L=2440, l=1220, prix=84.90, stock=None, ref="3663602840541", magasin="Castorama",
+                 nom="Panneau contreplaqué de feuillus 244 × 122 × 12")],
     "G": [dict(L=2000, l=38, prix=23.60 / 6, lot=6, prix_lot=23.60, stock=12, ref="5634083",
                nom="Lot de 6 tasseaux sapin brut 38 × 38 × 2000, petits nœuds, FSC")],
 }
-STOCK = {"A": "M18", "B": "M18", "C": "M18", "D": "D", "G": "G"}   # matériau → panneau acheté
+STOCK = {"A": "M18", "B": "M18", "K": "K12", "D": "D", "G": "G"}   # matériau → panneau acheté
 FIL = ()                # repères à ne pas tourner (aucun : mélaminé uni ; les tasseaux ne tiennent qu'en long)
 MAGASIN = dict(nom="Weldom Marseille Saint-Barnabé", adresse="90 rue François Scaramelli, 13012 Marseille",
                tel="04 91 49 27 27", url="https://www.weldom.fr/m/weldom-marseille-saint-barnabe", releve="13/10/2026")
@@ -734,10 +743,10 @@ NOMS = {
     "G3": "Montant", "G4": "Lisse (basse ou haute)", "G5": "Rail (avant ou arrière)",
     "G11": "Écharpe d'échelle (diagonale)", "G7": "Contrefiche du L", "G8": "Lisse de barre (sous la lisse haute)", "G10": "Accroche centrale des barres arrière",
     "A3": "Plateau du bac", "A6": "Porte du bac", "B1": "Support de barre", "E4": "Barre du sac (ronde)",
-    "A7": "Côté du caisson haut", "A8": "Dessus et dessous du caisson haut", "A9": "Montant central haut",
-    "A10": "Étagère serviettes", "A11": "Étagère pharmacie et produits divers", "A12": "Porte coulissante",
-    "A13": "Fileur de plafond",
-    "C1": "Fond du caisson haut",
+    "K1": "Côté du caisson haut", "K2": "Dessus et dessous du caisson haut", "K3": "Montant central haut",
+    "K4": "Étagère serviettes", "K5": "Étagère pharmacie et produits divers", "K6": "Porte coulissante",
+    "K7": "Fileur de plafond",
+    "K8": "Fond du caisson haut",
     "D1": "Plan de travail",
 }
 USINAGES = {
@@ -767,17 +776,18 @@ USINAGES = {
           "lamages Ø 10 de 8 pour les vis 4 × 16",
     "E4": "Manche à balai coupé ou tringle de rideau de 2 m, Ø 20 à 25, en quatre demi-barres (une devant et une derrière "
           "par sac) ; glissées dans les fourreaux",
-    "A7": "Taquets Ø 5 pas 32 côté intérieur, à 6 cm du chant avant",
-    "A8": f"Deux rainures de {RAINURE['l'] * 10:.0f} de large à la défonceuse, sur toute la longueur, à "
+    "K1": "Taquets Ø 5 pas 32 côté intérieur, à 6 cm du chant avant",
+    "K2": f"Deux rainures de {RAINURE['l'] * 10:.0f} de large à la défonceuse, sur toute la longueur, à "
           f"{RAINURE['bord'] * 10:.0f} et {(RAINURE['bord'] + RAINURE['l'] + RAINURE['entre']) * 10:.0f} du chant avant : "
           f"{RAINURE['haut'] * 10:.0f} de profondeur sous le dessus, {RAINURE['bas'] * 10:.0f} sur le dessous",
-    "A12": f"Patins PTFE adhésifs sous le chant bas ; on la pose en la soulevant dans la rainure du haut "
+    "K6": f"Patins PTFE adhésifs sous le chant bas ; on la pose en la soulevant dans la rainure du haut "
            f"({RAINURE['haut'] * 10:.0f}) puis en la laissant descendre dans celle du bas ({RAINURE['bas'] * 10:.0f})",
-    "A9": "En retrait de 6 derrière les rails ; taquets sur les deux faces",
-    "D1": f"Recoupé de 1800 à 1134 ; au chant arrière, au-dessus du robinet, une encoche de {PASSE['l']} × "
-          f"{PASSE['p']} pour le tuyau d'arrivée (scie sauteuse) ; non hydrofuge : vernir ou siliconer la coupe et "
-          "l'encoche, joint silicone sur les murs",
-    "C1": "Deux moitiés, jointes derrière le montant central A9",
+    "K3": "En retrait de 6 derrière les rails ; taquets sur les deux faces",
+    "D1": f"Recoupé de 2500 à {(YM1 - YM0) * 10:.0f} et de 650 à 600 : la bande de 50 s'enlève à l'arrière (chant d'usine devant, la "
+          f"coupe va contre le mur) ; au chant arrière, au-dessus du robinet, une encoche de {PASSE['l']} × "
+          f"{PASSE['p']} pour le tuyau d'arrivée (scie sauteuse) ; vernis marin partout, coupes et encoche comprises, "
+          "avant la pose ; joint silicone sur les murs",
+    "K8": "D'une pièce ; six trous Ø 6 pour les chevilles, au-dessus du carrelage",
 }
 QUINCAILLERIE = {
     "vis60": "vis à bois 5 × 60 (assemblages des tasseaux)",
@@ -792,7 +802,9 @@ QUINCAILLERIE = {
     "patins": "patins glisseurs PTFE adhésifs 15 × 100, lot de 2 (sous les portes coulissantes)",
     "verin": "vérin de réglage M8 × 30, semelle plastique, 50 kg (un sous chaque montant)",
     "insert": "insert à visser M8 × 24 pour le bois (foret Ø 10), un par montant",
-    "fraise": "fraise droite Ø 20 pour défonceuse (ou Ø 10 en deux passes), rainures des portes coulissantes",
+    "fraise": f"fraise droite Ø {RAINURE['l'] * 10:.0f} pour défonceuse (ou Ø {RAINURE['l'] * 5:.0f} en deux passes), "
+              "rainures des portes coulissantes",
+    "vernis": "vernis marin incolore satiné, à l'eau (plan de travail et caisson haut, toutes les faces)",
     "led": "ruban LED 1,5 m 4000 K + profil alu",
     "silicone": "silicone sanitaire",
     "tirefond": "tire-fond inox 8 × 60, tête 6 pans (clé de 13) : butée du L, un par échelle du bac",
@@ -824,6 +836,7 @@ WELDOM = {
     "peinture": ("Peinture bois Luxens int./ext. blanc satiné 0,5 L (microporeuse, à l'eau)", 17.70, 1, 13, "5620869"),
     "tirefond": ("Lot de 4 tirefonds inox tête 6 pans Standers 8 × 60", 5.60, 1, None, "5618626"),
     "mousse": ("Lot de 20 mousses amortisseur adhésif blanc 8 × 16 mm", 3.49, 1, None, "85066295"),
+    "vernis": None,     # V5.24 : quantité et pots calculés plus bas (VERNIS)
 }
 # Étapes de la notice : (titre, consigne courte, quincaillerie {code: quantité}). Les pièces de chaque étape sont celles
 # dont etape == numéro ; les perçages, ceux de TROUS.
@@ -835,7 +848,10 @@ ETAPES = [
      "la niche à 126. Mesurer la machine pieds réglés au plus bas : les montants se coupent à sa hauteur plus "
      f"{JEU_PLAN * 10:.0f} mm. Relever l'alcôve en trois hauteurs : garder la plus petite largeur. Les tasseaux sont en "
      "sapin brut non traité : les couper, les poncer, puis les peindre en blanc (deux couches, le bout des pieds "
-     "compris) avant l'assemblage.", {"peinture": 1}),
+     "compris) avant l'assemblage. Le plan de travail en hêtre et les pièces du caisson haut en contreplaqué sont "
+     "bruts : les couper, poncer (grain 120 puis 180), dépoussiérer, puis passer trois couches de vernis marin sur "
+     "toutes les faces et tous les chants, égrenées entre deux couches (le dessous du plan aussi : une face non vernie "
+     "reprend l'humidité et le plan se voile).", {"peinture": 1, "vernis": 1}),
     ("Échelles", "Assembler les trois échelles à plat sur le sol : deux montants G3, la lisse basse G4 au ras du pied "
      "des montants et la lisse haute au ras de la tête ; dans les deux échelles du bac (nord et milieu), une lisse de "
      "barre G8 juste sous la lisse haute. Deux vis 5 × 60 à travers le montant dans chaque bout de lisse, sans colle. "
@@ -877,10 +893,13 @@ ETAPES = [
     ("Machine", "Poser le tapis au sol entre les échelles du milieu et du mur sud. Raccorder la machine (le tuyau "
      f"d'arrivée monte au robinet par le passe-tuyau), la glisser sur le tapis jusqu'à {JEU_LL} du mur du fond et régler les pieds : {JEU_PLAN * 10:.0f} mm sous la tête des échelles, donc sous le plan (une cale "
      "de 5 posée sur la machine doit passer juste sous une règle posée sur les échelles).", {"tapis": 1}),
-    ("Plan de travail", "Découper au chant arrière l'encoche du passe-tuyau, au droit du robinet. Le plan n'est pas "
-     "hydrofuge : passer du vernis (ou du silicone) sur la coupe et l'encoche. Poser le plan D1 sur la tête des "
-     "échelles. Le visser par-dessous à travers les lisses hautes : lamage Ø 10 de 10 dans la lisse, avant-trou de 12 "
-     "seulement dans le plan, la vis 4 × 40 y entre de 14. Joint silicone contre les murs. Sous le plan, au milieu du "
+    ("Plan de travail", "Recouper le plan : longueur " + f"{(YM1 - YM0) * 10:.0f}" + ", puis la profondeur de 650 à 600 en enlevant la bande de 50 "
+     "à l'arrière, chant d'usine devant (scie circulaire et rail, ou règle serrée, lame fine de 48 dents ou plus, face "
+     "visible dessous pour un trait net dessus ; un ruban de masquage sur le trait limite les éclats). Découper au chant "
+     "arrière l'encoche du passe-tuyau, au droit du robinet, puis vernir (étape 0). Poser le plan D1 sur la tête des "
+     "échelles. Le visser par-dessous à travers les lisses hautes : lamage Ø 10 de 10 dans la lisse, trous ovalisés "
+     "d'avant en arrière sauf le trou avant (le hêtre gonfle et se rétracte en largeur : les vis doivent le laisser "
+     "bouger), avant-trou de 12 seulement dans le plan, la vis 4 × 40 y entre de " + f"{40 - (DE * 10 - 10):.0f}" + ". Joint silicone contre les murs. Sous le plan, au milieu du "
      "bac, visser l'accroche centrale G10 (deux équerres, crochet tourné vers la porte). Poser chaque demi-barre arrière : "
      "un bout dans son support B1 (demi-lune), l'autre glissé dans le crochet puis "
      "retombé dans sa poche. Pour vider : basculer la porte (les sacs l'arrêtent à " + f"{BAC['angle']}" + "°), soulever "
@@ -889,21 +908,22 @@ ETAPES = [
      "garde le L à " + f"{BAC['angle']}" + "° : lever les deux). Repousser le L fermé à la main : à vide il reste ouvert "
      "à la butée.",
      {"vis40": _n(7, "vis40l"), "silicone": 1, "equerre_a": ACCROCHE_EQUERRES, "vis16": 4 * ACCROCHE_EQUERRES}),
-    ("Caisson haut", "Assembler les côtés A7, dessus et dessous A8, le montant A9, puis le fond C1 (vis 4 × 40, "
-     "avant-trous). Avant l'assemblage, rainurer le dessous du dessus et le dessus du dessous A8 à la défonceuse : deux "
+    ("Caisson haut", "Assembler les côtés K1, dessus et dessous K2, le montant K3, puis le fond K8 (vis 4 × 40, "
+     "avant-trou Ø 2,5 bien dans l'axe du chant de 12, à 15 au moins des angles pour ne pas fendre les plis). Avant "
+     "l'assemblage (et avant le vernis), rainurer le dessous du dessus et le dessus du dessous K2 à la défonceuse : deux "
      f"rainures de {RAINURE['l'] * 10:.0f} de large, {RAINURE['haut'] * 10:.0f} de profondeur en haut, "
      f"{RAINURE['bas'] * 10:.0f} en bas (règle de guidage, deux passes).", {"vis40": _n(8, "vis40"), "fraise": 1}),
     ("Pose du caisson haut", "Poser le caisson haut sur deux cales de " + f"{Z_HAUT - Z_DESSUS:.1f}".replace(".", ",") +
      " sur le plan (niche). Les chevilles sont toutes au-dessus du carrelage (" + f"{CARRELAGE}" + ") : marquer à "
      "travers le fond, retirer le caisson, percer le mur nu (détecteur de câbles d'abord), cheviller selon le mur, "
      "revisser le caisson (voir « Fixer le caisson haut au mur » en tête de notice).", {"cheville": 6}),
-    ("Finitions", "Étagères A10 et A11 ; portes A12 : coller les patins sous leur chant bas, les soulever dans la rainure du haut et les laisser descendre dans celle du bas ; fileur A13 ajusté au plafond, profil LED sous le caisson.",
+    ("Finitions", "Étagères K4 et K5 ; portes K6 : coller les patins sous leur chant bas, les soulever dans la rainure du haut et les laisser descendre dans celle du bas ; fileur K7 ajusté au plafond, profil LED sous le caisson.",
      {"taquet": 24, "led": 1, "silicone": 1, "patins": 2}),
 ]
 # V4.3 : les deux meubles s'achètent et se montent séparément ; les consommables forment une liste commune, achetée
 # avec le meuble bas
 MEUBLE_HAUT_ETAPES = (8, 9, 10)
-CONSOMMABLES = ("vis60", "vis40", "vis16", "colle", "silicone", "chant")
+CONSOMMABLES = ("vis60", "vis40", "vis16", "colle", "silicone", "chant", "vernis")
 POSE_HAUT = 9           # étape où le caisson haut monte sur ses cales (pas de nouvelle pièce)
 BAC["sac"] = (f"sac en tissu à soufflet : {cm_(PATRON['largeur'])} de large, {cm_(PATRON['fond'])} de fond, "
               f"{cm_(PATRON['hauteur'])} de haut, deux fourreaux de 10 de tour pour les barres")
@@ -913,7 +933,48 @@ QUINCAILLERIE["toile"] = (f"{cm_(TOILE['achat_m'])} m de {TOILE['nom'].lower()} 
                           f"{_eu(TOILE['prix_m'])} € le mètre, soit {_eu(TOILE['prix'])} € ({TOILE['magasin']}, "
                           f"relevé en ligne du {TOILE['releve']})")
 
+# V5.24 : vernis marin (client) sur le plan de travail en hêtre et sur tout le caisson haut en contreplaqué brut, toutes
+# les faces et les chants (le bois reprend l'humidité par la face non vernie et se voile). Syntilor incolore satiné en
+# phase aqueuse, rendement 12 m²/L par couche (fiche Weldom 5603010, relevée le 26/10/2026) ; trois couches.
+VERNIS = dict(couches=3, rendement=12, pots=[
+    dict(l=0.25, prix=20.90, ref="5703473", nom="Vernis marin Syntilor incolore satiné 0,25 L"),
+    dict(l=0.75, prix=37.50, ref="5603010", nom="Vernis marin Syntilor incolore satiné 0,75 L"),
+    dict(l=2.5, prix=69.90, ref="1085572", nom="Vernis marin Syntilor Ultra Protect incolore satiné 2,5 L"),
+])
+
+
+def _surface(b):
+    a, l, e = sorted((b.x1 - b.x0, b.y1 - b.y0, b.z1 - b.z0), reverse=True)
+    return (2 * a * l + 2 * (a + l) * e) / 1e4                  # m², deux faces et quatre chants
+
+
+VERNIS["m2"] = sum(_surface(b) for b in PIECES if b.rep[:1] in ("K", "D"))
+VERNIS["litres"] = VERNIS["m2"] * VERNIS["couches"] / VERNIS["rendement"]
+# pots : la combinaison la moins chère qui couvre le besoin (au plus trois pots de chaque)
+_combis = [(sum(n * p["prix"] for n, p in zip(c, VERNIS["pots"])), c) for c in
+           ((i, j, k) for i in range(4) for j in range(4) for k in range(3))
+           if sum(n * p["l"] for n, p in zip(c, VERNIS["pots"])) >= VERNIS["litres"]]
+VERNIS["achat"] = [(p, n) for p, n in zip(VERNIS["pots"], min(_combis)[1]) if n]
+for _k, (_pv, _nv) in enumerate(VERNIS["achat"]):     # une ligne d'achat par format de pot
+    _code = "vernis" if _k == 0 else f"vernis{_k + 1}"
+    WELDOM[_code] = (_pv["nom"], _pv["prix"], _nv, None, _pv["ref"])
+    if _k:
+        CONSOMMABLES += (_code,)
+        QUINCAILLERIE[_code] = _pv["nom"]
+QUINCAILLERIE["vernis"] = (f"vernis marin incolore satiné, à l'eau : {cm_(VERNIS['m2'])} m² (plan et caisson haut, "
+                           f"faces et chants) × {VERNIS['couches']} couches ≈ {cm_(VERNIS['litres'])} L")
+
 CHANGEMENTS = [
+    ("V5.24", "26/10/2026",
+     "Matériaux revus après passage en magasin (client). Plan de travail en hêtre massif lamellé-collé abouté "
+     "2500 × 650 × " + cm_(PT * 10) + " (Forestea, 99 €, livré ; Leroy Merlin réf. 90122893, aussi chez Castorama) au "
+     "lieu du stratifié de 28 : recoupé à " + f"{(YM1 - YM0) * 10:.0f}" + " × 600, la bande de 50 enlevée à l'arrière ; dessus à " + cm_(Z_DESSUS) +
+     ", niche de " + cm_(Z_HAUT - Z_DESSUS) + " ; trous de vis ovalisés dans les lisses (le massif travaille). Caisson "
+     "haut en contreplaqué de feuillus de 12 (Castorama, plaque 244 × 122 à 84,90 €) au lieu du mélaminé de 18 : "
+     "repères K1 à K8 (ex-A7 à A13 et C1), fond d'une seule pièce, rainures des portes de " +
+     f"{RAINURE['l'] * 10:.0f}" + " (" + f"{RAINURE['haut'] * 10:.0f}" + " en haut, " + f"{RAINURE['bas'] * 10:.0f}" +
+     " en bas). Vernis marin Syntilor incolore satiné, trois couches sur toutes les faces du plan et du caisson haut (≈ " +
+     cm_(VERNIS["litres"]) + " L)."),
     ("V5.23", "13/10/2026",
      "Variante IKEA METOD du caisson haut retirée (demande client) : bouton, dessins, section et comparatif de prix ; "
      "le caisson haut est fait maison."),

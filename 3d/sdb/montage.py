@@ -705,7 +705,7 @@ OUTILS = {
         "fausse équerre ou rapporteur (coupes des écharpes)",
         "scie sauteuse : encoche du plan, crochet de l'accroche centrale, supports B1",
         "scie circulaire et règle de guidage pour recouper le plan et les tablettes (ou découpe en magasin)",
-        "ponceuse ou cale à poncer, pinceau ou petit rouleau (peinture des tasseaux)",
+        "ponceuse (grains 120 et 180), pinceau ou petit rouleau (peinture des tasseaux, vernis marin du plan)",
         "fer à repasser (chant thermocollant) et cutter",
         "équerre de menuisier, niveau à bulle, mètre, crayon, serre-joints",
         "ruban adhésif (butée de profondeur sur les forets)",
@@ -716,10 +716,11 @@ OUTILS = {
     "haut": [
         "perceuse-visseuse et embouts cruciformes PZ2",
         "forets bois Ø 2,5 et 4 ; fraise à noyer",
-        "défonceuse, fraise droite Ø 20 (ou Ø 10 en deux passes) et règle de guidage : rainures des portes",
-        "scie circulaire et règle de guidage pour les tablettes (ou découpe en magasin)",
+        f"défonceuse, fraise droite Ø {M.RAINURE['l'] * 10:.0f} (ou Ø {M.RAINURE['l'] * 5:.0f} en deux passes) et "
+        "règle de guidage : rainures des portes",
+        "scie circulaire et règle de guidage pour le contreplaqué (ou découpe en magasin)",
+        "ponceuse (grains 120 et 180), pinceau ou rouleau laqueur : vernis marin, trois couches",
         "gabarit à taquets et foret Ø 5 avec butée (trous des étagères)",
-        "fer à repasser (chant thermocollant) et cutter",
         "perceuse à percussion ou perforateur, foret selon le mur (béton / maçonnerie Ø 8, ou foret bois-métal pour le placo)",
         "détecteur de câbles et de tuyaux (les prises de la niche et le robinet sont juste en dessous)",
         "niveau à bulle de 60 ou plus, mètre, crayon",
@@ -801,7 +802,7 @@ def fixation_haut():
     """Méthode de fixation du caisson haut : au-dessus du carrelage, à travers le fond, chevilles selon le mur."""
     zf = sorted({round(t["z"]) for t in M.TROUS if t["vis"] == "cheville"})
     etapes = [
-        f"<b>Où</b> : six vis à travers le fond C1, toutes au-dessus du carrelage (il s'arrête à {M.CARRELAGE}) : deux "
+        f"<b>Où</b> : six vis à travers le fond K8, toutes au-dessus du carrelage (il s'arrête à {M.CARRELAGE}) : deux "
         f"rangées de trois, à {zf[0]} et {zf[-1]} du sol, à 10 des côtés et de part et d'autre du montant central. Le "
         "carreau n'est jamais percé.",
         "<b>Le mur</b> : faire un trou d'essai dans la zone cachée par le caisson. Poussière rouge ou grise et dure : "

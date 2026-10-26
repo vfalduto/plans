@@ -465,10 +465,11 @@ def ligne_panneaux(panneaux):
     for stock, fmts in M.PANNEAUX.items():
         for fmt in fmts:
             n = sum(1 for p in panneaux if p.fmt["ref"] == fmt["ref"])   # panneaux copiés : comparer les réf.
+            nom = fmt["nom"] + (f" — {fmt['magasin']}" if "magasin" in fmt else "")   # V5.24 : hors Weldom
             if n and "lot" in fmt:          # vendu par lots
-                r.append((fmt["nom"], fmt["ref"], -(-n // fmt["lot"]), fmt["prix_lot"], fmt["stock"]))
+                r.append((nom, fmt["ref"], -(-n // fmt["lot"]), fmt["prix_lot"], fmt["stock"]))
             elif n:
-                r.append((fmt["nom"], fmt["ref"], n, fmt["prix"], fmt["stock"]))
+                r.append((nom, fmt["ref"], n, fmt["prix"], fmt["stock"]))
     return r
 
 
@@ -478,7 +479,7 @@ def liste(lignes, titre):
         f'<tr><td>{escape(nom)}</td><td class="mono">{ref}</td><td class="num">{n}</td><td class="num">{euros(px)}</td>'
         f'<td class="num">{euros(n * px)}</td><td class="num">{"—" if st is None else st}</td></tr>'
         for nom, ref, n, px, st in lignes)
-    return total, (f'<div class="scroll"><table class="debit"><thead><tr><th>Article Weldom</th><th>Réf.</th>'
+    return total, (f'<div class="scroll"><table class="debit"><thead><tr><th>Article (Weldom sauf mention)</th><th>Réf.</th>'
                    f'<th class="num">Qté</th><th class="num">Prix</th><th class="num">Total</th><th class="num">Stock</th>'
                    f'</tr></thead><tbody>{corps}</tbody><tfoot><tr><td colspan="4"><b>{escape(titre)}</b></td>'
                    f'<td class="num"><b>{euros(total)}</b></td><td></td></tr></tfoot></table></div>')
@@ -507,9 +508,9 @@ def comparatif_bac():
         cal_r = CAL.calepinage_meubles(debit())
     finally:
         M.PIECES = old
-    tab = lambda cal: sum(n * prix for _, _, n, prix, _ in ligne_panneaux(cal["M18"]["bas"]))  # noqa: E731
+    tab = lambda cal: sum(n * prix for _, _, n, prix, _ in ligne_panneaux(cal.get("M18", {}).get("bas", [])))  # noqa: E731 (V5.24 : sans le L, plus de mélaminé)
     bois = (tab(calepinage()), tab(cal_r))
-    assert len(cal_r["M18"]["neufs"]) == len(calepinage()["M18"]["neufs"]), "caisson haut inchangé"
+    assert len(cal_r["K12"]["neufs"]) == len(calepinage()["K12"]["neufs"]), "caisson haut inchangé"
     co, w = M.CORNO, M.WELDOM
     lignes = [
         ("Paniers", M.TOILE["prix"], f"toile des 2 sacs : {cm(M.TOILE['achat_m'])} m à {eur(M.TOILE['prix_m'])} "
@@ -555,12 +556,12 @@ def achats():
     t2, l2 = liste(ligne_panneaux(neufs) + quinc["haut"], "Achat 2 · caisson haut")
     barres = "".join(tablette_svg(p, k + 1) for k, p in enumerate(cal["G"]["bas"]))
     tabs1 = "".join(tablette_svg(p, k + 1) for k, p in enumerate(cal["M18"]["bas"]))
-    tabs2 = "".join(tablette_svg(p, len(cal["M18"]["bas"]) + k + 1) for k, p in enumerate(cal["M18"]["neufs"]))
+    tabs2 = "".join(tablette_svg(p, len(cal["M18"]["bas"]) + k + 1) for k, p in enumerate(cal["K12"]["neufs"]))
     plan_ = "".join(tablette_svg(p, "P") for p in cal["D"]["bas"])
-    reste = sum(1 for p in cal["M18"]["bas"] for q in p.poses() if M.meuble(q[0]) == "haut")
     mg = M.MAGASIN
     ail = lambda m: (f'<p><b>À acheter ailleurs</b> : {escape(" ; ".join(manque[m]))}.</p>' if manque[m] else "")  # noqa: E731
-    return f"""<p>Tout vient de <b>{escape(mg['nom'])}</b> ({escape(mg['adresse'])}, {mg['tel']}), en deux achats : le meuble bas d'abord, avec les consommables communs aux deux meubles ; le caisson haut ensuite, taillé d'abord dans les chutes des tablettes du bas (pièces en bleu sur les tablettes du bas : les garder), puis dans des tablettes neuves. Prix et stock relevés en ligne le {mg['releve']}.</p>
+    pd, pk = M.PANNEAUX["D"][0], M.PANNEAUX["K12"][0]
+    return f"""<p>Presque tout vient de <b>{escape(mg['nom'])}</b> ({escape(mg['adresse'])}, {mg['tel']}), en deux achats : le meuble bas d'abord, avec les consommables communs aux deux meubles (vernis compris) ; le caisson haut ensuite. Deux exceptions : le plan de travail en hêtre massif ({escape(pd['magasin'])}, réf. {pd['ref']}, livraison annoncée « dès 69 € » : à vérifier au panier ; même plan chez Castorama) et le contreplaqué de 12 du caisson haut ({escape(pk['magasin'])}, réf. {pk['ref']}, découpe sur mesure en magasin), aucun des deux au Weldom. Prix Weldom relevés en ligne le {mg['releve']}, plan et contreplaqué le 26/10/2026.</p>
 {LEGENDE}
 <h3>Consommables · communs aux deux meubles (avec l'achat 1)</h3>
 {l0}
@@ -568,20 +569,20 @@ def achats():
 {ail("commun")}
 
 <h3>Achat 1 · meuble bas</h3>
-<p>Ossature en tasseaux de sapin brut non traité 38 × 38 de 2 m, vendus par lots de 6, peints ou vernis ; tablettes mélaminées blanches de 18 ; plan de travail de 28.</p>
+<p>Ossature en tasseaux de sapin brut non traité 38 × 38 de 2 m, vendus par lots de 6, peints ou vernis ; tablettes mélaminées blanches de 18 (porte et plateau du L) ; plan de travail en hêtre massif lamellé-collé abouté de {cm(M.PT * 10)} mm, verni.</p>
 <div class="fig"><div class="tabs">{barres}</div>
 <p class="cap">Débit des tasseaux de 2000 : chaque barre est tronçonnée (trait de scie de {CAL.TRAIT} compté). Couper les six montants G3 ensemble pour qu'ils aient la même longueur.</p></div>
 <div class="fig"><div class="tabs">{tabs1}</div>
-<p class="cap">Tablettes du meuble bas : refente en bandes sur la longueur, puis tronçonnage (trait de scie compté). En bleu, {reste} pièces du caisson haut qui tiennent dans la chute : les tracer et les couper avec le bas, ou garder la chute. Les chants longs d'usine sont déjà plaqués ; les chants coupés visibles reçoivent un chant thermocollant.</p></div>
+<p class="cap">Tablettes du meuble bas : refente en bandes sur la longueur, puis tronçonnage (trait de scie compté). Les chants longs d'usine sont déjà plaqués ; les chants coupés visibles reçoivent un chant thermocollant.</p></div>
 <div class="fig"><div class="tabs">{plan_}</div>
-<p class="cap">Plan de travail 1800 × 640 × 28 recoupé à {cal['D']['bas'][0].poses()[0][3]}.</p></div>
+<p class="cap">Plan de travail {pd['L']} × {pd['l']} × {cm(M.PT * 10)} recoupé à {cal['D']['bas'][0].poses()[0][3]} × {cal['D']['bas'][0].poses()[0][4]} : la bande de {pd['l'] - cal['D']['bas'][0].poses()[0][4]} s'enlève à l'arrière, le chant d'usine reste devant. Il reste une chute de {pd['L'] - cal['D']['bas'][0].poses()[0][3] - CAL.TRAIT} × {pd['l']} en hêtre massif (étagère, tablette de la niche…).</p></div>
 {l1}
 {ail("bas")}
 
 <h3>Achat 2 · caisson haut</h3>
-<p>Les pièces du caisson haut qui ne tiennent pas dans les chutes du bas, dans {len(cal['M18']['neufs'])} tablettes neuves, et la quincaillerie du haut.</p>
+<p>Tout le caisson haut en contreplaqué de feuillus de 12 ({len(cal['K12']['neufs'])} plaque{"s" if len(cal['K12']['neufs']) > 1 else ""} de {pk['L']} × {pk['l']}), et la quincaillerie du haut. Faire débiter au magasin (découpe sur mesure) ou à la scie sur rail.</p>
 <div class="fig"><div class="tabs">{tabs2}</div>
-<p class="cap">Tablettes neuves du caisson haut.</p></div>
+<p class="cap">Contreplaqué du caisson haut : refente en bandes, puis tronçonnage (trait de scie compté).</p></div>
 {l2}
 {ail("haut")}
 <p><b>Total des deux achats : {euros(t0 + t1 + t2)}</b> (consommables {euros(t0)}, meuble bas {euros(t1)}, caisson haut {euros(t2)}).</p>
@@ -650,7 +651,7 @@ tr.mat td{background:var(--paper);font-weight:700;padding-top:12px}
 .tab svg{display:block;width:100%;height:auto}
 .tabt{font-size:13px;color:var(--muted);margin-bottom:3px}.tabt b{color:var(--ink)}
 .tb{fill:var(--tile);stroke:var(--ink);stroke-width:3}
-.pc{stroke:var(--ink);stroke-width:2;fill:var(--cab)}.pc.mB{fill:var(--bac)}.pc.mC{fill:var(--tall)}.pc.mS{fill:var(--socle)}.pc.mD{fill:var(--wood)}.pc.mG{fill:var(--dg)}
+.pc{stroke:var(--ink);stroke-width:2;fill:var(--cab)}.pc.mB{fill:var(--bac)}.pc.mC{fill:var(--tall)}.pc.mK{fill:var(--tall)}.pc.mS{fill:var(--socle)}.pc.mD{fill:var(--wood)}.pc.mG{fill:var(--dg)}
 .pc.bas{fill:var(--bas)}.pc.haut{fill:var(--haut)}
 .sw.bas{background:var(--bas)}.sw.haut{background:var(--haut)}
 tr.bas td:first-child{box-shadow:inset 5px 0 var(--bas)}tr.haut td:first-child{box-shadow:inset 5px 0 var(--haut)}
@@ -659,7 +660,7 @@ tr.bas td:first-child{box-shadow:inset 5px 0 var(--bas)}tr.haut td:first-child{b
 .pt.ps{font-size:40px}
 .pd{font:400 40px "JetBrains Mono",ui-monospace,monospace;fill:var(--muted);text-anchor:middle}
 .sw{display:inline-block;width:12px;height:12px;border-radius:3px;margin-right:8px;vertical-align:-1px;border:1px solid var(--ink)}
-.mA{background:var(--cab)}.mB{background:var(--bac)}.mC{background:var(--tall)}.mD{background:var(--wood)}.mS{background:var(--socle)}.mG{background:var(--dg)}.mE{background:#B9C2C8}
+.mA{background:var(--cab)}.mB{background:var(--bac)}.mC{background:var(--tall)}.mK{background:var(--tall)}.mD{background:var(--wood)}.mS{background:var(--socle)}.mG{background:var(--dg)}.mE{background:#B9C2C8}
 ul.pistes{padding-left:20px;max-width:860px}ul.pistes li{margin:6px 0}
 .cta{display:inline-block;margin:6px 0;padding:10px 16px;border-radius:8px;background:var(--ink);color:var(--paper);text-decoration:none;font-weight:700}
 svg text{font-family:Archivo,system-ui,sans-serif;fill:var(--ink)}
@@ -923,11 +924,13 @@ def contenu():
 <li><b>Hauteur de la machine</b> : {M.LL['h']} pieds réglés au plus (à mesurer avant de couper les montants) ; le dessous du plan est à {cm(M.Z_PLAN)}. Régler les pieds pour qu'une cale de 5 mm posée sur la machine passe juste sous une règle posée sur les échelles : elle effleure le plan sans le toucher, les vibrations ne passent pas au plan.</li>
 <li><b>Montants</b> : la hauteur du plan se joue sur leur longueur ({cm(M.Z_CADRE)}) : les couper ensemble, et vérifier la hauteur de la machine avant de couper. Sol irrégulier : caler sous les montants.</li>
 <li><b>Plan à {cm(M.Z_DESSUS)}</b> : machine {M.LL['h']} + {cm(M.JEU_PLAN)} de jeu + plan {cm(M.PT)} ; un peu bas pour plier debout si on est grand, et le hublot est plus bas qu'en V4 (machine au sol).</li>
-<li><b>Plan de travail</b> : vissé par-dessous à travers les lisses hautes, avec un lamage Ø 10 de 10 dans la lisse : la vis 4 × 40 traverse les 26 de tasseau restants et entre de 14 dans les 28 du plan ; avant-trou de 12 au plus dans le plan (ruban sur le foret).</li>
+<li><b>Plan de travail</b> : vissé par-dessous à travers les lisses hautes, avec un lamage Ø 10 de 10 dans la lisse : la vis 4 × 40 traverse les 28 de tasseau restants et entre de 12 dans les {cm(M.PT * 10)} du plan ; avant-trou de 12 au plus dans le plan (ruban sur le foret). Trous ovalisés d'avant en arrière, sauf le trou avant : le hêtre massif gonfle et se rétracte en largeur.</li>
+<li><b>Hêtre et salle de bain</b> : le hêtre est l'un des bois qui travaillent le plus avec l'humidité (de mémoire, non vérifié). D'où le vernis marin sur toutes les faces, dessous et coupes compris, avant la pose, les vis qui le laissent bouger, et le joint silicone souple contre les murs. Ne jamais laisser d'eau stagner sur le plan ; refaire une couche si le vernis s'use devant la machine.</li>
+<li><b>Recoupe à 60</b> : le plan fait 65 ; on enlève la bande de 5 à l'arrière (elle va contre le mur, le chant d'usine reste devant). Scie circulaire sur rail ou contre une règle serrée, lame fine (48 dents ou plus), face visible dessous, ruban de masquage sur le trait. Le plan est livré : pas de découpe au magasin.</li>
 <li><b>Machine</b> : elle tient entre l'échelle du caisson et celle du mur sud, sur le tapis antivibration (0,6 de jeu de chaque côté).</li>
 <li><b>Porte d'entrée</b> : gonds à {M.GONDS} du mur du fond (relevé), vantail de {M.PORTE['l']}, ouvert à {cm(M.FACE - leaf()[2])} de la façade ; on bascule le bac et on charge la machine porte fermée.</li>
 <li><b>Robinet</b> d'arrêt quart de tour remonté dans la niche à {M.ROBINET['z']} (66 aujourd'hui), à 41 du mur sud ; d'après la NF C 15-100 (de mémoire, non vérifié ; à valider par l'électricien), circuit 20 A spécialisé pour la machine et prises hors des volumes 1 et 2.</li>
-<li><b>Humidité</b> : les tasseaux sont en sapin brut non traité : poncés puis peints ou vernis sur toutes les faces, le bout des pieds compris (ils sont posés sur le carrelage ; une fuite de la machine ne doit pas les tremper). Peinture blanche : l'ossature se fond avec le mélaminé. Les tablettes sont en aggloméré mélaminé non hydrofuge : tous les chants coupés sont plaqués, le plan est siliconé contre les murs. Sous la machine, le tapis antivibration fait aussi bac.</li>
+<li><b>Humidité</b> : les tasseaux sont en sapin brut non traité : poncés puis peints ou vernis sur toutes les faces, le bout des pieds compris (ils sont posés sur le carrelage ; une fuite de la machine ne doit pas les tremper). Peinture blanche : l'ossature se fond avec le mélaminé. Les tablettes (porte et plateau du L) sont en aggloméré mélaminé non hydrofuge : tous les chants coupés sont plaqués. Plan en hêtre et caisson haut en contreplaqué : trois couches de vernis marin sur toutes les faces et tous les chants ; plan siliconé contre les murs. Sous la machine, le tapis antivibration fait aussi bac.</li>
 <li><b>Murs</b> : carrelés jusqu'à {M.CARRELAGE} (relevé). Le meuble bas n'est fixé à aucun mur ; le caisson haut est chevillé au-dessus du carrelage, dans le mur nu : aucun perçage dans le carreau. Chevilles adaptées au mur (à vérifier : brique, placo, béton ?). Joint silicone entre plan et carrelage.</li>
 <li><b>Charnières plates</b> : leurs lames se logent entre le rail et le plateau (≈ 1 mm, sans entaille) ; vis de 16 dans le rail, de 12 au plus dans le plateau (aggloméré de 18).</li>
 <li><b>Alcôve</b> : mesurer la largeur en trois hauteurs ; au-delà de 5 mm d'écart, prévoir des fileurs.</li>
