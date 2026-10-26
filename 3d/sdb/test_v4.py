@@ -76,3 +76,9 @@ def test_pages():
             assert sec in h, sec
     assert all(m["nom"] in haut for m in M.MATERIAUX_HAUT)
     assert all(e["nom"] in bas for e in M.ESSENCES_PLAN)
+
+
+def test_plus_de_v3():
+    racine = os.path.join(os.path.dirname(__file__), "..", "..")
+    assert not os.path.exists(os.path.join(racine, "sdb-meuble-v3.html"))
+    assert not hasattr(M, "PANIERS")

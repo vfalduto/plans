@@ -1,4 +1,4 @@
-# Génère sdb-meuble-v3-montage.html : notice de montage façon IKEA (pièces, quincaillerie, étapes) depuis modele.py.
+# Aides de la notice de montage (dessins en perspective, pièces, outils, fixations) ; les pages sont générées par pages.py.
 #
 #   python3 3d/sdb/montage.py           (just sdb)
 #
@@ -15,7 +15,6 @@ sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 import modele as M  # noqa: E402
 import plan as PL  # noqa: E402
 
-OUT = os.path.join(PL.ROOT, PL.NOTICE)
 
 # ------------------------------------------------------------------ projection
 C30, S30 = math.cos(math.radians(30)), math.sin(math.radians(30))
@@ -616,17 +615,8 @@ def carte_piece(p):
             f'<div class="cdim mono">{p["L"]} × {sec}</div></div>')
 
 
-def vue_eclatee(c):
-    s = 1 if c == "d" else -1
-    decale = {"bac": (-75, 0, 0), "cadre": (0, 0, 22),
-              "plan": (0, 0, 48), "caisson_haut": (0, 0, 85), "machine": (-45, 0, 0), "caisson": (-20, 0, 0)}
-    tout = [b for b in M.version(c) if b.role not in ("prise", "led")]
-    return dessin(tout, decale=decale, reperes=False, titre="Vue éclatée")
 
 
-def vue_ensemble(c):
-    tout = [b for b in M.version(c) if b.role not in ("prise",)]
-    return dessin(tout, murs=True, reperes=False, titre="Meuble monté")
 
 
 CSS = PL.CSS + """
@@ -852,93 +842,9 @@ def fixation_haut():
     return fixation_svg() + '<ol class="pistes">' + "".join(f"<li>{e}</li>" for e in etapes) + "</ol>"
 
 
-def percage_type():
-    """Coupe d'un vissage type : pièce traversée (passage + fraisure), pièce reçue (avant-trou), vis."""
-    o = []
-    o.append('<rect class="dg" x="0" y="0" width="60" height="33"/>')
-    o.append('<rect class="dg" x="0" y="33" width="60" height="40" style="filter:brightness(.92)"/>')
-    o.append('<path class="pvide" d="M27.5 0 L32.5 0 L32.5 33 L27.5 33 Z M25 0 L35 0 L32.5 3 L27.5 3 Z"/>')
-    o.append('<path class="pvide" d="M28.5 33 L31.5 33 L31.5 63 L28.5 63 Z"/>')
-    o.append('<path class="pvis" d="M25.2 0 L34.8 0 L32 2.8 L32 60 L30 64 L28 60 L28 2.8 Z"/>')
-    for y in range(6, 60, 4):
-        o.append(f'<line class="pfil" x1="27.6" y1="{y}" x2="32.4" y2="{y + 2}"/>')
-    lab = [(0, 16, "pièce traversée : passage Ø 5 (vis Ø 5) + fraisure"), (0, 50, "pièce reçue : avant-trou Ø 3, 30 de profondeur")]
-    for x, y, t in lab:
-        o.append(f'<text class="ptx" x="64" y="{y}">{escape(t)}</text>')
-    o.append('<text class="ptx muted" x="64" y="70">ruban adhésif sur le foret = butée de profondeur</text>')
-    return f'<svg viewBox="-4 -6 240 84" role="img" aria-label="Perçage type">{"".join(o)}</svg>' 
 
 
-def contenu():
-    deb = PL.debit()
-    cartes = "".join(carte_piece(p) for p in deb)
-    haut0 = M.MEUBLE_HAUT_ETAPES[0]
-    legende = ('<p class="note">Plans des sous-ensembles : vue éclatée, puis chaque pièce à plat, face par face, cotes '
-               'en mm depuis le coin en bas à gauche. <span class="lg fta"></span> on perce à travers (passage, fraisure '
-               'ou lamage) · <span class="lg ftb"></span> avant-trou de la vis qui arrive · <span class="lg fent"></span> '
-               'entaille.</p>')
-    etapes = (bloc_etape(0) +
-              '<h2 class="partie">Meuble bas</h2>' + legende + plans_sous_ensembles("bas") +
-              "".join(bloc_etape(n) for n in range(1, haut0)) +
-              '<h2 class="partie haut">Caisson haut</h2>' + plans_sous_ensembles("haut") +
-              "".join(bloc_etape(n) for n in range(haut0, len(M.ETAPES))))
-    return f"""<div class="kicker">Salle de bain · meuble linge {M.VERSION} · notice de montage</div>
-<h1>Notice de montage</h1>
-<p class="pitch">{len(M.ETAPES) - 1} étapes, des échelles au caisson haut. Dans chaque dessin, les pièces de l'étape sont en orange avec leur repère, celles déjà posées en blanc, et les trous à percer en points noirs ; le tableau Perçages de chaque étape donne forets, vis et positions.</p>
-
-<h2>Le meuble</h2>
-<div class="deux">
-<div class="fig"><div class="vd">{vue_ensemble("d")}</div><p class="note">Meuble monté, vu depuis la salle de bain.</p></div>
-<div class="fig"><div class="vd">{vue_eclatee("d")}</div><p class="note">Vue éclatée : échelles et tire-fonds de butée, rails, porte basculante en L, barres et sacs, plan, caisson haut.</p></div>
-</div>
-
-<h2>Pièces</h2>
-<div class="cartes">{cartes}</div>
-<p class="note">Cotes en mm (longueur × largeur × épaisseur). Liste complète avec usinages : <a href="{os.path.basename(PL.OUT)}#debit">page des plans, Débit</a>.</p>
-
-<h2>Quincaillerie</h2>
-<div class="hws">{puces_quinc(sum((Counter(q) for _, _, q in M.ETAPES), Counter()))}</div>
-
-<h2>Outils</h2>
-<h3>Meuble bas</h3>
-<ul class="outils">{"".join(f"<li>{escape(o)}</li>" for o in OUTILS["bas"])}</ul>
-<h3>Caisson haut</h3>
-<ul class="outils">{"".join(f"<li>{escape(o)}</li>" for o in OUTILS["haut"])}</ul>
-
-<h2>Fixer le caisson haut au mur</h2>
-{fixation_haut()}
-
-<h2>Comment percer</h2>
-<div class="fig percage">{percage_type()}</div>
-<ul class="pistes">
-<li><b>Toujours deux forets</b> : dans la pièce qu'on traverse, un trou du diamètre de la vis (la vis serre les pièces au lieu de les écarter), fraisé pour noyer la tête ; dans la pièce reçue, un avant-trou plus fin (le bois massif ne fend pas, l'aggloméré n'éclate pas).</li>
-<li><b>Où</b> : chaque étape dessine les trous (points noirs sur la face par où on perce) et donne leur position dans le tableau Perçages. En bout de pièce, deux trous dans l'axe, au tiers et aux deux tiers de la section.</li>
-<li><b>Percer droit</b> : serrer les deux pièces en place (serre-joint, équerre), percer à travers la première jusque dans la seconde avec le foret fin, puis repercer la première au diamètre de la vis, fraiser, encoller, visser.</li>
-<li><b>Profondeur</b> : un ruban adhésif sur le foret ; indispensable sous le plan de travail (8 mm au plus).</li>
-</ul>
-
-{etapes}
-
-<p class="note">Notice générée depuis <span class="mono">3d/sdb/modele.py</span> par <span class="mono">3d/sdb/montage.py</span> (<span class="mono">just sdb</span>).</p>
-"""
 
 
-def page():
-    return f"""{PL.entete("Notice meuble linge", "", CSS)}
-<body>
-{PL.barre("", notice=False)}
-<nav class="toc" aria-label="Sommaire"><button type="button" class="tbtn" aria-expanded="true">Sommaire</button><ol></ol></nav>
-<main class="wrap">
-<div class="ver" data-v="courante">{contenu()}</div>
-</main>
-<script>{PL.ANCRES}</script>
-<script>{PL.SCRIPT % {"cle": PL.CLE}}</script>
-</body>
-</html>
-"""
 
 
-if __name__ == "__main__":
-    with open(OUT, "w", encoding="utf-8") as fh:
-        fh.write(page())
-    print(OUT)

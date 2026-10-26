@@ -705,28 +705,15 @@ assert CORNO["jeu_cote"] > 1, "les deux paniers passent entre les échelles"
 _cx0 = FACE + _co["recul"]                      # V5.18 : sans porte, au nu du plan à recul près
 assert _cx0 + _co["p"] < RAILS[1].x0, "les paniers s'arrêtent devant le rail arrière"
 assert _co["h"] < ECHELLES["n"]["barre"].z0 - 1, "les paniers passent sous les lisses de barre"
-PANIERS = [Bloc("panier", f"panier_{k + 1}", _cx0, _cx0 + _co["p"], y, y + _co["l"], 0, _co["h"], etape=5, groupe="bac",
-                etiq="")
-           for k, y in enumerate((_cy0, _cy0 + _co["l"] + _co["entre"]))]
 CORNO["place"] = dict(l=_yi1 - _yi0, p=RAILS[1].x0 - FACE, h=ECHELLES["n"]["barre"].z0)
-# pièces du L retirées (porte, rail avant, butée, plateau, contrefiches, supports, barres, accroche) ; G8 et écharpes restent
-RETIRES_ROUL = ({"rail_av", "plateau", "bac_porte", "accroche_centrale"} | {c_.nom for c_ in CONTREFICHES}
-                | {b.nom for b in PIECES if b.role in ("support", "barre")} | {b_.nom for b_ in BUTEES})
-VOLUME_ROUL = 2 * _co["litres"]
 
 
 def version(c="d"):
-    """Pièces et équipements de la version c : "d" (L basculant) ou "dr" (linge sale en deux paniers à roulettes).
-    V5.23 : la variante du caisson haut en IKEA METOD (V5.2) est retirée."""
-    pieces = list(PIECES)
-    if c.endswith("r"):
-        pieces = [b for b in pieces if b.nom not in RETIRES_ROUL] + PANIERS
-    else:
-        pieces += SACS
-    return pieces + EQUIPEMENTS
+    """Pièces et équipements de la version c ("d" : L basculant, avec ses sacs).
+    V5.23 : la variante du caisson haut en IKEA METOD (V5.2) est retirée ; V6.0 : celle des bacs à roulettes aussi
+    (CORNO ne sert plus qu'à la note du document)."""
+    return list(PIECES) + SACS + EQUIPEMENTS
 
-
-VERSIONS = {"d": "L basculant", "dr": "bacs à roulettes"}
 
 # ------------------------------------------------------------------ matériaux, débit, quincaillerie
 # Panneaux du commerce pour le calepinage, par matériau (Weldom Marseille Saint-Barnabé, prix TTC, stock lu sur la fiche
