@@ -14,7 +14,7 @@
 import math
 from dataclasses import dataclass, field, replace
 
-VERSION = "V5.24"
+VERSION = "V6.0"
 H = 250                 # plafond (confirmé par le client)
 X0, X1 = 167, 234       # alcôve : bord ouest (ouverture) et mur du fond (est)
 Y0, Y1 = 0, 115         # alcôve : mur nord et mur sud (V5.6 : relevé client, fond 115 ; avant : 114)
@@ -25,10 +25,12 @@ FACE = X1 - PROF        # nu des façades et du plan : 174 (avant : 168,1, meubl
 
 # V3.1 : tout le meuble en tablettes mélaminées de 18 (seul panneau de 12 à 18 vendu au Weldom Saint-Barnabé), plan
 # de travail de 28 (format du magasin 1800 × 640). Les lettres A, B, C, S gardent les familles de pièces.
-T, F, B, PT, S = 1.8, 1.8, 1.8, 2.6, 1.8   # épaisseurs : caissons, fonds, bacs, plan, socle
+T, F, B, PT, S = 1.8, 1.8, 1.8, 1.8, 1.8   # épaisseurs : caissons, fonds, bacs, plan, socle
 # V5.24 (client, après passage en magasin) : plan en hêtre massif lamellé-collé abouté de 26 (avant : stratifié de 28) ;
 # caisson haut en contreplaqué de 12, le 18 est trop épais.
-TH = 1.2                # épaisseur du caisson haut (contreplaqué de feuillus 12)
+# V6.0 (demande client : budget de 400 €, protection au juste niveau) : plan en chêne lamellé-collé de 18 (tablette
+# Weldom) ; caisson haut de nouveau en tablettes mélaminées blanches de 18, sans vernis.
+TH = 1.8                # épaisseur du caisson haut (tablette mélaminée 18)
 
 
 @dataclass
@@ -102,7 +104,7 @@ LL = dict(l=59.5, p=53, h=85, nom="lave-linge 59,5 × 53 × 85 (relevé client)"
 JEU_PLAN = 0.5          # entre le dessus de la machine et le dessous du plan (elle l'effleure sans toucher)
 Z_PLAN = SOCLE_H + LL["h"] + JEU_PLAN          # dessous du plan, posé sur la tête des échelles : 85,5
 Z_CADRE = Z_PLAN                               # tête des échelles
-Z_DESSUS = Z_PLAN + PT                         # dessus du plan : 88,1
+Z_DESSUS = Z_PLAN + PT                         # dessus du plan : 87,3 (V6.0 ; avant : 88,1)
 Z_HAUT1 = H - 2         # dessus du caisson haut ; fileur jusqu'au plafond
 H_HAUT = 90             # hauteur du caisson haut (V3.4 : 96 → 90)
 Z_HAUT = Z_HAUT1 - H_HAUT                      # dessous du caisson haut (niche de Z_DESSUS à Z_HAUT) : 158
@@ -145,7 +147,7 @@ PERCAGE = {
     "vis60": ("Ø 5 traversant + fraisure", "Ø 3, 30 de profondeur"),
     "vis40": ("Ø 4 traversant + fraisure", "Ø 2,5, 20 de profondeur"),
     "vis40l": ("lamage Ø 10, 10 de profondeur, puis Ø 4 traversant, ovalisé à 8 d'avant en arrière sauf le trou avant "
-               "(le hêtre massif travaille en largeur)",
+               "(le chêne massif travaille en largeur)",
                f"Ø 3, 12 de profondeur dans le plan (ruban sur le foret) : la vis y entre de {40 - (DE * 10 - 10):.0f}"),
     "vis16l": ("lamage Ø 10, 8 de profondeur, puis Ø 4 traversant",
                "Ø 2,5, 8 de profondeur dans la porte (ruban sur le foret) : la vis n'en traverse pas plus de 6"),
@@ -547,7 +549,7 @@ TOILE["prix"] = round(TOILE["achat_m"] * TOILE["prix_m"], 2)
 # V5.7 : plus de trappe. Le robinet d'arrêt est remonté dans la niche, au-dessus du plan (décision client), à 41 du mur
 # sud : on l'atteint sans rien ouvrir, et la machine recule vers le mur du fond. Le tuyau d'arrivée monte derrière le
 # plan par une encoche au chant arrière (passe-tuyau).
-PLAN_P = PROF           # V5.10 : plan de 60, recoupé dans le 1800 × 640 × 28 du commerce
+PLAN_P = PROF           # V5.10 : plan de 60 ; V6.0 : la tablette chêne fait déjà 600 de profondeur
 PLAN_X1 = FACE + PLAN_P                        # contre le mur du fond (joint silicone)
 ROBINET = dict(y=Y1 - 41, z=round(Z_DESSUS + 15))
 PASSE = dict(l=6, p=4)                         # encoche du passe-tuyau : 6 de large, 4 de profondeur dans le chant arrière
@@ -578,8 +580,10 @@ H_("caisson", "ch_dessous", _h["x0"], _hx, _hy0, _hy1, _h["z0"], _hz0, rep="K2",
 H_("caisson", "ch_dessus", _h["x0"], _hx, _hy0, _hy1, _hz1, _h["z1"], rep="K2", etape=8)
 _ym = CENTRE
 H_("caisson", "ch_montant", _h["x0"] + _h["retrait"], _hx, _ym - TH / 2, _ym + TH / 2, _hz0, _hz1, rep="K3", etape=8)
-# V5.24 : fond d'une seule pièce (la plaque de contreplaqué fait 1220 de large ; avant : deux moitiés de tablette)
-H_("fond", "ch_fond", _hx, _h["x1"], _h["y0"], _h["y1"], _h["z0"], _h["z1"], rep="K8", etape=8)
+# V6.0 : fond de nouveau en deux moitiés (une tablette fait 600 de large), jointes derrière le montant central
+# (V5.24 : d'une pièce, dans la plaque de contreplaqué de 1220)
+H_("fond", "ch_fond_n", _hx, _h["x1"], _h["y0"], CENTRE - 0.1, _h["z0"], _h["z1"], rep="K8", etape=8)
+H_("fond", "ch_fond_s", _hx, _h["x1"], CENTRE + 0.1, _h["y1"], _h["z0"], _h["z1"], rep="K8", etape=8)
 CH["serviettes"] = 2    # étagères côté serviettes (nord) : 3 cases
 CH["pharmacie"] = 4     # étagères côté pharmacie (sud) : 5 cases
 _hi_h = _hz1 - _hz0
@@ -595,8 +599,9 @@ for cote, n, y0, y1, rep in (("n", CH["serviettes"], _hy0 + 0.2, _ym - TH / 2 - 
 # portes coulissantes intérieures, recouvrement 3 au milieu. V5.4 : pas de kit, deux rainures à la défonceuse dans le
 # dessous du dessus et le dessus du dessous (K2) ; les portes glissent dedans sur des patins PTFE. Rainure du haut plus
 # profonde : on soulève la porte dedans pour la dégager de celle du bas. V5.24 : dans du contreplaqué de 12, rainures
-# de 14 (porte de 12 + 2 de jeu), 8 en haut et 4 en bas : il reste 4 mm de bois au-dessus de la rainure du haut.
-RAINURE = dict(l=TH + 0.2, haut=0.8, bas=0.4, bord=0.5, entre=1.0, prise=0.3)   # largeur, profondeurs, retraits (cm)
+# de 14, 8 en haut et 4 en bas. V6.0 : retour au mélaminé de 18 et aux rainures d'avant la V5.24 (20 de large, 12 en
+# haut, 5 en bas) : il reste 6 mm de bois au-dessus de la rainure du haut.
+RAINURE = dict(l=2.0, haut=1.2, bas=0.5, bord=0.5, entre=1.0, prise=0.6)   # largeur, profondeurs, retraits (cm)
 _rn = RAINURE
 assert TH - _rn["haut"] >= 0.4 - 1e-9, "il reste au moins 4 mm de bois derrière la rainure du haut"
 RAINURE["x"] = [_h["x0"] + _rn["bord"] + k * (_rn["l"] + _rn["entre"]) for k in range(2)]   # bord avant des rainures
@@ -623,8 +628,10 @@ for cote in ("ch_cote_n", "ch_cote_s"):
         visser(_pc[cote], _pc[b_], "vis40", 8)
 for b_ in ("ch_dessous", "ch_dessus"):
     visser(_pc[b_], _pc["ch_montant"], "vis40", 8)
-for b_ in ("ch_cote_n", "ch_cote_s", "ch_dessous", "ch_dessus", "ch_montant"):
-    visser(_pc["ch_fond"], _pc[b_], "vis40", 8)
+for f_ in ("ch_fond_n", "ch_fond_s"):
+    for b_ in ("ch_cote_n", "ch_cote_s", "ch_dessous", "ch_dessus", "ch_montant"):
+        if touche(_pc[f_], _pc[b_]):
+            visser(_pc[f_], _pc[b_], "vis40", 8)
 # fixation au mur du fond : de l'intérieur, à travers le fond. V5.8 : le carrelage s'arrête à CARRELAGE (relevé
 # client) : toutes les chevilles au-dessus, dans le mur nu (plus de perçage du carrelage) ; deux rangées de trois
 CARRELAGE = 204
@@ -636,7 +643,8 @@ _zf = (CARRELAGE + 6, _hz1 - 6)
 assert _zf[0] < _zf[1] - 10, "deux rangées de chevilles au-dessus du carrelage"
 for z in _zf:
     for y in (10, CENTRE - 8 if z == _zf[1] else CENTRE + 8, Y1 - 10):
-        trou(9, _pc["ch_fond"], None, "cheville", (_hx, y, z), (-1, 0, 0), f"6 trous au-dessus du carrelage ({CARRELAGE}) : deux "
+        f_ = _pc["ch_fond_n" if y < CENTRE else "ch_fond_s"]
+        trou(9, f_, None, "cheville", (_hx, y, z), (-1, 0, 0), f"6 trous au-dessus du carrelage ({CARRELAGE}) : deux "
              f"rangées à {cm_(_zf[0])} et {cm_(_zf[1])} du sol, à 10 des côtés et près du montant")
 
 # meuble de chaque repère (code couleur des découpes) : le caisson haut, le reste est le meuble bas
@@ -654,7 +662,25 @@ MACHINE = Bloc("machine", "lave_linge", X1 - JEU_LL - LL["p"], X1 - JEU_LL, LLZ[
 LED = Bloc("led", "profil_led", _h["x0"] + 2, _h["x0"] + 4, _hy0 + 2, _hy1 - 2, Z_HAUT - 1, Z_HAUT, etape=10,
            miroir=False, groupe="caisson_haut")
 PRISES = Bloc("prise", "prises_niche", X1 - 1, X1, 84, 104, 122, 130, miroir=False)   # bloc 2 prises + USB, mur du fond
-EQUIPEMENTS = [MACHINE, LED, PRISES]
+# V6.0 : tuyaux au mur du fond, à l'aplomb du robinet. L'évacuation passe par un siphon dans la lame entre l'ossature et le
+# mur (XO1 → X1) ; l'arrivée monte au robinet par l'encoche du plan (TRAPPE). Aucune pièce du meuble dans leur zone.
+TUYAUX = dict(zone=(XO1, X1, ROBINET["y"] - 8, ROBINET["y"] + 8, 50, Z_PLAN), evacuation_z=60, arrivee_z=80)
+_tz = TUYAUX["zone"]
+assert not [b.nom for b in PIECES if b.x0 < _tz[1] and b.x1 > _tz[0] and b.y0 < _tz[3] and b.y1 > _tz[2]
+            and b.z0 < _tz[5] and b.z1 > _tz[4]], "aucune pièce dans la zone des tuyaux"
+_ds = min(6, X1 - XO1)  # siphon (cylindre Ø 6 approché par un bloc), dans la lame de 5 derrière l'ossature
+SIPHON = Bloc("tuyau", "siphon", X1 - _ds, X1, ROBINET["y"] - 3, ROBINET["y"] + 3, TUYAUX["evacuation_z"] - 6,
+              TUYAUX["evacuation_z"] + 6, miroir=False)
+ARRIVEE = Bloc("tuyau", "arrivee", X1 - 2, X1, ROBINET["y"] - 1, ROBINET["y"] + 1, TUYAUX["arrivee_z"], ROBINET["z"],
+               miroir=False)
+assert TRAPPE["y0"] <= ARRIVEE.y0 and ARRIVEE.y1 <= TRAPPE["y1"] and TRAPPE["x0"] <= ARRIVEE.x0, "l'arrivée passe dans l'encoche"
+EQUIPEMENTS = [MACHINE, LED, PRISES, SIPHON, ARRIVEE]
+
+# V6.0 : coins de calage taillés dans des chutes de tasseau, enfoncés au maillet entre les montants des deux échelles du
+# bord et le carreau des murs nord et sud, en bas et en haut ; chaque position vaut pour le montant avant et le montant
+# arrière. Pas de pièce de débit, pas de vis dans le mur.
+COINS = dict(n=8, pos=[(e, z) for e in ("n", "s") for z in (Z0 + 5, Z_PLAN - 5)])
+assert COINS["n"] == 2 * len(COINS["pos"]), "un coin par montant avant et arrière à chaque position"
 
 # ------------------------------------------------------------------ salle de bain (pour le plan)
 SDB = dict(l=234, p=160)
@@ -703,18 +729,6 @@ def version(c="d"):
 VERSIONS = {"d": "L basculant", "dr": "bacs à roulettes"}
 
 # ------------------------------------------------------------------ matériaux, débit, quincaillerie
-MATERIAUX = {
-    "A": ("Tablette mélaminée blanche 18 mm", "plateau et porte du bac (aggloméré non hydrofuge : chants "
-          "coupés à recouvrir de chant thermocollant blanc)", T),
-    "B": ("Tablette mélaminée blanche 18 mm", "supports des barres (chutes)", T),
-    "E": ("Barres", "barres rondes Ø 22 des sacs", 0),
-    "K": ("Contreplaqué de feuillus 12 mm", "tout le caisson haut, fond d'une pièce ; brut : vernis marin sur toutes "
-          "les faces et les chants", TH),
-    "D": ("Plan de travail hêtre massif lamellé-collé abouté 26 mm", "2500 × 650, brut, FSC : recoupé à " + f"{(YM1 - YM0) * 10:.0f}" + " × 600 "
-          "(la bande de 50 enlevée à l'arrière), vernis marin sur toutes les faces et les chants avant la pose", PT),
-    "G": ("Tasseau sapin brut 38 × 38, non traité", "ossature du meuble bas : échelles, rails, contrefiches "
-          "(non traité : poncer, puis peindre ou vernir toutes les faces, pieds compris)", DE),
-}
 # Panneaux du commerce pour le calepinage, par matériau (Weldom Marseille Saint-Barnabé, prix TTC, stock lu sur la fiche
 # produit ; tablettes et plan relevés le 12/10/2026, tasseaux le 13/10/2026). Les tablettes ont leurs deux chants longs
 # finis : pas de délignage. Un tasseau est rangé comme une « tablette » de 36 de large ; vendus par lots de 6 (lot).
@@ -726,16 +740,70 @@ TABLETTES_18 = [
 ]
 PANNEAUX = {
     "M18": TABLETTES_18,
-    # V5.24 : plan livré (vendeur Forestea sur Leroy Merlin, aussi sur Castorama ; livraison annoncée « dès 69 € », à
-    # vérifier au panier) ; contreplaqué au rayon Castorama (relevés en ligne du 26/10/2026, stock non lu)
-    "D": [dict(L=2500, l=650, prix=99.00, stock=None, ref="90122893", magasin="Leroy Merlin (Forestea, livré)",
-               nom="Plan de travail hêtre massif lamellé collé abouté 2500 × 650 × 26 FSC")],
-    "K12": [dict(L=2440, l=1220, prix=84.90, stock=None, ref="3663602840541", magasin="Castorama",
-                 nom="Panneau contreplaqué de feuillus 244 × 122 × 12")],
+    # V6.0 : plan en tablette chêne du Weldom Saint-Barnabé (relevé en ligne du 26/10/2026, stock non lu), sans
+    # livraison ; V5.24 : hêtre 2500 × 650 × 26 Forestea (Leroy Merlin, livré) et caisson haut en contreplaqué de 12
+    "D": [dict(L=2000, l=600, prix=66.90, stock=None, ref="82025610", magasin="Weldom",
+               nom="Tablette chêne lamellé-collé brute FSC 200 × 60 × 18")],
     "G": [dict(L=2000, l=38, prix=23.60 / 6, lot=6, prix_lot=23.60, stock=12, ref="5634083",
                nom="Lot de 6 tasseaux sapin brut 38 × 38 × 2000, petits nœuds, FSC")],
 }
-STOCK = {"A": "M18", "B": "M18", "K": "K12", "D": "D", "G": "G"}   # matériau → panneau acheté
+STOCK = {"A": "M18", "B": "M18", "K": "M18", "D": "D", "G": "G"}   # matériau → panneau acheté
+_pd = PANNEAUX["D"][0]
+assert _pd["l"] == PLAN_P * 10 and _pd["L"] >= (YM1 - YM0) * 10, "le plan se tire de la tablette sans recoupe en profondeur"
+MATERIAUX = {
+    "A": ("Tablette mélaminée blanche 18 mm", "plateau et porte du bac (aggloméré non hydrofuge : chants "
+          "coupés à recouvrir de chant thermocollant blanc)", T),
+    "B": ("Tablette mélaminée blanche 18 mm", "supports des barres (chutes)", T),
+    "E": ("Barres", "barres rondes Ø 22 des sacs", 0),
+    "K": (f"Tablette mélaminée blanche {TH * 10:.0f} mm", "tout le caisson haut, fond en deux moitiés (aggloméré non "
+          "hydrofuge : chants coupés plaqués de chant thermocollant blanc ; pas de vernis)", TH),
+    "D": (f"Tablette chêne lamellé-collé brute FSC {PT * 10:.0f} mm", f"{_pd['L']} × {_pd['l']} : recoupée à "
+          f"{(YM1 - YM0) * 10:.0f} de long, pas de recoupe en profondeur ; vernis marin, "
+          "trois couches sur toutes les faces et les chants avant la pose", PT),
+    "G": ("Tasseau sapin brut 38 × 38, non traité", "ossature du meuble bas : échelles, rails, contrefiches "
+          "(non traité : poncer, puis peindre ou vernir toutes les faces, pieds compris)", DE),
+}
+# V6.0 : matériaux possibles du caisson haut, relevés au Weldom le 26/10/2026 (en ligne, stock non lu) ; le mélaminé
+# est retenu (aucune finition à faire, le moins cher).
+_t18 = TABLETTES_18[0]
+MATERIAUX_HAUT = [
+    dict(nom="Tablette mélaminée blanche", ep=1.8, magasin="Weldom", ref=_t18["ref"], prix=_t18["prix"],
+         format=f"{_t18['L']} × {_t18['l']} (aussi en 500, 400 et 300 de large)", qualites="aucune finition, blanc d'usine",
+         defauts="chants coupés à plaquer ; aggloméré qui gonfle à l'eau", finition="chant thermocollant sur les coupes",
+         retenu=True),
+    dict(nom="Aggloméré brut", ep=1.6, magasin="Weldom", ref="9128556", prix=13.35,
+         format="prédécoupe 1200 × 600 (ou demi-panneau 2500 × 600 à 21,50 €)", qualites="bon marché",
+         defauts="chants poreux ; aggloméré qui gonfle à l'eau", finition="à peindre, sous-couche d'abord", retenu=False),
+    dict(nom="Médium (MDF)", ep=1.6, magasin="Weldom", ref="9128677", prix=12.50,
+         format="prédécoupes 1200 × 400 (ou 800 × 600, réf. 9128697, 12,50 €)", qualites="se peint très bien",
+         defauts="lourd ; petites plaques seulement", finition="à peindre", retenu=False),
+    dict(nom="OSB3 trois plis Swiss Krono", ep=1.8, magasin="Weldom", ref="68398456", prix=20.50, format="2500 × 675",
+         qualites="grand format, solide", defauts="aspect brut : se peint, mais la texture reste", finition="à peindre",
+         retenu=False),
+    dict(nom="Tablette sapin lamellé-collé", ep=1.8, magasin="Weldom", ref=None, prix=36.70, format="2000 × 500",
+         qualites="bois massif", defauts="plus cher", finition="se peint ou se vernit", retenu=False),
+]
+# V6.0 : essences possibles du plan de travail ; retrait_t : retrait tangentiel de l'état vert à l'état anhydre (%), selon
+# la Wood Database (None : non relevé). Le chêne du Weldom est retenu : il bouge moins que le hêtre et résiste bien à la
+# pourriture, à un prix qui tient dans le budget.
+ESSENCES_PLAN = [
+    dict(nom="Hêtre lamellé-collé", ep=2.6, magasin="Leroy Merlin", ref=None, prix=59.90, format="2000 × 650",
+         qualites="dur, grain fin", defauts="non durable (pourrit à l'humidité) ; bouge beaucoup",
+         finition="vernis marin, trois couches", retenu=False, retrait_t=11.7,
+         source="https://www.wood-database.com/european-beech/"),
+    dict(nom="Chêne lamellé-collé brut FSC", ep=PT, magasin=_pd["magasin"], ref=_pd["ref"], prix=_pd["prix"],
+         format=f"{_pd['L']} × {_pd['l']}", qualites="très bonne résistance à la pourriture ; bouge moins que le hêtre",
+         defauts="brut, à vernir", finition="vernis marin, trois couches", retenu=True, retrait_t=8.4,
+         source="https://www.wood-database.com/english-oak/"),
+    dict(nom="Chêne lamellé-collé", ep=2.6, magasin="Leroy Merlin", ref=None, prix=109.00, format="2500 × 650",
+         qualites="très bonne résistance à la pourriture ; plus épais", defauts="plus cher ; à recouper",
+         finition="vernis marin, trois couches", retenu=False, retrait_t=8.4,
+         source="https://www.wood-database.com/english-oak/"),
+    dict(nom="Acacia huilé", ep=2.6, magasin="Leroy Merlin", ref=None, prix=119.00, format="2500 × 650",
+         qualites="huilé d'usine", defauts="le plus cher ; retrait non relevé", finition="huile, à entretenir",
+         retenu=False, retrait_t=None, source=None),
+]
+assert sum(m["retenu"] for m in MATERIAUX_HAUT) == 1 and sum(e["retenu"] for e in ESSENCES_PLAN) == 1
 FIL = ()                # repères à ne pas tourner (aucun : mélaminé uni ; les tasseaux ne tiennent qu'en long)
 MAGASIN = dict(nom="Weldom Marseille Saint-Barnabé", adresse="90 rue François Scaramelli, 13012 Marseille",
                tel="04 91 49 27 27", url="https://www.weldom.fr/m/weldom-marseille-saint-barnabe", releve="13/10/2026")
@@ -783,11 +851,12 @@ USINAGES = {
     "K6": f"Patins PTFE adhésifs sous le chant bas ; on la pose en la soulevant dans la rainure du haut "
            f"({RAINURE['haut'] * 10:.0f}) puis en la laissant descendre dans celle du bas ({RAINURE['bas'] * 10:.0f})",
     "K3": "En retrait de 6 derrière les rails ; taquets sur les deux faces",
-    "D1": f"Recoupé de 2500 à {(YM1 - YM0) * 10:.0f} et de 650 à 600 : la bande de 50 s'enlève à l'arrière (chant d'usine devant, la "
-          f"coupe va contre le mur) ; au chant arrière, au-dessus du robinet, une encoche de {PASSE['l']} × "
-          f"{PASSE['p']} pour le tuyau d'arrivée (scie sauteuse) ; vernis marin partout, coupes et encoche comprises, "
-          "avant la pose ; joint silicone sur les murs",
-    "K8": "D'une pièce ; six trous Ø 6 pour les chevilles, au-dessus du carrelage",
+    "D1": f"Recoupé de {_pd['L']} à {(YM1 - YM0) * 10:.0f} de long ; la tablette fait déjà {_pd['l']} de profondeur : "
+          f"pas de recoupe en profondeur (chants d'usine devant et derrière) ; au chant arrière, au-dessus du robinet, "
+          f"une encoche de {PASSE['l']} × {PASSE['p']} pour le tuyau d'arrivée (scie sauteuse) ; vernis marin, trois "
+          "couches sur toutes les faces, coupes et encoche comprises, avant la pose ; trous de vis ovalisés dans les "
+          "lisses (le chêne bouge moins que le hêtre, mais il bouge) ; joint silicone sur les murs",
+    "K8": "Deux moitiés, jointes derrière le montant central K3 ; six trous Ø 6 pour les chevilles, au-dessus du carrelage",
 }
 QUINCAILLERIE = {
     "vis60": "vis à bois 5 × 60 (assemblages des tasseaux)",
@@ -804,7 +873,7 @@ QUINCAILLERIE = {
     "insert": "insert à visser M8 × 24 pour le bois (foret Ø 10), un par montant",
     "fraise": f"fraise droite Ø {RAINURE['l'] * 10:.0f} pour défonceuse (ou Ø {RAINURE['l'] * 5:.0f} en deux passes), "
               "rainures des portes coulissantes",
-    "vernis": "vernis marin incolore satiné, à l'eau (plan de travail et caisson haut, toutes les faces)",
+    "vernis": "vernis marin incolore satiné, à l'eau (plan de travail seulement, toutes les faces)",
     "led": "ruban LED 1,5 m 4000 K + profil alu",
     "silicone": "silicone sanitaire",
     "tirefond": "tire-fond inox 8 × 60, tête 6 pans (clé de 13) : butée du L, un par échelle du bac",
@@ -832,7 +901,7 @@ WELDOM = {
     "sac": None,
     "toile": None,      # V5.19 : Marseille Textiles, prix dans QUINCAILLERIE["toile"]
     "E4": None,
-    "chant": None,
+    "chant": ("Bande de chant thermocollante blanc Primo 500 × 2,3 cm", 9.50, 1, None, "5566191"),   # V6.0
     "peinture": ("Peinture bois Luxens int./ext. blanc satiné 0,5 L (microporeuse, à l'eau)", 17.70, 1, 13, "5620869"),
     "tirefond": ("Lot de 4 tirefonds inox tête 6 pans Standers 8 × 60", 5.60, 1, None, "5618626"),
     "mousse": ("Lot de 20 mousses amortisseur adhésif blanc 8 × 16 mm", 3.49, 1, None, "85066295"),
@@ -848,10 +917,10 @@ ETAPES = [
      "la niche à 126. Mesurer la machine pieds réglés au plus bas : les montants se coupent à sa hauteur plus "
      f"{JEU_PLAN * 10:.0f} mm. Relever l'alcôve en trois hauteurs : garder la plus petite largeur. Les tasseaux sont en "
      "sapin brut non traité : les couper, les poncer, puis les peindre en blanc (deux couches, le bout des pieds "
-     "compris) avant l'assemblage. Le plan de travail en hêtre et les pièces du caisson haut en contreplaqué sont "
-     "bruts : les couper, poncer (grain 120 puis 180), dépoussiérer, puis passer trois couches de vernis marin sur "
-     "toutes les faces et tous les chants, égrenées entre deux couches (le dessous du plan aussi : une face non vernie "
-     "reprend l'humidité et le plan se voile).", {"peinture": 1, "vernis": 1}),
+     "compris) avant l'assemblage. Le plan de travail en chêne est brut : le couper, le poncer (grain 120 puis 180), "
+     "le dépoussiérer, puis passer trois couches de vernis marin sur toutes ses faces et tous ses chants, égrenées "
+     "entre deux couches (le dessous aussi : une face non vernie reprend l'humidité et le plan se voile). Le caisson "
+     "haut, en mélaminé, ne se vernit pas.", {"peinture": 1, "vernis": 1}),
     ("Échelles", "Assembler les trois échelles à plat sur le sol : deux montants G3, la lisse basse G4 au ras du pied "
      "des montants et la lisse haute au ras de la tête ; dans les deux échelles du bac (nord et milieu), une lisse de "
      "barre G8 juste sous la lisse haute. Deux vis 5 × 60 à travers le montant dans chaque bout de lisse, sans colle. "
@@ -868,7 +937,9 @@ ETAPES = [
      "du fond : une contre le mur nord, une à " + cm_(ECH["c"] - YM0) + " d'elle (place du bac), une contre le mur sud. "
      "Entre les deux premières, au sol, les rails G5 au droit des montants avant et arrière. Deux vis 5 × 60 à travers "
      "le montant du milieu dans chaque bout, et côté nord, contre le mur, une équerre plate sur les faces affleurantes "
-     "du montant et du tasseau. Rien ne se fixe aux murs.", {"vis60": _n(2, "vis60"), "tirefond": _n(2, "butee"), "equerre_p": RAIL_EQUERRES, "vis16": 4 * RAIL_EQUERRES}),
+     "du montant et du tasseau. Rien ne se fixe aux murs : enfoncer au maillet un coin, taillé dans une chute de "
+     "tasseau, entre chaque montant des échelles du bord et le carreau, en bas et en haut, sans vis, avec un point de "
+     "silicone.", {"vis60": _n(2, "vis60"), "tirefond": _n(2, "butee"), "equerre_p": RAIL_EQUERRES, "vis16": 4 * RAIL_EQUERRES}),
     ("Le L", "Au fer à repasser, plaquer le chant blanc sur les chants coupés visibles de la porte et du plateau. Porte "
      "A6 à plat, face vers le sol : poser le plateau A3 debout contre son dos, le dessous du plateau 0,5 sous le bas de "
      "la porte, et le fixer par deux équerres d'assemblage. Couper les deux contrefiches G7 d'onglet, les poser aux "
@@ -893,13 +964,14 @@ ETAPES = [
     ("Machine", "Poser le tapis au sol entre les échelles du milieu et du mur sud. Raccorder la machine (le tuyau "
      f"d'arrivée monte au robinet par le passe-tuyau), la glisser sur le tapis jusqu'à {JEU_LL} du mur du fond et régler les pieds : {JEU_PLAN * 10:.0f} mm sous la tête des échelles, donc sous le plan (une cale "
      "de 5 posée sur la machine doit passer juste sous une règle posée sur les échelles).", {"tapis": 1}),
-    ("Plan de travail", "Recouper le plan : longueur " + f"{(YM1 - YM0) * 10:.0f}" + ", puis la profondeur de 650 à 600 en enlevant la bande de 50 "
-     "à l'arrière, chant d'usine devant (scie circulaire et rail, ou règle serrée, lame fine de 48 dents ou plus, face "
-     "visible dessous pour un trait net dessus ; un ruban de masquage sur le trait limite les éclats). Découper au chant "
+    ("Plan de travail", "Recouper le plan à " + f"{(YM1 - YM0) * 10:.0f}" + " de long (scie circulaire et rail, ou "
+     "règle serrée, lame fine de 48 dents ou plus, face visible dessous pour un trait net dessus ; un ruban de masquage "
+     "sur le trait limite les éclats) ; la tablette fait déjà " + f"{_pd['l']}" + " de profondeur, ses chants d'usine "
+     "restent devant et derrière. Découper au chant "
      "arrière l'encoche du passe-tuyau, au droit du robinet, puis vernir (étape 0). Poser le plan D1 sur la tête des "
      "échelles. Le visser par-dessous à travers les lisses hautes : lamage Ø 10 de 10 dans la lisse, trous ovalisés "
-     "d'avant en arrière sauf le trou avant (le hêtre gonfle et se rétracte en largeur : les vis doivent le laisser "
-     "bouger), avant-trou de 12 seulement dans le plan, la vis 4 × 40 y entre de " + f"{40 - (DE * 10 - 10):.0f}" + ". Joint silicone contre les murs. Sous le plan, au milieu du "
+     "d'avant en arrière sauf le trou avant (le chêne bouge moins que le hêtre, mais il gonfle et se rétracte en "
+     "largeur : les vis doivent le laisser bouger), avant-trou de 12 seulement dans le plan, la vis 4 × 40 y entre de " + f"{40 - (DE * 10 - 10):.0f}" + ". Joint silicone contre les murs. Sous le plan, au milieu du "
      "bac, visser l'accroche centrale G10 (deux équerres, crochet tourné vers la porte). Poser chaque demi-barre arrière : "
      "un bout dans son support B1 (demi-lune), l'autre glissé dans le crochet puis "
      "retombé dans sa poche. Pour vider : basculer la porte (les sacs l'arrêtent à " + f"{BAC['angle']}" + "°), soulever "
@@ -908,9 +980,9 @@ ETAPES = [
      "garde le L à " + f"{BAC['angle']}" + "° : lever les deux). Repousser le L fermé à la main : à vide il reste ouvert "
      "à la butée.",
      {"vis40": _n(7, "vis40l"), "silicone": 1, "equerre_a": ACCROCHE_EQUERRES, "vis16": 4 * ACCROCHE_EQUERRES}),
-    ("Caisson haut", "Assembler les côtés K1, dessus et dessous K2, le montant K3, puis le fond K8 (vis 4 × 40, "
-     "avant-trou Ø 2,5 bien dans l'axe du chant de 12, à 15 au moins des angles pour ne pas fendre les plis). Avant "
-     "l'assemblage (et avant le vernis), rainurer le dessous du dessus et le dessus du dessous K2 à la défonceuse : deux "
+    ("Caisson haut", "Au fer à repasser, plaquer le chant blanc sur les chants coupés visibles. Assembler les côtés "
+     "K1, dessus et dessous K2, le montant K3, puis les deux moitiés du fond K8, jointes derrière le montant (vis "
+     "4 × 40, avant-trou Ø 2,5 dans l'axe du chant de " + f"{TH * 10:.0f}" + "). Avant l'assemblage, rainurer le dessous du dessus et le dessus du dessous K2 à la défonceuse : deux "
      f"rainures de {RAINURE['l'] * 10:.0f} de large, {RAINURE['haut'] * 10:.0f} de profondeur en haut, "
      f"{RAINURE['bas'] * 10:.0f} en bas (règle de guidage, deux passes).", {"vis40": _n(8, "vis40"), "fraise": 1}),
     ("Pose du caisson haut", "Poser le caisson haut sur deux cales de " + f"{Z_HAUT - Z_DESSUS:.1f}".replace(".", ",") +
@@ -933,8 +1005,8 @@ QUINCAILLERIE["toile"] = (f"{cm_(TOILE['achat_m'])} m de {TOILE['nom'].lower()} 
                           f"{_eu(TOILE['prix_m'])} € le mètre, soit {_eu(TOILE['prix'])} € ({TOILE['magasin']}, "
                           f"relevé en ligne du {TOILE['releve']})")
 
-# V5.24 : vernis marin (client) sur le plan de travail en hêtre et sur tout le caisson haut en contreplaqué brut, toutes
-# les faces et les chants (le bois reprend l'humidité par la face non vernie et se voile). Syntilor incolore satiné en
+# V5.24 : vernis marin (client) sur le plan de travail et le caisson haut, toutes les faces et les chants (le bois reprend
+# l'humidité par la face non vernie et se voile). V6.0 : sur le plan seul, le caisson haut est en mélaminé. Syntilor incolore satiné en
 # phase aqueuse, rendement 12 m²/L par couche (fiche Weldom 5603010, relevée le 26/10/2026) ; trois couches.
 VERNIS = dict(couches=3, rendement=12, pots=[
     dict(l=0.25, prix=20.90, ref="5703473", nom="Vernis marin Syntilor incolore satiné 0,25 L"),
@@ -948,7 +1020,7 @@ def _surface(b):
     return (2 * a * l + 2 * (a + l) * e) / 1e4                  # m², deux faces et quatre chants
 
 
-VERNIS["m2"] = sum(_surface(b) for b in PIECES if b.rep[:1] in ("K", "D"))
+VERNIS["m2"] = sum(_surface(b) for b in PIECES if b.rep[:1] == "D")
 VERNIS["litres"] = VERNIS["m2"] * VERNIS["couches"] / VERNIS["rendement"]
 # pots : la combinaison la moins chère qui couvre le besoin (au plus trois pots de chaque)
 _combis = [(sum(n * p["prix"] for n, p in zip(c, VERNIS["pots"])), c) for c in
@@ -961,20 +1033,31 @@ for _k, (_pv, _nv) in enumerate(VERNIS["achat"]):     # une ligne d'achat par fo
     if _k:
         CONSOMMABLES += (_code,)
         QUINCAILLERIE[_code] = _pv["nom"]
-QUINCAILLERIE["vernis"] = (f"vernis marin incolore satiné, à l'eau : {cm_(VERNIS['m2'])} m² (plan et caisson haut, "
+QUINCAILLERIE["vernis"] = (f"vernis marin incolore satiné, à l'eau : {cm_(VERNIS['m2'])} m² (plan de travail seulement, "
                            f"faces et chants) × {VERNIS['couches']} couches ≈ {cm_(VERNIS['litres'])} L")
 
 CHANGEMENTS = [
+    ("V6.0", "26/10/2026",
+     "Document V4 (demande client) : trois pages, la principale, le meuble bas et le caisson haut ; le reste est retiré. "
+     "Budget de 400 € au plus. Plan de travail en tablette chêne lamellé-collé brute FSC de " + cm_(PT * 10) +
+     " (Weldom réf. " + _pd["ref"] + ", " + _eu(_pd["prix"]) + " €), recoupée en longueur seulement, au lieu du hêtre "
+     "de 26 ; dessus à " + cm_(Z_DESSUS) + ". Caisson haut de nouveau en tablettes mélaminées blanches de " +
+     cm_(TH * 10) + ", chants plaqués (bande Primo, Weldom réf. " + WELDOM["chant"][4] + "), fond en deux moitiés, rainures des portes de " +
+     f"{RAINURE['l'] * 10:.0f}" + " (" + f"{RAINURE['haut'] * 10:.0f}" + " en haut, " + f"{RAINURE['bas'] * 10:.0f}" +
+     " en bas). Vernis marin sur le plan seul (≈ " + cm_(VERNIS["litres"]) + " L, un pot de " +
+     f"{VERNIS['achat'][0][0]['l']:g}".replace(".", ",") + " L). " + str(COINS["n"]) + " coins de calage, taillés dans les chutes de "
+     "tasseau, entre les échelles du bord et les murs nord et sud. Tuyaux au mur du fond, sous le robinet : siphon "
+     "d'évacuation à " + cm_(TUYAUX["evacuation_z"]) + " du sol, arrivée à " + cm_(TUYAUX["arrivee_z"]) +
+     " qui monte par l'encoche du plan ; aucune pièce dans leur zone."),
+    # V6.0 : texte figé aux valeurs de la V5.24 (plan de 26, contreplaqué de 12, vernis du plan et du caisson haut)
     ("V5.24", "26/10/2026",
      "Matériaux revus après passage en magasin (client). Plan de travail en hêtre massif lamellé-collé abouté "
-     "2500 × 650 × " + cm_(PT * 10) + " (Forestea, 99 €, livré ; Leroy Merlin réf. 90122893, aussi chez Castorama) au "
-     "lieu du stratifié de 28 : recoupé à " + f"{(YM1 - YM0) * 10:.0f}" + " × 600, la bande de 50 enlevée à l'arrière ; dessus à " + cm_(Z_DESSUS) +
-     ", niche de " + cm_(Z_HAUT - Z_DESSUS) + " ; trous de vis ovalisés dans les lisses (le massif travaille). Caisson "
-     "haut en contreplaqué de feuillus de 12 (Castorama, plaque 244 × 122 à 84,90 €) au lieu du mélaminé de 18 : "
-     "repères K1 à K8 (ex-A7 à A13 et C1), fond d'une seule pièce, rainures des portes de " +
-     f"{RAINURE['l'] * 10:.0f}" + " (" + f"{RAINURE['haut'] * 10:.0f}" + " en haut, " + f"{RAINURE['bas'] * 10:.0f}" +
-     " en bas). Vernis marin Syntilor incolore satiné, trois couches sur toutes les faces du plan et du caisson haut (≈ " +
-     cm_(VERNIS["litres"]) + " L)."),
+     "2500 × 650 × 26 (Forestea, 99 €, livré ; Leroy Merlin réf. 90122893, aussi chez Castorama) au lieu du stratifié "
+     "de 28 : recoupé à 1144 × 600, la bande de 50 enlevée à l'arrière ; dessus à 88,1, niche de 69,9 ; trous de vis "
+     "ovalisés dans les lisses (le massif travaille). Caisson haut en contreplaqué de feuillus de 12 (Castorama, plaque "
+     "244 × 122 à 84,90 €) au lieu du mélaminé de 18 : repères K1 à K8 (ex-A7 à A13 et C1), fond d'une seule pièce, "
+     "rainures des portes de 14 (8 en haut, 4 en bas). Vernis marin Syntilor incolore satiné, trois couches sur toutes "
+     "les faces du plan et du caisson haut (≈ 3,2 L)."),
     ("V5.23", "13/10/2026",
      "Variante IKEA METOD du caisson haut retirée (demande client) : bouton, dessins, section et comparatif de prix ; "
      "le caisson haut est fait maison."),

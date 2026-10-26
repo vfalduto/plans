@@ -92,7 +92,7 @@ CLS = {"socle": ("socle", "soclec"), "rebord": ("socle", "soclec"), "caisson": (
        "plinthe": ("plinthe", "cabc"), "bac": ("bac", "bacc"), "facade": ("fac", "facc"), "tasseau": ("tas", "tasc"),
        "corniere": ("alu", "alu"), "plan": ("top", "topc"), "trappe": ("trap", "trap"), "etagere": ("shelf", "shelfc"),
        "porte": ("porte", "portec"), "fileur": ("cab", "cabc"), "machine": ("appf", "appc"), "led": ("led", "led"),
-       "prise": ("plug", "plug"), "pied": ("appf", "appc"), "vis": ("alu", "alu"),
+       "prise": ("plug", "plug"), "tuyau": ("plug", "plug"), "pied": ("appf", "appc"), "vis": ("alu", "alu"),
        "support": ("cab", "cabc"), "barre": ("tas", "tasc"), "sac": ("sac", "sacc"), "bois": ("dg", "dgc"),
        "panier": ("panier", "panierc")}
 
@@ -508,9 +508,10 @@ def comparatif_bac():
         cal_r = CAL.calepinage_meubles(debit())
     finally:
         M.PIECES = old
-    tab = lambda cal: sum(n * prix for _, _, n, prix, _ in ligne_panneaux(cal.get("M18", {}).get("bas", [])))  # noqa: E731 (V5.24 : sans le L, plus de mélaminé)
+    # V6.0 : le caisson haut est de nouveau en mélaminé, rangé en partie dans les chutes du bas : on compare toutes les
+    # tablettes mélaminées des deux meubles
+    tab = lambda cal: sum(n * prix for _, _, n, prix, _ in ligne_panneaux(cal["M18"]["bas"] + cal["M18"]["neufs"]))  # noqa: E731
     bois = (tab(calepinage()), tab(cal_r))
-    assert len(cal_r["K12"]["neufs"]) == len(calepinage()["K12"]["neufs"]), "caisson haut inchangé"
     co, w = M.CORNO, M.WELDOM
     lignes = [
         ("Paniers", M.TOILE["prix"], f"toile des 2 sacs : {cm(M.TOILE['achat_m'])} m à {eur(M.TOILE['prix_m'])} "
@@ -520,8 +521,8 @@ def comparatif_bac():
          0, "aucune (pas de porte)"),
         ("Équerres", w["equerre_a"][1] + w["equerre_p"][1], "lot de 6 équerres (L, accroche) + 1 équerre plate (rail avant)",
          0, "plus d'équerre d'assemblage ; 1 équerre plate (rail arrière)"),
-        ("Tablettes du meuble bas", bois[0], "porte et plateau du L, supports",
-         bois[1], "aucune : sans porte ni plateau, le meuble bas n'est qu'en tasseaux et plan"),
+        ("Tablettes mélaminées", bois[0], "porte et plateau du L, supports, caisson haut",
+         bois[1], "caisson haut seul : sans porte ni plateau, le meuble bas n'est qu'en tasseaux et plan"),
     ]
     t1 = sum(a for _, a, _, _, _ in lignes)
     t2 = sum(b for _, _, _, b, _ in lignes)
@@ -556,12 +557,12 @@ def achats():
     t2, l2 = liste(ligne_panneaux(neufs) + quinc["haut"], "Achat 2 · caisson haut")
     barres = "".join(tablette_svg(p, k + 1) for k, p in enumerate(cal["G"]["bas"]))
     tabs1 = "".join(tablette_svg(p, k + 1) for k, p in enumerate(cal["M18"]["bas"]))
-    tabs2 = "".join(tablette_svg(p, len(cal["M18"]["bas"]) + k + 1) for k, p in enumerate(cal["K12"]["neufs"]))
+    tabs2 = "".join(tablette_svg(p, len(cal["M18"]["bas"]) + k + 1) for k, p in enumerate(cal["M18"]["neufs"]))
     plan_ = "".join(tablette_svg(p, "P") for p in cal["D"]["bas"])
     mg = M.MAGASIN
     ail = lambda m: (f'<p><b>À acheter ailleurs</b> : {escape(" ; ".join(manque[m]))}.</p>' if manque[m] else "")  # noqa: E731
-    pd, pk = M.PANNEAUX["D"][0], M.PANNEAUX["K12"][0]
-    return f"""<p>Presque tout vient de <b>{escape(mg['nom'])}</b> ({escape(mg['adresse'])}, {mg['tel']}), en deux achats : le meuble bas d'abord, avec les consommables communs aux deux meubles (vernis compris) ; le caisson haut ensuite. Deux exceptions : le plan de travail en hêtre massif ({escape(pd['magasin'])}, réf. {pd['ref']}, livraison annoncée « dès 69 € » : à vérifier au panier ; même plan chez Castorama) et le contreplaqué de 12 du caisson haut ({escape(pk['magasin'])}, réf. {pk['ref']}, découpe sur mesure en magasin), aucun des deux au Weldom. Prix Weldom relevés en ligne le {mg['releve']}, plan et contreplaqué le 26/10/2026.</p>
+    pd = M.PANNEAUX["D"][0]
+    return f"""<p>Presque tout vient de <b>{escape(mg['nom'])}</b> ({escape(mg['adresse'])}, {mg['tel']}), en deux achats : le meuble bas d'abord, avec les consommables communs aux deux meubles (vernis compris) ; le caisson haut ensuite. Prix Weldom relevés en ligne le {mg['releve']}, plan de travail (réf. {pd['ref']}) le 26/10/2026.</p>
 {LEGENDE}
 <h3>Consommables · communs aux deux meubles (avec l'achat 1)</h3>
 {l0}
@@ -569,20 +570,20 @@ def achats():
 {ail("commun")}
 
 <h3>Achat 1 · meuble bas</h3>
-<p>Ossature en tasseaux de sapin brut non traité 38 × 38 de 2 m, vendus par lots de 6, peints ou vernis ; tablettes mélaminées blanches de 18 (porte et plateau du L) ; plan de travail en hêtre massif lamellé-collé abouté de {cm(M.PT * 10)} mm, verni.</p>
+<p>Ossature en tasseaux de sapin brut non traité 38 × 38 de 2 m, vendus par lots de 6, peints ou vernis ; tablettes mélaminées blanches de 18 (porte et plateau du L) ; plan de travail en chêne lamellé-collé brut de {cm(M.PT * 10)} mm, verni.</p>
 <div class="fig"><div class="tabs">{barres}</div>
 <p class="cap">Débit des tasseaux de 2000 : chaque barre est tronçonnée (trait de scie de {CAL.TRAIT} compté). Couper les six montants G3 ensemble pour qu'ils aient la même longueur.</p></div>
 <div class="fig"><div class="tabs">{tabs1}</div>
 <p class="cap">Tablettes du meuble bas : refente en bandes sur la longueur, puis tronçonnage (trait de scie compté). Les chants longs d'usine sont déjà plaqués ; les chants coupés visibles reçoivent un chant thermocollant.</p></div>
 <div class="fig"><div class="tabs">{plan_}</div>
-<p class="cap">Plan de travail {pd['L']} × {pd['l']} × {cm(M.PT * 10)} recoupé à {cal['D']['bas'][0].poses()[0][3]} × {cal['D']['bas'][0].poses()[0][4]} : la bande de {pd['l'] - cal['D']['bas'][0].poses()[0][4]} s'enlève à l'arrière, le chant d'usine reste devant. Il reste une chute de {pd['L'] - cal['D']['bas'][0].poses()[0][3] - CAL.TRAIT} × {pd['l']} en hêtre massif (étagère, tablette de la niche…).</p></div>
+<p class="cap">Plan de travail {pd['L']} × {pd['l']} × {cm(M.PT * 10)} recoupé en longueur à {cal['D']['bas'][0].poses()[0][3]} : la profondeur reste celle de la tablette, chants d'usine devant et derrière. Il reste une chute de {pd['L'] - cal['D']['bas'][0].poses()[0][3] - CAL.TRAIT} × {pd['l']} en chêne (étagère, tablette de la niche…).</p></div>
 {l1}
 {ail("bas")}
 
 <h3>Achat 2 · caisson haut</h3>
-<p>Tout le caisson haut en contreplaqué de feuillus de 12 ({len(cal['K12']['neufs'])} plaque{"s" if len(cal['K12']['neufs']) > 1 else ""} de {pk['L']} × {pk['l']}), et la quincaillerie du haut. Faire débiter au magasin (découpe sur mesure) ou à la scie sur rail.</p>
+<p>Tout le caisson haut en tablettes mélaminées blanches de {cm(M.TH * 10)} ({len(cal['M18']['neufs'])} tablette{"s" if len(cal['M18']['neufs']) > 1 else ""} neuve{"s" if len(cal['M18']['neufs']) > 1 else ""}, le reste dans les chutes du meuble bas), et la quincaillerie du haut. Faire débiter au magasin (découpe sur mesure) ou à la scie sur rail.</p>
 <div class="fig"><div class="tabs">{tabs2}</div>
-<p class="cap">Contreplaqué du caisson haut : refente en bandes, puis tronçonnage (trait de scie compté).</p></div>
+<p class="cap">Tablettes neuves du caisson haut : refente en bandes, puis tronçonnage (trait de scie compté).</p></div>
 {l2}
 {ail("haut")}
 <p><b>Total des deux achats : {euros(t0 + t1 + t2)}</b> (consommables {euros(t0)}, meuble bas {euros(t1)}, caisson haut {euros(t2)}).</p>
