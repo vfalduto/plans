@@ -37,3 +37,42 @@ def test_catalogues():
     assert {m["ep"] for m in M.MATERIAUX_HAUT} <= {1.6, 1.8}
     assert sum(e["retenu"] for e in M.ESSENCES_PLAN) == 1
     assert next(e for e in M.ESSENCES_PLAN if e["retenu"])["ref"] == "82025610"
+
+
+# ------------------------------------------------------------------ tâche 3 : les trois pages
+import re  # noqa: E402
+
+import pages  # noqa: E402
+import plan as PL  # noqa: E402
+
+
+def test_budget():
+    p = pages.prix()
+    assert p["total"] <= 400.00
+    lignes = sum(n * px for m in ("commun", "bas", "haut") for _, _, n, px, _ in p["lignes"][m])
+    assert abs(p["total"] - (lignes + p["ailleurs"])) < 0.01
+    assert abs(p["ailleurs"] - M.TOILE["prix"]) < 0.01
+
+
+def test_tous_les_reperes_poses():
+    from collections import Counter
+    cal = PL.calepinage()
+    poses = Counter(q[0] for st in cal for grp in ("bas", "neufs") for pn in cal[st][grp] for q in pn.poses())
+    attendu = Counter({r["rep"]: r["q"] for r in PL.debit() if r["mat"] in M.STOCK})
+    assert poses == attendu
+
+
+def test_pages():
+    ens, bas, haut = pages.page_ensemble(), pages.page_meuble("bas"), pages.page_meuble("haut")
+    assert 'class="icarr"' in ens and f"carrelage {M.CARRELAGE}" in ens
+    assert "Wenko Corno" in ens and 'id="changements"' in ens and "V6.0" in ens
+    for h in (ens, bas, haut):
+        # l'historique des changements cite légitimement l'ancien vocabulaire : on le retire avant de chercher
+        h = re.sub(r'<section id="changements">.*?</section>', "", h, flags=re.S)
+        for interdit in ("Coupe", "Élévation", "Bacs à roulettes", "sdb-meuble-v3"):
+            assert interdit not in h, interdit
+    for h in (bas, haut):
+        for sec in ('id="iso"', 'id="montage"', 'id="decoupe"', 'id="achats"'):
+            assert sec in h, sec
+    assert all(m["nom"] in haut for m in M.MATERIAUX_HAUT)
+    assert all(e["nom"] in bas for e in M.ESSENCES_PLAN)

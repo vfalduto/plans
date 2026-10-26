@@ -881,7 +881,7 @@ QUINCAILLERIE = {
     "tapis": "tapis antivibration 60 × 60",
     "sac": "sac en tissu",
     "E4": "barres rondes Ø 20 à 25 : manche à balai (récupération) ou tringle de rideau de 2 m (non relevée au magasin)",
-    "chant": "chant thermocollant blanc 20 mm (rouleau)",
+    "chant": "bande de chant thermocollante blanche de 23 mm, rouleau de 5 m (Primo)",
     "peinture": "peinture bois blanche microporeuse 0,5 L, pour les tasseaux (deux couches)",
 }
 # Achats au Weldom Saint-Barnabé : code → (désignation Weldom, prix unitaire, quantité achetée, stock, réf.) ; None :
@@ -942,7 +942,7 @@ ETAPES = [
      "silicone.", {"vis60": _n(2, "vis60"), "tirefond": _n(2, "butee"), "equerre_p": RAIL_EQUERRES, "vis16": 4 * RAIL_EQUERRES}),
     ("Le L", "Au fer à repasser, plaquer le chant blanc sur les chants coupés visibles de la porte et du plateau. Porte "
      "A6 à plat, face vers le sol : poser le plateau A3 debout contre son dos, le dessous du plateau 0,5 sous le bas de "
-     "la porte, et le fixer par deux équerres d'assemblage. Couper les deux contrefiches G7 d'onglet, les poser aux "
+     "la porte, et le fixer par deux équerres d'assemblage. Scier les deux contrefiches G7 d'onglet, les poser aux "
      "bords du plateau, jambes de " + f"{BAC['contrefiche']}" + " sur la porte et sur le plateau : deux vis 4 × 40 "
      "par-dessous à travers le plateau, une équerre contre la porte (vis 4 × 16 : avec l'aile, 14 dans la porte de 18, "
      "ruban sur le foret). Percer le trou de prise Ø 25.",
@@ -957,7 +957,7 @@ ETAPES = [
      f"à {BAC['angle_max']}° ; avec les sacs et les barres arrière en place (étape 7), il s'arrête à {BAC['angle']}°.",
      {"charniere_p": CHARNIERES["n"], "vis16": 4 * CHARNIERES["n"] + _n(4, "vis16l"), "mousse": 2}),
     ("Barres et sacs", "Visser les deux supports B1 des barres arrière sur les lisses de barre G8, à " +
-     f"{BAC['prof']}" + " du nu avant, demi-lune en haut. Coudre les deux sacs (voir la page des plans) et enfiler chacun "
+     f"{BAC['prof']}" + " du nu avant, demi-lune en haut. Coudre les deux sacs (patron et cotes en tête de notice) et enfiler chacun "
      "sur ses deux demi-barres E4. Poser les demi-barres de la porte dans leurs supports. Les demi-barres arrière se posent "
      "une fois le plan en place (étape 7), entre leur support et l'accroche centrale.",
      {"vis40": _n(5, "vis40"), "sac": 2, "toile": 1}),

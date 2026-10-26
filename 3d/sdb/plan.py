@@ -537,24 +537,12 @@ def comparatif_bac():
 
 
 def achats():
-    cal = calepinage()
-    tot = Counter()
-    for _, _, q in M.ETAPES:
-        tot.update(q)
-    quinc = {"commun": [], "bas": [], "haut": []}
-    manque = {"commun": [], "bas": [], "haut": []}
-    for code, w in M.WELDOM.items():
-        m = code_meuble(code)
-        if w is None:
-            manque[m].append(M.QUINCAILLERIE[code])
-        else:
-            quinc[m].append((w[0], w[4], w[2], w[1], w[3]))
-    non_chiffres = [f"{tot[c]} × {M.QUINCAILLERIE[c]}" for c in M.CONSOMMABLES if c not in M.WELDOM and tot[c]]
-    bas_p = [p for st in ("G", "M18", "D") for p in cal[st]["bas"]]
-    neufs = [p for st in cal for p in cal[st]["neufs"]]
-    t0, l0 = liste(quinc["commun"], "Consommables")
-    t1, l1 = liste(ligne_panneaux(bas_p) + quinc["bas"], "Achat 1 · meuble bas")
-    t2, l2 = liste(ligne_panneaux(neufs) + quinc["haut"], "Achat 2 · caisson haut")
+    import pages        # V6.0 : le calcul des lignes est partagé avec pages.prix() (import tardif : pages importe plan)
+    a = pages.lignes_achats()
+    cal, manque, non_chiffres = a["cal"], a["manque"], a["non_chiffres"]
+    t0, l0 = liste(a["lignes"]["commun"], "Consommables")
+    t1, l1 = liste(a["lignes"]["bas"], "Achat 1 · meuble bas")
+    t2, l2 = liste(a["lignes"]["haut"], "Achat 2 · caisson haut")
     barres = "".join(tablette_svg(p, k + 1) for k, p in enumerate(cal["G"]["bas"]))
     tabs1 = "".join(tablette_svg(p, k + 1) for k, p in enumerate(cal["M18"]["bas"]))
     tabs2 = "".join(tablette_svg(p, len(cal["M18"]["bas"]) + k + 1) for k, p in enumerate(cal["M18"]["neufs"]))

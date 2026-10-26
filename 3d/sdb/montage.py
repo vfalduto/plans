@@ -111,9 +111,11 @@ def pts_svg(pts):
     return " ".join(f"{x:.2f},{y:.2f}" for x, y in pts)
 
 
-def dessin(blocs, neuves=(), murs=False, reperes=True, decale=None, extra=None, marge=14, titre="", trous=()):
+def dessin(blocs, neuves=(), murs=False, reperes=True, decale=None, extra=None, marge=14, titre="", trous=(),
+           carrelage=None):
     """Dessin isométrique : blocs dessinés, neuves = noms des pièces de l'étape (en couleur et repérées), trous = perçages
-    de l'étape (dessinés sur la face par où on perce, quand elle est tournée vers nous)."""
+    de l'étape (dessinés sur la face par où on perce, quand elle est tournée vers nous). V6.0 : avec les murs, carrelage
+    = hauteur du carrelage, dessiné en bande sur les murs du fond et nord, sous les pièces."""
     decale = decale or {}
     vis = []
     for b in blocs:
@@ -131,6 +133,20 @@ def dessin(blocs, neuves=(), murs=False, reperes=True, decale=None, extra=None, 
             o.append(f'<polygon class="{cls}" points="{pts_svg(p)}"/>')
             xs += [x for x, _ in p]
             ys += [y for _, y in p]
+        if carrelage:
+            cz = min(carrelage, M.H)
+            bandes = ([proj(M.X1, 0, 0), proj(M.X1, M.Y1, 0), proj(M.X1, M.Y1, cz), proj(M.X1, 0, cz)],
+                      [proj(M.X0, 0, 0), proj(M.X1, 0, 0), proj(M.X1, 0, cz), proj(M.X0, 0, cz)])
+            for p in bandes:
+                o.append(f'<polygon class="icarr" points="{pts_svg(p)}"/>')
+            haut = [proj(M.X0, 0, cz), proj(M.X1, 0, cz), proj(M.X1, M.Y1, cz)]
+            o.append(f'<polyline class="icarrl" points="{pts_svg(haut)}"/>')
+            tx, ty = proj(M.X0, 0, cz)          # libellé à gauche du mur nord, au niveau du haut du carrelage
+            libelle = (f'<line class="icarrl" x1="{tx - 4:.1f}" y1="{ty:.1f}" x2="{tx:.1f}" y2="{ty:.1f}"/>'
+                       f'<text class="icarrt" x="{tx - 5:.1f}" y="{ty + 2.4:.1f}" text-anchor="end">carrelage {carrelage}</text>')
+            xs.append(tx - 5 - 4.2 * len(f"carrelage {carrelage}"))
+    else:
+        carrelage = None
     etiq = {}
     par_piece = {}
     for t in trous:
@@ -140,7 +156,8 @@ def dessin(blocs, neuves=(), murs=False, reperes=True, decale=None, extra=None, 
                   min(proj(*p)[1] for b in vis for f, _ in faces(b) for p in f)) / 120) if vis else 1
     for b in ordre(vis):
         neuve = b.nom in neuves
-        cls = "isac" if b.role == "sac" else "inew" if neuve else ("iapp" if b.role == "machine" else "ipc")
+        cls = ("isac" if b.role == "sac" else "itu" if b.role == "tuyau" else "inew" if neuve else
+               ("iapp" if b.role == "machine" else "ipc"))
         for f, n in faces(b):
             if sum(a * c for a, c in zip(n, VUE)) <= 1e-6:
                 continue
@@ -165,6 +182,8 @@ def dessin(blocs, neuves=(), murs=False, reperes=True, decale=None, extra=None, 
         if neuve and reperes and b.rep and b.rep not in etiq:
             cx, cy = proj((b.x0 + b.x1) / 2, (b.y0 + b.y1) / 2, (b.z0 + b.z1) / 2)
             etiq[b.rep] = (cx, cy)
+    if carrelage:
+        o.append(libelle)
     if extra:
         o += extra(xs, ys)
     if not xs:
@@ -614,6 +633,10 @@ CSS = PL.CSS + """
 .isol{fill:var(--line);fill-opacity:.25}
 .imur{fill:var(--line);fill-opacity:.35;stroke:var(--muted);stroke-width:.25}
 .imur2{fill:var(--line);fill-opacity:.18;stroke:var(--muted);stroke-width:.25}
+.icarr{fill:var(--water);fill-opacity:.12;stroke:none}
+.icarrl{fill:none;stroke:var(--water);stroke-width:.5;stroke-dasharray:2 1.2}
+.icarrt{font-size:7px;font-weight:600;fill:var(--water)}
+.itu{fill:var(--water);fill-opacity:.75;stroke:var(--ink);stroke-width:.3}
 .ipc{fill:hsl(40 15% calc(var(--t) * 100% - 4%));stroke:var(--ink);stroke-width:.32;stroke-linejoin:round}
 .inew{fill:hsl(32 80% calc(var(--t) * 72% + 8%));stroke:var(--ink);stroke-width:.4;stroke-linejoin:round}
 .isac{fill:hsl(205 60% calc(var(--t) * 40% + 55%));fill-opacity:.8;stroke:var(--water);stroke-width:.35;stroke-dasharray:1.2 .8}
