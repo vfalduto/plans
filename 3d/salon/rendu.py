@@ -48,6 +48,7 @@ R.MATS.update({
     "s_tapis":      ("#B9A88E", 0.98, {}),
     "s_abat_jour":  ("#F3E9D6", 0.9, {"emission": 0.6}),
     "s_cadre":      ("#1E1E20", 0.4, {}),
+    "s_pin_noir":   ("#1C1C1E", 0.75, {}),                              # montants pin peint noir mat
     "s_platine":    ("#1B1B1D", 0.3, {}),
     "s_clim":       ("#F4F4F2", 0.4, {}),
     "s_vinyle":     ("#2A2A2D", 0.5, {}),
@@ -55,7 +56,7 @@ R.MATS.update({
 })
 ROLES = {
     "mur": "s_mur", "linteau": "s_mur", "cadre": "porte_peinte", "caisson": "s_chene", "facade": "s_chene_v",
-    "etagere": "s_chene", "canape": "s_lin", "table": "s_noyer", "desserte": "s_chene", "vinyles": "s_vinyle",
+    "etagere": "s_chene", "montant": "s_pin_noir", "canape": "s_lin", "table": "s_noyer", "desserte": "s_chene", "vinyles": "s_vinyle",
     "platine": "s_platine", "lampe": "s_abat_jour", "table_basse": "s_chene", "fauteuil": "s_dyvlinge",
     "chilienne": "lin", "tapis": "s_tapis", "lampe_pied": "noir", "plante": "feuillage", "pot": "terre_cuite",
     "cadre_mur": "s_cadre", "projecteur": "noir", "clim": "s_clim", "pied": "noir",
@@ -260,6 +261,74 @@ def visible(b):
 
 # ------------------------------------------------------------------ scène
 
+# ------------------------------------------------------------------ pièces des meubles à fabriquer (pieces_3d)
+def _matieres():
+    import commun
+    return commun.MATIERES
+
+
+ARRONDI = 0.005          # m : arêtes de la planche adoucies (5 mm), comme le chant arrondi du plan de travail
+
+
+def planche(nom, morceaux):
+    """Une pièce de bois d'un seul tenant à partir de ses morceaux (boîtes disjointes) : la boîte englobante moins les
+    vides (entailles), par soustraction booléenne, puis arêtes arrondies. Pas de joint entre les morceaux."""
+    x0, x1 = min(p.x0 for p in morceaux), max(p.x1 for p in morceaux)
+    y0, y1 = min(p.y0 for p in morceaux), max(p.y1 for p in morceaux)
+    z0, z1 = min(p.z0 for p in morceaux), max(p.z1 for p in morceaux)
+    o = boite(f"meuble__{nom}", x0, x1, y0, y1, z0, z1, _matieres()[morceaux[0].matiere][1], chanfrein=False)
+    # vides : le long de chaque rangée de morceaux collés au mur, les intervalles en y qui ne sont pas couverts
+    rangs = {}
+    for p in morceaux:
+        rangs.setdefault((p.x0, p.x1), []).append(p)
+    for (a, c), rang in rangs.items():
+        if (a, c) == (x0, x1):
+            continue
+        bords = [y0] + [v for p in sorted(rang, key=lambda p: p.y0) for v in (p.y0, p.y1)] + [y1]
+        for k in range(0, len(bords), 2):
+            if bords[k + 1] - bords[k] > 1e-6:
+                outil = boite(f"vide__{nom}_{k}", a - 1, c, bords[k], bords[k + 1], z0 - 1, z1 + 1, "s_mur", False)
+                mod = o.modifiers.new(f"entaille_{k}", "BOOLEAN")
+                mod.operation, mod.solver, mod.object = "DIFFERENCE", "EXACT", outil
+                bpy.context.view_layer.objects.active = o
+                bpy.ops.object.modifier_apply(modifier=mod.name)
+                bpy.data.objects.remove(outil, do_unlink=True)
+    habiller(o, _matieres()[morceaux[0].matiere][1])
+    mod = o.modifiers.new("arrondi", "BEVEL")
+    mod.width, mod.segments, mod.limit_method = ARRONDI, 4, "ANGLE"
+    mod.angle_limit, mod.use_clamp_overlap, mod.harden_normals = math.radians(30), True, True
+    return o
+
+
+def rond_y(nom, p, key):
+    """Rond d'axe y (cheville en acier) inscrit dans la boîte de la pièce, bouts légèrement adoucis."""
+    r = min(p.x1 - p.x0, p.z1 - p.z0) / 2
+    bpy.ops.mesh.primitive_cylinder_add(vertices=32, radius=r / 100, depth=(p.y1 - p.y0) / 100,
+                                        location=R.p((p.x0 + p.x1) / 2, (p.y0 + p.y1) / 2, (p.z0 + p.z1) / 2),
+                                        rotation=(math.pi / 2, 0, 0))
+    o = bpy.context.object
+    o.name = nom
+    habiller(o, key)
+    mod = o.modifiers.new("arrondi", "BEVEL")
+    mod.width, mod.segments, mod.limit_method = 0.0008, 2, "ANGLE"
+    mod.angle_limit, mod.use_clamp_overlap = math.radians(30), True
+    bpy.ops.object.shade_smooth()
+    return o
+
+
+def etageres():
+    """Étagères de la page dédiée (etageres.pieces_3d) : tablettes d'une seule pièce entaillées, chevilles rondes."""
+    import etageres as ET
+    ps = ET.pieces_3d()
+    for p in ps:
+        if p.forme == "cyl_y":
+            rond_y(f"etagere__{p.nom}", p, _matieres()[p.matiere][1])
+        elif not p.groupe:
+            boite(f"etagere__{p.nom}", p.x0, p.x1, p.y0, p.y1, p.z0, p.z1, _matieres()[p.matiere][1])
+    for g in dict.fromkeys(p.groupe for p in ps if p.groupe):
+        planche(f"etagere_{g}", [p for p in ps if p.groupe == g])
+
+
 def build_scene():
     bpy.ops.wm.read_factory_settings(use_empty=True)
     sc = bpy.context.scene
@@ -281,7 +350,7 @@ def build_scene():
     boite("mur__couloir", -130, -120, M.PASSAGE["y0"] - 10, M.PASSAGE["y1"] + 10, 0, M.H, "s_mur", False)
 
     for b in M.ENVELOPPE + M.MEUBLES:
-        if not visible(b) or b.role in ("projection", "baie"):
+        if not visible(b) or b.role in ("projection", "baie", "etagere", "montant"):   # étagères : etageres()
             continue
         nom = f"{b.role}__{b.nom}"
         if b.role == "table" and CONFIG == "f":   # plateau rond (le modèle n'en a que l'emprise)
@@ -340,13 +409,16 @@ def build_scene():
         boite(f"baie__montant_{y}", M.L + 2, M.L + 8, y, y + 6, 4, ba["h"] - 5, "s_baie", False)
     boite("baie__vitre_n", M.L + 4.7, M.L + 5.3, ba["y0"] + 6, ba["milieu"] - 3, 4, ba["h"] - 5, "verre", False)
     boite("baie__vitre_s", M.L + 4.7, M.L + 5.3, ba["milieu"] + 3, ba["y1"] - 6, 4, ba["h"] - 5, "verre", False)
+    etageres()
     # plantes : modèle Poly Haven à la place des cylindres
-    R.remplacer(sc, [dict(cacher=rf"^(pot|plante)__(pot|plante)_{n}$", cadre=rf"^(pot|plante)__(pot|plante)_{n}$",
-                          modele="potted_plant_04") for n in ("sud", "e1", "e3a", "e3b")])
+    # (noms des objets d'étagère depuis la V4.21 : objet_e<k> au bout sud de chaque tablette, pot_ha / pot_hb en haut)
+    R.remplacer(sc, [dict(cacher=rf"^(pot|plante)__(pot|objet|plante)_{n}$", cadre=rf"^(pot|plante)__(pot|objet|plante)_{n}$",
+                          modele="potted_plant_04") for n in ("sud", "e1", "ha", "hb")])
     # objets : vases en céramique et bols en bois (Poly Haven) dans l'emprise du modèle
-    R.remplacer(sc, [dict(cacher=rf"^objet__{n}$", cadre=rf"^objet__{n}$",
-                          modele="ceramic_vase_04" if n.startswith("vase") else "wooden_bowl_01")
-                     for n in ("vase_e0", "vase_e3", "vase_table", "bol_e2", "bol_tb")])
+    R.remplacer(sc, [dict(cacher=rf"^objet__{n}$", cadre=rf"^objet__{n}$", modele=m)
+                     for n, m in (("objet_e0", "ceramic_vase_04"), ("objet_e3", "ceramic_vase_04"),
+                                  ("vase_haut", "ceramic_vase_04"), ("vase_table", "ceramic_vase_04"),
+                                  ("objet_e2", "wooden_bowl_01"), ("bol_tb", "wooden_bowl_01"))])
 
     sc.render.engine = "CYCLES"
     R.reglages_cycles(sc)

@@ -79,9 +79,11 @@ v13-apercu *vues:
 v13-figer:
     python3 3d/v13/plan.py --figer
 
-# Salon V4 : régénère salon-v4.html depuis 3d/salon/modele.py (source unique)
+# Salon V4 : régénère salon-v4.html et les pages des meubles (étagères, enfilade) depuis 3d/salon/modele.py
 salon:
     python3 3d/salon/plan.py
+    python3 3d/salon/etageres.py
+    python3 3d/salon/enfilade.py
 
 # Salon V4 : rendus 3D (Blender) depuis 3d/salon/modele.py → salon-v4-3d/*.jpg, puis regénère la page
 salon-rendu echantillons="64" *vues:
@@ -89,6 +91,14 @@ salon-rendu echantillons="64" *vues:
     mkdir -p salon-v4-3d
     for f in 3d/sortie/salon-v4-rendu-*.png; do sips -s format jpeg -s formatOptions 85 "$f" --out "salon-v4-3d/$(basename "$f" .png | sed 's/salon-v4-rendu-//').jpg" >/dev/null; done
     python3 3d/salon/plan.py
+
+# Salon : rendus 3D des meubles à fabriquer (étagères, enfilade) → salon-meubles-3d/*.jpg, puis regénère leurs pages
+salon-meubles-rendu echantillons="128" *vues:
+    /Applications/Blender.app/Contents/MacOS/Blender -b --python 3d/salon/rendu_meubles.py -- {{echantillons}} {{vues}}
+    mkdir -p salon-meubles-3d
+    for f in 3d/sortie/salon-meuble-*.png; do sips -s format jpeg -s formatOptions 85 "$f" --out "salon-meubles-3d/$(basename "$f" .png | sed 's/salon-meuble-//').jpg" >/dev/null; done
+    python3 3d/salon/etageres.py
+    python3 3d/salon/enfilade.py
 
 # Fige la version courante du salon (bouton de comparaison + archive/salon-v4.x.html)
 salon-figer:

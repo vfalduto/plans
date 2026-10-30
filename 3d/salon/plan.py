@@ -79,7 +79,7 @@ def cfg_cls(b):
 
 # ------------------------------------------------------------------ plan vu de dessus
 PLAN_CLS = {"mur": "w", "linteau": None, "cadre": "cadre", "baie": "win", "caisson": "cab", "facade": "fac",
-            "pied": None, "etagere": "upper", "canape": "sofa", "table": "tbl", "chaise": None, "desserte": "cab",
+            "pied": None, "etagere": "upper", "montant": "mont", "canape": "sofa", "table": "tbl", "chaise": None, "desserte": "cab",
             "vinyles": None, "platine": "dark", "lampe": "lampe", "volet": "dark", "table_basse": "tbl",
             "chilienne": "chil", "tapis": "tapis", "lampe_pied": None, "plante": "plante", "pot": None,
             "cadre_mur": "cadrem", "livres": None, "fauteuil": "dyv", "projection": "proj", "projecteur": "projr",
@@ -238,7 +238,7 @@ def plan_svg():
 # ------------------------------------------------------------------ coupes
 COUPE_CLS = {"mur": ("bgwall", "w"), "linteau": ("wallv", "w"), "poutre": ("wallv", "w"), "cadre": ("cadre", "cadre"), "baie": ("vitre", "vitrec"),
              "caisson": ("cab", "cab"), "facade": ("fac", "fac"), "pied": ("dark", "dark"),
-             "etagere": ("shelf", "shelfc"), "canape": ("sofa", "sofa"), "table": ("tbl", "tbl"),
+             "etagere": ("shelf", "shelfc"), "montant": ("mont", "mont"), "canape": ("sofa", "sofa"), "table": ("tbl", "tbl"),
              "chaise": ("stool", "stool"), "desserte": ("cab", "cab"), "vinyles": ("vinyl", "vinyl"),
              "platine": ("dark", "dark"), "lampe": ("lampe", "lampe"), "volet": ("tbl", "tbl"),
              "table_basse": ("tbl", "tbl"), "chilienne": ("chil", "chil"), "tapis": ("tapis", "tapis"),
@@ -312,7 +312,7 @@ def coupe_configs(*args, **kw):
 
 
 def coupe_a():
-    e, et = M.ENFILADE, M.ETAGERES
+    e, et, mo = M.ENFILADE, M.ETAGERES, M.MONTANTS
 
     def cotes(X):
         u0, u1 = sorted((X(e["y0"]), X(e["y1"])))
@@ -322,11 +322,13 @@ def coupe_a():
         for y0, y1 in e["modules"]:
             a, b = sorted((X(y0), X(y1)))
             r.append(cote_h(a, b, 9, f(y1 - y0)))
-        xm = (u0 + u1) / 2
-        r.append(text(xm, -(et["zs"][-1] + 10), "fixation des étagères à étudier (R&D)", "lblc"))
+        axes = sorted(X(y) for y in mo["axes"])
+        for a, b in zip(axes, axes[1:]):
+            r.append(cote_h(a, b, -(mo["z1"] + 7), f(mo["pas"])))
         return r
 
-    return coupe_configs(COUPE_A, "ouest", -20, M.P + 20, [e["pieds"], e["z1"]] + et["zs"], extra=cotes)
+    return coupe_configs(COUPE_A, "ouest", -20, M.P + 20, [e["pieds"], e["z1"], mo["z0"]] + et["zs"] + [mo["z1"]],
+                         extra=cotes)
 
 
 def coupe_b():
@@ -427,6 +429,11 @@ svg text{font-family:Archivo,system-ui,sans-serif;fill:var(--ink)}
 .dark{fill:var(--ink)}
 .shelf{fill:var(--wood);fill-opacity:.3;stroke:var(--wood);stroke-width:.6}
 .shelfc{fill:var(--wood);stroke:var(--ink);stroke-width:.6}
+.mont{fill:#26262A;stroke:var(--ink);stroke-width:.4}
+.trou{fill:var(--paper)}
+.acier{fill:#8E9399;stroke:var(--ink);stroke-width:.4}
+.acierh{fill:none;stroke:#5E6369;stroke-width:.8;stroke-dasharray:2 1.5}
+.mur-h{fill:var(--line);fill-opacity:.6;stroke:var(--muted);stroke-width:.5}
 .upper{fill:none;stroke:var(--ink);stroke-width:.8;stroke-dasharray:3 2}
 .sofa{fill:var(--sofa);stroke:var(--ink);stroke-width:.8}
 .sofac{fill:var(--sofa);stroke:var(--ink);stroke-width:.6;filter:brightness(.93)}
@@ -505,7 +512,7 @@ def table_rangement():
     lignes = [
         ("① Enfilade", f'{f(e["y1"] - e["y0"])} × {e["p"]} × {e["z1"]}, 3 modules de {f(e["modules"][0][1] - e["modules"][0][0])}',
          f"≈ {round(M.VOLUME_ENFILADE, -1):.0f} L"),
-        ("② Étagères suspendues", f'{len(M.ETAGERES["zs"])} × {f(e["y1"] - e["y0"])}, P{M.ETAGERES["p"]}',
+        ("② Étagères sur montants", f'{len(M.TABLETTES)} tablettes chêne P{M.ETAGERES["p"]} sur {M.MONTANTS["n"]} montants pin noir',
          f'{virg(M.METRES_ETAGERES)} m · ≈ {M.METRES_ETAGERES * M.CHARGE_LIVRES:.0f} kg pleines'),
         ("④ Desserte", f'{d["x1"] - d["x0"]} × {d["y1"] - d["y0"]} × {d["z1"]} sur roulettes, 2 niveaux pour vinyles',
          f"≈ {round(M.VINYLES, -1):.0f} disques"),
@@ -541,6 +548,18 @@ def galerie():
     return f'<h2>Rendu 3D</h2>\n{"".join(blocs)}\n' if blocs else ""
 
 
+def meubles():
+    """Résumé des meubles à fabriquer, avec un lien vers la page de chacun."""
+    mo, et = M.MONTANTS, M.ETAGERES
+    return f"""<h2 id="meubles">Meubles à fabriquer</h2>
+<p>Les deux meubles du mur ouest ont chacun leur page, comme le meuble linge de la salle de bain : plans, matériaux, débit, achats et prix, montage.</p>
+<ul class="pistes">
+<li><a href="salon-etageres.html"><b>Étagères</b></a> : {mo["n"]} montants en pin massif peint en noir ({virg(mo["l"])} × {mo["p"]}, à {mo["pas"]} d'axe en axe) vissés au mur au-dessus de l'enfilade sans la toucher, et {len(M.TABLETTES)} tablettes en chêne massif entaillées autour des montants, pincées par deux chevilles en acier ({virg(M.METRES_ETAGERES)} m de tablettes).</li>
+<li><a href="salon-enfilade.html"><b>Enfilade</b></a> : {virg(M.ENFILADE["y1"] - M.ENFILADE["y0"])} × {M.ENFILADE["p"]} × {M.ENFILADE["z1"]} sur pieds, trois modules (portes, tiroirs, portes).</li>
+</ul>
+"""
+
+
 def contenu():
     e, et, c, d, t, dg = M.ENFILADE, M.ETAGERES, M.CANAPE, M.DESSERTE, M.TABLE, M.DEGAGEMENTS
     lignes = "".join(f'<tr><td class="mono">{v}</td><td class="mono">{dt}</td><td>{escape(x)}</td></tr>'
@@ -552,11 +571,11 @@ def contenu():
 
 <h2>Plan</h2>
 <div class="fig">{tog_table()}<div class="scroll">{plan_svg()}</div>
-<p class="cap">Échelle : 1 unité = 1 cm ; ouest à gauche, nord en haut. <b>① Enfilade</b> contre le mur ouest, du coin nord au cadre du passage ({f(e["y1"] - e["y0"])} utiles), profondeur {e["p"]} (caisson {e["p"] - e["facade"]} + façades {e["facade"]}), dessus à {e["z1"]}, sur pieds de {e["pieds"]} ; trois modules de {f(e["modules"][0][1] - e["modules"][0][0])} : {modules}. <b>② Étagères suspendues</b> (tireté) : {len(et["zs"])} tablettes {f(et["y1"] - et["y0"])} × {et["p"]} au-dessus de l'enfilade, sur toute sa longueur ; fixation à étudier (voir plus bas). <b>③ Canapé</b> {c["nom"]} {c["l"]} × {c["p"]} dos au mur nord, tourné vers le sud, à {M.ALLEE_ENFILADE} de l'enfilade : l'allée laisse ouvrir les portes du module nord. <b>④ Desserte</b> {d["x1"] - d["x0"]} × {d["y1"] - d["y0"]} sur roulettes, contre le mur nord, dans le décroché nord-est (x {d["x0"]} → {d["x1"]}), façade au sud : à côté de la baie, sans rien devant le vitrage. Platine au milieu du dessus, vinyles sur deux niveaux (≈ {round(M.VINYLES, -1):.0f}). <b>⑤ Table</b> à volets et allonges (type Louis-Philippe). Au quotidien, <b>ronde</b> Ø {f(t["d"])} (volets levés) dans l'angle sud-est, face à la baie, centrée en {t["ronde"]}, avec 4 chaises en biais et la suspension au-dessus. Pour recevoir, on la tire au milieu et on ajoute {t["allonges"]} allonges de {t["allonge"]} : <b>ouverte</b>, ovale de {f(t["ouvert"])} × {f(t["d"])} centrée en ({t["cx"]}, {t["cy"]}), est-ouest (nord-sud, il faudrait {f(t["ouvert"] + 2 * 70)} pour {M.P}), 12 chaises à pas de {M.PAS_CHAISES:.0f}, une à chaque bout ; les {M.CHAISES_PLIANTES} chaises de plus sont pliantes, rangées dans le kafoutche extérieur. <b>⑥ Table basse</b> <a href="{M.TABLE_BASSE["url"]}">{M.TABLE_BASSE["nom"]}</a> {M.TABLE_BASSE["l"]} × {M.TABLE_BASSE["p"]} ({M.TABLE_BASSE["prix"]} €), dessus à {M.TABLE_BASSE["z1"]} (à peine au-dessus de l'assise, {M.CANAPE["assise"]}), à {M.TABLE_BASSE["ecart"]} devant le canapé, centrée sur lui. <b>⑦ Siège</b> (bouton Siège) : <a href="{M.DYVLINGE["url"]}">IKEA DYVLINGE</a> pivotant ({M.DYVLINGE["l"]} × {M.DYVLINGE["p"]} × {M.DYVLINGE["h"]}, assise à {M.DYVLINGE["assise"]}, {M.DYVLINGE["prix"]} €) à l'est de la table basse, tourné vers le canapé ; il pivote vers l'écran ou la baie. Variante : chilienne {M.CHILIENNE["long"]} × {M.CHILIENNE["l"]}, tête à l'est. <b>⑧ Meuble bas</b> style enfilade scandinave {M.CONSOLE["l"]} × {M.CONSOLE["p"]} × {M.CONSOLE["z1"]} sur pieds, contre le mur sud en face du canapé, centré sur lui ; peu profond pour laisser passer la table ouverte. Le mur sud au-dessus sert d'<b>écran</b> : image {f(M.ECRAN["l"])} × {f(M.ECRAN["h"])} (16/9), bas à {M.ECRAN["bas"]}, vue du canapé à ≈ {M.PROJECTEUR["recul"]} (1,5 fois la largeur de l'image, le confort habituel) ; <b>vidéoprojecteur</b> au plafond au-dessus du canapé, à {M.PROJECTEUR["recul"]} du mur : il faut un rapport de projection de {virg(M.PROJECTEUR["rapport"], 2)} (zoom courant 1,2–1,6). <b>Clim</b> existante sur le mur sud, tout à l'est (x {M.CLIM["x0"]} → {M.CLIM["x1"]}, h {M.CLIM["z0"]} → {M.CLIM["z1"]}, à relever). Table ouverte : la table basse se range debout dans l'allée de l'enfilade (on n'ouvre pas le module nord pendant le dîner), le DYVLINGE recule contre le mur nord à côté de la desserte, la chilienne se plie contre le mur sud. <b>Dégagements</b> (rouge) : au quotidien, {f(dg["canape_basse"])} entre le canapé et la table basse, puis {f(M.CONSOLE["y0"] - M.TABLE_BASSE["pos"]["f"][3])} jusqu'au meuble bas ; ouverte, {f(dg["canape_table"])} entre le canapé et la table, {f(dg["table_sud"])} jusqu'au meuble bas, {f(dg["bout_ouest"])} entre son bout ouest et l'enfilade, {f(dg["bout_est"])} à l'est. À 12, il reste {f(dg["derriere_chaises"])} derrière les chaises côté canapé et côté meuble bas : on s'assoit, on ne circule plus derrière. <b>Déco</b> (bouton dans la barre du haut), proportions d'aménagement : un seul tapis, {M.TAPIS["l"]} × {M.TAPIS["p"]}, sous le coin canapé (25 de plus que le canapé de chaque côté, pieds avant du canapé et de la chilienne dessus), rien sous la table à manger ; lampadaire de lecture contre l'accoudoir est du canapé, derrière l'épaule de qui est dans le siège, hors du passage devant la desserte ; lampe à poser sur l'enfilade, sous la première tablette, et petite lampe au bout de la desserte ; plantes (vert : une grande à droite du meuble bas, hors de l'image et loin du souffle de la clim, des branches sur l'enfilade) ; paire de cadres 55 × 70 au-dessus du canapé (2/3 de sa largeur, bas à 20 du dossier), cadre 80 × 60 au-dessus de la desserte (bas à 135 : le capot de la platine s'ouvre) ; livres sur les étagères, avec un objet au bout de chaque tablette (vase, petite plante, bol) et la tablette du haut, trop basse pour des livres, garnie de deux plantes retombantes et d'un vase ; deux livres d'art et un bol sur la table basse, un vase bas au centre de la table ronde ; <b>rideau</b> de lin écru (beige) sur rail au plafond, tiré au sud de la baie sur le trumeau (au nord, la desserte) : replié, {M.RIDEAU["y1"] - M.RIDEAU["y0"]} de plis dont 15 sur le bord du vitrage. Suspension Ø {M.SUSPENSION["d"]} (tireté jaune, la moitié de la table) au-dessus de la table ronde : table ouverte, elle n'est plus centrée (à prévoir : un second point lumineux ou une suspension déplaçable).</p></div>
+<p class="cap">Échelle : 1 unité = 1 cm ; ouest à gauche, nord en haut. <b>① Enfilade</b> contre le mur ouest, {f(e["y1"] - e["y0"])} centrés entre le coin nord et le cadre du passage ({f(e["y0"])} libres à chaque bout), profondeur {e["p"]} (caisson {e["p"] - e["facade"]} + façades {e["facade"]}), dessus à {e["z1"]}, sur pieds de {e["pieds"]} ; trois modules de {f(e["modules"][0][1] - e["modules"][0][0])} : {modules}. <b>② Étagères sur montants</b> (tireté) : {M.MONTANTS["n"]} montants noirs vissés au mur au-dessus de l'enfilade, à {M.MONTANTS["pas"]} d'axe en axe, et {len(M.TABLETTES)} tablettes en chêne de {et["p"]} de profondeur, décalées, sur {virg(M.METRES_ETAGERES)} m (voir la page Étagères). <b>③ Canapé</b> {c["nom"]} {c["l"]} × {c["p"]} dos au mur nord, tourné vers le sud, à {M.ALLEE_ENFILADE} de l'enfilade : l'allée laisse ouvrir les portes du module nord. <b>④ Desserte</b> {d["x1"] - d["x0"]} × {d["y1"] - d["y0"]} sur roulettes, contre le mur nord, dans le décroché nord-est (x {d["x0"]} → {d["x1"]}), façade au sud : à côté de la baie, sans rien devant le vitrage. Platine au milieu du dessus, vinyles sur deux niveaux (≈ {round(M.VINYLES, -1):.0f}). <b>⑤ Table</b> à volets et allonges (type Louis-Philippe). Au quotidien, <b>ronde</b> Ø {f(t["d"])} (volets levés) dans l'angle sud-est, face à la baie, centrée en {t["ronde"]}, avec 4 chaises en biais et la suspension au-dessus. Pour recevoir, on la tire au milieu et on ajoute {t["allonges"]} allonges de {t["allonge"]} : <b>ouverte</b>, ovale de {f(t["ouvert"])} × {f(t["d"])} centrée en ({t["cx"]}, {t["cy"]}), est-ouest (nord-sud, il faudrait {f(t["ouvert"] + 2 * 70)} pour {M.P}), 12 chaises à pas de {M.PAS_CHAISES:.0f}, une à chaque bout ; les {M.CHAISES_PLIANTES} chaises de plus sont pliantes, rangées dans le kafoutche extérieur. <b>⑥ Table basse</b> <a href="{M.TABLE_BASSE["url"]}">{M.TABLE_BASSE["nom"]}</a> {M.TABLE_BASSE["l"]} × {M.TABLE_BASSE["p"]} ({M.TABLE_BASSE["prix"]} €), dessus à {M.TABLE_BASSE["z1"]} (à peine au-dessus de l'assise, {M.CANAPE["assise"]}), à {M.TABLE_BASSE["ecart"]} devant le canapé, centrée sur lui. <b>⑦ Siège</b> (bouton Siège) : <a href="{M.DYVLINGE["url"]}">IKEA DYVLINGE</a> pivotant ({M.DYVLINGE["l"]} × {M.DYVLINGE["p"]} × {M.DYVLINGE["h"]}, assise à {M.DYVLINGE["assise"]}, {M.DYVLINGE["prix"]} €) à l'est de la table basse, tourné vers le canapé ; il pivote vers l'écran ou la baie. Variante : chilienne {M.CHILIENNE["long"]} × {M.CHILIENNE["l"]}, tête à l'est. <b>⑧ Meuble bas</b> style enfilade scandinave {M.CONSOLE["l"]} × {M.CONSOLE["p"]} × {M.CONSOLE["z1"]} sur pieds, contre le mur sud en face du canapé, centré sur lui ; peu profond pour laisser passer la table ouverte. Le mur sud au-dessus sert d'<b>écran</b> : image {f(M.ECRAN["l"])} × {f(M.ECRAN["h"])} (16/9), bas à {M.ECRAN["bas"]}, vue du canapé à ≈ {M.PROJECTEUR["recul"]} (1,5 fois la largeur de l'image, le confort habituel) ; <b>vidéoprojecteur</b> au plafond au-dessus du canapé, à {M.PROJECTEUR["recul"]} du mur : il faut un rapport de projection de {virg(M.PROJECTEUR["rapport"], 2)} (zoom courant 1,2–1,6). <b>Clim</b> existante sur le mur sud, tout à l'est (x {M.CLIM["x0"]} → {M.CLIM["x1"]}, h {M.CLIM["z0"]} → {M.CLIM["z1"]}, à relever). Table ouverte : la table basse se range debout dans l'allée de l'enfilade (on n'ouvre pas le module nord pendant le dîner), le DYVLINGE recule contre le mur nord à côté de la desserte, la chilienne se plie contre le mur sud. <b>Dégagements</b> (rouge) : au quotidien, {f(dg["canape_basse"])} entre le canapé et la table basse, puis {f(M.CONSOLE["y0"] - M.TABLE_BASSE["pos"]["f"][3])} jusqu'au meuble bas ; ouverte, {f(dg["canape_table"])} entre le canapé et la table, {f(dg["table_sud"])} jusqu'au meuble bas, {f(dg["bout_ouest"])} entre son bout ouest et l'enfilade, {f(dg["bout_est"])} à l'est. À 12, il reste {f(dg["derriere_chaises"])} derrière les chaises côté canapé et côté meuble bas : on s'assoit, on ne circule plus derrière. <b>Déco</b> (bouton dans la barre du haut), proportions d'aménagement : un seul tapis, {M.TAPIS["l"]} × {M.TAPIS["p"]}, sous le coin canapé (25 de plus que le canapé de chaque côté, pieds avant du canapé et de la chilienne dessus), rien sous la table à manger ; lampadaire de lecture contre l'accoudoir est du canapé, derrière l'épaule de qui est dans le siège, hors du passage devant la desserte ; lampe à poser sur l'enfilade, sous la première tablette, et petite lampe au bout de la desserte ; plantes (vert : une grande à droite du meuble bas, hors de l'image et loin du souffle de la clim, des branches sur l'enfilade) ; paire de cadres 55 × 70 au-dessus du canapé (2/3 de sa largeur, bas à 20 du dossier), cadre 80 × 60 au-dessus de la desserte (bas à 135 : le capot de la platine s'ouvre) ; livres sur les étagères, avec un objet au bout de chaque tablette (vase, petite plante, bol) et la tablette du haut, trop basse pour des livres, garnie de deux plantes retombantes et d'un vase ; deux livres d'art et un bol sur la table basse, un vase bas au centre de la table ronde ; <b>rideau</b> de lin écru (beige) sur rail au plafond, tiré au sud de la baie sur le trumeau (au nord, la desserte) : replié, {M.RIDEAU["y1"] - M.RIDEAU["y0"]} de plis dont 15 sur le bord du vitrage. Suspension Ø {M.SUSPENSION["d"]} (tireté jaune, la moitié de la table) au-dessus de la table ronde : table ouverte, elle n'est plus centrée (à prévoir : un second point lumineux ou une suspension déplaçable).</p></div>
 
 <h2>Coupe A-A · mur ouest</h2>
 <div class="fig"><div class="scroll">{coupe_a()}</div>
-<p class="cap">Coupe à x {COUPE_A}, regard vers l'ouest : le sud est à gauche. Enfilade sur pieds de {e["pieds"]}, dessus à {e["z1"]} ; tablettes de {et["ep"]} avec le dessus à {", ".join(str(z) for z in et["zs"])} (un premier vide de {et["zs"][0] - et["ep"] - e["z1"]} au-dessus de l'enfilade pour poser lampes et objets, puis {et["zs"][1] - et["zs"][0] - et["ep"]} de hauteur libre entre tablettes : les livres courants font 18 à 30). À gauche, le passage vers le couloir ({round(M.PASSAGE["y1"] - M.PASSAGE["y0"], 1):g} × {M.PASSAGE["h"]}) avec son cadre.</p></div>
+<p class="cap">Coupe à x {COUPE_A}, regard vers l'ouest : le sud est à gauche. Enfilade sur pieds de {e["pieds"]}, dessus à {e["z1"]} ; au-dessus, {M.MONTANTS["n"]} montants noirs percés tous les {M.MONTANTS["pas_trous"]} (z {M.MONTANTS["z0"]} → {M.MONTANTS["z1"]}, ils ne touchent pas l'enfilade) et des tablettes de chêne de {virg(et["ep"])} décalées, dessus à {", ".join(str(z) for z in et["zs"])} (un premier vide de {virg(et["zs"][0] - et["ep"] - e["z1"])} au-dessus de l'enfilade pour poser lampes et objets, puis {virg(et["zs"][1] - et["zs"][0] - et["ep"])} de hauteur libre entre tablettes : les livres courants font 18 à 30). À gauche, le passage vers le couloir ({round(M.PASSAGE["y1"] - M.PASSAGE["y0"], 1):g} × {M.PASSAGE["h"]}) avec son cadre.</p></div>
 
 <h2>Coupe B-B · baie et desserte</h2>
 <div class="fig"><div class="scroll">{coupe_b()}</div>
@@ -585,22 +604,13 @@ def contenu():
 
 <h2>Rangements</h2>
 <div class="fig">{table_rangement()}
-<p class="cap">Volume utile de l'enfilade : intérieur des caissons, panneaux de {e["ep"]} déduits. Étagères : {M.CHARGE_LIVRES} kg par mètre pleine de livres (ordre de grandeur), d'où la question de la fixation. Vinyles : environ 3,5 mm par disque sous pochette, rangées de 31,5 de profondeur.</p></div>
+<p class="cap">Volume utile de l'enfilade : intérieur des caissons, panneaux de {e["ep"]} déduits. Étagères : {M.CHARGE_LIVRES} kg par mètre pleine de livres (ordre de grandeur), repris par les montants et la cloison (voir la page Étagères). Vinyles : environ 3,5 mm par disque sous pochette, rangées de 31,5 de profondeur.</p></div>
 
 <h2>Tables qui se replient</h2>
 <div class="fig">{table_repliables()}
 <p class="cap">Recherche du 11/10/2026. Ronde Ø 90 : on n'en trouve pas qui dépasse ≈ 190 ouverte, soit 8 à 10 couverts ; pour 12, il faut au moins une Ø 100 et 4 allonges (280, serré : ≈ 62 par personne). Les consoles extensibles ont la plus petite emprise repliée (≈ 0,4 m²) mais sont rectangulaires et étroites (90) ; leurs rallonges se rangent dans la console ou à côté. Les tables à volets et allonges (Louis-Philippe) sont rondes volets levés et ovales avec leurs allonges, souvent anciennes, à chiner : c'est le type dessiné. Les tables à abattants seules (gateleg) se replient très bien mais plafonnent à 6 places. Dimensions et prix relevés sur les fiches : à revérifier avant achat.</p></div>
 
-<h2>Étagères suspendues : fixation à étudier</h2>
-<p>Charge à reprendre : jusqu'à {M.METRES_ETAGERES * M.CHARGE_LIVRES:.0f} kg sur {virg(M.METRES_ETAGERES)} m de tablettes, au-dessus d'un meuble qu'on ne veut pas faire porter. Le mur ouest est la cloison du cellier et du WC (nature à confirmer). Pistes à comparer :</p>
-<ul class="pistes">
-<li><b>Tiges ou câbles depuis le plafond</b>, tablettes accrochées dessous (vraie étagère suspendue, rien dans la cloison) : dépend du plafond (béton, hourdis, faux plafond ?) ; tiges filetées Ø 8–10 sous fourreau, ou câbles inox avec serre-câbles réglables ; un appui ponctuel au mur pour empêcher le balancement.</li>
-<li><b>Montants plafond–sol</b> en tension ou vissés au plafond, derrière l'enfilade (comme la String ou la Moebe de la page bibliothèque), tablettes sur consoles : rien de porté par la cloison.</li>
-<li><b>Fixations invisibles</b> (tiges dans la cloison, tablettes percées) : le plus « flottant », mais exige un mur plein ou un renfort dans la cloison ; portée 258 trop longue d'un seul tenant.</li>
-<li><b>Crémaillères et consoles</b> : la solution connue (voir <a href="salon-bibliotheque-fixation.html">page Fixations</a>), à garder comme repli.</li>
-</ul>
-<p class="note">À relever avant de choisir : nature du plafond et de la cloison (sondage, carottage léger), position des réseaux électriques dans le mur ouest, flèche admissible d'une tablette de {et["ep"]} sur la portée retenue.</p>
-
+{meubles()}
 <h2>Points à vérifier</h2>
 <ul class="pistes">
 <li><b>Prises</b> : près de la desserte (platine, ampli ou enceintes actives), près du canapé (lampadaire), derrière le meuble bas (box), au plafond (vidéoprojecteur).</li>

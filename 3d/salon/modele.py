@@ -9,7 +9,7 @@
 import math
 from dataclasses import dataclass
 
-VERSION = "V4.20"
+VERSION = "V4.26"
 H = 254.5               # hauteur sous plafond (relevée)
 L, P = 547, 367         # salon : 547 (ouest → est) × 367 (nord → sud), relevé du client (V4.12)
 EP = 12                 # épaisseur dessinée des murs
@@ -102,9 +102,12 @@ ENVELOPPE = [
 MEUBLES = []
 
 # ------------------------------------------------------------------ ① enfilade, mur ouest
-# Position validée par le client : mur ouest, du coin nord au cadre du passage (258 utiles).
-# Meuble bas style enfilade, sur pieds, profond pour avoir du volume ; trois modules de 86.
-ENFILADE = dict(y0=0, y1=PASSAGE["y0"] - PASSAGE["cadre"], p=45, pieds=15, z1=80, facade=2, ep=1.8)
+# Position validée par le client : mur ouest, entre le coin nord et le cadre du passage (258 utiles).
+# Meuble bas style enfilade, sur pieds, profond pour avoir du volume ; V4.25, choix du client : trois caissons de 80
+# (240), centré sur le mur (8,8 libres de chaque côté), donc sur le même axe que les étagères ; V4.26, demande du
+# client : 60 de profond au lieu de 45 (l'allée de 60 est gardée, le canapé et ce qui s'aligne sur lui glissent de 15).
+_niche = PASSAGE["y0"] - PASSAGE["cadre"]
+ENFILADE = dict(y0=round((_niche - 3 * 80) / 2, 1), y1=round((_niche + 3 * 80) / 2, 1), p=60, pieds=15, z1=80, facade=2, ep=1.8)
 _MODULES = [  # (façades, contenu)
     (["porte", "porte"], "jeux, albums, vinyles"),
     (["tiroir", "tiroir", "tiroir"], "linge de table, couverts"),
@@ -134,14 +137,93 @@ for y in (_e["y0"] + 6, _e["y1"] - 6):
 VOLUME_ENFILADE = (_xf - 2 * _e["ep"]) * (_e["y1"] - _e["y0"] - (len(_MODULES) + 1) * _e["ep"]) \
     * (_e["z1"] - _e["pieds"] - 2 * _e["ep"]) / 1000   # litres utiles
 
-# ------------------------------------------------------------------ ② étagères suspendues au-dessus
-# Fixation à étudier (R&D) : rien n'est encore choisi, les tablettes sont dessinées « flottantes ».
-ETAGERES = dict(p=28, ep=3, zs=[125, 160, 195, 230], y0=ENFILADE["y0"], y1=ENFILADE["y1"])
-for i, z in enumerate(ETAGERES["zs"]):
-    MEUBLES.append(Bloc("etagere", f"etagere_{i + 1}", 0, ETAGERES["p"], ETAGERES["y0"], ETAGERES["y1"],
-                        z - ETAGERES["ep"], z, etiq="②" if i == len(ETAGERES["zs"]) - 1 else ""))
-METRES_ETAGERES = len(ETAGERES["zs"]) * (ETAGERES["y1"] - ETAGERES["y0"]) / 100
+# ------------------------------------------------------------------ ② étagères sur montants percés (V4.21)
+# Système vu par le client : montants verticaux en pin massif peint en noir, percés à pas régulier, qui ne touchent
+# ni le sol ni l'enfilade (ils « flottent » au-dessus, vissés au mur) ; tablettes en chêne massif posées sur deux
+# montants ou plus, en composition décalée. Pas de 55 (demande 50 à 60) : 5 montants centrés sur l'enfilade.
+# V4.23, choix du client : tablette ENTAILLÉE autour de chaque montant, elle touche le mur et le montant la traverse.
+# Elle est pincée par deux chevilles en acier Ø 10 qui traversent le montant d'un flanc à l'autre et dépassent de
+# 1,5 de chaque côté sous les joues de l'entaille : une devant, dessous (elle porte), une derrière, dessus (elle
+# empêche la tablette de basculer vers l'avant). Deux colonnes de trous sur les flancs du montant, décalées de
+# l'épaisseur de la tablette plus une cheville : les trous se voient de biais, pas de face.
+MONTANTS = dict(n=5, pas=55, l=4.5, p=7, z0=110, z1=229, trou=1.0, pas_trous=5, x_av=5, x_ar=2,
+                bois="pin massif raboté, peint en noir mat")
+_c = (ENFILADE["y0"] + ENFILADE["y1"]) / 2
+MONTANTS["axes"] = [_c + (i - (MONTANTS["n"] - 1) / 2) * MONTANTS["pas"] for i in range(MONTANTS["n"])]
+# tablettes : chêne massif 2,7 (lamellé-collé abouté), 32 de profondeur depuis le mur (deux bandes par plan de
+# travail de 65), entaille 4,7 × 7,1 (2 de jeu en largeur, 1 en profondeur) au droit de chaque montant, 12 de
+# débord au-delà de l'axe du dernier montant
+ETAGERES = dict(p=32, ep=2.7, debord=12, x0=0, entaille=(MONTANTS["l"] + 0.2, MONTANTS["p"] + 0.1),
+                cheville=MONTANTS["l"] + 3, cheville_ext=1.5)
+ETAGERES["x1"] = ETAGERES["x0"] + ETAGERES["p"]
+# rainure à la défonceuse sous chaque tablette, au droit de la cheville avant, sur 9 centrés sur chaque entaille :
+# la cheville avant y est prise (ni la tablette vers la pièce, ni la cheville en long ne bougent) ; largeur, profondeur
+ETAGERES["rainure"] = dict(l=1.1, prof=0.5, long=9.0)
+# composition (dessus de la tablette, premier montant, dernier montant), montants numérotés 0 → 4 du nord au sud ;
+# niveaux à 35 l'un de l'autre (pas des trous), tablette du haut à 32 du plafond pour des objets
+TABLETTES = [(122, 0, 4), (157, 1, 4), (192, 0, 2), (192, 3, 4), (222, 1, 3)]
+ETAGERES["zs"] = sorted({z for z, _, _ in TABLETTES})
+# dessus possibles, sur toute la hauteur percée : de 122 (la lampe de l'enfilade passe dessous) à 222 (cheville
+# arrière sous le haut du montant), de 5 en 5 ; toutes les dispositions ci-dessous tiennent sur les mêmes montants
+NIVEAUX = (122, 222)
+# Dispositions étudiées (page Étagères) : (dessus, premier, dernier montant), comme TABLETTES. La première est
+# celle du plan (TABLETTES) ; les autres n'utilisent que deux longueurs : 134 (deux travées) et 79 (une travée).
+DISPOSITIONS = [
+    dict(cle="actuelle", nom="Actuelle", tablettes=list(TABLETTES),
+         idee="La composition du plan du salon : cinq tablettes de quatre longueurs (244, 189, 134, 79)."),
+    dict(cle="rangs", nom="Rangs", tablettes=[(122, 0, 2), (122, 3, 4), (157, 0, 1), (157, 2, 4),
+                                              (192, 0, 2), (192, 3, 4), (222, 0, 1), (222, 2, 4)],
+         idee="Quatre rangs à 35, 35 et 30 ; chacun d'une longue et d'une courte, le vide change de travée d'un rang "
+              "à l'autre, comme un appareil de briques."),
+    dict(cle="decalee", nom="Décalée", tablettes=[(122, 0, 2), (137, 2, 4), (152, 0, 1), (167, 3, 4),
+                                                  (182, 0, 2), (197, 2, 4), (212, 0, 1), (222, 3, 4)],
+         idee="Deux demi-murs décalés de 15 en hauteur : les longues montent en zigzag autour du montant du milieu, "
+              "les courtes aux bouts libèrent deux niches de 57 pour les grands formats."),
+    dict(cle="escalier", nom="Escalier", tablettes=[(122, 3, 4), (137, 2, 3), (152, 1, 2), (167, 0, 1),
+                                                    (162, 3, 4), (177, 2, 3), (192, 1, 2), (207, 0, 1),
+                                                    (122, 0, 2), (207, 2, 4)],
+         idee="Deux volées de courtes qui montent de 15 par travée vers le nord, une longue en bas au nord et une en "
+              "haut au sud ; tout le mur à moins de 210."),
+]
+# trous : colonne avant sous les tablettes (axe à une demi-cheville sous le dessous), colonne arrière au-dessus
+_r = MONTANTS["trou"] / 2
+_zz = range(NIVEAUX[0], NIVEAUX[1] + 1, MONTANTS["pas_trous"])
+MONTANTS["trous_av"] = [z - ETAGERES["ep"] - _r + ETAGERES["rainure"]["prof"] for z in _zz]
+MONTANTS["trous_ar"] = [z + _r for z in _zz]
+MONTANTS["decalage"] = ETAGERES["ep"] + MONTANTS["trou"] - ETAGERES["rainure"]["prof"]
+for i, y in enumerate(MONTANTS["axes"]):
+    MEUBLES.append(Bloc("montant", f"montant_{i + 1}", 0, MONTANTS["p"], y - MONTANTS["l"] / 2, y + MONTANTS["l"] / 2,
+                        MONTANTS["z0"], MONTANTS["z1"]))
+ETAGERES["tablettes"] = []
+for i, (z, a, b) in enumerate(TABLETTES):
+    y0, y1 = MONTANTS["axes"][a] - ETAGERES["debord"], MONTANTS["axes"][b] + ETAGERES["debord"]
+    ETAGERES["tablettes"].append((z, y0, y1, b - a + 1))
+    MEUBLES.append(Bloc("etagere", f"etagere_{i + 1}", ETAGERES["x0"], ETAGERES["x1"], y0, y1,
+                        z - ETAGERES["ep"], z, etiq="②" if i == 0 else ""))
+METRES_ETAGERES = sum(y1 - y0 for _, y0, y1, _ in ETAGERES["tablettes"]) / 100
+CHEVILLES = 2 * sum(n for *_, n in ETAGERES["tablettes"])
+ENTAILLES = sum(n for *_, n in ETAGERES["tablettes"])
 CHARGE_LIVRES = 25          # kg par mètre de tablette pleine de livres (ordre de grandeur)
+
+# vérifications de l'étude (ordres de grandeur, g = 9,81) : un montant reprend 55 de tablette pleine ; la charge
+# est au milieu de la partie devant le montant ; la tablette pivote sur la cheville avant, la cheville arrière la
+# retient (couple sur l'écart des deux colonnes)
+_q = CHARGE_LIVRES * MONTANTS["pas"] / 100 * 9.81                      # N par montant et par tablette
+_xq = (MONTANTS["p"] + ETAGERES["x1"]) / 2                             # cm, centre de la charge depuis le mur
+_m = _q * (_xq - MONTANTS["x_av"]) / 100                               # N·m autour de la cheville avant
+_ar = _m / ((MONTANTS["x_av"] - MONTANTS["x_ar"]) / 100)               # N, cheville arrière (vers le haut)
+_av = _ar + _q                                                         # N, cheville avant (vers le bas)
+_w = math.pi * 10 ** 3 / 32                                            # module de flexion d'une cheville Ø 10, mm³
+ETUDE_MONTANTS = dict(
+    effort=_q, moment=_m, arriere=_ar, avant=_av,
+    contrainte=_av / 2 * ETAGERES["cheville_ext"] * 10 / 2 / _w,       # MPa, bout de cheville en porte-à-faux
+    pression=_av / (MONTANTS["trou"] * 10 * MONTANTS["l"] * 10),       # MPa sur le pin, sur toute la largeur
+    joue=_av / 2 / (MONTANTS["trou"] * 10 * ETAGERES["cheville_ext"] * 10),  # MPa sur le chêne, sous une joue
+    poids=METRES_ETAGERES * CHARGE_LIVRES + METRES_ETAGERES * ETAGERES["p"] / 100 * 0.027 * 700
+    + 5 * 1.2 * 0.045 * 0.07 * 450,
+    vis=3,                                                             # vis par montant
+)
+ETUDE_MONTANTS["par_montant"] = ETUDE_MONTANTS["poids"] / MONTANTS["n"]
 
 # ------------------------------------------------------------------ ③ canapé, mur nord, dans l'angle de la bibliothèque
 # Dos au mur nord, tourné vers le sud ; une allée de 60 devant l'enfilade pour en ouvrir les portes.
@@ -382,7 +464,7 @@ DECO += [Cyl("lampe_pied", "lampadaire_socle", LAMPADAIRE["cx"], LAMPADAIRE["cy"
          Cyl("lampe_pied", "lampadaire_tige", LAMPADAIRE["cx"], LAMPADAIRE["cy"], 1, 3, LAMPADAIRE["z"][0], deco=True),
          Cyl("lampe", "lampadaire_abat_jour", LAMPADAIRE["cx"], LAMPADAIRE["cy"], LAMPADAIRE["abat"], *LAMPADAIRE["z"],
              deco=True)]
-for nom, cx, cy, z0, h, r in (("enfilade", 22, 40, ENFILADE["z1"], 40, 14), ("desserte", DESSERTE["x1"] - 16, DESSERTE["y0"] + 18, DESSERTE["z1"], 35, 11)):
+for nom, cx, cy, z0, h, r in (("enfilade", 22, 40, ENFILADE["z1"], 36, 14), ("desserte", DESSERTE["x1"] - 16, DESSERTE["y0"] + 18, DESSERTE["z1"], 35, 11)):
     DECO += [Cyl("lampe_pied", f"lampe_{nom}_pied", cx, cy, 5, z0, z0 + h - 16, deco=True),
              Cyl("lampe", f"lampe_{nom}_abat_jour", cx, cy, r, z0 + h - 18, z0 + h, deco=True)]
 # plantes : une grande à droite du meuble bas, hors de l'image et loin de la clim (air froid et sec) ;
@@ -391,7 +473,7 @@ for nom, cx, cy, r, h in (("sud", CONSOLE["x1"] + 52, P - 21, 16, 160),):
     DECO += [Cyl("pot", f"pot_{nom}", cx, cy, r, 0, 35, deco=True),
              Cyl("plante", f"plante_{nom}", cx, cy, r + 6, 35, h, deco=True)]
 DECO += [Cyl("pot", "vase_enfilade", 22, 205, 8, ENFILADE["z1"], ENFILADE["z1"] + 28, deco=True),
-         Cyl("plante", "branches_enfilade", 22, 205, 12, ENFILADE["z1"] + 28, ENFILADE["z1"] + 40, deco=True)]
+         Cyl("plante", "branches_enfilade", 22, 205, 12, ENFILADE["z1"] + 28, ENFILADE["z1"] + 36, deco=True)]
 # cadres : au-dessus du canapé, une paire 55 × 70 espacée de 8 (118 de large ≈ 2/3 du canapé), centrée, bas à 20 du
 # dossier ; au-dessus de la desserte, 80 × 60 centré, bas à 135 pour ouvrir le capot de la platine. Mur sud : écran.
 _xc = (CANAPE["x0"] + CANAPE["x1"]) / 2
@@ -400,29 +482,35 @@ CADRES = [(_xc - 59, _xc - 4, 0, _zc, _zc + 70), (_xc + 4, _xc + 59, 0, _zc, _zc
           (_xm - 40, _xm + 40, DECROCHE["y"], 135, 195)]
 for i, (x0, x1, y, z0, z1) in enumerate(CADRES):
     DECO.append(Bloc("cadre_mur", f"cadre_{i}", x0, x1, y, y + 3, z0, z1, deco=True))
-# livres sur les étagères : rangées de hauteurs variées, avec des vides pour les objets
+# livres sur les tablettes (sauf celle du haut, à 32 du plafond) : rangées de hauteurs variées, des vides pour les
+# objets ; les livres se posent devant les montants (et devant les chevilles arrière)
 _alea = [23, 27, 30, 21, 25, 28, 24, 22, 29, 26]
-for k, z in enumerate(ETAGERES["zs"][:-1]):
-    y, n = ETAGERES["y0"] + 4, 0
-    while y < ETAGERES["y1"] - 45:                        # le bout sud de chaque tablette reçoit un objet
-        l = 30 + 12 * ((k + n) % 4)                       # longueur de la rangée
+_bx0, _bx1 = MONTANTS["p"] + 1, ETAGERES["x1"] - 4
+_haut = ETAGERES["zs"][-1]
+for k, (z, ty0, ty1, _) in enumerate(ETAGERES["tablettes"]):
+    if z == _haut:
+        continue
+    y, n = ty0 + 4, 0
+    while y < ty1 - 40:                                   # le bout sud de chaque tablette reçoit un objet
+        l = 26 + 10 * ((k + n) % 4)                       # longueur de la rangée
         h = _alea[(k * 3 + n) % len(_alea)]
-        DECO.append(Bloc("livres", f"livres_{k}_{n}", 1, 22, y, min(y + l, ETAGERES["y1"] - 4), z, z + h, deco=True))
+        DECO.append(Bloc("livres", f"livres_{k}_{n}", _bx0, _bx1, y, min(y + l, ty1 - 30), z, z + h, deco=True))
         y += l + (14 if (k + n) % 3 == 0 else 3)
         n += 1
-# objets sur les étagères (V4.19) : un par tablette au bout sud des livres, et la tablette du haut (24 sous le
-# plafond, trop basse pour des livres) garnie de deux petites plantes retombantes et d'un vase ; hauteurs ≤ 2/3 de
-# l'espace libre pour que les objets respirent
-_e, _yo = ETAGERES, ETAGERES["y1"] - 22
-_z = ETAGERES["zs"]
-DECO += [Cyl("objet", "vase_e0", 14, _yo, 7, _z[0], _z[0] + 22, deco=True),
-         Cyl("pot", "pot_e1", 14, _yo, 7, _z[1], _z[1] + 11, deco=True),
-         Cyl("plante", "plante_e1", 14, _yo, 10, _z[1] + 11, _z[1] + 24, deco=True),
-         Cyl("objet", "bol_e2", 14, _yo, 11, _z[2], _z[2] + 8, deco=True),
-         Cyl("objet", "vase_e3", 14, (_e["y0"] + _e["y1"]) / 2, 6, _z[3], _z[3] + 17, deco=True)]
-for nom, y in (("e3a", _e["y0"] + 35), ("e3b", _e["y1"] - 35)):
-    DECO += [Cyl("pot", f"pot_{nom}", 14, y, 8, _z[3], _z[3] + 11, deco=True),
-             Cyl("plante", f"plante_{nom}", 14, y, 12, _z[3] + 11, _z[3] + 21, deco=True)]
+# objets : un au bout sud de chaque tablette à livres, et la tablette du haut garnie de deux petites plantes
+# retombantes et d'un vase ; hauteurs ≤ 2/3 de l'espace libre pour que les objets respirent
+_xo = (MONTANTS["p"] + ETAGERES["x1"]) / 2
+_objets = [("objet", 7, 22), ("pot", 7, 11), ("objet", 11, 8), ("objet", 6, 16)]
+for k, (z, ty0, ty1, _) in enumerate(t for t in ETAGERES["tablettes"] if t[0] != _haut):
+    role, r, h = _objets[k % len(_objets)]
+    DECO.append(Cyl(role, f"objet_e{k}", _xo, ty1 - 18, r, z, z + h, deco=True))
+    if role == "pot":
+        DECO.append(Cyl("plante", f"plante_e{k}", _xo, ty1 - 18, 10, z + h, z + h + 13, deco=True))
+_, _ty0, _ty1, _ = next(t for t in ETAGERES["tablettes"] if t[0] == _haut)
+DECO.append(Cyl("objet", "vase_haut", _xo, (_ty0 + _ty1) / 2, 6, _haut, _haut + 17, deco=True))
+for nom, y in (("ha", _ty0 + 22), ("hb", _ty1 - 22)):
+    DECO += [Cyl("pot", f"pot_{nom}", _xo, y, 8, _haut, _haut + 11, deco=True),
+             Cyl("plante", f"plante_{nom}", _xo, y, 12, _haut + 11, _haut + 21, deco=True)]
 # table basse : pile de deux livres d'art et un bol en bois (un tiers du plateau au plus, le reste libre pour poser)
 _tx0, _ty0, _tx1, _ty1 = TABLE_BASSE["pos"]["f"]
 _zt = TABLE_BASSE["z1"]
@@ -492,13 +580,42 @@ TABLES_REPLIABLES = [
      "https://www.dimensions.com/element/ikea-norden-gateleg-table"),
 ]
 # rendus 3D : (titre, version du modèle rendue, [(vue, nom de la variante)])
-RENDUS = [("Vue isométrique depuis le sud-est (murs sud et est coupés) : table ronde, DYVLINGE, UGGLERUM, déco (rideau coupé avec le mur est)", "V4.19",
+RENDUS = [("Vue isométrique depuis le sud-est (murs sud et est coupés) : table ronde, DYVLINGE, UGGLERUM, déco (rideau coupé avec le mur est) ; étagères sur montants percés de la page Étagères", "V4.25",
            [("iso", "Chêne"), ("iso_noyer", "Noyer")]),
           ("Vue isométrique opposée, depuis le nord-ouest (murs nord et ouest coupés, avec les cadres et le papier peint) : "
            "écran et meuble bas, baie et rideau, table ronde", "V4.20",
            [("iso_no", "Chêne"), ("iso_no_noyer", "Noyer")])]
 
 CHANGEMENTS = [
+    ("V4.26", "30/10/2026",
+     "Enfilade de 60 de profond au lieu de 45 (demande du client). L'allée de 60 devant elle est gardée : le canapé, "
+     "la table basse, le tapis, le meuble bas, l'écran et le projecteur, centrés sur le canapé, glissent de 15 vers "
+     "l'est ; la table, centrée entre l'enfilade et le mur est, de 7,5. Rendus 3D non refaits."),
+    ("V4.25", "29/10/2026",
+     "Enfilade : trois caissons de 80 (240 au lieu de 257,6), centrée sur le mur ouest avec 8,8 libres de chaque "
+     "côté ; les étagères, centrées sur le même axe, ne bougent pas."),
+    ("V4.25", "29/10/2026",
+     "Rendu iso (chêne et noyer) refait avec les étagères de la page Étagères : montants noirs, tablettes d'une seule "
+     "pièce entaillées autour des montants, arêtes arrondies, chevilles rondes. Le rendu prend désormais les étagères "
+     "dans etageres.pieces_3d(). Vue nord-ouest non refaite (V4.20)."),
+    ("V4.24", "29/10/2026",
+     "Les meubles à fabriquer ont leur page, comme le meuble linge de la salle de bain : Étagères (montants percés "
+     "et tablettes entaillées) et Enfilade, avec plans, matériaux, débit, achats et prix. L'étude des étagères "
+     "quitte cette page pour la page Étagères ; ici, un résumé et les liens."),
+    ("V4.23", "29/10/2026",
+     "Étagères : tablette entaillée autour des montants (choix du client) à la place des broches. La tablette va "
+     "jusqu'au mur (32 de profondeur, entaille 4,7 × 7,1 à chaque montant) ; deux chevilles en acier Ø 10 par "
+     "montant la pincent : une devant, dessous, qui porte, une derrière, dessus, qui l'empêche de basculer. Les "
+     "montants ont deux colonnes de trous sur leurs flancs. Profil, vues de dessus, charges et achats refaits."),
+    ("V4.22", "29/10/2026",
+     "Étude des étagères : vues de dessus niveau par niveau (montants, tablettes, broches, enfilade dessous), avec "
+     "les entraxes et les profondeurs. Modèle inchangé."),
+    ("V4.21", "29/10/2026",
+     "Étude des étagères sur montants percés, d'après un modèle vu par le client : 5 montants en pin massif peint en "
+     "noir, 4,5 × 7, espacés de 55, vissés au mur au-dessus de l'enfilade sans toucher ni le sol ni le meuble "
+     "(z 110 → 229), percés tous les 5 ; 5 tablettes en chêne massif de 2,7, décalées, posées chacune sur 2 à 5 "
+     "montants par des broches en acier Ø 12 enfilées dans leur chant arrière (7,8 m de tablettes au lieu de 10,3). "
+     "Section d'étude : mécanisme, charges, fixation selon la cloison, débit, achats estimés. Rendus non refaits."),
     ("V4.20", "11/10/2026",
      "Rendu 3D : vue isométrique opposée, depuis le nord-ouest (murs nord et ouest et plafond coupés), en chêne et en "
      "noyer. Modèle inchangé."),
