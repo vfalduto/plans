@@ -1,7 +1,7 @@
 # Génère les trois pages du meuble linge (document V4, modèle V6.0) depuis modele.py :
 #
 #   sdb-meuble-v4.html        page principale : les deux meubles en place, matériaux communs, paniers, budget, changements
-#   sdb-meuble-v4-bas.html    meuble bas : vue, notice de montage, découpe, achats, essence du plan
+#   sdb-meuble-v4-bas.html    meuble bas : vue, cotes (V6.1), notice de montage, découpe, achats, essence du plan
 #   sdb-meuble-v4-haut.html   caisson haut : vue, notice de montage, découpe, achats, matériaux possibles
 #
 #   python3 3d/sdb/pages.py   (just sdb)
@@ -18,6 +18,7 @@ import modele as M  # noqa: E402
 import plan as PL  # noqa: E402
 import montage as MO  # noqa: E402
 import calepinage as CAL  # noqa: E402
+import cotes as CO  # noqa: E402
 
 ENSEMBLE = "sdb-meuble-v4.html"
 PAGES = {"bas": "sdb-meuble-v4-bas.html", "haut": "sdb-meuble-v4-haut.html"}
@@ -53,8 +54,8 @@ def lignes_achats():
     consommables communs, du meuble bas et du caisson haut ; articles à acheter ailleurs ; consommables non chiffrés."""
     cal = PL.calepinage()
     tot = Counter()
-    for _, _, q in M.ETAPES:
-        tot.update(q)
+    for e in M.ETAPES:
+        tot.update(e[-1])
     quinc = {"commun": [], "bas": [], "haut": []}
     manque = {"commun": [], "bas": [], "haut": []}
     for code, w in M.WELDOM.items():
@@ -309,7 +310,7 @@ def sacs():
     pt, c = M.PATRON, M.COUTURE
     bw, bl = pt["bande"]
     sw, sh = pt["soufflet"]
-    return (f'<h3>Sacs à coudre</h3><div class="fig"><div class="scroll">{PL.patron_svg()}</div>'
+    return (f'<h2 id="sacs">Sacs à coudre</h2><div class="fig"><div class="scroll">{PL.patron_svg()}</div>'
             f'<p class="cap">{lettres(N_SACS).capitalize()} sacs dans {cm(M.TOILE["achat_m"])} m de toile en {pt["tissu"]} de laize. Chaque sac : '
             f'une bande de {cm(bw)} × {cm(bl)} (devant, fond et dos, un fourreau à chaque bout) et deux soufflets en '
             f'trapèze de {cm(sh)} de haut, {cm(pt["soufflet_haut"])} en haut et {cm(pt["soufflet_bas"])} en bas ; '
@@ -320,6 +321,8 @@ def sacs():
 
 
 def montage(meuble):
+    """V6.1 : l'ordre de travail, ce qu'il faut sous la main, la méthode de perçage, puis les étapes en opérations
+    numérotées ; en annexe, les sacs (ou la fixation du caisson haut) et les fiches de perçage des pièces."""
     n_ = etapes(meuble)
     deb = [p for p in PL.debit() if M.meuble(p["rep"]) == meuble]
     cartes = "".join(MO.carte_piece(p) for p in deb)
@@ -328,13 +331,15 @@ def montage(meuble):
         if k in quinc:
             quinc[k] = min(quinc[k], PL.achat(k))
     outils = "".join(f"<li>{escape(o)}</li>" for o in MO.OUTILS[meuble])
-    legende = ('<p class="note">Plans des sous-ensembles : vue éclatée, puis chaque pièce à plat, face par face, cotes '
+    legende = ('<p class="note">Une vue éclatée par sous-ensemble, puis chaque pièce à plat, face par face, cotes '
                'en mm depuis le coin en bas à gauche. <span class="lg fta"></span> on perce à travers (passage, fraisure '
                'ou lamage) · <span class="lg ftb"></span> avant-trou de la vis qui arrive · <span class="lg fent"></span> '
                'entaille.</p>')
-    extra = sacs() if meuble == "bas" else f'<h3>Fixer le caisson haut au mur</h3>{MO.fixation_haut()}'
+    annexe = sacs() if meuble == "bas" else f'<h2 id="fixer-haut">Fixer le caisson haut au mur</h2>{MO.fixation_haut()}'
+    cotes = (' Les cotes de position sont sur la <a href="#cotes">feuille de cotes</a>.' if meuble == "bas" else "")
     return f"""<h2 id="montage">Notice de montage</h2>
-<p>{len(n_)} étapes. Dans chaque dessin, les pièces de l'étape sont en orange avec leur repère, celles déjà posées en blanc, et les trous à percer en points noirs ; le tableau Perçages de chaque étape donne forets, vis et positions.</p>
+<p>{len(n_)} étapes, dans l'ordre. Chacune dit d'abord ce qu'on obtient et ce qu'il faut sous la main, puis donne les opérations une à une avec leurs cotes ; <b>Contrôle</b> : ce qu'on vérifie avant de passer à la suite ; <b>Attention</b> : le piège. À côté, le dessin du résultat de l'étape.{cotes}</p>
+{MO.ordre_travail(n_)}
 <h3>Pièces</h3>
 <div class="cartes">{cartes}</div>
 <p class="note">Cotes en mm (longueur × largeur × épaisseur) ; usinages dans la <a href="#decoupe">découpe</a>.</p>
@@ -342,12 +347,13 @@ def montage(meuble):
 <ul class="outils">{outils}</ul>
 <h3>Quincaillerie</h3>
 <div class="hws">{MO.puces_quinc(quinc)}</div>
-{extra}
-<h3>Comment percer</h3>
+<h3 id="comment-percer">Comment percer</h3>
 {MO.comment_percer()}
+{"".join(MO.bloc_etape(n) for n in n_)}
+{annexe}
+<h2 id="fiches">Fiches de perçage des pièces</h2>
 {legende}
-{MO.plans_sous_ensembles(meuble)}
-{"".join(MO.bloc_etape(n) for n in n_)}"""
+{MO.plans_sous_ensembles(meuble)}"""
 
 
 def decoupe(meuble):
@@ -414,7 +420,7 @@ def achats(meuble):
             o.append(f'<p><b>À acheter avec le meuble bas</b> : {escape(liste_chutes())} se taillent dans les '
                      f'<a href="{PAGES["bas"]}#achats">achats du meuble bas</a>, qui ne sont pas recomptés ici.</p>')
         com = [M.QUINCAILLERIE[c].split(" (")[0] for c in M.CONSOMMABLES
-               if c in M.WELDOM and any(c in M.ETAPES[n][2] for n in M.MEUBLE_HAUT_ETAPES)]
+               if c in M.WELDOM and any(c in M.ETAPES[n][-1] for n in M.MEUBLE_HAUT_ETAPES)]
         if com:
             o.append(f'<p>Le caisson haut utilise aussi des consommables achetés avec le meuble bas : '
                      f'{escape(" ; ".join(com))}.</p>')
@@ -478,13 +484,14 @@ def page_meuble(meuble):
         "haut": f"Le caisson de {cm(M.Z_HAUT)} à {cm(M.Z_HAUT1)}, au-dessus de la niche : serviettes au nord, pharmacie au sud, {lettres(N_PORTES_HAUT, True)} portes coulissantes, fileur jusqu'au plafond. Chevillé au mur du fond, au-dessus du carrelage.",
     }[meuble]
     fin = essence_plan() if meuble == "bas" else materiaux_haut()
+    cotes = f'<h2 id="cotes">Cotes</h2>{CO.feuille()}' if meuble == "bas" else ""
     corps = f"""{kicker(TITRES[meuble].lower())}
 <h1>{TITRES[meuble]}</h1>
 <p class="pitch">{pitch}</p>
 
 <h2 id="iso">Le meuble</h2>
 <div class="fig">{iso_meuble(meuble)}</div>
-
+{cotes}
 {montage(meuble)}
 
 {decoupe(meuble)}

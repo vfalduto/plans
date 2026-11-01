@@ -14,6 +14,7 @@ from html import escape
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 import modele as M  # noqa: E402
 import plan as PL  # noqa: E402
+import cotes as CO  # noqa: E402
 
 
 # ------------------------------------------------------------------ projection
@@ -357,7 +358,7 @@ def profil_bac():
     o.append(PL.text(bu.x1 + 1.5, -(bu.z0 + 1), f"tire-fond de butée ({M.BAC['angle_max']}°)", "lblx", "start"))
     o.append(PL.text(xr0 + bx + 1.5, -(zb1 - 1), "barre arrière (amovible)", "lblx", "start"))
     o.append(PL.text((M.XO0 + M.XO1) / 2 + 4, -40, "sac", "lblx"))
-    x0, x1 = M.FACE - 32, M.XO1 + 22
+    x0, x1 = M.FACE - 38, M.XO1 + 22
     return (f'<svg viewBox="{x0} {-(M.Z_DESSUS + 6):.1f} {x1 - x0} {M.Z_DESSUS + 14:.1f}" role="img" '
             f'aria-label="Porte basculée jusqu\'à la butée, vue de côté">{"".join(o)}</svg>')
 
@@ -406,7 +407,7 @@ def puces_pieces(c, n):
 
 def quantites(n):
     """Quincaillerie de l'étape n ; le chant en rouleaux, compté sur les chants visibles des pièces de l'étape."""
-    q = dict(M.ETAPES[n][2])
+    q = dict(M.ETAPES[n][-1])
     if "chant" in q:
         q["chant"] = PL.chants()["par_etape"].get(n, 0)
         if not q["chant"]:
@@ -414,28 +415,50 @@ def quantites(n):
     return q
 
 
+# V6.1 : la notice n'est plus une suite de dessins façon IKEA avec un paragraphe par étape : chaque étape dit ce qu'on
+# obtient, ce qu'il faut sous la main, puis des opérations numérotées, chacune avec son dessin coté s'il en faut un, le
+# contrôle à faire avant de passer à la suite et le piège à éviter ; le dessin en perspective de l'étape montre le
+# résultat, à côté.
+FIGURES = dict(CO.FIGURES, charniere=charniere_svg, profil_bac=profil_bac)
+VOIR = {"decoupe": "la découpe", "comment-percer": "comment percer", "sacs": "les sacs à coudre",
+        "cote-bac": "la coupe C3", "cote-machine": "la coupe C4", "fixer-haut": "fixer le caisson haut au mur"}
+
+
+def operation(n, k, o):
+    voir = f' <a class="voir" href="#{o["voir"]}">→ {escape(VOIR[o["voir"]])}</a>' if o["voir"] else ""
+    fig = f'<div class="opfig">{FIGURES[o["fig"]]()}</div>' if o["fig"] else ""
+    ctrl = f'<p class="ctrl"><b>Contrôle</b> {escape(o["ctrl"])}</p>' if o["ctrl"] else ""
+    att = f'<p class="att"><b>Attention</b> {escape(o["att"])}</p>' if o["att"] else ""
+    return (f'<li class="op" id="op-{n}-{k}"><span class="opn">{n}.{k}</span><div class="opc">'
+            f'<p>{escape(o["texte"])}{voir}</p>{fig}{ctrl}{att}</div></li>')
+
+
 def bloc_etape(n):
-    titre, texte, _ = M.ETAPES[n]
+    titre, but, ops, _ = M.ETAPES[n]
     q = quantites(n)
-    par_cote = n not in SEUL
-    if par_cote:
-        fig = f'<div class="vd">{dessin_etape("d", n)}</div>'
-    else:
-        fig = dessin_etape("d", n)
+    fig = dessin_etape("d", n) if n else ""      # avant de commencer : le mur du fond est dessiné coté en 0.1
     fois = f'<div class="fois">× {FOIS[n]}</div>' if n in FOIS else ""
-    extra = f'<div class="mini"><div class="charns">{charniere_svg()}</div>{profil_bac()}</div>' if n == 4 else ""
     pcs = puces_pieces("d", n)
+    besoin = (f'<div class="besoin"><div class="pcs">{pcs}</div><div class="hws">{puces_quinc(q)}</div></div>'
+              if pcs or q else "")
+    lis = "".join(operation(n, k + 1, o) for k, o in enumerate(ops))
     return f"""<section class="etape" id="etape-{n}">
 <div class="num">{n}</div>
 <div class="ecorps">
 <h2>{escape(titre)}</h2>
-<div class="pcs">{pcs}</div>
-<div class="hws">{puces_quinc(q)}</div>
-<div class="edessin">{fig}{fois}{extra}</div>
-<p class="consigne">{escape(texte)}</p>
+<p class="but"><b>Résultat</b> {escape(but)}</p>
+{besoin}
+<div class="egrille{"" if fig else " seule"}"><ol class="ops">{lis}</ol>
+{f'<div class="eiso"><div class="edessin">{fig}{fois}</div><p class="note">Le résultat de l’étape : pièces de l’étape en orange, trous à percer en points noirs.</p></div>' if fig else ""}</div>
 {table_percages(n)}
 </div>
 </section>"""
+
+
+def ordre_travail(etapes):
+    """Vue d'ensemble de la notice : une ligne par étape, ce qu'on obtient."""
+    return ('<ol class="ordre">' + "".join(f'<li><a href="#etape-{n}"><b>{n}. {escape(M.ETAPES[n][0])}</b></a> '
+                                          f'<span>{escape(M.ETAPES[n][1])}</span></li>' for n in etapes) + "</ol>")
 
 
 # ------------------------------------------------------------------ plans des sous-ensembles (V4.3)
@@ -630,7 +653,7 @@ def carte_piece(p):
 
 
 
-CSS = PL.CSS + """
+CSS = PL.CSS + CO.CSS + """
 .isol{fill:var(--line);fill-opacity:.25}
 .imur{fill:var(--line);fill-opacity:.35;stroke:var(--muted);stroke-width:.25}
 .imur2{fill:var(--line);fill-opacity:.18;stroke:var(--muted);stroke-width:.25}
@@ -714,7 +737,27 @@ details.perc{margin:10px 0 0}details.perc summary{cursor:pointer;font-weight:700
 .pvis{fill:#B9C2C8;stroke:var(--ink);stroke-width:.35}
 .pfil{stroke:var(--ink);stroke-width:.3}
 .ptx{font-size:5px;fill:var(--ink)}.ptx.muted{fill:var(--muted)}
-@media (max-width:560px){ .etape{grid-template-columns:1fr} .etape>.num{font-size:40px} }
+.but{margin:0 0 8px;max-width:820px}.but b,.ctrl b,.att b{font:700 11px "JetBrains Mono",ui-monospace,monospace;text-transform:uppercase;letter-spacing:.06em;margin-right:6px}
+.besoin{margin:0 0 10px}
+.egrille{display:grid;grid-template-columns:minmax(0,1fr);gap:14px}
+@media (min-width:980px){.egrille.seule{grid-template-columns:minmax(0,1fr);max-width:820px}.egrille:not(.seule){grid-template-columns:minmax(0,1.35fr) minmax(0,1fr)}.eiso{position:sticky;top:56px;align-self:start}}
+.eiso .edessin{margin:0}.eiso .edessin svg{max-height:52vh}.eiso .note{margin:4px 2px 0}
+ol.ops{list-style:none;margin:0;padding:0;counter-reset:none}
+li.op{display:grid;grid-template-columns:44px minmax(0,1fr);gap:8px;padding:10px 0;border-top:1px solid var(--line)}
+li.op:first-child{border-top:none;padding-top:2px}
+.opn{font:800 15px "JetBrains Mono",ui-monospace,monospace;color:var(--muted);padding-top:2px}
+.opc p{margin:0 0 6px}
+.opfig{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:8px;margin:6px 0 8px;overflow-x:auto}
+.opfig svg{display:block;width:100%;height:auto;max-height:56vh}.opfig .charn{max-width:none}
+.ctrl{border-left:4px solid var(--water);background:var(--panel);padding:5px 10px;border-radius:0 8px 8px 0}
+.ctrl b{color:var(--water)}
+.att{border-left:4px solid var(--tri);background:var(--panel);padding:5px 10px;border-radius:0 8px 8px 0}
+.att b{color:var(--tri)}
+a.voir{font-size:13px;white-space:nowrap}
+ol.ordre{padding-left:0;list-style:none;display:grid;gap:4px;max-width:860px}
+ol.ordre li{padding:6px 10px;border:1px solid var(--line);border-radius:8px;background:var(--panel)}
+ol.ordre a{color:var(--ink);text-decoration:none}ol.ordre a:hover{text-decoration:underline}ol.ordre span{color:var(--muted);font-size:14px}
+@media (max-width:560px){ .etape{grid-template-columns:1fr} .etape>.num{font-size:40px} li.op{grid-template-columns:36px minmax(0,1fr)} }
 """
 
 # V5.15 : outils par meuble (le bas et le haut se font séparément)

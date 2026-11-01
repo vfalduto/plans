@@ -7,7 +7,7 @@ import modele as M  # noqa: E402
 
 
 def test_epaisseurs_v6():
-    assert M.VERSION == "V6.0" and M.PT == 1.8 and M.TH == 1.8
+    assert M.VERSION == "V6.1" and M.PT == 1.8 and M.TH == 1.8
 
 
 def test_plan_chene_weldom():
@@ -70,7 +70,7 @@ def test_pages():
     for h in (ens, bas, haut):
         # l'historique des changements cite légitimement l'ancien vocabulaire : on le retire avant de chercher
         h = re.sub(r'<section id="changements">.*?</section>', "", h, flags=re.S)
-        for interdit in ("Coupe", "Élévation", "Bacs à roulettes", "sdb-meuble-v3"):
+        for interdit in ("Bacs à roulettes", "sdb-meuble-v3"):     # V6.1 : coupes et vues cotées de retour
             assert interdit not in h, interdit
     for h in (bas, haut):
         for sec in ('id="iso"', 'id="montage"', 'id="decoupe"', 'id="achats"'):
@@ -93,17 +93,17 @@ def _sans_changements(h):
 def test_siphon_dans_la_notice():
     bas = _sans_changements(pages.page_meuble("bas"))
     assert "siphon" in bas
-    assert f"{M.TUYAUX['saillie_max'] * 10:.0f} mm" in M.ETAPES[0][1]
-    assert "vidange" in M.ETAPES[6][1] and "siphon" in M.ETAPES[6][1]
+    assert f"{M.TUYAUX['saillie_max'] * 10:.0f} mm" in M.texte_etape(0)
+    assert "vidange" in M.texte_etape(6) and "siphon" in M.texte_etape(6)
 
 
 def test_niveau_avant_les_coins():
-    t = M.ETAPES[2][1]
+    t = M.texte_etape(2)
     assert "niveau" in t and t.index("niveau") < t.index("coin")
     for z in sorted({z for _, z in M.COINS["pos"]}):
         assert M.cm_(z) in t
-    assert "sans forcer" in t and "silicone" in M.ETAPES[2][2]
-    assert "ensuite sur place" not in M.ETAPES[1][1]
+    assert "sans forcer" in t and "silicone" in M.ETAPES[2][-1]
+    assert "ensuite sur place" not in M.texte_etape(1)
 
 
 def test_tasseau_de_joint_du_fond():
@@ -174,3 +174,28 @@ def test_vis_du_caisson_haut():
         h = re.sub(r'<section id="changements">.*?</section>', "", h, flags=re.S)
         assert "6 × 70" not in h
     assert f"6 × {v['L']}" in pages.page_meuble("haut")
+
+
+# ------------------------------------------------------------------ V6.1 : feuille de cotes, notice en opérations
+def test_feuille_de_cotes():
+    bas, haut = pages.page_meuble("bas"), pages.page_meuble("haut")
+    for id_ in ("cotes", "cote-face", "cote-dessus", "cote-bac", "cote-machine"):
+        assert f'id="{id_}"' in bas, id_
+    assert 'id="cotes"' not in haut
+
+
+def test_operations_de_la_notice():
+    import cotes as CO
+    bas, haut = pages.page_meuble("bas"), pages.page_meuble("haut")
+    for n, (titre, but, ops, q) in enumerate(M.ETAPES):
+        assert titre and but and ops and isinstance(q, dict)
+        page = haut if n in M.MEUBLE_HAUT_ETAPES else bas
+        for k, o in enumerate(ops):
+            assert f'id="op-{n}-{k + 1}"' in page
+            assert o["fig"] is None or o["fig"] in MO.FIGURES, o["fig"]
+            assert o["voir"] is None or f'id="{o["voir"]}"' in page, o["voir"]
+    assert set(CO.FIGURES) <= set(MO.FIGURES)
+
+
+def test_montants_moins_les_verins():
+    assert f"{(M.Z_CADRE - M.Z0) * 10:.0f} pour la machine" in M.texte_etape(0)

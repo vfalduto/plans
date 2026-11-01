@@ -166,7 +166,7 @@ def code_meuble(code):
     """Meuble d'un article de quincaillerie : celui des étapes où il sert (consommables : commun)."""
     if code in M.CONSOMMABLES:
         return "commun"
-    etapes = {n for n, (_, _, q) in enumerate(M.ETAPES) if code in q}
+    etapes = {n for n, e in enumerate(M.ETAPES) if code in e[-1]}
     return "haut" if etapes and etapes <= set(M.MEUBLE_HAUT_ETAPES) else "bas"
 
 
