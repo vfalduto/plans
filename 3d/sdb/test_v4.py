@@ -7,7 +7,7 @@ import modele as M  # noqa: E402
 
 
 def test_epaisseurs_v6():
-    assert M.VERSION == "V6.1" and M.PT == 1.8 and M.TH == 1.8
+    assert M.VERSION == "V6.4" and M.PT == 1.8 and M.TH == 1.8
 
 
 def test_plan_chene_weldom():
@@ -77,6 +77,19 @@ def test_pages():
             assert sec in h, sec
     assert all(m["nom"] in haut for m in M.MATERIAUX_HAUT)
     assert all(e["nom"] in bas for e in M.ESSENCES_PLAN)
+
+
+def test_chapitre_paniers():
+    # V6.2 : la variante des paniers a son chapitre au sommaire, avec la photo et le comparatif de prix
+    ens = pages.page_ensemble()
+    assert '<h2 id="paniers">Variante : deux paniers à roulettes</h2>' in ens
+    assert ens.index('id="budget"') < ens.index('id="paniers"') < ens.index('id="changements"')
+    racine = os.path.join(os.path.dirname(__file__), "..", "..")
+    # V6.3 : la photo est rangée avec les pages archivées (archive/sdb-meuble-photos/)
+    assert f'src="{M.CORNO["photo"]}"' in ens and os.path.exists(os.path.join(racine, "archive", M.CORNO["photo"]))
+    eco = sum(q * px for _, _, q, px in pages.en_moins_paniers())
+    assert abs(eco - 43.17) < 0.005
+    assert pages.PL.euros(pages.prix()["total"] - eco + 2 * M.CORNO["prix"]) in ens
 
 
 def test_plus_de_v3():
@@ -199,3 +212,169 @@ def test_operations_de_la_notice():
 
 def test_montants_moins_les_verins():
     assert f"{(M.Z_CADRE - M.Z0) * 10:.0f} pour la machine" in M.texte_etape(0)
+
+
+# ------------------------------------------------------------------ V6.3 : page autonome du meuble haut (haut.py)
+import math  # noqa: E402
+from collections import Counter  # noqa: E402
+
+import haut as H  # noqa: E402
+import calepinage as CAL  # noqa: E402
+
+RACINE = os.path.join(os.path.dirname(__file__), "..", "..")
+
+
+def _hors_notice_bas(h):
+    """La page haut ne parle du meuble bas que dans la note « Si le meuble bas est construit aussi »."""
+    return re.sub(r'<p class="note"><b>Si le meuble bas est construit aussi</b>.*?</p>', "", h, flags=re.S)
+
+
+def test_archives_a_la_place():
+    for nom in ("sdb-meuble-v4.html", "sdb-meuble-v4-bas.html", "sdb-meuble-v4-haut.html", "sdb-meuble-variantes.html",
+                "sdb-meuble-niveaux.html", "sdb-meuble-bas-revue.html"):
+        assert os.path.exists(os.path.join(RACINE, "archive", nom)), nom
+        assert not os.path.exists(os.path.join(RACINE, nom)), nom
+    assert os.path.isdir(os.path.join(RACINE, "archive", "sdb-meuble-photos"))
+    assert not os.path.exists(os.path.join(RACINE, "sdb-meuble-photos"))
+
+
+def test_pages_ne_regenerent_plus_les_archives():
+    assert not hasattr(pages, "ecrire")
+
+
+def test_page_haut_sections_et_entete():
+    h = H.page()
+    for sec in ('id="iso"', 'id="montage"', 'id="decoupe"', 'id="achats"', 'id="materiaux"', 'id="changements"'):
+        assert sec in h, sec
+    assert "<h1>Meuble haut</h1>" in h and "meuble haut · " in h
+    assert '<div class="vbar"><a class="back" href="index.html">← Plans</a><span class="sp"></span></div>' in h
+    assert 'class="btn"' not in h                       # pas d'onglets Ensemble / Meuble bas
+
+
+def test_gabarit_barre_par_defaut_inchangee():
+    par_defaut = pages.gabarit("t", "bas", "<p>x</p>")
+    assert 'href="sdb-meuble-v4-bas.html"' in par_defaut and "Caisson haut" in par_defaut
+    assert "BARRE-PROPRE" in pages.gabarit("t", "haut", "", barre_html="BARRE-PROPRE")
+
+
+def test_page_haut_sans_lien_vers_v4_nu():
+    h = H.page()
+    assert 'href="sdb-meuble-v4' not in h and 'href="sdb-meuble-v4-' not in h
+    assert 'src="sdb-meuble-v4' not in h
+    assert 'href="archive/sdb-meuble-v4.html' in h
+
+
+def test_page_haut_liens_existent():
+    h = H.page()
+    for v in re.findall(r'\b(?:href|src)="([^"]*)"', h):
+        if not v or v.startswith(("http", "data:", "#")):
+            continue
+        assert os.path.exists(os.path.join(RACINE, v.split("#")[0])), v
+    for ancre in re.findall(r'href="#([^"]+)"', h):
+        assert f'id="{ancre}"' in h, ancre
+
+
+
+def test_page_haut_pieces_posees_seules():
+    poses = Counter(q[0] for c in H.calepinage_seul().values() for pn in c["retenu"]["panneaux"] for q in pn.poses())
+    attendu = Counter({r["rep"]: r["q"] for r in PL.debit() if M.meuble(r["rep"]) == "haut"})
+    assert poses == attendu
+    assert {"K1", "G12"} <= set(poses)                   # celles qui étaient dans les chutes du bas
+
+
+
+def test_etapes_du_haut_sans_le_bas():
+    for n in M.MEUBLE_HAUT_ETAPES:
+        assert "meuble bas" not in M.texte_etape(n), n
+
+
+def test_page_haut_meuble_bas_absent():
+    # V6.4 : la page du haut ne parle plus du meuble bas (la note des chutes est dans la liste d'achats)
+    h = H.page()
+    assert "meuble bas" not in h and "même panneau" not in h
+
+
+def test_page_haut_sans_tableau_dachats():
+    h = H.page()
+    achats = re.search(r'<h2 id="achats">.*?(?=<h2 id="materiaux">)', h, flags=re.S)
+    assert achats and "<table" not in achats[0]
+    assert 'href="sdb-meuble-achats.html#haut-seul"' in achats[0] and 'href="sdb-meuble-achats.html#deux-meubles"' in achats[0]
+    assert PL.euros(H.total_lignes(H.lignes())) in achats[0]
+    assert abs(H.total_lignes(H.lignes()) - 179.82) < 0.005
+
+
+def test_haut_seul_liste_et_sous_total():
+    ls = H.lignes()
+    total = sum(n * px for _, _, n, px, _ in ls)
+    assert abs(total - 179.82) < 0.005
+    assert f'<b>{PL.euros(total)}</b>' in pages_achats()
+    refs = [ref for _, ref, _, _, _ in ls]
+    assert "5603010" not in refs                         # vernis : aucune étape du haut
+    assert H.consommables_haut() == ["vis40", "silicone"]
+    assert M.WELDOM["vis40"][4] in refs and M.WELDOM["silicone"][4] in refs
+    m = PL.chants()["metres"]["haut"]
+    assert H.rouleaux_haut() * M.CHANT["rouleau"] >= m * 1000 > (H.rouleaux_haut() - 1) * M.CHANT["rouleau"]
+    assert next(n for _, ref, n, _, _ in ls if ref == M.WELDOM["chant"][4]) == H.rouleaux_haut()
+
+
+def pages_achats():
+    import achats as A
+    return A.page()
+
+
+def test_page_achats_sections():
+    import achats as A
+    h = A.page()
+    for sec in ('id="deux-meubles"', 'id="haut-seul"', 'id="changements"'):
+        assert sec in h, sec
+    assert "<h1>Liste d'achats</h1>" in h and "achats · V6.4" in h
+    assert 'href="sdb-meuble-haut.html"' in h and 'href="index.html"' in h
+    assert 'href="archive/sdb-meuble-v4-bas.html"' in h and 'href="archive/sdb-meuble-v4-bas.html#decoupe"' in h
+    assert "Chez <b>" in h and M.MAGASIN["tel"] in h
+
+
+def test_page_achats_total_428_33():
+    import achats as A
+    p = pages.prix()
+    assert abs(p["total"] - 428.33) < 0.005
+    lg = pages.lignes_achats()["lignes"]
+    somme = sum(n * px for m in ("commun", "bas", "haut") for _, _, n, px, _ in lg[m]) + p["ailleurs"]
+    assert abs(somme - p["total"]) < 0.005
+    assert "428,33 €" in A.page()
+
+
+def test_page_achats_haut_seul_179_82():
+    import achats as A
+    assert "179,82 €" in A.page()
+    assert A.haut_seul().count("<table") == 1
+
+
+def test_page_achats_liens_existent():
+    import achats as A
+    h = A.page()
+    for v in re.findall(r'\b(?:href|src)="([^"]*)"', h):
+        if not v or v.startswith(("http", "data:", "#")):
+            continue
+        assert os.path.exists(os.path.join(RACINE, v.split("#")[0])), v
+    for ancre in re.findall(r'href="#([^"]+)"', h):
+        assert f'id="{ancre}"' in h, ancre
+    for href in re.findall(r'href="(?:archive/)?([^"#]*\.html)#([^"]+)"', h):
+        pass
+    # l'ancre d'archive citée existe dans le fichier archivé
+    archive = open(os.path.join(RACINE, "archive", "sdb-meuble-v4-bas.html"), encoding="utf-8").read()
+    assert 'id="decoupe"' in archive
+
+
+def test_index_liste_dachats():
+    idx = open(os.path.join(RACINE, "index.html"), encoding="utf-8").read()
+    assert 'href="sdb-meuble-achats.html"' in idx and 'href="sdb-meuble-haut.html"' in idx
+    assert idx.index('href="sdb-meuble-haut.html"') < idx.index('href="sdb-meuble-achats.html"')
+
+
+def test_version_v64_presente():
+    h = H.page()
+    assert M.VERSION == "V6.4" and "V6.4" in h and "V6.3" in h
+    assert M.CHANGEMENTS[0][0] == "V6.4" and M.CHANGEMENTS[1][0] == "V6.3" and "archivés" in M.CHANGEMENTS[1][2]
+    assert 'href="archive/sdb-meuble-v4.html#changements"' in h
+    assert h.index('<td class="mono">V6.4</td>') < h.index('<td class="mono">V6.3</td>')
+

@@ -1,10 +1,8 @@
-# Génère les trois pages du meuble linge (document V4, modèle V6.0) depuis modele.py :
+# Fonctions des pages du meuble linge SDB, depuis modele.py : achats, prix, gabarit, notice, découpe, matériaux.
 #
-#   sdb-meuble-v4.html        page principale : les deux meubles en place, matériaux communs, paniers, budget, changements
-#   sdb-meuble-v4-bas.html    meuble bas : vue, cotes (V6.1), notice de montage, découpe, achats, essence du plan
-#   sdb-meuble-v4-haut.html   caisson haut : vue, notice de montage, découpe, achats, matériaux possibles
-#
-#   python3 3d/sdb/pages.py   (just sdb)
+# Les trois pages du document V4 (sdb-meuble-v4.html, sdb-meuble-v4-bas.html, sdb-meuble-v4-haut.html) sont archivées
+# dans archive/ et ne sont plus régénérées : ce module ne les écrit plus. La page courante du meuble haut, autonome,
+# est produite par haut.py (sdb-meuble-haut.html, just sdb), qui réutilise les fonctions d'ici.
 #
 # Les dessins sont les projections isométriques de montage.py ; les listes et le calepinage viennent de plan.py.
 
@@ -70,7 +68,7 @@ def lignes_achats():
     neufs = [p for st in cal for p in cal[st]["neufs"]]
     lignes = {"commun": quinc["commun"], "bas": PL.ligne_panneaux(bas_p) + quinc["bas"],
               "haut": PL.ligne_panneaux(neufs) + quinc["haut"]}
-    return dict(cal=cal, lignes=lignes, manque=manque, non_chiffres=non_chiffres)
+    return dict(cal=cal, lignes=lignes, quinc=quinc, manque=manque, non_chiffres=non_chiffres)
 
 
 def prix():
@@ -189,10 +187,11 @@ def barre(courante):
     return f'<div class="vbar"><a class="back" href="index.html">← Plans</a><span class="sp"></span>{btn}</div>'
 
 
-def gabarit(titre, courante, corps):
+def gabarit(titre, courante, corps, barre_html=None):
+    """Page complète. barre_html : barre du haut propre à la page (par défaut, les onglets des trois pages V4)."""
     return f"""{PL.entete(titre, "", CSS)}
 <body class="explications changements">
-{barre(courante)}
+{barre_html if barre_html is not None else barre(courante)}
 <nav class="toc" aria-label="Sommaire"><button type="button" class="tbtn" aria-expanded="true">Sommaire</button><ol></ol></nav>
 <main class="wrap">
 {corps}
@@ -228,13 +227,48 @@ def table_budget(p):
 
 
 # ------------------------------------------------------------------ page principale
-def note_paniers():
-    co = M.CORNO
-    return (f'<p>Le L basculant peut être remplacé par deux paniers à linge étroits à roulettes <b>Wenko Corno</b>, '
-            f'{cm(co["l"])} × {cm(co["p"])} × {cm(co["h"])} ({co["litres"]} L chacun), à {PL.euros(co["prix"])} pièce '
-            f'({escape(co["source"])}), soit {PL.euros(2 * co["prix"])} les deux. Ils se roulent côte à côte entre les '
-            'échelles du bac, <b>sans porte</b> : on ne fait plus la porte, le plateau, les contrefiches, le rail avant, '
-            'les butées, les barres ni les sacs. Les pages des deux meubles décrivent le L.</p>')
+def en_moins_paniers():
+    """Achats du L que la variante supprime : lignes (nom, réf., quantité, prix) ; la tablette mélaminée du meuble bas,
+    la quincaillerie de M.CORNO["en_moins"] et la toile des sacs."""
+    r = [(n, ref, q, px) for n, ref, q, px, _ in PL.ligne_panneaux(PL.calepinage()["M18"]["bas"])]
+    for code, q in M.CORNO["en_moins"]:
+        nom, px, _, _, ref = M.WELDOM[code]
+        r.append((nom, ref, q, px))
+    r.append((f'Toile des sacs, {cm(M.TOILE["achat_m"])} m ({M.TOILE["magasin"].split(",")[0]})', "", 1, M.TOILE["prix"]))
+    return r
+
+
+def variante_paniers(p):
+    co, pl = M.CORNO, M.CORNO["place"]
+    moins = en_moins_paniers()
+    eco = sum(q * px for _, _, q, px in moins)
+    paniers = 2 * co["prix"]
+    places = [("Largeur", f'2 × {cm(co["l"])} + {cm(co["entre"])} entre les deux', pl["l"],
+               f'{cm(co["jeu_cote"])} de jeu de chaque côté'),
+              ("Profondeur", cm(co["p"]), pl["p"],
+               f'{cm(co["recul"])} en retrait du nu du plan, {cm(co["rab"])} de rab devant le rail arrière'),
+              ("Hauteur", cm(co["h"]), pl["h"], f'{cm(co["dessus"])} sous les lisses de barre : le couvercle s’ouvre '
+               'en place')]
+    t_place = "".join(f'<tr><td>{n}</td><td class="num">{v}</td><td class="num">{cm(d)}</td><td>{escape(x)}</td></tr>'
+                      for n, v, d, x in places)
+    t_prix = "".join(f'<tr><td>{escape(n)}</td><td class="mono">{ref}</td><td class="num">− {q}</td>'
+                     f'<td class="num">− {PL.euros(q * px)}</td></tr>' for n, ref, q, px in moins)
+    t_prix += (f'<tr><td>2 × {escape(co["nom"])} ({escape(co["source"])})</td><td></td><td class="num">+ 2</td>'
+               f'<td class="num">+ {PL.euros(paniers)}</td></tr>')
+    return f"""<div class="fig"><img src="{co["photo"]}" alt="Panier à linge étroit à roulettes Wenko Corno 43 L, gris" width="800" height="800" loading="lazy" style="display:block;width:100%;max-width:320px;height:auto;margin:0 auto">
+<p class="cap">Wenko Corno 43 L, coloris gris (photo du fabricant, fiche <a href="{co["photo_source"]}">toom.de</a>). {cm(co["l"])} de large × {cm(co["p"])} de profondeur × {cm(co["h"])} de haut.</p></div>
+<p>Le L basculant et ses deux sacs peuvent être remplacés par deux paniers à linge étroits à roulettes <b>Wenko Corno</b> du commerce ({escape(co["detail"])}), roulés côte à côte entre les échelles du bac, <b>sans porte</b> : {2 * co["litres"]} L en tout. On tire le panier par sa poignée et on le roule jusqu'à la machine. Dimensions d'après les fiches La Redoute, Galaxus et toom ; Bricomarché en donne d'autres (sans doute le carton) : mesurer à réception.</p>
+<h3>Place entre les échelles</h3>
+<div class="scroll"><table><thead><tr><th></th><th>Paniers</th><th>Place</th><th>Reste</th></tr></thead>
+<tbody>{t_place}</tbody></table></div>
+<h3>Ce qu'on ne fait plus</h3>
+<p>Le rail avant G5 (les roulettes ne le passeraient pas), la butée et ses tire-fonds, le plateau A3, la porte A6, les contrefiches G7, les supports B1, les barres E4, l'accroche G10, les sacs à coudre et les charnières : dans la notice du <a href="{PAGES["bas"]}#montage">meuble bas</a>, les étapes du L, de la porte et des sacs sautent. Le rail arrière reste au sol derrière les paniers et lie le bas des échelles, le plan en lie le haut ; les écharpes et les lisses de barre restent. Les paniers restent visibles, couvercle fermé.</p>
+<p>Porte d'entrée : un panier tiré avance de {cm(co["p"])} devant le meuble, dans le débattement du vantail ; on le sort porte fermée, comme pour charger la machine.</p>
+<h3>Prix</h3>
+<div class="scroll"><table><thead><tr><th>Achat</th><th>Réf.</th><th>Quantité</th><th>Prix</th></tr></thead>
+<tbody>{t_prix}<tr class="tot"><td>Écart</td><td></td><td></td><td class="num">+ {PL.euros(paniers - eco)}</td></tr></tbody></table></div>
+<p>Avec les paniers, le total passe de {PL.euros(p["total"])} à <b>{PL.euros(p["total"] - eco + paniers)}</b>. Débit refait sans les pièces du L : la tablette mélaminée du meuble bas ne sert plus (le côté K1 du caisson haut tient dans ses propres panneaux), les tasseaux restent en deux lots et le chant en deux rouleaux ; le lot d'équerres et les boîtes de vis servent encore ailleurs.</p>
+<p class="note">Les dessins de la variante (plan, élévation, coupes) sont dans la version archivée <a href="archive/sdb-meuble-v5.24.html">V5.24</a>, bouton de la variante à roulettes, en haut de page ; le meuble a changé depuis (plan de travail, caisson haut), pas la place entre les échelles. Les pages des deux meubles décrivent le L.</p>"""
 
 
 def materiaux_communs():
@@ -274,12 +308,12 @@ def page_ensemble():
 <h2 id="materiaux-communs">Matériaux communs</h2>
 {materiaux_communs()}
 
-<h2 id="paniers">Remplacer le L par deux paniers</h2>
-{note_paniers()}
-
 <h2 id="budget">Budget</h2>
 {table_budget(p)}
 <p class="note">Prix TTC relevés en ligne : {escape(M.MAGASIN["nom"])} ({escape(M.MAGASIN["adresse"])}) le {M.MAGASIN["releve"]} et le {M.RELEVE_V6}, toile chez {escape(M.TOILE["magasin"])} le {M.TOILE["releve"]}. Détail ligne à ligne dans les pages <a href="{PAGES["bas"]}#achats">Meuble bas</a> et <a href="{PAGES["haut"]}#achats">Caisson haut</a>.</p>
+
+<h2 id="paniers">Variante : deux paniers à roulettes</h2>
+{variante_paniers(p)}
 
 <p class="note">Repère : origine à l'angle nord-ouest intérieur, x vers l'est, y vers le sud, z depuis le sol, cotes en cm (débit en mm). Source : <span class="mono">3d/sdb/modele.py</span> ; pages : <span class="mono">3d/sdb/pages.py</span> (<span class="mono">just sdb</span>).</p>
 
@@ -434,7 +468,9 @@ def achats(meuble):
     return "\n".join(o)
 
 
-def materiaux_haut():
+def materiaux_haut(partage=True):
+    """Matériaux possibles du caisson haut. partage : phrase sur le panneau commun avec le meuble bas (absente de la
+    page autonome du caisson haut)."""
     corps = "".join(
         f'<tr class="{"retenu" if m["retenu"] else ""}"><td><b>{escape(m["nom"])}</b>'
         f'{BADGE if m["retenu"] else ""}</td><td class="num">{mm(m["ep"])}</td>'
@@ -444,7 +480,7 @@ def materiaux_haut():
         for m in M.MATERIAUX_HAUT)
     r = next(m for m in M.MATERIAUX_HAUT if m["retenu"])
     commun = (", et le même panneau que la porte et le plateau du meuble bas, dont les chutes reçoivent une partie du "
-              "caisson" if haut_dans_chutes() else "")
+              "caisson" if haut_dans_chutes() else "") if partage else ""
     return f"""<h2 id="materiaux">Matériaux possibles</h2>
 <p>Le caisson haut est au-dessus de la niche, loin des projections : il ne prend presque pas d'eau. Pas besoin de vernis marin ni de bois massif ; un panneau de {mm(min(m["ep"] for m in M.MATERIAUX_HAUT))} ou {mm(max(m["ep"] for m in M.MATERIAUX_HAUT))} mm suffit. Un panneau brut se peint (sous-couche, puis deux couches).</p>
 <div class="scroll"><table class="debit cmp"><thead><tr><th>Panneau</th><th class="num">Ép. (mm)</th><th>Format</th><th>Qualités</th><th>Défauts</th><th>Finition</th><th class="num">Prix</th><th>Magasin</th></tr></thead>
@@ -477,17 +513,21 @@ def essence_plan():
 <p>Le meuble bas n'est vissé à aucun mur. Il tient par {M.COINS["n"]} coins de calage, taillés dans les chutes de tasseau et enfoncés au maillet entre les montants des deux échelles du bord et les murs nord et sud ; par le plan, vissé par-dessous sur les {len(M.ECHELLES)} échelles, qui les relie en tête ; et par les {len(M.ECHARPES)} écharpes, une par échelle, qui les rendent indéformables d'avant en arrière. Derrière la machine, rien ne passe entre {cm(z0)} et {cm(z1)} de haut, sur {cm(y1 - y0)} de large au droit du robinet : la zone des tuyaux reste libre. La machine ne touche jamais le meuble ({cm(jeu)} de jeu de chaque côté, {mm(M.JEU_PLAN)} mm sous le plan, tapis antivibration) : ses vibrations ne passent pas au plan.</p>"""
 
 
-def page_meuble(meuble):
-    assert meuble in PAGES, meuble
-    pitch = {
+def pitch(meuble):
+    """Chapeau d'une page de meuble (le caisson haut le garde dans sa page autonome)."""
+    return {
         "bas": f"{lettres(N_ECHELLES, True).capitalize()} échelles en tasseaux de sapin debout sur le carrelage, le plan de travail en chêne posé sur leur tête à {cm(M.Z_DESSUS)}, la machine au sol dessous, et à côté la porte basculante en L qui ouvre {lettres(N_SACS)} sacs à linge.",
         "haut": f"Le caisson de {cm(M.Z_HAUT)} à {cm(M.Z_HAUT1)}, au-dessus de la niche : serviettes au nord, pharmacie au sud, {lettres(N_PORTES_HAUT, True)} portes coulissantes, fileur jusqu'au plafond. Chevillé au mur du fond, au-dessus du carrelage.",
     }[meuble]
+
+
+def page_meuble(meuble):
+    assert meuble in PAGES, meuble
     fin = essence_plan() if meuble == "bas" else materiaux_haut()
     cotes = f'<h2 id="cotes">Cotes</h2>{CO.feuille()}' if meuble == "bas" else ""
     corps = f"""{kicker(TITRES[meuble].lower())}
 <h1>{TITRES[meuble]}</h1>
-<p class="pitch">{pitch}</p>
+<p class="pitch">{pitch(meuble)}</p>
 
 <h2 id="iso">Le meuble</h2>
 <div class="fig">{iso_meuble(meuble)}</div>
@@ -504,13 +544,3 @@ def page_meuble(meuble):
     return gabarit(f"{TITRES[meuble]} · meuble linge", meuble, corps)
 
 
-def ecrire():
-    for nom, html in ((ENSEMBLE, page_ensemble()), (PAGES["bas"], page_meuble("bas")), (PAGES["haut"], page_meuble("haut"))):
-        chemin = os.path.join(PL.ROOT, nom)
-        with open(chemin, "w", encoding="utf-8") as fh:
-            fh.write(html)
-        print(chemin)
-
-
-if __name__ == "__main__":
-    ecrire()

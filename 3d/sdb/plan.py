@@ -120,8 +120,8 @@ def debit():
     return r
 
 
-def table_debit(meuble):
-    """Débit d'un des deux meubles ("bas" ou "haut")."""
+def table_debit(meuble, descriptions=None):
+    """Débit d'un des deux meubles ("bas" ou "haut"). descriptions : usage propre à la page, par matériau (sinon celui de M.MATERIAUX)."""
     o, mat = [], None
     surf = Counter()
     lignes = [p for p in debit() if M.meuble(p["rep"]) == meuble]
@@ -129,6 +129,7 @@ def table_debit(meuble):
         if p["mat"] != mat:
             mat = p["mat"]
             n, d, _ = M.MATERIAUX[mat]
+            d = (descriptions or {}).get(mat, d)
             o.append(f'<tr class="mat"><td colspan="6"><span class="sw m{mat}"></span>{mat} — {escape(n)} '
                      f'<span class="note">· {escape(d)}</span></td></tr>')
         if mat not in "EG":

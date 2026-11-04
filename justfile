@@ -104,9 +104,10 @@ salon-meubles-rendu echantillons="128" *vues:
 salon-figer:
     python3 3d/salon/plan.py --figer
 
-# Meuble linge SDB (document V4) : régénère les trois pages sdb-meuble-v4*.html et le modèle FreeCAD depuis 3d/sdb/modele.py
+# Meuble linge SDB : régénère sdb-meuble-haut.html (haut.py) et sdb-meuble-achats.html (achats.py), depuis 3d/sdb/modele.py, puis le modèle FreeCAD
 sdb:
-    python3 3d/sdb/pages.py
+    python3 3d/sdb/haut.py
+    python3 3d/sdb/achats.py
     /Applications/FreeCAD.app/Contents/Resources/bin/freecadcmd 3d/sdb/cad.py
 
 # Recherches Leboncoin : serveur local des pages achats/ (boutons ★ / ✕), voir .claude/skills/lbc/SKILL.md

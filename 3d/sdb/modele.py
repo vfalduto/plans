@@ -14,7 +14,7 @@
 import math
 from dataclasses import dataclass, field, replace
 
-VERSION = "V6.1"
+VERSION = "V6.4"
 H = 250                 # plafond (confirmé par le client)
 X0, X1 = 167, 234       # alcôve : bord ouest (ouverture) et mur du fond (est)
 Y0, Y1 = 0, 115         # alcôve : mur nord et mur sud (V5.6 : relevé client, fond 115 ; avant : 114)
@@ -710,7 +710,11 @@ LAVABO = (82, Y1, 165, 160)
 # les paniers et lie les échelles en bas, le plan les lie en haut. V5.18 : pas de porte (choix client), les paniers
 # affleurent presque le nu du plan.
 CORNO = dict(l=18.5, p=40, h=60, litres=43, prix=45.00, nom="panier à linge étroit à roulettes Wenko Corno 43 L",
-             source="Amazon, relevé client du 13/10/2026", entre=1.0, recul=0.5)
+             source="Amazon, relevé client du 13/10/2026", entre=1.0, recul=0.5,
+             detail="polyester, 4 roulettes, poignées, couvercle à cordon ; coloris noir, gris, beige ou taupe",
+             # V6.2 : photo du fabricant, reprise de la fiche toom.de (réf. 5241310), coloris gris
+             photo="sdb-meuble-photos/wenko-corno.jpg",
+             photo_source="https://toom.de/p/waeschesammler-corno-grau-185-x-60-x-40-cm-43-l/5241310")
 _co = CORNO
 _cy0 = (_yi0 + _yi1 - 2 * _co["l"] - _co["entre"]) / 2
 CORNO["jeu_cote"] = _cy0 - _yi0
@@ -719,12 +723,19 @@ _cx0 = FACE + _co["recul"]                      # V5.18 : sans porte, au nu du p
 assert _cx0 + _co["p"] < RAILS[1].x0, "les paniers s'arrêtent devant le rail arrière"
 assert _co["h"] < ECHELLES["n"]["barre"].z0 - 1, "les paniers passent sous les lisses de barre"
 CORNO["place"] = dict(l=_yi1 - _yi0, p=RAILS[1].x0 - FACE, h=ECHELLES["n"]["barre"].z0)
+CORNO["rab"] = CORNO["place"]["p"] - _co["recul"] - _co["p"]          # derrière les paniers, devant le rail arrière
+CORNO["dessus"] = CORNO["place"]["h"] - _co["h"]                       # au-dessus : le couvercle s'ouvre en place
+# V6.2 : achats du L que la variante supprime, (code WELDOM, quantité en moins). Débit refait sans les pièces du L
+# (A3, A6, G5 avant, G7, B1, G10, E4, butée) : la tablette mélaminée du bas ne porte plus que le L (le côté K1 du
+# caisson haut tient dans ses propres panneaux), les tasseaux restent en deux lots, le chant en deux rouleaux
+# (5042 mm pour 5000 par rouleau) ; les lots d'équerres et les boîtes de vis servent encore ailleurs.
+CORNO["en_moins"] = [("charniere_p", 2), ("tirefond", 1), ("mousse", 1), ("equerre_p", 1)]
 
 
 def version(c="d"):
     """Pièces et équipements de la version c ("d" : L basculant, avec ses sacs).
     V5.23 : la variante du caisson haut en IKEA METOD (V5.2) est retirée ; V6.0 : celle des bacs à roulettes aussi
-    (CORNO ne sert plus qu'à la note du document)."""
+    (CORNO ne sert plus qu'au chapitre Variante du document)."""
     return list(PIECES) + SACS + EQUIPEMENTS
 
 
@@ -856,8 +867,8 @@ USINAGES = {
            f"({RAINURE['haut'] * 10:.0f}) puis en la laissant descendre dans celle du bas ({RAINURE['bas'] * 10:.0f})",
     "K3": f"En retrait de {_h['retrait']:g} derrière le chant avant, arrêté devant le tasseau de joint G12 ; taquets sur les deux faces",
     "G12": "Debout derrière le montant central, à cheval sur la jonction des deux moitiés du fond K8 : chaque moitié s'y "
-           "visse ; vissé en bout par le dessus et le dessous K2. Taillé dans une barre en rab des lots du meuble bas, peint "
-           "avec eux",
+           "visse ; vissé en bout par le dessus et le dessous K2. Taillé dans un tasseau sapin brut 38 × 38 de 2 m, peint "
+           "avant l'assemblage",
     "D1": f"Recoupé de {_pd['L']} à {(YM1 - YM0) * 10:.0f} de long ; la tablette fait déjà {_pd['l']} de profondeur : "
           f"pas de recoupe en profondeur (chants d'usine devant et derrière) ; au chant arrière, au-dessus du robinet, "
           f"une encoche de {PASSE['l']} × {PASSE['p']} pour le tuyau d'arrivée (scie sauteuse) ; vernis marin, trois "
@@ -1102,7 +1113,7 @@ ETAPES = [
           f"{RAINURE['bas'] * 10:.0f} en bas (règle de guidage, deux passes)."),
         O("Au fer à repasser, plaquer le chant blanc sur les chants coupés visibles ; araser au cutter."),
         O("Assembler les côtés K1, le dessus et le dessous K2, le montant K3 et, derrière lui, le tasseau de joint G12 "
-          "(peint avec les tasseaux du meuble bas), vissés en bout à travers le dessus et le dessous."),
+          "(sapin, peint avant l'assemblage), vissés en bout à travers le dessus et le dessous."),
         O("Visser les deux moitiés du fond K8, jointes au milieu du tasseau : chacune s'y visse sur toute la hauteur "
           f"(vis 4 × 40, avant-trou Ø 2,5 dans les chants de {TH * 10:.0f}, Ø 3 dans le tasseau).",
           ctrl="Le caisson est d'équerre : ses deux diagonales sont égales."),
@@ -1189,6 +1200,15 @@ QUINCAILLERIE["vernis"] = (f"vernis marin incolore satiné, à l'eau : {cm_(VERN
 # Les lignes des versions passées sont figées aux valeurs de l'archive (archive/sdb-meuble-v5.24.html) quand une cote
 # a bougé depuis ; les autres lisent encore le modèle, dont les cotes n'ont pas changé pour elles.
 CHANGEMENTS = [
+    ("V6.4", "04/11/2026",
+     "Liste d'achats sortie dans une page à part, pour les deux meubles."),
+    ("V6.3", "04/11/2026",
+     "Meuble haut sorti en page autonome, avec sa propre découpe et ses propres achats ; les autres documents du meuble "
+     "linge sont archivés."),
+    ("V6.2", "01/11/2026",
+     "Page principale : la note sur les paniers devient un chapitre du sommaire, « Variante : deux paniers à "
+     "roulettes », placé après le budget : photo du Wenko Corno, place entre les échelles, ce qu'on ne fait plus, "
+     "comparatif de prix (achats du L en moins, paniers en plus) et lien vers les dessins de la V5.24 archivée."),
     ("V6.1", "31/10/2026",
      "Meuble bas : feuille de cotes (vue de face, implantation au sol, coupe par le bac, coupe par la machine), "
      "projetée depuis le modèle. Notice refaite : chaque étape dit ce qu'on obtient et ce qu'il faut sous la main, puis "
