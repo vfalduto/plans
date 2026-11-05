@@ -89,8 +89,8 @@ def achats():
     """Section Achats de la page du caisson haut : seulement son prix et les renvois à la liste d'achats."""
     prix = PL.euros(total_lignes(lignes()))
     return (f'<h2 id="achats">Achats</h2><p>Le caisson haut, acheté seul, coûte <b>{prix}</b>. Sa liste, celle que suit la '
-            f'découpe de cette page, est dans <a href="{ACHATS}#haut-seul">la liste d\'achats, section Meuble haut acheté '
-            f'seul</a> ; pour les deux meubles ensemble, voir <a href="{ACHATS}#deux-meubles">la liste commune</a>.</p>')
+            f'découpe de cette page, est dans <a href="{ACHATS}#haut-seul">la liste d\'achats, section Meuble haut</a> ; '
+            f'pour les deux meubles ensemble, voir <a href="{ACHATS}#deux-meubles">le total</a>.</p>')
 
 
 def changements():

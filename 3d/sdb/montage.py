@@ -37,6 +37,14 @@ def faces(b):
             n = (sgn * (z1 - z0), 0, -sgn * (x1 - x0))
             r.append(([(x0, b.y0, z0), (x1, b.y0, z1), (x1, b.y1, z1), (x0, b.y1, z0)], n))
         return r
+    if hasattr(b, "xy"):            # prisme : contour dans le plan x-y, extrudé le long de z
+        pts = b.xy
+        aire = sum(x0 * y1 - x1 * y0 for (x0, y0), (x1, y1) in zip(pts, pts[1:] + pts[:1]))
+        sgn = 1 if aire > 0 else -1
+        r = [([(x, y, b.z1) for x, y in pts], (0, 0, 1)), ([(x, y, b.z0) for x, y in pts], (0, 0, -1))]
+        for (x0, y0), (x1, y1) in zip(pts, pts[1:] + pts[:1]):
+            r.append(([(x0, y0, b.z0), (x1, y1, b.z0), (x1, y1, b.z1), (x0, y0, b.z1)], (sgn * (y1 - y0), -sgn * (x1 - x0), 0)))
+        return r
     x0, x1, y0, y1, z0, z1 = b.x0, b.x1, b.y0, b.y1, b.z0, b.z1
     return [
         ([(x0, y0, z1), (x1, y0, z1), (x1, y1, z1), (x0, y1, z1)], (0, 0, 1)),
@@ -157,7 +165,7 @@ def dessin(blocs, neuves=(), murs=False, reperes=True, decale=None, extra=None, 
     for b in ordre(vis):
         neuve = b.nom in neuves
         cls = ("isac" if b.role == "sac" else "itu" if b.role == "tuyau" else "inew" if neuve else
-               ("iapp" if b.role == "machine" else "ipc"))
+               ("iapp" if b.role == "machine" else "imel" if b.role == "melamine" else "ibois" if b.role == "chene" else "ipc"))
         for f, n in faces(b):
             if sum(a * c for a, c in zip(n, VUE)) <= 1e-6:
                 continue
@@ -165,6 +173,10 @@ def dessin(blocs, neuves=(), murs=False, reperes=True, decale=None, extra=None, 
             xs += [x for x, _ in p]
             ys += [y for _, y in p]
             o.append(f'<polygon class="{cls}" style="--t:{teinte(n):.2f}" points="{pts_svg(p)}"/>')
+        for cl, c in getattr(b, "decor", ()):                        # plaques et trous posés sur une face : (classe, points 3D)
+            o.append(f'<polygon class="{cl}" points="{pts_svg([proj(*q) for q in c])}"/>')
+        for c in getattr(b, "fenetres", ()):                         # découpes d'une porte : contours (y, z) sur sa face ouest
+            o.append(f'<polygon class="ifen" points="{pts_svg([proj(b.x0, y, z) for y, z in c])}"/>')
         if isinstance(b, M.Bloc) and (b.encoche or b.entailles):     # trou de trappe, entailles : sur le dessus
             for x0, x1, y0, y1 in ((b.encoche,) if b.encoche else ()) + tuple(b.entailles):
                 p = [proj(x0, y0, b.z1), proj(x1, y0, b.z1), proj(x1, y1, b.z1), proj(x0, y1, b.z1)]
@@ -664,6 +676,10 @@ CSS = PL.CSS + CO.CSS + """
 .ipc{fill:hsl(40 15% calc(var(--t) * 100% - 4%));stroke:var(--ink);stroke-width:.32;stroke-linejoin:round}
 .inew{fill:hsl(32 80% calc(var(--t) * 72% + 8%));stroke:var(--ink);stroke-width:.4;stroke-linejoin:round}
 .isac{fill:hsl(205 60% calc(var(--t) * 40% + 55%));fill-opacity:.8;stroke:var(--water);stroke-width:.35;stroke-dasharray:1.2 .8}
+.ifen{fill:var(--ink);fill-opacity:.62;stroke:var(--ink);stroke-width:.3}
+.idec{fill:#fbfaf5;stroke:var(--ink);stroke-width:.3}
+.imel{fill:hsl(45 14% calc(var(--t) * 28% + 70%));stroke:var(--ink);stroke-width:.32;stroke-linejoin:round}
+.ibois{fill:hsl(32 45% calc(var(--t) * 50% + 25%));stroke:var(--ink);stroke-width:.32;stroke-linejoin:round}
 .iapp{fill:hsl(200 10% calc(var(--t) * 100% - 2%));stroke:var(--ink);stroke-width:.35}
 .ihub{fill:none;stroke:var(--ink);stroke-width:.35}
 .ical{fill:var(--tri);fill-opacity:.35;stroke:var(--tri);stroke-width:.3}

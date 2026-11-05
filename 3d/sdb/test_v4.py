@@ -327,20 +327,30 @@ def test_page_achats_sections():
     h = A.page()
     for sec in ('id="deux-meubles"', 'id="haut-seul"', 'id="changements"'):
         assert sec in h, sec
-    assert "<h1>Liste d'achats</h1>" in h and "achats · V6.4" in h
-    assert 'href="sdb-meuble-haut.html"' in h and 'href="index.html"' in h
-    assert 'href="archive/sdb-meuble-v4-bas.html"' in h and 'href="archive/sdb-meuble-v4-bas.html#decoupe"' in h
-    assert "Chez <b>" in h and M.MAGASIN["tel"] in h
+    import bas
+    assert 'id="bas"' in h
+    assert "<h1>Liste d'achats</h1>" in h and f"achats · {bas.VERSION}" in h
+    assert 'href="sdb-meuble-haut.html"' in h and 'href="sdb-meuble-bas.html"' in h and 'href="index.html"' in h
+    assert M.MAGASIN["tel"] in h
 
 
-def test_page_achats_total_428_33():
+def test_page_achats_suit_le_meuble_bas_courant():
     import achats as A
+    import bas
+    h = A.page()
+    for nom, ref, _, _, _ in bas.prix():
+        assert ref in h, nom
+    assert PL.euros(bas.total()) in h
+    assert PL.euros(bas.total() + H.total_lignes(H.lignes())) == "476,64 €" and "476,64 €" in h
+    assert "5634083" in A.haut_seul() and A.bas_courant().count("5634083") == 0   # les tasseaux de l'ancien L ne sont plus au bas
+
+
+def test_ancien_total_reste_celui_des_archives():
     p = pages.prix()
     assert abs(p["total"] - 428.33) < 0.005
     lg = pages.lignes_achats()["lignes"]
     somme = sum(n * px for m in ("commun", "bas", "haut") for _, _, n, px, _ in lg[m]) + p["ailleurs"]
     assert abs(somme - p["total"]) < 0.005
-    assert "428,33 €" in A.page()
 
 
 def test_page_achats_haut_seul_179_82():
