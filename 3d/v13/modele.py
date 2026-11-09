@@ -12,7 +12,7 @@ import math
 import os
 from dataclasses import dataclass
 
-VERSION = "V13.26"
+VERSION = "V13.27"
 H = 250  # hauteur sous plafond
 
 
@@ -911,9 +911,13 @@ RENDUS_VERSION.update({v: "V13.20" for v in RENDUS_VERSION})   # V13.20 : toutes
 RENDUS_VERSION.pop("iso_no_hermione", None)
 RENDUS_VERSION.update({v: "V13.24" for v in RENDUS_VERSION})   # V13.24 : toutes les vues refaites (hauts METOD 80)
 RENDUS_VERSION.update({v: "V13.26" for v in RENDUS_VERSION})   # V13.26 : bas et colonnes METOD
+RENDUS_VERSION["iso_no"] = "V13.27"
 
 # ------------------------------------------------------------------ historique (section Changements)
 CHANGEMENTS = [
+    ("V13.27", "09/11/2026",
+     "Rendu isométrique depuis le nord-ouest : porte du cellier fermée, dans sa cloison (cloison et linteau du cellier "
+     "n'étaient plus dessinés), machine à café retirée de la vue avec la rangée nord coupée."),
     ("V13.26", "09/11/2026",
      "Colonnes au standard IKEA METOD : armoires de 220 sur les mêmes pieds et la même plinthe de 8 que les bas, dessus "
      "à 228 (au lieu de 243, hauteur non standard), fileur de 22 jusqu'au plafond. Meubles hauts inchangés (h 155 → "

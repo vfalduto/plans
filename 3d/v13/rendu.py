@@ -467,8 +467,9 @@ COUPES_ISO = (r"^(mur__(ouest_nord|ouest_sud|sud_ouest|sud_est)|allege__|linteau
               r"plafond__|verre__|alu__|ext_)")   # V13.20 : bas de mur du mur sud coupé avec le mur
 # isométrique depuis le nord-ouest : murs nord et ouest, plafond ET rangée nord coupés (vue de dos, elle masquait la
 # pièce ; elle se voit dans la vue A)
-COUPES_ISO_NO = (r"^(mur__(nord|nord_alcove|ouest_nord|ouest_sud)|allege__|socle__plinthe_fenetre|linteau__linteau_fenetre|cloison__cloison_cellier|"
-                 r"linteau__linteau_cellier|plafond__|verre__|alu__|ext_|caisson__|caisson_haut__|plan__|plaque__|evier__|"
+# V13.27 : cloison et linteau du cellier gardés (la porte, fermée, reste dans son mur), machine à café coupée avec B6
+COUPES_ISO_NO = (r"^(mur__(nord|nord_alcove|ouest_nord|ouest_sud)|allege__|socle__plinthe_fenetre|linteau__linteau_fenetre|"
+                 r"cafetiere__|plafond__|verre__|alu__|ext_|caisson__|caisson_haut__|plan__|plaque__|evier__|"
                  r"cuve__|mitigeur__|egouttoir__|hotte__|led__|credence__|four__facade_b|facade__facade_b|facade_haut__|"
                  r"socle__socle_(b|fileur)|joue__(joue_h|fileur_ouest|fileur_est|fileur_h_est)|fileur__fileur_hauts|etagere_haute__etagere_mur|"
                  r"tech__coffre_reseaux|poignee_(inox|bois)__facade_(b|h)|aspiration__)")
@@ -490,7 +491,8 @@ VIEWS = {
     # G — isométrique de nuit, tous les éclairages allumés
     "iso_nuit":    dict(ISO, nuit=True),
     # A' — isométrique depuis le nord-ouest
-    "iso_no":      dict(ortho=6.0, loc=(-400, -470, 700), target=(220, 140, 60), coupes=COUPES_ISO_NO),
+    "iso_no":      dict(ortho=6.0, loc=(-400, -470, 700), target=(220, 140, 60), coupes=COUPES_ISO_NO,
+                        porte_fermee=True),
 }
 # Rendus temporaires (hors page) : crédence zellige chaud (3 teintes empilées), hauts en chêne fumé
 CREDENCE = dict(loc=(152, 235, 135), target=(152, 0, 135), lens=22, shift=0.0)
