@@ -910,6 +910,7 @@ RENDUS_VERSION.update({v: "V13.2" for v in ("iso", "entree", "fenetre", "banquet
 RENDUS_VERSION.update({v: "V13.20" for v in RENDUS_VERSION})   # V13.20 : toutes les vues refaites (crédence en retour)
 RENDUS_VERSION.pop("iso_no_hermione", None)
 RENDUS_VERSION.update({v: "V13.24" for v in RENDUS_VERSION})   # V13.24 : toutes les vues refaites (hauts METOD 80)
+RENDUS_VERSION.update({v: "V13.26" for v in RENDUS_VERSION})   # V13.26 : bas et colonnes METOD
 
 # ------------------------------------------------------------------ historique (section Changements)
 CHANGEMENTS = [
@@ -918,7 +919,7 @@ CHANGEMENTS = [
      "à 228 (au lieu de 243, hauteur non standard), fileur de 22 jusqu'au plafond. Meubles hauts inchangés (h 155 → "
      "235) : ils dépassent de 7 au-dessus des colonnes. C2 : frigo h 8 → 186 (niche 178), porte haute h 186 → 228 "
      "(42 au lieu de 50). C1 : tiroir h 8 → 56 (48 au lieu de 41), lave-vaisselle et micro-ondes inchangés, porte haute "
-     "h 176 → 228 (52 au lieu de 67). Rayonnage du cellier inchangé. Rendus 3D non refaits."),
+     "h 176 → 228 (52 au lieu de 67). Rayonnage du cellier inchangé. Rendus 3D refaits (bas et colonnes METOD)."),
     ("V13.25", "09/11/2026",
      "Meubles bas au standard IKEA METOD : pieds réglables et plinthe de 8 (au lieu d'un socle de 15), caisson de 80 "
      "(au lieu de 72, non standard), plan de travail 4 : plan à 92 (au lieu de 91 ; 91,5 avec les pieds au minimum de "
