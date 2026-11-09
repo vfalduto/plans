@@ -93,7 +93,7 @@ PLAN_CLS = {"mur": "w", "allege": "win", "tech": "tech", "socle": None,
             "dormant": "dorm", "dormant_haut": None, "joue": "fac", "paumelle": None,
             "ratelier": "dark", "balai": "balai", "manche": None,
             "led": "led", "etagere_haute": "upper", "enceinte": "upper", "lampe": "lampe", "fil": None, "aspirateur": "aspi", "cafetiere": "cafe",
-            "plante": "plante", "pot": None}
+            "plante": "plante", "pot": None, "seau": "aspi"}
 
 
 def batons_rompus(w=8, l=32):
@@ -356,7 +356,8 @@ COUPE_CLS = {"mur": ("bgwall", "w"), "allege": ("bgwall", "w"), "linteau": ("wal
              "paumelle": ("dark", "dark"), "ratelier": ("dark", "dark"), "balai": ("balai", "balai"),
              "manche": ("balai", "balai"), "led": ("led", "led"), "etagere_haute": ("shelf", "shelfc"),
              "enceinte": ("dark", "dark"), "lampe": ("lampe", "lampe"), "fil": ("dark", "dark"),
-             "aspirateur": ("aspi", "aspi"), "cafetiere": ("dark", "dark"), "plante": ("plante", "plante"), "pot": ("pot", "pot")}
+             "aspirateur": ("aspi", "aspi"), "cafetiere": ("dark", "dark"), "plante": ("plante", "plante"), "pot": ("pot", "pot"),
+             "seau": ("aspi", "aspi")}
 
 
 # Regard d'une coupe : (axe coupé, sens de la profondeur, miroir de l'axe horizontal)
@@ -461,6 +462,8 @@ def coupe_svg(cut, regard, umin, umax, chaines, hauteurs, xh, extra=None, origin
                 zc = b.z0 + 6
             zc = -zc
             etiquettes.append(text(xm, zc, b.contenu, "lblc"))
+        if b.role == "seau" and v - u > 10:
+            etiquettes.append(text(xm, -(b.z0 + b.z1) / 2 + 2, "seau", "lblx onDark"))
         if b.nom == "aspirateur_bloc" and v - u > 10:
             etiquettes.append(text(xm, -(b.z0 + b.z1) / 2 + 2, "aspirateur", "lblx onDark"))
         if b.role == "cafetiere" and v - u > 10:
@@ -506,7 +509,7 @@ def coupe_a():
                 text(xm, -25, ", ".join(rn["sol"].split(", ")[2:]), "lblc")]
 
     return coupe_svg(COUPE_A, "nord", -20, 494, [(bas, 22), (hauts, -M.H - 8)],
-                     [M.SOCLE, M.CAISSON_H, M.PT_Z1, M.HAUT_Z0, M.HAUT_Z1], -50, sol)
+                     [M.SOCLE, M.CAISSON_H, M.PT_Z1, M.HAUT_Z0, M.HAUT_JOINT, M.HAUT_Z1], -50, sol)
 
 
 def coupe_b():
@@ -537,8 +540,79 @@ def coupe_c():
                 cote_h(X(M.BAIE_Y1 - M.PASSAGE_CELLIER), X(M.BAIE_Y1), -204 - 6, f"passage {f(M.PASSAGE_CELLIER)}")]
 
     return coupe_svg(COUPE_C, "est", -20, 262, [(cols, 22)],
-                     [M.SOCLE, M.LV_Z0, M.MO_Z0, M.MO_Z1, 193, M.COL_Z1], -50, cellier,
+                     [M.SOCLE_COL, M.LV_Z0, M.MO_Z0, M.MO_Z1, M.FRIGO_Z1, M.COL_Z1], -50, cellier,
                      transparents=("cellier_pliante", "linteau_cellier"))
+
+
+# ------------------------------------------------------------------ règle des hauteurs de rangement (V13.23)
+# Zones et repères du corps pour 1,75 m, mis à l'échelle pour les autres tailles (proportions moyennes du corps,
+# estimations). Zone centrale 60 → 150 et rien au-delà de 180 sans aide d'après les guides (Bora, FCBA).
+TAILLES = (175, 180)
+ZONES_175 = [(0, 50, "z3", "bas"), (50, 75, "z2", "facile"), (75, 150, "z1", "zone d'or"), (150, 180, "z2", "facile"),
+             (180, 200, "z3", "pointe des pieds"), (200, None, "z4", "escabeau")]
+REPERES_175 = [(110, "coude"), (144, "épaule"), (163, "yeux"), (180, "main levée")]
+
+
+def zones_taille(t):
+    k = t / 175
+    return ([(round(a * k), round(b * k) if b else M.H, c, n) for a, b, c, n in ZONES_175],
+            [(round(z * k), n) for z, n in REPERES_175])
+
+
+def regle(svg, umin, umax):
+    """Ajoute à droite d'une coupe la règle des zones de hauteur, une par taille. Bouton Taille à trois états :
+    1,75 m, 1,80 m, masquée ; masquée, la coupe reprend sa largeur (viewBox d'origine, data-vb0)."""
+    xb = umax + 18                                   # bande de 7, noms des zones dedans (verticaux)
+    o = []
+    for t in TAILLES:
+        zones, reperes = zones_taille(t)
+        g = []
+        for z0, z1, cls, nom in zones:
+            zm = -(z0 + z1) / 2
+            court = {"pointe des pieds": "pointe", "zone d'or": "zone d'or"}.get(nom, nom)
+            g.append(rect(xb, -z1, xb + 7, -z0, cls))
+            if z1 - z0 >= 18:
+                g.append(f'<text class="lblz" x="{f(xb + 3.5)}" y="{f(zm)}" text-anchor="middle" dominant-baseline="central" '
+                         f'transform="rotate(-90 {f(xb + 3.5)} {f(zm)})">{escape(court)}</text>')
+        for z, nom in reperes:
+            g.append(f'<line class="rep" x1="{f(umin)}" y1="{-z}" x2="{f(xb + 7)}" y2="{-z}"/>')
+            g.append(text(xb + 9, -z + 1.5, f"{nom} {z}", "lblz rept", anchor="start"))
+        g.append(text(xb + 3.5, -M.H - 8, f"{t / 100:.2f} m".replace(".", ","), "lblx"))
+        o.append(f'<g class="regle" data-t="{t}">{"".join(g)}</g>')
+    m = re.search(r'viewBox="(\S+) (\S+) (\S+) (\S+)"', svg)
+    vb0 = " ".join(m.groups())
+    vb1 = f"{m[1]} {m[2]} {f(float(m[3]) + 44)} {m[4]}"
+    svg = svg.replace(m[0], f'viewBox="{vb1}" data-vb0="{vb0}" data-vb1="{vb1}"', 1)
+    return svg.replace("</svg>", "".join(o) + "</svg>")
+
+
+TAILLE_BTN = ('<div class="tog"><span>Taille</span><button type="button" class="btaille" aria-pressed="true">'
+              '1,75 m</button></div>')
+TAILLE_LEG = ('<span class="leg"><i class="sw" style="background:#5B9E6A"></i>zone d\'or '
+              '<i class="sw" style="background:#A9CF8F"></i>facile '
+              '<i class="sw" style="background:#E8C26A"></i>bas ou pointe des pieds '
+              '<i class="sw" style="background:#D9826B"></i>escabeau</span>')
+TAILLE_JS = """
+  var TAILLES = ["175", "180", "off"], TLIB = {"175": "1,75 m", "180": "1,80 m", "off": "masquée"};
+  function taille(t) {
+    if (TAILLES.indexOf(t) < 0) t = "175";
+    document.documentElement.dataset.taille = t;
+    document.querySelectorAll(".btaille").forEach(function (b) {
+      b.textContent = TLIB[t]; b.setAttribute("aria-pressed", t !== "off");
+    });
+    document.querySelectorAll("svg[data-vb0]").forEach(function (s) {
+      s.setAttribute("viewBox", t === "off" ? s.dataset.vb0 : s.dataset.vb1);
+    });
+    try { localStorage.setItem("cuisine-v13-taille", t); } catch (e) {}
+  }
+  document.querySelectorAll(".btaille").forEach(function (b) {
+    b.addEventListener("click", function () {
+      var i = TAILLES.indexOf(document.documentElement.dataset.taille);
+      taille(TAILLES[(i + 1) % TAILLES.length]);
+    });
+  });
+  try { taille(localStorage.getItem("cuisine-v13-taille") || "175"); } catch (e) { taille("175"); }
+"""
 
 
 # ------------------------------------------------------------------ porte du cellier : Mantion Tango (V13.14)
@@ -785,6 +859,10 @@ CSS = """
   --tech:#26303A; --glass:#1F3A4E; --cement:#3A3E40; --elec:#E8B84A; --prise:#B597F0; color-scheme:dark;
 }
 *{box-sizing:border-box}
+.z1{fill:#5B9E6A;opacity:.85}.z2{fill:#A9CF8F;opacity:.85}.z3{fill:#E8C26A;opacity:.85}.z4{fill:#D9826B;opacity:.85}
+.rep{stroke:#C8412C;stroke-width:.5;stroke-dasharray:3 2;opacity:.7}.rept{fill:#C8412C}
+.lblz{font-size:3.8px;fill:var(--ink)}.lblz.rept{fill:#C8412C}.regle{display:none}html[data-taille="175"] .regle[data-t="175"],html[data-taille="180"] .regle[data-t="180"]{display:inline}
+.leg .sw{display:inline-block;width:12px;height:9px;border-radius:2px;margin:0 3px 0 8px;vertical-align:middle}
 html,body{margin:0}
 body{background:var(--paper);color:var(--ink);font-family:Archivo,system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;line-height:1.55;font-size:16px}
 .wrap{max-width:1120px;margin:0 auto;padding:28px 16px 64px}
@@ -1077,7 +1155,9 @@ def texte_cellier():
             f"dessous, au bout est ; contre le mur du WC "
             f"(V13.6, à la place du rayonnage sud), <b>deux balais</b> sur un tasseau à {100 - M.Y_BALAIS} du mur, devant "
             f"les tuyaux du LV ; entre les deux, {f(M.PASSAGE_BALAIS)} de passage vers la niche : nourrice, groupe de "
-            f"sécurité et chute restent accessibles. "
+            f"sécurité et chute restent accessibles. Au-dessus des balais (V13.22), une <b>étagère P{M.ENTRETIEN['y1'] - M.ENTRETIEN['y0']}</b> à deux "
+            f"tablettes (h {M.ENTRETIEN['zs'][0]} et {M.ENTRETIEN['zs'][1]}) pour les produits d'entretien, à part de la "
+            f"nourriture ; le <b>seau</b> au sol dans l'angle sud-est, contre C1. "
             +             f"<b>Finitions</b> : fileur chêne de {M.FILEUR_C2} au sud de C2, jusqu'au fileur couleur des murs qui ferme l'angle "
             f"au nu du montant de l'entrée (y {f(M.Y_MONTANT)}), joue à l'ouest de H1, fileurs de "
             f"{f(M.FILEUR_EST)} entre B{M.B_ETROIT} / H{M.N_HAUTS} et le retour de cloison, fileurs de 7 jusqu'au "
@@ -1152,16 +1232,16 @@ def contenu():
 <p class="cap">Échelle : 1 unité = 1 cm. Pièce vide : chambre et ancien cellier ouverts, sans cloison. Restent la fenêtre coulissante du mur ouest (y 58 → 200), la porte d'entrée (baie x 228 → 306), le décroché de l'angle sud-est, la chute (sous le ballon), le ballon et le WC. <b>Sols</b> : parquet chêne en bâtons rompus dans l'ancienne chambre (x 0 → 325), gris ciment dans l'ancien cellier et l'ancien placard (à partir de x 325) ; les cloisons déposées du relevé d'origine sont en tireté (chambre / cellier x 325 → 335, cellier / placard y 100 → 110). <b>Mur nord</b> : {len(caissons)} meubles bas de {' + '.join(f(w) for w in M.LARGEURS_BAS)} (x {f(x0)} → {f(x1)}), à {f(M.ECART_OUEST)} du mur ouest et {f(M.FILEUR_EST)} du retour de cloison du cellier (fileurs Canopée) : plan de travail de mur à mur ; caisson P{M.P_CAISSON} + façade {M.FACADE}, profondeur {M.P_CAISSON + M.FACADE}, sous un plan de travail de 4 (P62, débord de 2), sauf B{M.B_ETROIT} (P{M.P_ETROIT} + façade, profondeur {M.P_ETROIT + M.FACADE}, plan P{M.P_PLAN_ETROIT}) qui laisse se replier la porte du cellier. <b>Induction</b> 60 classique, four encastré dessous et hotte intégrée dans H1 au-dessus, sur B{M.B_PLAQUE} (x {f(M.sur_bas(M.B_PLAQUE)[0])} → {f(M.sur_bas(M.B_PLAQUE)[1])}) ; <b>évier</b> inox 1 bac 56 × 50 (bac 40 × 40) sur B{M.B_EVIER} (x {f(M.sur_bas(M.B_EVIER)[0])} → {f(M.sur_bas(M.B_EVIER)[1])}), mitigeur derrière le bac, égouttoir à gauche au-dessus de B4. <b>Mur est</b> : colonnes C1 (lave-vaisselle en hauteur, micro-ondes au-dessus, y {f(M.JOUE_C2)} → {f(M.COL_Y0)}) et C2 (frigo, y {f(M.COL_Y0)} → {f(M.COL_Y0 + 60)}) de 60, P60, fileur chêne de {M.FILEUR_C2} entre C2 et le décroché (la porte du frigo s'ouvre à 90° sans toucher le fileur de l'entrée), contre le mur du WC (x {f(M.X_MUR_EST)}), du décroché vers le nord, façades vers l'ouest (x {f(M.COL_X)}). Le mur sud est libre entre la table et le caisson du galandage. <b>Porte d'entrée</b> : à galandage, vantail {f(M.ENTREE["vantail"])} × {M.ENTREE["h"]} (trait plein, fermé) ; ouverte, elle rentre vers l'ouest dans un caisson de galandage (ocre, x {f(M.ENTREE["poche"][0])} → {f(M.ENTREE["poche"][1])}) logé dans un doublage de 10 contre le mur sud (y 242 → 252), avec un montant de 4 à l'est de la baie. Le passage reste de {f(M.ENTREE["x1"] - M.ENTREE["x0"])} ; rien ne bat dans la cuisine. Face cuisine du caisson : <b>tableau noir</b> (peinture ardoise, h 120 → 200) et <b>zone aimantée</b> en dessous (h 70 → 118), sur 81 de large (coupe B-B). <b>Équipements</b> : poubelles de tri sous l'évier (B{M.B_EVIER}), four sous la plaque (B{M.B_PLAQUE}), lave-vaisselle 60 tout intégrable en hauteur dans C1. <b>Triangle d'activité</b> (rouge ; centres de la plaque et de l'évier, milieu de la façade du frigo) : {tri}, total {f(round(sum(cotes_tri)))} cm. <b>Passage</b> (cote oblique) : {M.ACCES_CELLIER:.0f} du coin du plan de travail P62 (B{M.B_EVIER}, x {f(M.sur_bas(M.B_EVIER)[1])}, y 62) au coin nord-ouest de C1 (y {M.JOUE_C2}), devant la porte du cellier. <b>Réseaux</b> (bleu ; pose type IKEA METOD, sans vide technique : 1 cm de jeu derrière les caissons). Le <b>LV</b>, en hauteur dans C1, est raccordé par le cellier sans le traverser : alimentation depuis la nourrice le long du mur est puis du mur nord du WC, sous le rayonnage sud, jusqu'au dos de C1 ; vidange pompée par le LV le long du même mur, directement dans la chute. À l'est de l'évier, les tuyaux passent dans le <b>fond de B{M.B_ETROIT}</b> (découpé, tiroirs P30) et derrière son fileur, puis dans le retour de cloison au nord de la porte du cellier : tout <b>longe les murs</b>, en partie basse. Alimentation EF/EC en trait plein, à 3 des murs, depuis la <b>nourrice</b> (petit point, sous le ballon) : le long du retour sud de l'alcôve (y 44), de sa face ouest (x 434), puis du mur nord jusqu'à l'évier ; une seconde ligne va au LV (C1) le long du mur nord du WC. Dans la niche du cellier, tout reste dans la zone technique des {M.ZONE_TECH} premiers cm (la chute est basse, dernier étage) : l'alimentation y passe à h 20 et remonte dans l'angle, l'évacuation descend à h 25 sous la première tablette du rayonnage nord ; un coffre technique (h 0 → {M.ZONE_TECH}) couvre l'angle. Évacuation en tireté depuis le siphon de l'évier (axe x {f(M.SIPHON[0])}), à 4 du mur nord dans la cuisine, puis à 12 des murs pour passer au-delà de la nourrice : le long du mur nord, de l'alcôve, du mur est (x 484) puis du mur nord du WC jusqu'à la <b>chute</b> (cercle contre le mur du WC, sous le ballon : la colonne d'eaux usées existante, x à confirmer). Contre l'alcôve, ils passent sous la première tablette du rayonnage du mur nord ; sous le ballon (h 90), ils passent dessous ; longueur ≈ {f(M.EVAC_LONGUEUR)} : de h {M.RESEAUX[3][3]} sous le siphon à h {M.RESEAUX[4][3]} à la chute, soit {(M.RESEAUX[3][3] - M.RESEAUX[4][3]) / M.EVAC_LONGUEUR * 100:.1f} cm/m de pente moyenne (hauteur d'arrivée sur la chute à confirmer). Les réseaux traversent la cloison du cellier. <b>Cellier</b> : cloison de 7 (x 320 → 327), contre le fileur de B{M.N_BAS}. {texte_cellier()} <b>Coin repas</b> (V13.17) : banquette d'une place contre le mur ouest, dans l'angle sud-ouest, assise tournée vers l'est (x {f(M.BANQ["x0"])} → {f(M.BANQ["x1"])}, y {f(M.BANQ["y0"])} → {f(M.BANQ["y1"])} : {f(M.BANQ["y1"] - M.BANQ["y0"])} de long, dossier {M.BANQ["dossier"]} à h 85 contre le mur, assise {f(M.BANQ["x1"] - M.BANQ["x0"] - M.BANQ["dossier"])} à h 45 avec coffre) ; elle passe de {f(200 - M.BANQ["y0"])} sous la fenêtre (y 200), le dossier reste sous l'allège (h 106). Table type Véra {M.TABLE["cote"]} × {M.TABLE["cote"]} aux angles arrondis (rose poudré, chant noir), sur un pied central à embase, à 10 de l'assise et à 10 du bas de mur sud (x {f(M.TABLE["x0"])} → {f(M.TABLE["x1"])}, y {f(M.TABLE["y0"])} → {f(M.TABLE["y1"])}) : son bord nord est à {f(M.TABLE["y0"] - M.P_CAISSON - M.FACADE - 52)} de la porte du four ouverte (y {f(M.P_CAISSON + M.FACADE + 52)}) et à {f(M.TABLE["y0"] - 62)} du plan de travail. Une <b>chaise</b> {M.CHAISE["l"]} × {M.CHAISE["p"]} en face, côté est, dossier à l'est. Mur sud derrière la table : <b>bas de mur</b> en chêne miel (2, h {M.BAS_DE_MUR["h"]}, x {f(M.BAS_DE_MUR["x0"])} → {f(M.BAS_DE_MUR["x1"])}), où s'appuie la banquette, et papier peint Hermione au-dessus jusqu'au plafond (voir Matériaux). <b>Suspension</b> (tireté jaune) : point lumineux au plafond centré sur la table, abat-jour Ø {M.SUSPENSION["d"]}, bas à h {M.SUSPENSION["z0"]}, soit {M.SUSPENSION["z0"] - 75} au-dessus du plateau (coupe B-B). <b>Places</b> : {M.PLACES_BANQUETTE} sur la banquette + 1 sur la chaise ; un tabouret pliant côté nord en appoint. <b>Sous la banquette</b> : un seul tiroir, ouvert côté nord (façade h 6 → 40), hors des jambes et de la table (tireté : tiroir sorti de 35, jusqu'à y {f(M.BANQ["y0"] - 37)}). <b>Au-dessus</b> (tireté) : étagère P25 contre le mur sud, du mur ouest au doublage de l'entrée, dessus à h {f(M.ETAGERE_BANQ["z1"])}, avec l'enceinte audio (22 × 18 × 30) à l'est et la plante à l'ouest (coupe B-B). <b>Ouvertures</b> : porte du LV abattue (C1, x {f(M.COL_X - 58)} → {f(M.COL_X)}, y {f(M.JOUE_C2)} → {f(M.JOUE_C2 + 60)}), porte du four abattue (sous la plaque), porte du frigo (dessinée à 90°), charnières au sud : elle se rabat vers le sud, devant le fileur de C2 ({M.FILEUR_C2}), et on accède au frigo par le nord, côté évier. Elle s'ouvre au plus à ≈ {M.FRIGO_ANGLES["entree_fermee"][0]:.0f}° porte d'entrée fermée (son bout touche le vantail d'entrée) et ≈ {M.FRIGO_ANGLES["entree_ouverte"][0]:.0f}° porte d'entrée ouverte (montant du galandage) ; calcul sur une façade de 60 × 2 tournant autour de son angle avant, à quelques degrés près selon la charnière. <b>Meubles hauts</b> (tireté) : {len(hauts)} de {' + '.join(f(w) for w in M.LARGEURS_HAUTS)}, x {f(hauts[0].x0)} → {f(hauts[-1].x1)}, joints au droit de ceux des bas, fileur de {f(M.FILEUR_EST)} jusqu'au retour de cloison ; à leur gauche, étagères ouvertes jusqu'au mur ouest ; caisson P{M.P_HAUT} + façade {M.FACADE} (H5 compris, comme H4).</p></div>
 
 <h2>Coupe A-A · mur nord</h2>
-<div class="fig"><div class="scroll">{coupe_a()}</div>
-<p class="cap">Coupe à y {COUPE_A}, regard vers le nord. Socle {M.SOCLE}, caissons bas h {M.SOCLE} → {M.CAISSON_H}, plan de travail 4 (h {M.CAISSON_H} → {M.PT_Z1}), meubles hauts h {M.HAUT_Z0} → {M.HAUT_Z1}, fileur de {M.H - M.HAUT_Z1} jusqu'au plafond ({M.H}). <b>Ruban LED</b> (jaune) sous H1 → H{M.N_HAUTS}, vers l'avant, pour éclairer le plan de travail. <b>Façades</b> : organisation tout en tiroirs ; les traits épais sont les poignées.</p></div>
+<div class="fig">{TAILLE_BTN}<div class="scroll">{regle(coupe_a(), -20, 494)}</div>
+<p class="cap">Coupe à y {COUPE_A}, regard vers le nord. Pieds et plinthe {M.SOCLE} (METOD), caissons bas de {M.CAISSON_H - M.SOCLE} h {M.SOCLE} → {M.CAISSON_H}, plan de travail 4 (h {M.CAISSON_H} → {M.PT_Z1}), meubles hauts h {M.HAUT_Z0} → {M.HAUT_Z1}, fileur de {M.H - M.HAUT_Z1} jusqu'au plafond ({M.H}). <b>Ruban LED</b> (jaune) sous H1 → H{M.N_HAUTS}, vers l'avant, pour éclairer le plan de travail. <b>Façades</b> : tout en tiroirs en bas ; en haut (V13.24), caissons METOD de 80 à deux portes battantes de 40 superposées : porte basse (h {M.HAUT_Z0} → {M.HAUT_JOINT}) pour le quotidien, porte haute (h {M.HAUT_JOINT} → {M.HAUT_Z1}) pour le rare ; les traits épais sont les poignées. <b>Règle à droite</b> (V13.23) : hauteurs de rangement pour la personne qui cuisine (bouton Taille : 1,75 m, 1,80 m ou masquée), le quotidien dans la zone d'or, rien au-dessus de la main levée sans escabeau ; en tireté rouge, coude, épaule, yeux et main levée estimés par les proportions moyennes du corps. {TAILLE_LEG}</p></div>
 
 <h2>Coupe B-B · mur sud</h2>
 <div class="fig"><div class="scroll">{coupe_b()}</div>
 <p class="cap">Coupe à y {COUPE_B}, regard vers le sud : l'est est à gauche. <b>Porte d'entrée</b> : baie {f(M.ENTREE["x1"] - M.ENTREE["x0"])} × {M.ENTREE["h"]}, porte à galandage, vantail {f(M.ENTREE["vantail"])} × {M.ENTREE["h"]} (fermé), qui rentre à droite dans le caisson du doublage (poche {f(M.ENTREE["poche"][1] - M.ENTREE["poche"][0])}). Sur le caisson, <b>tableau noir</b> h 120 → 200 et <b>zone aimantée</b> h 70 → 118. Banquette (de profil, contre la fenêtre) et table au fond, devant le bas de mur en chêne et le papier peint Hermione, avec l'étagère P25 au-dessus (h {f(M.ETAGERE_BANQ["z0"])} → {f(M.ETAGERE_BANQ["z1"])}) et l'enceinte audio ; à gauche, la colonne C2 coupée (C1 derrière). À droite, la fenêtre coupée ; au centre, la baie d'entrée et son vantail fermé.</p></div>
 
 <h2>Coupe C-C · mur est</h2>
-<div class="fig transp"><div class="tog"><span>Porte du cellier</span><button type="button" class="trbtn" aria-pressed="true">en transparence</button></div><div class="scroll">{coupe_c()}</div>
-<p class="cap">Coupe à x {COUPE_C}, regard vers l'est : le nord est à gauche. Au fond, la cloison du cellier (x 320 → 327), et dans son prolongement la porte du cellier fermée ({M.PORTE_TITRE}), dessinée en transparence (tireté) avec son dormant et son linteau (bouton au-dessus de la coupe : transparente ou normale), pour montrer le fond du cellier : le ballon. Puis, contre le mur du WC (x {f(M.X_MUR_EST)}), les colonnes P{M.P_CAISSON + M.FACADE}, socle {M.SOCLE}, dessus à {M.COL_Z1} comme les meubles hauts, fileur de {M.H - M.COL_Z1} jusqu'au plafond : <b>C2</b> réfrigérateur intégrable (niche 178, porte h 15 → 193), porte de rangement au-dessus ; <b>C1</b> un tiroir (h 15 → {M.LV_Z0}), lave-vaisselle intégré en hauteur (h {M.LV_Z0} → {M.MO_Z0}), micro-ondes encastrable (niche 38, h {M.MO_Z0} → {M.MO_Z1}), porte de rangement au-dessus ; à droite, le décroché et le mur sud coupé.</p></div>
+<div class="fig transp"><div class="tog"><span>Porte du cellier</span><button type="button" class="trbtn" aria-pressed="true">en transparence</button></div>{TAILLE_BTN}<div class="scroll">{regle(coupe_c(), -20, 262)}</div>
+<p class="cap">Coupe à x {COUPE_C}, regard vers l'est : le nord est à gauche. Au fond, la cloison du cellier (x 320 → 327), et dans son prolongement la porte du cellier fermée ({M.PORTE_TITRE}), dessinée en transparence (tireté) avec son dormant et son linteau (bouton au-dessus de la coupe : transparente ou normale), pour montrer le fond du cellier : le ballon. Puis, contre le mur du WC (x {f(M.X_MUR_EST)}), les colonnes P{M.P_CAISSON + M.FACADE}, pieds et plinthe {M.SOCLE_COL}, armoires METOD {M.COL_Z1 - M.SOCLE_COL}, dessus à {M.COL_Z1} (les meubles hauts finissent à {M.HAUT_Z1}), fileur de {M.H - M.COL_Z1} jusqu'au plafond : <b>C2</b> réfrigérateur intégrable (niche 178, porte h {M.SOCLE_COL} → {M.FRIGO_Z1}), porte de rangement au-dessus ; <b>C1</b> un tiroir (h {M.SOCLE_COL} → {M.LV_Z0}), lave-vaisselle intégré en hauteur (h {M.LV_Z0} → {M.MO_Z0}), micro-ondes encastrable (niche 38, h {M.MO_Z0} → {M.MO_Z1}), porte de rangement au-dessus ; à droite, le décroché et le mur sud coupé.</p></div>
 
 {section_tango()}
 {section_elec()}
@@ -1194,7 +1274,7 @@ def page(figees, racine=""):
              f'<button type="button" class="expl" aria-pressed="false">Explications</button>'
              f'<button type="button" class="chg" aria-pressed="false">Changements</button></div>')
     return f"""<!doctype html>
-<html lang="fr">
+<html lang="fr" data-taille="175">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
@@ -1257,6 +1337,7 @@ def page(figees, racine=""):
       g.querySelectorAll("figure[data-rv]").forEach(function (f) {{ f.hidden = f.dataset.rv !== b.dataset.rv; }});
     }});
   }});
+{TAILLE_JS}
   var be = document.querySelector(".vbar .expl");
   function expl(on) {{
     document.body.classList.toggle("explications", on);

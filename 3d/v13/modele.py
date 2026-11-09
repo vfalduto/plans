@@ -12,7 +12,7 @@ import math
 import os
 from dataclasses import dataclass
 
-VERSION = "V13.20"
+VERSION = "V13.26"
 H = 250  # hauteur sous plafond
 
 
@@ -170,8 +170,12 @@ FENETRE = dict(y0=58, y1=200, allege=106, linteau=215)
 ENTREE = dict(x0=228, x1=306, h=204, vantail=83, ferme=(225, 308), ouvert=(142, 225), y=247, poche=(140, 225))
 
 # ------------------------------------------------------------------ meubles
-# Conventions : socle 15 en retrait de 5 sous les façades, caisson P58 h 15 → 87, façade 2.
-SOCLE, CAISSON_H, P_CAISSON, FACADE = 15, 87, 58, 2
+# Conventions : pieds et plinthe en retrait de 5 sous les façades, caisson P58, façade 2.
+# V13.25 : meubles bas METOD : pieds et plinthe de 8, caisson de 80 (h 8 → 88), plan 4 → 92. Les colonnes gardent un
+# socle de 15 (SOCLE_COL) en attendant le choix de leur hauteur METOD.
+# V13.26 : colonnes METOD 220 sur les mêmes pieds de 8 (dessus à 228).
+SOCLE, CAISSON_H, P_CAISSON, FACADE = 8, 88, 58, 2
+SOCLE_COL = SOCLE
 
 MEUBLES = []
 
@@ -184,18 +188,27 @@ def meuble_bas_nord(nom, x0, largeur, p=P_CAISSON):
 
 # Meubles hauts : caisson P33 + façade 2, h 153 → 243 (remontés de 5 en V11.8 : 62 au-dessus du plan),
 # fileur de 7 jusqu'au plafond.
-HAUT_Z0, HAUT_Z1, P_HAUT = 153, 243, 33
+# V13.24 (variante C, organisation pour 1,75 m) : caissons METOD de 80 (h 155 → 235), deux portes battantes de
+# 60 × 40 superposées sur charnières latérales (pas de relevable), fileur de 15 jusqu'au plafond. Porte basse
+# (h 155 → 195) : le quotidien ; porte haute (h 195 → 235) : le rare et léger.
+FILEUR_HAUT = 15
+HAUT_Z1, P_HAUT = H - FILEUR_HAUT, 33
+HAUT_Z0 = HAUT_Z1 - 80
+HAUT_JOINT = HAUT_Z0 + 40                       # joint des deux portes
 
 
-HAUTS_CONTENU = ["hotte intégrée", "épices, huiles", "petit-déjeuner, épicerie", "assiettes, bols",
-                 "verres, tasses, café, thé"]
+# (porte basse, porte haute)
+HAUTS_CONTENU = [("hotte, filtres", "rare : thermos"), ("épices, condiments", "recharges épices"),
+                 ("petit-déj, thé, sucre", "réserves épicerie"), ("assiettes, bols", "plats de service"),
+                 ("verres, tasses", "verres à pied")]
 
 
-def meuble_haut_nord(nom, x0, largeur, contenu=""):
+def meuble_haut_nord(nom, x0, largeur, contenu=("", "")):
     x1 = x0 + largeur
     MEUBLES.append(Bloc("caisson_haut", f"caisson_{nom}", x0, x1, 0, P_HAUT, HAUT_Z0, HAUT_Z1, nom.upper()))
-    MEUBLES.append(Bloc("facade_haut", f"facade_{nom}", x0, x1, P_HAUT, P_HAUT + FACADE, HAUT_Z0, HAUT_Z1,
-                        poignee=ORGA["hauts"], contenu=contenu))
+    for k, (z0, z1, c) in enumerate(((HAUT_Z0, HAUT_JOINT, contenu[0]), (HAUT_JOINT, HAUT_Z1, contenu[1]))):
+        MEUBLES.append(Bloc("facade_haut", f"facade_{nom}_{('bas', 'haut')[k]}", x0, x1, P_HAUT, P_HAUT + FACADE,
+                            z0, z1, poignee=ORGA["hauts"], contenu=c))
     # ruban LED sous le caisson, vers l'avant, éclairant le plan de travail
     MEUBLES.append(Bloc("led", f"led_{nom}", x0 + 2, x1 - 2, P_HAUT - 7, P_HAUT - 5, HAUT_Z0 - 0.8, HAUT_Z0))
 
@@ -223,19 +236,21 @@ for i in range(N_BAS):
     meuble_bas_nord(f"b{i + 1}", _X_BAS[i], LARGEURS_BAS[i], P_BAS.get(i + 1, P_CAISSON))
 
 # ------------------------------------------------------------------ organisation des façades (A, tout en tiroirs)
-# L'électroménager ne bouge pas : B2 (sous la plaque : four encastré 60 au-dessus d'un tiroir de 12)
-# (LV, façade intégrée) sont fixes. Façades du haut vers le bas, hauteurs en cm (total 72, h 15 → 87).
+# L'électroménager ne bouge pas : B2 (sous la plaque : four encastré 60 au-dessus d'un tiroir de 20)
+# (LV, façade intégrée) sont fixes. Façades du haut vers le bas, hauteurs en cm (total 80, h 8 → 88 ; V13.25 : hauteurs de façades METOD 20 / 40 / 60 / 80).
 # (genre, hauteur, contenu)
 ORGA = dict(titre="Tout en tiroirs", hauts="porte",
-            bas={B_TIROIRS: [("tiroir", 18, "ustensiles"), ("tiroir", 27, "poêles"), ("tiroir", 27, "casseroles")],
-                 B_COULISSANT: [("tiroir", 72, "huiles, épices")],
-                 B_TIROIRS_2: [("tiroir", 18, "couverts"), ("tiroir", 27, "moules, plats à four"),
-                               ("tiroir", 27, "boîtes de conservation")],
-                 5: [("tiroir", 72, "tri : 3 bacs")],
+            # V13.24 : contenu réparti pour 1,75 m (quotidien dans le tiroir du haut, lourd en bas)
+            bas={B_TIROIRS: [("tiroir", 20, "ustensiles, couteaux"), ("tiroir", 20, "poêles, couvercles"),
+                             ("tiroir", 40, "casseroles")],
+                 B_COULISSANT: [("tiroir", 80, "huiles, épices")],
+                 B_TIROIRS_2: [("tiroir", 20, "couverts"), ("tiroir", 20, "boîtes, planches"),
+                               ("tiroir", 40, "plats, moules, saladiers")],
+                 5: [("tiroir", 80, "tri : 3 bacs")],
                  # V13.0 : B6 reprend une partie de C3 ; V13.8 : un placard (porte, charnières à l'ouest pour ne pas
                  # gêner la porte du cellier repliée ; une étagère, fond découpé pour les tuyaux) sous la machine à café
-                 B_ETROIT: [("porte", 72, "café, détartrant, boîtes, torchons")]})
-FACADES_FIXES = {B_PLAQUE: [("four", 60, ""), ("tiroir", 12, "plaques, grilles")]}
+                 B_ETROIT: [("porte", 80, "café, thé, filtres")]})
+FACADES_FIXES = {B_PLAQUE: [("four", 60, ""), ("tiroir", 20, "plaques, grilles")]}
 for n in range(1, N_BAS + 1):
     x0, x1 = _X_BAS[n - 1], _X_BAS[n]
     z, p = CAISSON_H, P_BAS.get(n, P_CAISSON)
@@ -348,8 +363,10 @@ EVAC_LONGUEUR = round(sum(math.dist(a, b) for a, b in zip(_ev, _ev[1:])))
 LARGEURS_HAUTS = [60, 60, 60, 60, 40]
 DEPART_HAUTS = sur_bas(N_BAS)[1] - sum(LARGEURS_HAUTS)
 # V11.40 : étagères tout le long, du mur ouest à H1
-ETAGERES_MUR = dict(x0=0, x1=DEPART_HAUTS - 2, p=25, zs=[160, 195, 230],
-                    contenus=["livres de cuisine", "bocaux", "plantes, objets"])
+# V13.23 : la première étagère démarre au bas des meubles hauts (règle client : toujours alignée sur leur dessous)
+# V13.24 : alignées sur les hauts : dessous au bas des hauts, au joint des portes, dessus au haut des hauts
+ETAGERES_MUR = dict(x0=0, x1=DEPART_HAUTS - 2, p=25, zs=[HAUT_Z0, HAUT_JOINT, HAUT_Z1 - 2.5],
+                    contenus=["bocaux du quotidien", "livres de cuisine", "déco, plantes"])
 for k, (z, c) in enumerate(zip(ETAGERES_MUR["zs"], ETAGERES_MUR["contenus"])):
     MEUBLES.append(Bloc("etagere_haute", f"etagere_mur_{k + 1}", ETAGERES_MUR["x0"], ETAGERES_MUR["x1"], 0,
                         ETAGERES_MUR["p"], z, z + 2.5, contenu=c))
@@ -372,7 +389,9 @@ Y_MUR_SUD = 252
 X_MUR_EST = 382
 COL_DOS = X_MUR_EST
 COL_X = COL_DOS - P_CAISSON - FACADE      # nu des façades, x 322
-COL_Z1 = HAUT_Z1
+COL_Z1 = SOCLE_COL + 220   # V13.26 : colonnes METOD 220 sur pieds de 8, dessus à 228 (fileur de 22) ; hauts à 235
+RAYON_Z1 = 243             # rayonnage du cellier, indépendant des colonnes
+FRIGO_Z1 = SOCLE_COL + 178  # niche du réfrigérateur intégrable (178), h 8 → 186
 # V11.50 : du nord au sud, C1 LV + MO (60, y 81 → 141), C2 frigo (60), C3 tiroirs à l'anglaise (39, → 240)
 # V13.0 : C3 supprimée, C1 et C2 descendent jusqu'au décroché : C1 y 120 → 180, C2 y 180 → 240
 # V13.1 : fileur de 10 au sud de C2 : C1 y 110 → 170, C2 y 170 → 230, fileur y 230 → 240
@@ -380,15 +399,15 @@ COL_Z1 = HAUT_Z1
 COL_Y0, COL_Y1 = JOUE_C2 + 60, 240
 
 
-COLONNES_CONTENU = {("c1", "tiroir_1"): "pastilles LV, torchons", ("c1", "lv"): "lave-vaisselle intégré",
-                    ("c1", "porte_haute"): "réserves", ("c2", "porte_haute"): "grands plats, saladiers"}
+COLONNES_CONTENU = {("c1", "tiroir_1"): "LV, torchons, sacs", ("c1", "lv"): "lave-vaisselle intégré",
+                    ("c1", "porte_haute"): "essuie-tout, films", ("c2", "porte_haute"): "vaisselle de fête"}
 
 
 def colonne_est(nom, y0, largeur, facades, etiq):
     """facades : (rôle, nom, z0, z1), de bas en haut."""
     y1 = y0 + largeur
-    MEUBLES.append(Bloc("socle", f"socle_{nom}", COL_X + 5, COL_DOS, y0, y1, 0, SOCLE))
-    MEUBLES.append(Bloc("colonne", f"caisson_{nom}", COL_X + FACADE, COL_DOS, y0, y1, SOCLE, COL_Z1, etiq))
+    MEUBLES.append(Bloc("socle", f"socle_{nom}", COL_X + 5, COL_DOS, y0, y1, 0, SOCLE_COL))
+    MEUBLES.append(Bloc("colonne", f"caisson_{nom}", COL_X + FACADE, COL_DOS, y0, y1, SOCLE_COL, COL_Z1, etiq))
     for role, n, z0, z1 in facades:
         p = "tiroir" if n.startswith("tiroir") or n == "lv" else "porte" if n in ("porte_haute", "frigo", "porte_anglaise") else ""
         MEUBLES.append(Bloc(role, f"{n}_{nom}", COL_X, COL_X + FACADE, y0, y1, z0, z1, poignee=p,
@@ -397,13 +416,16 @@ def colonne_est(nom, y0, largeur, facades, etiq):
 
 # C1 (V11.50, au nord) : lave-vaisselle 60 intégré en hauteur à la place du four (niche 82, h 66 → 148), micro-ondes
 # encastrable au-dessus (niche 38, h 148 → 186), un tiroir dessous, rangement dessus
-LV_Z0, MO_Z0, MO_Z1 = 66, 148, 186
+# V13.21 : C1 abaissé de 10 pour une personne de 1,75 m (plateau du micro-ondes ≈ 141, sous l'épaule) :
+# tiroir h 15 → 56, LV h 56 → 138, micro-ondes h 138 → 176, porte haute h 176 → 243
+# V13.26 : tiroir h 8 → 56, porte haute h 176 → 228
+LV_Z0, MO_Z0, MO_Z1 = 56, 138, 176
 colonne_est("c1", JOUE_C2, 60, [
-    ("facade_col", "tiroir_1", SOCLE, LV_Z0), ("facade_col", "lv", LV_Z0, MO_Z0), ("micro_onde", "micro_onde", MO_Z0, MO_Z1),
+    ("facade_col", "tiroir_1", SOCLE_COL, LV_Z0), ("facade_col", "lv", LV_Z0, MO_Z0), ("micro_onde", "micro_onde", MO_Z0, MO_Z1),
     ("facade_col", "porte_haute", MO_Z1, COL_Z1)], "C1 LV + MO")
 # C2 : réfrigérateur intégrable (niche 178), porte de rangement au-dessus
 colonne_est("c2", COL_Y0, 60, [
-    ("facade_col", "frigo", SOCLE, 193), ("facade_col", "porte_haute", 193, COL_Z1)], "C2 frigo")
+    ("facade_col", "frigo", SOCLE_COL, FRIGO_Z1), ("facade_col", "porte_haute", FRIGO_Z1, COL_Z1)], "C2 frigo")
 # V13.0 : C3 (colonne de 39 à tiroirs à l'anglaise) supprimée ; son contenu passe dans B6 et H5, les bocaux et vases au
 # cellier.
 TIROIRS_ANGLAISE = []
@@ -411,8 +433,8 @@ TIROIRS_ANGLAISE = []
 # V13.7 : le fileur descend jusqu'au nu du montant de l'entrée (y 242), où il rejoint le fileur couleur des murs ; la
 # joue x 322 → 341, enfermée derrière lui (entre C2 et le décroché), est retirée
 Y_MONTANT = next(b for b in ENVELOPPE if b.nom == "galandage_montant").y0      # nu nord du montant de l'entrée, y 242
-MEUBLES.append(Bloc("socle", "socle_fileur_c2", COL_X + 5, COL_DOS, COL_Y1 - FILEUR_C2, COL_Y1, 0, SOCLE))
-MEUBLES.append(Bloc("joue", "fileur_c2", COL_X, COL_X + FACADE, COL_Y1 - FILEUR_C2, Y_MONTANT, SOCLE, COL_Z1))
+MEUBLES.append(Bloc("socle", "socle_fileur_c2", COL_X + 5, COL_DOS, COL_Y1 - FILEUR_C2, COL_Y1, 0, SOCLE_COL))
+MEUBLES.append(Bloc("joue", "fileur_c2", COL_X, COL_X + FACADE, COL_Y1 - FILEUR_C2, Y_MONTANT, SOCLE_COL, COL_Z1))
 # fileur couleur des murs entre C1 et le mur sud (montant du galandage, x 312) : ferme la poche de l'angle sud-est
 # V13.7 : aligné sur le montant de l'entrée (nu nord y 242) au lieu de dépasser de 2 devant
 MEUBLES.append(Bloc("joue", "fileur_c1", 312, COL_X + FACADE, Y_MONTANT, Y_MONTANT + 2, 0, H))
@@ -514,7 +536,7 @@ CHAISE = dict(l=42, p=42)
 EP = 2  # épaisseur des tablettes et montants
 
 
-def rayonnage(nom, x0, x1, y0, y1, zs, montants_en_x=True, z1=COL_Z1, contenus=(), arrondi=0):
+def rayonnage(nom, x0, x1, y0, y1, zs, montants_en_x=True, z1=RAYON_Z1, contenus=(), arrondi=0):
     """Montants toute hauteur aux deux bouts + tablettes aux hauteurs zs (dessus de tablette = z + EP).
     arrondi : tablettes arrondies à l'angle (x0, y1), montant de ce bout raccourci d'autant."""
     if montants_en_x:
@@ -546,6 +568,17 @@ for k, (xc, tete) in enumerate(BALAIS):
     MEUBLES.append(Bloc("ratelier", f"crochet_balai_{k + 1}", xc - 1, xc + 1, Y_BALAIS - 3, Y_BALAIS, zc, zc + 3))
     MEUBLES.append(Cyl("manche", f"manche_balai_{k + 1}", xc, Y_BALAIS - 2.5, 1.2, *zm))
     MEUBLES.append(Bloc("balai", f"tete_balai_{k + 1}", xc - 12, xc + 12, Y_BALAIS - 6, Y_BALAIS, *zt))
+
+# V13.22 : entretien (rien depuis le retrait du rayonnage sud en V13.6). Étagère P15 sur consoles contre le mur nord du
+# WC (y 85 → 100, x 382 → 434), deux tablettes à h 170 et 195 au-dessus de la tête haute des balais (h 160) : produits
+# ménagers, à part de la nourriture ; seau dans l'angle sud-est du cellier, contre C1 et le mur du WC.
+ENTRETIEN = dict(x0=382, x1=434, y0=100 - 15, y1=100, zs=[170, 195],
+                 contenus=["produits ménagers, gants", "recharges, chiffons, sacs d'aspirateur"])
+for k, (z, c) in enumerate(zip(ENTRETIEN["zs"], ENTRETIEN["contenus"])):
+    MEUBLES.append(Bloc("etagere", f"etag_entretien_{k + 1}", ENTRETIEN["x0"], ENTRETIEN["x1"], ENTRETIEN["y0"],
+                        ENTRETIEN["y1"], z, z + 2, contenu=c))
+SEAU = Cyl("seau", "seau", 367, 100, 14, 0, 30)    # x 353 → 381, y 86 → 114
+MEUBLES.append(SEAU)
 
 # Rayonnage toute hauteur P40 contre le mur nord, jusqu'au mur de l'alcôve (x 434) : 6 tablettes, la première à h 60
 # au-dessus des réseaux (h 43 → 50) qui passent dessous. La porte s'ouvrant côté cuisine (V11.35), il part de la
@@ -620,7 +653,7 @@ PASSAGE_BALAIS = Y_BALAIS - 6 - RAYON_NORD["y1"]
 # abattant : emprise de la porte abattue (x0, x1, y0, y1) ; battant : charnière, bout fermé, bout ouvert à 90°.
 _pl = sur_bas(B_PLAQUE)
 OUVERTURES = [
-    ("abattant", "LV", (COL_X - 58, COL_X, JOUE_C2, JOUE_C2 + 60)),              # LV en hauteur (C1), porte à h 66
+    ("abattant", "LV", (COL_X - 58, COL_X, JOUE_C2, JOUE_C2 + 60)),              # LV en hauteur (C1), porte à h 56 (V13.21)
     ("abattant", "four", (_pl[0], _pl[1], P_CAISSON + FACADE, P_CAISSON + FACADE + 52)),   # four sous la plaque
     # frigo : charnières au sud (côté C1), la porte se rabat vers le sud, on accède par le nord (côté évier)
     ("battant", "frigo", ((COL_X, COL_Y0 + 60), (COL_X, COL_Y0), (COL_X - 60, COL_Y0 + 60))),
@@ -696,9 +729,9 @@ VOLUMES = dict(
                           litres(LARGEURS_BAS[B_PLAQUE - 1], P_CAISSON, 12),
                           litres(LARGEURS_BAS[B_TIROIRS_2 - 1], P_CAISSON, CAISSON_H - SOCLE),
                           litres(sum(LARGEURS_HAUTS[1:]), P_HAUT, HAUT_Z1 - HAUT_Z0),   # H1 : hotte, hors volume
-                          litres(60, P_CAISSON, (LV_Z0 - SOCLE) + (COL_Z1 - MO_Z1)), litres(60, P_CAISSON, COL_Z1 - 193),
+                          litres(60, P_CAISSON, (LV_Z0 - SOCLE_COL) + (COL_Z1 - MO_Z1)), litres(60, P_CAISSON, COL_Z1 - FRIGO_Z1),
                           2 * litres(40, 40, 30)]),
-             cellier=litres(L_NORD, RAYON_NORD["y1"], COL_Z1 - RAYON_NORD["zs"][0])),
+             cellier=litres(L_NORD, RAYON_NORD["y1"], RAYON_Z1 - RAYON_NORD["zs"][0])),
     p9a=dict(cuisine=sum([litres(40, 58, 72), litres(60, 58, 46), litres(80, 58, 72), litres(140, 33, 90),
                           litres(60, 58, 23 + 118), litres(59, 57, 45), litres(59, 57, 71 + 50), litres(52, 28, 72)]),
              cellier=litres(38, 30, 194)),
@@ -706,26 +739,36 @@ VOLUMES = dict(
 # contenu des rangements ouverts et des tiroirs, pour le tableau « Contenu des rangements »
 CONTENU = [
     ("B1, coulissant de 20 à gauche de la plaque", "huiles, vinaigres, épices, sel (paniers en hauteur)"),
-    ("B2, sous la plaque", "four encastré ; tiroir de 12 : plaques et grilles du four"),
-    ("B3, à droite de la plaque", "3 tiroirs : ustensiles (18), poêles (27), casseroles (27)"),
-    ("B4, à gauche de l'évier", "3 tiroirs : couverts (18), moules et plats à four (27), boîtes de conservation (27)"),
-    ("B5, sous l'évier", "1 tiroir découpé autour du siphon : tri en 3 bacs (ordures, emballages, verre) et produits "
-     "d'évier dans le bac avant"),
-    ("B6, P40, contre la porte du cellier", "placard, une étagère (les tuyaux passent dans le fond) : café, "
-     "détartrant, boîtes et films, torchons ; machine à café posée dessus"),
+    ("B2, sous la plaque", "four encastré ; tiroir de 20 : plaques et grilles du four"),
+    ("B3, à droite de la plaque", "3 tiroirs : ustensiles de cuisson et couteaux (20), poêles et couvercles (20), "
+     "casseroles et faitouts (40)"),
+    ("B4, à gauche de l'évier", "3 tiroirs : couverts (20), boîtes de conservation, planches, film (20), plats à "
+     "four, moules, saladiers (40 : le lourd en bas, à portée du four)"),
+    ("B5, sous l'évier", "1 tiroir découpé autour du siphon : tri en 3 bacs (ordures, emballages, verre) ; bac "
+     "avant : liquide vaisselle, éponges, brosse, produit évier"),
+    ("B6, P40, contre la porte du cellier", "placard, une étagère (les tuyaux passent dans le fond) : café et thé en "
+     "réserve, filtres, détartrant ; machine à café posée dessus"),
     ("Étagères à gauche de H1", ", ".join(ETAGERES_MUR["contenus"])),
-    ("H1, au-dessus de la plaque", "hotte intégrée (groupe filtrant en recyclage) ; petit rangement au-dessus"),
-    ("H2, au-dessus de B3", "épices, huiles, condiments"),
-    ("H3", "petit-déjeuner (céréales, thé, café, confitures) et épicerie sèche du quotidien : pâtes, riz, farine"),
-    ("H4, au-dessus de l'évier", "assiettes et bols"),
-    ("H5, au-dessus de B6", "verres, tasses, café, thé"),
-    ("C1, à côté de la porte du cellier", "tiroir bas : pastilles et sel du LV, torchons ; lave-vaisselle en hauteur ; "
-     "micro-ondes ; porte haute : réserves"),
-    ("C2", "porte au-dessus du frigo : grands plats, saladiers, plateaux (rarement utilisés)"),
+    ("H1, au-dessus de la plaque", "porte basse : hotte intégrée (groupe filtrant), filtres de rechange ; porte "
+     "haute : rare (thermos)"),
+    ("H2, au-dessus de B3", "porte basse : épices en gradins, condiments, sauces ; porte haute : recharges d'épices"),
+    ("H3", "porte basse : petit-déjeuner (thé, sucre, confitures, céréales entamées) ; porte haute : réserves "
+     "d'épicerie légères"),
+    ("H4, au-dessus de l'évier", "porte basse : assiettes, bols ; porte haute : plats de service"),
+    ("H5, au-dessus de B6", "porte basse : verres, tasses ; porte haute : verres à pied, carafe"),
+    ("C1, à côté de la porte du cellier", "tiroir bas : pastilles et sel du LV, torchons, sacs poubelle ; "
+     "lave-vaisselle en hauteur ; micro-ondes ; porte haute : essuie-tout, sacs congélation, films (tablette h 178), "
+     "stock au-dessus"),
+    ("C2", "porte au-dessus du frigo : vaisselle de fête, plateaux (rare et léger : plus de plats lourds en hauteur)"),
     ("Banquette", "tiroir unique, ouvert côté nord : nappes, sets de table, jeux, bougies"),
     ("Cellier nord, sol sous la 1re tablette", RAYON_NORD["sol"] + " (les tuyaux passent derrière, contre le mur)"),
 ] + [(f"Cellier nord, tablette h {z}", c) for z, c in zip(RAYON_NORD["zs"], RAYON_NORD["contenus"]) if c] + [
     ("Cellier, mur du WC (à la place du rayonnage sud)", "2 balais (un tête en bas, un tête en haut)"),
+    ("Cellier, étagère P15 au-dessus des balais, h 170", "produits ménagers : multi-usage, sols, vitres, anticalcaire, "
+     "javel ; gants (à part de la nourriture)"),
+    ("Cellier, même étagère, h 195", "recharges, chiffons microfibre, sacs d'aspirateur"),
+    ("Cellier, angle sud-est au sol", "seau, serpillière ou balai à franges, essoreur"),
+    ("Salle de bains", "produits WC et salle de bains (restent dans la salle de bains)"),
     ("Cellier nord, sous la 1re tablette, à l'est", "aspirateur traîneau avec sac (type Rowenta Silence Force), "
      "couché, tube et brosse au sol devant lui"),
 ]
@@ -750,7 +793,7 @@ MATERIAUX = [
     ("Colonnes C1, C2 et meubles hauts H1 → H5", "Chêne miel, Plum Living", "Façades, joues et fileurs.", ("#A8743F",)),
     ("Meubles bas B1 → B6", "Laque Canopée, Plum Living",
      "Vert profond (nuancier Plum Living), posé sur caissons type IKEA METOD.", ("#3C524C",)),
-    ("Crédence", "Zellige greige", "Carreaux 10 × 10 émaillés à la main, h 91 → 153, sur toute la rangée, en retour sur le mur ouest (jusqu'à la "
+    ("Crédence", "Zellige greige", "Carreaux 10 × 10 émaillés à la main, h 92 → 155, sur toute la rangée, en retour sur le mur ouest (jusqu'à la "
      "fenêtre) et sur le retour de cloison du cellier, à l'est de la machine à café.",
      ("#C6BCAC", "#B9AE9D", "#A99D8B")),
     ("Plan de travail", "Effet béton blanc-gris", "Matière à définir (compact, céramique, quartz…) ; elle décide du "
@@ -866,9 +909,43 @@ RENDUS_VERSION["iso_no_hermione"] = "V11.50"
 RENDUS_VERSION.update({v: "V13.2" for v in ("iso", "entree", "fenetre", "banquette", "cellier", "dos_cellier", "iso_nuit", "iso_no")})   # essai papier peint (rendu à part, scratchpad)
 RENDUS_VERSION.update({v: "V13.20" for v in RENDUS_VERSION})   # V13.20 : toutes les vues refaites (crédence en retour)
 RENDUS_VERSION.pop("iso_no_hermione", None)
+RENDUS_VERSION.update({v: "V13.24" for v in RENDUS_VERSION})   # V13.24 : toutes les vues refaites (hauts METOD 80)
 
 # ------------------------------------------------------------------ historique (section Changements)
 CHANGEMENTS = [
+    ("V13.26", "09/11/2026",
+     "Colonnes au standard IKEA METOD : armoires de 220 sur les mêmes pieds et la même plinthe de 8 que les bas, dessus "
+     "à 228 (au lieu de 243, hauteur non standard), fileur de 22 jusqu'au plafond. Meubles hauts inchangés (h 155 → "
+     "235) : ils dépassent de 7 au-dessus des colonnes. C2 : frigo h 8 → 186 (niche 178), porte haute h 186 → 228 "
+     "(42 au lieu de 50). C1 : tiroir h 8 → 56 (48 au lieu de 41), lave-vaisselle et micro-ondes inchangés, porte haute "
+     "h 176 → 228 (52 au lieu de 67). Rayonnage du cellier inchangé. Rendus 3D non refaits."),
+    ("V13.25", "09/11/2026",
+     "Meubles bas au standard IKEA METOD : pieds réglables et plinthe de 8 (au lieu d'un socle de 15), caisson de 80 "
+     "(au lieu de 72, non standard), plan de travail 4 : plan à 92 (au lieu de 91 ; 91,5 avec les pieds au minimum de "
+     "7,5). Façades redécoupées aux hauteurs METOD : B3 et B4 en 3 tiroirs 20 / 20 / 40 (au lieu de 18 / 27 / 27), B1, "
+     "B5 et B6 en une façade de 80, B2 four 60 + tiroir 20 (au lieu de 12). Crédence h 92 → 155. Colonnes inchangées "
+     "(socle 15, dessus à 243) en attendant le choix de leur hauteur METOD. Rendus 3D non refaits."),
+    ("V13.24", "09/11/2026",
+     "Placards réorganisés pour la personne qui cuisine (1,75 m), variante C du document de travail : meubles hauts "
+     "en caissons METOD de 80 (h 155 → 235, au lieu de 90 de haut, non standard), deux portes battantes de 60 × 40 "
+     "superposées (porte basse h 155 → 195 : le quotidien ; porte haute h 195 → 235 : le rare), fileur de 15 "
+     "jusqu'au plafond ; colonnes inchangées (dessus à 243). Étagères ouvertes alignées sur les hauts (h 155, 195, "
+     "235). Contenu réparti de zéro : quotidien dans les portes basses et les tiroirs du haut, lourd en bas (plats, "
+     "moules et saladiers dans B4), rare et léger en hauteur (vaisselle de fête au-dessus du frigo). Règle des "
+     "hauteurs : bouton Taille à trois états (1,75 m, 1,80 m, masquée), règle plus étroite. Tous les rendus refaits."),
+    ("V13.23", "09/11/2026",
+     "Étagères ouvertes à gauche de H1 : la première démarre au bas des meubles hauts (h 153 au lieu de 160). Coupes "
+     "A-A et C-C : règle des hauteurs de rangement (zone d'or) à droite, pour la personne qui cuisine, 1,75 m ou "
+     "1,80 m (bouton Taille). Rendus pas refaits."),
+    ("V13.22", "09/11/2026",
+     "Nettoyage et entretien replacés (absents depuis la V13.6) : étagère P15 sur le mur nord du WC, au-dessus des "
+     "balais (x 382 → 434, tablettes h 170 : produits ménagers et gants, h 195 : recharges, chiffons, sacs "
+     "d'aspirateur) ; seau et serpillière au sol dans l'angle sud-est du cellier ; bac avant du tiroir de tri (B5) : "
+     "produits d'évier ; tiroir de C1 : produits du LV. Rendus pas refaits."),
+    ("V13.21", "09/11/2026",
+     "C1 abaissé de 10 pour une personne de 1,75 m : tiroir h 15 → 56, lave-vaisselle h 56 → 138 (avant 66 → 148), "
+     "micro-ondes h 138 → 176 (avant 148 → 186), plateau vers h 141, sous l'épaule ; porte haute h 176 → 243. "
+     "Prises P7 (h 40) et P8 (h 205) inchangées. Rendus pas refaits."),
     ("V13.20", "09/11/2026",
      "Crédence en zellige prolongée en retour sur le mur ouest (y 0 → 58, jusqu'à la fenêtre) et sur le retour de "
      "cloison du cellier, à l'est de la machine à café (y 0 → 42). Vue A (isométrique sud-ouest) : le bas de mur en "

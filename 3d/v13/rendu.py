@@ -79,7 +79,7 @@ ROLES = {
     "four": "v11_four", "micro_onde": "v11_four", "led": "v11_led",
     "banquette": "v11_banquette", "coussin": "v11_velours", "etagere_haute": "v11_chene_h", "chaise": "v11_chene",
     "table": "v11_rose", "chant": "noir", "peinture": "v11_pan", "pied": "epoxy_blanc", "lampe": "globe", "fil": "noir", "enceinte": "tissu_noir", "cafetiere": "v11_four", "aspirateur": "v11_pvc",
-    "pot": "terre_cuite", "plante": "feuillage",
+    "pot": "terre_cuite", "plante": "feuillage", "seau": "v11_pvc",
     "porte": "v11_porte", "paumelle": "v11_inox", "ardoise": "ardoise", "aimant": "v11_aimant",
     "etagere": "bois_clair", "montant": "bois_clair", "ballon": "electro_blanc",
     "balai": "noir", "manche": "bois_clair", "ratelier": "v11_inox",
