@@ -107,8 +107,8 @@ def meubles():
             nom, _, equip = b.etiq.partition(" ")
             r.append((nom, equip, M.COL_X, b.y0, b.x1, b.y1, [], "m"))
     ba = M.BANQ
-    r.append(("Banquette", "coffre · 2 tiroirs", ba["x0"], ba["y0"], ba["x1"], ba["y1"],
-              [M.Bloc("dossier", "", ba["x0"], ba["x1"], ba["y1"] - 5, ba["y1"], 0, 0)], "m"))
+    r.append(("Banquette", "coffre · 1 tiroir", ba["x0"], ba["y0"], ba["x1"], ba["y1"],
+              [M.Bloc("dossier", "", ba["x0"], ba["x0"] + ba["dossier"], ba["y0"], ba["y1"], 0, 0)], "m"))
     t = M.TABLE
     r.append(("Table", "pied central", t["x0"], t["y0"], t["x1"], t["y1"], [], "m table"))
     for nom, rv in [("Rayonnage", r) for r in (M.RAYON_NORD, M.RAYON_SUD) if r]:

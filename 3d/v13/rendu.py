@@ -200,6 +200,11 @@ def complements(sc):
     boite(sc, "sol_wc__wc", 392, 484, 110, 252, -2, 0)
     # crédence zellige entre le plan et les hauts, sur toute la rangée
     boite(sc, "credence__credence", 0, M.X_CLOISON, 0, 0.4, M.PT_Z1 + 0.05, M.HAUT_Z0 - 0.05)
+    # V13.20 : en retour sur le mur ouest (jusqu'au tableau de la fenêtre) et sur le retour de cloison du cellier, à
+    # l'est de la machine à café (jusqu'au bord du plan de B6)
+    boite(sc, "credence__credence_ouest", 0, 0.4, 0.4, M.CREDENCE_RETOURS["ouest"], M.PT_Z1 + 0.05, M.HAUT_Z0 - 0.05)
+    boite(sc, "credence__credence_est", M.X_CLOISON - 0.4, M.X_CLOISON, 0.4, M.CREDENCE_RETOURS["est"], M.PT_Z1 + 0.05,
+          M.HAUT_Z0 - 0.05)
     # fenêtre coulissante (2 vantaux) dans la baie du mur ouest, alu, à 10 du nu intérieur
     fe = M.FENETRE
     y0, y1, z0, z1 = fe["y0"], fe["y1"], fe["allege"], fe["linteau"]
@@ -231,8 +236,9 @@ def complements(sc):
                 boite(sc, f"ext_alu__{etage}_{k}_{n}", fx, fx + 3, b0, b1, c0, c1)
     # banquette : coussins d'assise et de dossier en velours
     bq = M.BANQ
-    boite(sc, "coussin__assise", bq["x0"] + 0.5, bq["x1"] - 0.5, bq["y0"] + 0.5, bq["y1"] - 5.5, 45, 50)
-    boite(sc, "coussin__dossier", bq["x0"] + 0.5, bq["x1"] - 0.5, bq["y1"] - 11, bq["y1"] - 5.2, 50, 84)
+    d = bq["x0"] + bq["dossier"]                     # V13.17 : dossier contre le mur ouest, assise vers l'est
+    boite(sc, "coussin__assise", d + 0.5, bq["x1"] - 0.5, bq["y0"] + 0.5, bq["y1"] - 0.5, 45, 50)
+    boite(sc, "coussin__dossier", d + 0.2, d + 6, bq["y0"] + 0.5, bq["y1"] - 0.5, 50, 84)
     # poignées : profilé toute longueur en chêne sur les façades bois, barres inox sur les bas Canopée
     for b in M.MEUBLES:
         pg = getattr(b, "poignee", "")
@@ -457,7 +463,8 @@ def nuit(sc, oui):
 # Vues : yeux à 163 debout, 120 assis ; visée horizontale et décentrement vertical (verticales droites).
 DEBOUT, ASSIS = R.DEBOUT, R.ASSIS
 COUPES_ISO = (r"^(mur__(ouest_nord|ouest_sud|sud_ouest|sud_est)|allege__|linteau__(linteau_fenetre|linteau_entree|"
-              r"linteau_galandage)|cloison__galandage|porte__entree|ardoise__|aimant__|peinture__|socle__plinthe_|plafond__|verre__|alu__|ext_)")
+              r"linteau_galandage)|cloison__galandage|porte__entree|ardoise__|aimant__|peinture__|joue__bas_de_mur|socle__plinthe_|"
+              r"plafond__|verre__|alu__|ext_)")   # V13.20 : bas de mur du mur sud coupé avec le mur
 # isométrique depuis le nord-ouest : murs nord et ouest, plafond ET rangée nord coupés (vue de dos, elle masquait la
 # pièce ; elle se voit dans la vue A)
 COUPES_ISO_NO = (r"^(mur__(nord|nord_alcove|ouest_nord|ouest_sud)|allege__|socle__plinthe_fenetre|linteau__linteau_fenetre|cloison__cloison_cellier|"
@@ -473,8 +480,8 @@ VIEWS = {
     "entree":      dict(loc=(268, 236, DEBOUT), target=(105, 40, DEBOUT), lens=18, shift=-0.12),
     # C — depuis la fenêtre, vers les colonnes et le cellier
     "fenetre":     dict(loc=(12, 105, DEBOUT), target=(330, 140, DEBOUT), lens=18, shift=-0.12),
-    # D — assis sur la banquette, place est, vers la rangée nord et les colonnes
-    "banquette":   dict(loc=(78, 226, ASSIS), target=(300, 70, ASSIS), lens=20, shift=0.02),
+    # D — assis sur la banquette (une place, mur ouest), vers l'est : chaise, colonnes, porte du cellier
+    "banquette":   dict(loc=(28, 217, ASSIS), target=(320, 150, ASSIS), lens=20, shift=0.02),   # V13.17
     # E — entré dans le cellier, porte refermée derrière soi : dans l'axe du passage vers le ballon (V13.2), rayonnage nord à
     # gauche, balais à droite (V13.6)
     "cellier":     dict(loc=(336, 72, DEBOUT), target=(470, 60, DEBOUT), lens=14, shift=-0.15, porte_fermee=True),

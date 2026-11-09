@@ -12,7 +12,7 @@ import math
 import os
 from dataclasses import dataclass
 
-VERSION = "V13.16"
+VERSION = "V13.20"
 H = 250  # hauteur sous plafond
 
 
@@ -329,6 +329,9 @@ RESEAUX = [
 ZONE_TECH = 30
 # V13.8 : machine à café (expresso automatique, environ 24 × 36 × h 36) sur le plan de B6, contre la crédence ; 26 de
 # dégagement sous H5
+# V13.20 : crédence en retour sur le mur ouest (y 0 → 58, jusqu'à la fenêtre) et sur la face ouest du retour de
+# cloison du cellier, à l'est de la machine à café (y 0 → 42, profondeur du plan de B6) ; même hauteur (plan → hauts)
+CREDENCE_RETOURS = dict(ouest=58, est=42)
 CAFE = dict(x0=sur_bas(B_ETROIT)[0] + 8, x1=sur_bas(B_ETROIT)[0] + 32, y0=3, y1=39, h=36)
 MEUBLES.append(Bloc("cafetiere", "machine_cafe", CAFE["x0"], CAFE["x1"], CAFE["y0"], CAFE["y1"], PT_Z1, PT_Z1 + CAFE["h"]))
 # V13.0 : plus de coffre des réseaux : B6 et son fileur les recouvrent jusqu'au retour de cloison (fond de B6 découpé)
@@ -426,34 +429,41 @@ TRIANGLE = [("frigo", (COL_X, (_frigo.y0 + _frigo.y1) / 2)),
 
 
 # ------------------------------------------------------------------ coin repas : banquette et table, angle sud-ouest
-# Banquette contre le mur sud, du mur ouest au retour du doublage de la porte d'entrée (x 0 → 140, V11.45) : assise 45
-# (h 45), dossier 5 (h 85). Deux places larges (70 chacune), trois en se serrant. Dessous, deux tiroirs (façades
-# h 6 → 40) ; V11.46 : la table n'ayant plus qu'un pied central, ils passent au-dessus de son embase (h 2).
-BANQ = dict(x0=0, x1=ENTREE["poche"][0], y0=Y_MUR_SUD - 50, y1=Y_MUR_SUD)
-PLACES_BANQUETTE, LARGEUR_PLACE = 2, 70
-TIROIRS_BANQ = [(3, 67), (73, 137)]   # V11.46 : pied central, ils passent au-dessus de l'embase
+# V13.17 (essai dans la cuisine réelle : la table était trop près de la plaque et du four) : banquette d'UNE place contre
+# le mur ouest, dans l'angle sud-ouest, assise tournée vers l'est ; table contre le mur sud, une chaise en face (est).
+# Banquette x 0 → 50 (dossier 5 contre le mur, h 85 ; assise 45, h 45), y 182 → 252 : 70 de long, la largeur de la
+# table ; elle passe de 18 sous la fenêtre (y 200, allège 106 : le dossier reste dessous). Un seul caisson dessous :
+# un tiroir (façade h 6 → 40) ; V13.18 : il s'ouvre côté nord (face y 182), hors des jambes et de la table.
+# (V11.45 → V13.16 : banquette de 2 places contre le mur sud, x 0 → 140, deux tiroirs face au nord.)
+# V13.19 : bas de mur en chêne (2) sur le mur sud, x 0 → 140, h 0 → 85 : la banquette s'y appuie (y 180 → 250)
+BAS_DE_MUR = dict(x0=0, x1=ENTREE["poche"][0], ep=2, h=85)
+Y_BAS_DE_MUR = Y_MUR_SUD - BAS_DE_MUR["ep"]                   # nu du bas de mur, y 250
+BANQ = dict(x0=0, x1=50, y0=Y_BAS_DE_MUR - 70, y1=Y_BAS_DE_MUR, dossier=5)
+PLACES_BANQUETTE, LARGEUR_PLACE = 1, 70
+TIROIRS_BANQ = [(BANQ["x0"] + 3, BANQ["x1"] - 3)]   # tiroir unique, en x (V13.18 : façade sur la face nord)
 MEUBLES += [
-    Bloc("banquette", "banquette_assise", BANQ["x0"], BANQ["x1"], BANQ["y0"], BANQ["y1"] - 5, 0, 45, "banquette"),
-    Bloc("banquette", "banquette_dossier", BANQ["x0"], BANQ["x1"], BANQ["y1"] - 5, BANQ["y1"], 0, 85),
+    Bloc("banquette", "banquette_assise", BANQ["x0"] + BANQ["dossier"], BANQ["x1"], BANQ["y0"], BANQ["y1"], 0, 45,
+         "banquette"),
+    Bloc("banquette", "banquette_dossier", BANQ["x0"], BANQ["x0"] + BANQ["dossier"], BANQ["y0"], BANQ["y1"], 0, 85),
 ] + [Bloc("facade", f"tiroir_banquette_{k + 1}", a, b, BANQ["y0"] - 2, BANQ["y0"], 6, 40, poignee="tiroir",
-          contenu=c) for k, ((a, b), c) in enumerate(zip(TIROIRS_BANQ, ("nappes, sets", "jeux, bougies")))]
-# Étagère au-dessus de la banquette, contre le mur sud : P25, dessus à h 162,5 (assez haut pour la tête assise), avec
-# l'enceinte audio (22 × 18 × 30) posée à l'est.
-ETAGERE_BANQ = dict(x0=BANQ["x0"], x1=BANQ["x1"], y0=Y_MUR_SUD - 25, y1=Y_MUR_SUD, z0=160, z1=162.5)
+          contenu="nappes, sets, jeux, bougies") for k, (a, b) in enumerate(TIROIRS_BANQ)]
+# Étagère contre le mur sud, au-dessus de la table et de la banquette : P25, dessus à h 162,5 (assez haut pour la
+# tête assise), avec l'enceinte audio (22 × 18 × 30) posée à l'est. Inchangée (x 0 → 140, jusqu'au doublage).
+ETAGERE_BANQ = dict(x0=0, x1=ENTREE["poche"][0], y0=Y_MUR_SUD - 25, y1=Y_MUR_SUD, z0=160, z1=162.5)
 MEUBLES += [
     Bloc("etagere_haute", "etagere_banquette", ETAGERE_BANQ["x0"], ETAGERE_BANQ["x1"], ETAGERE_BANQ["y0"],
          ETAGERE_BANQ["y1"], ETAGERE_BANQ["z0"], ETAGERE_BANQ["z1"]),
-    Bloc("enceinte", "enceinte_audio", BANQ["x1"] - 28, BANQ["x1"] - 6, Y_MUR_SUD - 20, Y_MUR_SUD - 2, ETAGERE_BANQ["z1"],
-         ETAGERE_BANQ["z1"] + 30),
+    Bloc("enceinte", "enceinte_audio", ETAGERE_BANQ["x1"] - 28, ETAGERE_BANQ["x1"] - 6, Y_MUR_SUD - 20, Y_MUR_SUD - 2,
+         ETAGERE_BANQ["z1"], ETAGERE_BANQ["z1"] + 30),
     # plante retombante à l'ouest de l'étagère : pot Ø 16, feuillage Ø 28
     Cyl("pot", "pot_plante", 22, Y_MUR_SUD - 12, 8, ETAGERE_BANQ["z1"], ETAGERE_BANQ["z1"] + 14),
     Cyl("plante", "plante", 22, Y_MUR_SUD - 12, 14, ETAGERE_BANQ["z1"] + 14, ETAGERE_BANQ["z1"] + 40),
 ]
-# V11.45 : table type Véra (Les Gambettes) 70 × 70 × h 75, plateau stratifié rose poudré à chant noir, devant la
-# banquette, à 10 de son assise ; plus de chaise. Suspension centrée au-dessus.
-# V11.46 : angles arrondis (R 12) et pied central laqué blanc (colonne Ø 8, embase Ø 44) à la place des quatre pieds :
-# on se glisse sur la banquette sans pied dans les jambes.
-TABLE = dict(cote=70, x0=35, y0=BANQ["y0"] - 10 - 70)
+# Table type Véra (Les Gambettes) 70 × 70 × h 75, plateau stratifié rose poudré à chant noir, angles arrondis (R 12),
+# pied central laqué blanc (colonne Ø 8, embase Ø 44). V13.17 : contre le mur sud (y 182 → 252), à 10 de l'assise de
+# la banquette (x 60 → 130) ; son bord nord est à 70 de la porte du four ouverte (y 112 ; avant : 10).
+# Suspension centrée au-dessus.
+TABLE = dict(cote=70, x0=BANQ["x1"] + 10, y0=Y_BAS_DE_MUR - 10 - 70)   # V13.19 : à 10 du bas de mur (y 170 → 240)
 TABLE.update(x1=TABLE["x0"] + 70, y1=TABLE["y0"] + 70, cx=TABLE["x0"] + 35, cy=TABLE["y0"] + 35)
 MEUBLES += [
     Bloc("table", "plateau_vera", TABLE["x0"], TABLE["x1"], TABLE["y0"], TABLE["y1"], 74.8, 75, arrondi=12, coins="tous"),
@@ -466,10 +476,15 @@ MEUBLES += [
     Cyl("fil", "rosace_suspension", TABLE["cx"], TABLE["cy"], 5, H - 3, H),
 ]
 SUSPENSION = dict(d=35, z0=140, z1=160)
-# pan de mur derrière la banquette, du mur ouest au doublage de l'entrée : peinture vert profond (V11.45 ; le papier
-# peint seventies essayé en V11.46 → V11.48 a été retiré en V11.49)
-PAPIER_PEINT = None
-MEUBLES.append(Bloc("peinture", "pan_banquette", BANQ["x0"], BANQ["x1"], Y_MUR_SUD - 0.3, Y_MUR_SUD, 0, H))
+# pan de mur du coin repas (mur sud), du mur ouest au doublage de l'entrée. V13.19 : papier peint Hermione (4murs,
+# intissé cerise noire et vert-de-gris, motif ≈ 64 répété en miroir) au-dessus du bas de mur, jusqu'au plafond ; la
+# peinture vert profond (V11.45 → V13.18) est abandonnée. Bas de mur en chêne miel, comme les façades bois.
+PAPIER_PEINT = dict(nom="Hermione (4murs), intissé cerise noire et vert-de-gris",
+                    image="3d/textures/papier-hermione.png", motif=64, couleur="#4B2E3B")
+MEUBLES.append(Bloc("peinture", "pan_banquette", BAS_DE_MUR["x0"], BAS_DE_MUR["x1"], Y_MUR_SUD - 0.3, Y_MUR_SUD,
+                    BAS_DE_MUR["h"], H))
+MEUBLES.append(Bloc("joue", "bas_de_mur", BAS_DE_MUR["x0"], BAS_DE_MUR["x1"], Y_BAS_DE_MUR, Y_MUR_SUD, 0,
+                    BAS_DE_MUR["h"]))
 # plinthe au pied du mur de la fenêtre, de la rangée nord à la banquette : couleur des murs, h 8, épaisseur 1,5
 PLINTHE = dict(h=8, ep=1.5)
 MEUBLES.append(Bloc("socle", "plinthe_fenetre", 0, PLINTHE["ep"], P_CAISSON + FACADE, BANQ["y0"], 0, PLINTHE["h"]))
@@ -489,6 +504,8 @@ def chaise(nom, x0, y0, dossier):
 
 
 GLISSE = 0   # plus de chaise (V11.45)
+# V13.17 : une chaise en face de la banquette, côté est, dossier à l'est ; l'assise passe de 8 sous le plateau
+chaise("chaise_1", TABLE["x1"] - 8, TABLE["cy"] - 21, "e")
 # chaise seule, ajoutée aux meubles à découper de la version imprimable (V12.4), pas posée dans le projet
 CHAISE = dict(l=42, p=42)
 
@@ -655,7 +672,7 @@ CAPACITE = dict(
              cellier=(RAYON_NORD["x1"] - RAYON_NORD["x0"], len(RAYON_NORD["zs"]), L_NORD, RAYON_NORD["y1"]),
              cellier_sud=None,   # V13.6 : rayonnage sud retiré
              menage=None,
-             autres="banquette : 2 tiroirs ; étagère P25 au-dessus"),
+             autres="banquette : 1 tiroir ; étagère P25 au-dessus de la table"),
     # Proposition 9 A (3d/cuisine_a.py) : bas 40 + 60 + 80 + 60 (x 9 → 249) et meuble café P28 de 52 ; hauts 40 + 40 + 60 ;
     # colonnes LV, frigo, four ; plan x 0 → 249 moins plaque (52 → 106) et évier monobloc avec égouttoir (161 → 247) ;
     # cellier 6 tablettes P30 de 38. Tiroirs : 3 + 3 + 1 sous la plaque + 1 sous le LV + 2 sous le four.
@@ -705,7 +722,7 @@ CONTENU = [
     ("C1, à côté de la porte du cellier", "tiroir bas : pastilles et sel du LV, torchons ; lave-vaisselle en hauteur ; "
      "micro-ondes ; porte haute : réserves"),
     ("C2", "porte au-dessus du frigo : grands plats, saladiers, plateaux (rarement utilisés)"),
-    ("Banquette", "tiroir entre les pieds de la table : nappes, sets de table ; tiroir est : jeux, bougies"),
+    ("Banquette", "tiroir unique, ouvert côté nord : nappes, sets de table, jeux, bougies"),
     ("Cellier nord, sol sous la 1re tablette", RAYON_NORD["sol"] + " (les tuyaux passent derrière, contre le mur)"),
 ] + [(f"Cellier nord, tablette h {z}", c) for z, c in zip(RAYON_NORD["zs"], RAYON_NORD["contenus"]) if c] + [
     ("Cellier, mur du WC (à la place du rayonnage sud)", "2 balais (un tête en bas, un tête en haut)"),
@@ -733,7 +750,8 @@ MATERIAUX = [
     ("Colonnes C1, C2 et meubles hauts H1 → H5", "Chêne miel, Plum Living", "Façades, joues et fileurs.", ("#A8743F",)),
     ("Meubles bas B1 → B6", "Laque Canopée, Plum Living",
      "Vert profond (nuancier Plum Living), posé sur caissons type IKEA METOD.", ("#3C524C",)),
-    ("Crédence", "Zellige greige", "Carreaux 10 × 10 émaillés à la main, h 91 → 153, sur toute la rangée.",
+    ("Crédence", "Zellige greige", "Carreaux 10 × 10 émaillés à la main, h 91 → 153, sur toute la rangée, en retour sur le mur ouest (jusqu'à la "
+     "fenêtre) et sur le retour de cloison du cellier, à l'est de la machine à café.",
      ("#C6BCAC", "#B9AE9D", "#A99D8B")),
     ("Plan de travail", "Effet béton blanc-gris", "Matière à définir (compact, céramique, quartz…) ; elle décide du "
      "type d'évier possible (sous plan ou à encastrer).", ("#D6D4CE", "#BDBBB5")),
@@ -743,12 +761,14 @@ MATERIAUX = [
     ("Poignées des meubles bas Canopée (B1 → B6)", "Barres en inox brossé",
      "Comme l'évier et la robinetterie.", ("#3C524C", "#C9C9C7")),
     ("Table", "Stratifié rose poudré à chant noir", "Plateau type Véra (Les Gambettes) carré 70 × 70 aux angles "
-     "arrondis (R 12), sur un pied central laqué blanc à embase ronde, adapté à la banquette.", ("#D9BDBB", "#18181A")),
-    ("Pan de mur derrière la banquette", "Peinture vert profond",
-     "Du mur ouest au doublage de l'entrée, jusqu'au plafond : un vert profond proche de Canopée (piste : peinture murale "
-     "Vert sauvage de Plum Living, à comparer sur échantillon avec la façade Canopée) relie le coin repas aux meubles bas.",
-     ("#3F5A4E",)),
-    ("Banquette", "Coffre couleur des murs, coussins velours ocre moutarde", "Coffre, dossier et façades des tiroirs "
+     "arrondis (R 12), sur un pied central laqué blanc à embase ronde, contre le mur sud.", ("#D9BDBB", "#18181A")),
+    ("Pan de mur du coin repas (mur sud)", "Papier peint Hermione (4murs)",
+     "Intissé cerise noire et vert-de-gris, au-dessus du bas de mur (h 85) jusqu'au plafond, du mur ouest au doublage "
+     "de l'entrée ; motif ≈ 64 répété en miroir. Remplace la peinture vert profond (V13.19).", ("#4B2E3B", "#8FA89B")),
+    ("Bas de mur du coin repas (mur sud)", "Chêne miel, comme les façades bois",
+     "Panneau de 2 sur 85 de haut, du mur ouest au doublage de l'entrée (x 0 → 140), là où était l'ancienne banquette : "
+     "la banquette s'y appuie, la table s'arrête à 10 devant.", ("#A8743F",)),
+    ("Banquette", "Coffre couleur des murs, coussins velours ocre moutarde", "Coffre, dossier et façade du tiroir "
      "dans le blanc des murs ; coussins d'assise et de dossier en velours côtelé ocre moutarde (retenu face au "
      "terracotta et au vieux rose).", ("#EFE9DC", "#C08A2E")),
 ]
@@ -777,8 +797,9 @@ INTERRUPTEURS = [
      "plaque verticale 2 postes (V13.4 : il ne reste que 6 de mur entre le plan et la baie)",
      [("haut", "L2", "va-et-vient avec S1"),
       ("bas", "L4", "simple allumage, à voyant : on voit la lumière restée allumée porte fermée")]),
-    ("S3", "Banquette", 0, 212, 105,
-     "mur ouest, au bout de la banquette, à portée de main assis ; sur la même plaque que P11",
+    ("S3", "Banquette", 54, Y_MUR_SUD, 105,
+     "mur sud, juste à l'est du dossier de la banquette, au-dessus de la table : à portée de main assis ; sur la même "
+     "plaque que P11 (V13.17 : le mur ouest est pris par le dossier)",
      [("", "L3", "poussoir du variateur, avec S1")]),
 ]
 # Prises : (repère, x, y, z, socles, circuit, usage, emplacement) ; « dans » : au fond d'un meuble, invisible
@@ -792,9 +813,10 @@ PRISES = [
     ("P7", COL_DOS, JOUE_C2 + 30, 40, 1, "lv", "lave-vaisselle", "dans C1, derrière le tiroir bas"),
     ("P8", COL_DOS, JOUE_C2 + 30, 205, 1, "plan", "micro-ondes", "dans C1, derrière la porte haute"),
     ("P9", COL_DOS, COL_Y0 + 30, 210, 1, "frigo", "réfrigérateur", "dans C2, derrière la porte haute"),
-    ("P10", BANQ["x1"] - 17, Y_MUR_SUD, 175, 1, "autres", "enceinte audio",
+    ("P10", ETAGERE_BANQ["x1"] - 17, Y_MUR_SUD, 175, 1, "autres", "enceinte audio",
      "mur sud, derrière l'enceinte posée sur l'étagère"),
-    ("P11", 0, 224, 105, 2, "autres", "téléphone, ordinateur (dont 1 USB)", "mur ouest, au bout de la banquette, avec S3"),
+    ("P11", 66, Y_MUR_SUD, 105, 2, "autres", "téléphone, ordinateur (dont 1 USB)",
+     "mur sud, au-dessus de la table, à côté de la banquette, avec S3"),
     ("P12", 400, 0, 75, 1, "autres", "aspirateur, raclette, gaufrier",
      "cellier, mur nord, dans le rayonnage au-dessus de l'aspirateur, entre les tablettes h 60 et h 96"),
     ("P13", 290, 0, 135, 1, "autres", "machine à café", "crédence, au-dessus de B6 (au-dessus de la machine)"),
@@ -815,7 +837,7 @@ CIRCUITS = [
 # groupes de rendus (titre, [(vue, libellé du bouton)]) : libellé vide = vues distinctes, sans bouton de variante
 RENDUS_GROUPES = [
     ("Isométrique depuis le sud-ouest", [("iso", "Jour"), ("iso_nuit", "Nuit")]),
-    ("Isométrique depuis le nord-ouest", [("iso_no", "Peinture vert profond"), ("iso_no_hermione", "Papier peint Hermione")]),
+    ("Isométrique depuis le nord-ouest", [("iso_no", "")]),
     ("Dans la cuisine", [("entree", ""), ("fenetre", ""), ("banquette", ""), ("dos_cellier", "")]),
     ("Cellier", [("cellier", "")]),
 ]
@@ -823,12 +845,9 @@ RENDUS = [
     ("iso", "A · Isométrique", "Depuis le sud-ouest, murs ouest et sud et plafond coupés (ils portent toujours ombres et lumière)."),
     ("iso_no", "A' · Isométrique, autre sens", "Depuis le nord-ouest, murs nord et ouest, plafond et rangée nord "
      "coupés (elle se voit dans la vue A) : la banquette, l'entrée, les colonnes et la porte du cellier."),
-    ("iso_no_hermione", "A'' · Essai papier peint Hermione", "Même vue que A', avec le papier peint intissé Hermione "
-     "(4murs, cerise noire et vert-de-gris) sur le pan derrière la banquette au lieu du vert profond : essai, pas retenu "
-     "dans le modèle. Motif estimé à 64 cm, répété en miroir dans la hauteur."),
     ("entree", "B · Depuis l'entrée", "Debout dans la baie d'entrée, vers la rangée nord et la fenêtre."),
     ("fenetre", "C · Depuis la fenêtre", "Debout devant la fenêtre, vers les colonnes, la porte du cellier ouverte et l'entrée."),
-    ("banquette", "D · Assis sur la banquette", "Place est de la banquette, yeux à 120, vers la rangée nord et les colonnes."),
+    ("banquette", "D · Assis sur la banquette", "Sur la banquette, yeux à 120, vers l'est : la chaise, les colonnes et la porte du cellier."),
     ("cellier", "E · Entrée du cellier", "Entré dans le cellier, porte refermée derrière soi, dans l'axe du passage vers la niche : rayonnage nord à "
      "gauche, ballon au fond, rayonnage sud à droite."),
     ("dos_cellier", "F · Dos à la porte du cellier", "Debout devant la porte du cellier, vers la table et la banquette."),
@@ -845,9 +864,30 @@ RENDUS_VERSION = {v: "V11.50" for v in ("iso", "entree", "fenetre", "banquette",
 RENDUS_VERSION["iso_no_hermione"] = "V11.50"
 # V13.2 : toutes les vues refaites (sauf l'essai Hermione, rendu à part)
 RENDUS_VERSION.update({v: "V13.2" for v in ("iso", "entree", "fenetre", "banquette", "cellier", "dos_cellier", "iso_nuit", "iso_no")})   # essai papier peint (rendu à part, scratchpad)
+RENDUS_VERSION.update({v: "V13.20" for v in RENDUS_VERSION})   # V13.20 : toutes les vues refaites (crédence en retour)
+RENDUS_VERSION.pop("iso_no_hermione", None)
 
 # ------------------------------------------------------------------ historique (section Changements)
 CHANGEMENTS = [
+    ("V13.20", "09/11/2026",
+     "Crédence en zellige prolongée en retour sur le mur ouest (y 0 → 58, jusqu'à la fenêtre) et sur le retour de "
+     "cloison du cellier, à l'est de la machine à café (y 0 → 42). Vue A (isométrique sud-ouest) : le bas de mur en "
+     "chêne est coupé avec le mur sud. Tous les rendus refaits."),
+    ("V13.19", "09/11/2026",
+     "Peinture vert profond abandonnée : papier peint Hermione (4murs) sur le pan de mur sud du coin repas, au-dessus "
+     "d'un bas de mur en chêne miel (comme les façades bois, h 85, x 0 → 140, là où était l'ancienne banquette). "
+     "Table décalée de 10 du mur (y 170 → 240) ; la banquette s'appuie sur le bas de mur (y 180 → 250). "
+     "Tous les rendus 3D refaits ; vue A'' (essai Hermione) retirée, devenue inutile."),
+    ("V13.18", "09/11/2026",
+     "Tiroir de la banquette ouvert côté nord (face y 182, sorti de 35 jusqu'à y 145) au lieu de face à la table. "
+     "Rendu A' (isométrique depuis le nord-ouest) refait avec le nouveau coin repas."),
+    ("V13.17", "09/11/2026",
+     "Essai dans la cuisine : position des meubles validée, sauf le coin repas (table trop près de la plaque et du four). "
+     "Banquette réduite à une place, contre le mur ouest dans l'angle sud-ouest, assise tournée vers l'est (x 0 → 50, "
+     "y 182 → 252 : elle passe de 18 sous la fenêtre), avec un seul tiroir. Table 70 × 70 contre le mur "
+     "sud (x 60 → 130) : 70 entre la porte du four ouverte et la table (10 avant). Une chaise en face, côté est. "
+     "Suspension recentrée sur la table ; S3 et P11 passent sur le mur sud, au-dessus de la table. Étagère, enceinte, "
+     "plante et pan vert restent sur le mur sud. Rendus 3D pas refaits (ils montrent l'ancienne banquette)."),
     ("V13.16", "23/10/2026",
      "Maquette 3D tournante (page à part, à la souris ou en rotation automatique, murs effacés côté caméra, "
      "mannequin de 1,75 m) : lien à côté du titre « Plan » et du titre « Rendus 3D »."),
