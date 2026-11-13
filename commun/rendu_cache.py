@@ -12,6 +12,7 @@ import dataclasses
 import hashlib
 import importlib
 import json
+import os
 import subprocess
 import sys
 from pathlib import Path
@@ -19,8 +20,9 @@ from pathlib import Path
 from commun.modele import Camera
 
 FICHIER = Path("cache/empreintes.json")
-EXCLUES = ("CAMERAS", "CHANGEMENTS")
-BLENDER = "/opt/homebrew/bin/blender"
+# textes et constantes de page seulement : le rendu ne les lit pas
+EXCLUES = ("CAMERAS", "CHANGEMENTS", "VERSION", "BASE", "ZONES", "RENDUS", "FIGEES_ANCIENNES")
+BLENDER = os.environ.get("BLENDER", "/opt/homebrew/bin/blender")
 RACINE = Path(__file__).resolve().parent.parent
 
 # Entrée, document d'aménagement : variante -> module des données

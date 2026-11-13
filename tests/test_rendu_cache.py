@@ -54,3 +54,12 @@ def test_a_rendre(tmp_path):
     assert not rendu_cache.a_rendre(cle, "abc", fichier)
     assert rendu_cache.a_rendre(cle, "def", fichier)
     assert rendu_cache.a_rendre("entree/amenagement/victor/couloir", "abc", fichier)
+
+
+def test_constantes_de_page_sans_effet(monkeypatch):
+    cams = cameras()
+    avant = {k: emp(c, victor) for k, c in cams.items()}
+    monkeypatch.setattr(victor, "VERSION", "V9.9")
+    monkeypatch.setattr(victor, "ZONES", ())
+    monkeypatch.setattr(victor, "RENDUS", [])
+    assert {k: emp(c, victor) for k, c in cams.items()} == avant
