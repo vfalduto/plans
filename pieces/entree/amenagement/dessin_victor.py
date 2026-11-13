@@ -48,7 +48,7 @@ def plan_svg(M, aria="Plan de l'entrée, version Victor", zones=""):
     o.append(text(39, 392, "porte d’entrée", "lbls muted"))
     # tableau électrique, mur nord libre
     o.append(rect(M.TABLEAU["x0"], -6, M.TABLEAU["x1"], 0, "tech"))
-    o.append(text(140, 14, "tableau électrique · mur libre dessous", "lblx muted"))
+    o.append(text(140, 14, "tableau électrique, mur libre dessous", "lblx muted"))
     # ① meuble à chaussures avec son arrondi jusqu'au PAX, joints des abattants, étagères flottantes (tireté)
     o.append(coin_arrondi(b["x0"], b["x1"], b["y0"], b["y1"], b["r"], "cab"))
     for x in [b["xa"]] + [x0 for x0, _ in b["modules"][1:]]:
@@ -57,9 +57,9 @@ def plan_svg(M, aria="Plan de l'entrée, version Victor", zones=""):
     cx, cy = M.CENTRE_ARRONDI
     o.append(f'<circle class="hook" cx="{cx}" cy="{cy}" r="1.2"/>')
     xm = (b["xa"] + b["x1"]) / 2
-    o.append(text(xm, b["y0"] + 7, f'① Chaussures {b["x1"] - b["xa"]} × {b["y1"] - b["y0"]} · h {b["z1"] + b["plateau"]}', "lblx"))
+    o.append(text(xm, b["y0"] + 7, f'① Chaussures {b["x1"] - b["xa"]} × {b["y1"] - b["y0"]}, h {b["z1"] + b["plateau"]}', "lblx"))
     o.append(text(xm, b["y0"] + 13, f'{len(b["modules"])} abattants', "lblx"))
-    o.append(text(xm, et["y0"] + 14, f'2 étagères flottantes h {et["z"][0]} · {et["z"][1]}', "lblx muted"))
+    o.append(text(xm, et["y0"] + 14, f'2 étagères flottantes h {et["z"][0]}, {et["z"][1]}', "lblx muted"))
     o.append(text(b["xa"] - 2, b["y1"] - 4, f'R {b["r"]}', "lblx muted", "end"))
     # ③ penderie PAX : portes de 50 (nord) et 25 (sud) vers l'ouest, débattement en tireté ; tringle (cintres de face)
     o.append(rect(pe["x0"], pe["y0"], pe["x1"], pe["y1"], "talli"))
@@ -71,8 +71,8 @@ def plan_svg(M, aria="Plan de l'entrée, version Victor", zones=""):
     o.append(f'<path class="swing" d="M{pe["x0"]} {f(yj)} A{l2} {l2} 0 0 0 {f(pe["x0"] - l2)} {pe["y1"]}"/>')
     xt = (pe["x0"] + pe["x1"]) / 2
     ym = (pe["y0"] + pe["y1"]) / 2
-    o.append(text(xt - 4, ym, f'③ Penderie PAX {pe["y1"] - pe["y0"]} × {pe["x1"] - pe["x0"] - pe["facade"]} · h {pe["z1"]}', "lblx", extra=rot(xt - 4, ym)))
-    o.append(text(xt + 3, ym, "portes 50 + 25 · cintres de face", "lblx", extra=rot(xt + 3, ym)))
+    o.append(text(xt - 4, ym, f'③ Penderie PAX {pe["y1"] - pe["y0"]} × {pe["x1"] - pe["x0"] - pe["facade"]}, h {pe["z1"]}', "lblx", extra=rot(xt - 4, ym)))
+    o.append(text(xt + 3, ym, "portes 50 + 25, cintres de face", "lblx", extra=rot(xt + 3, ym)))
     o.append(text(xt + 10, ym, f'bandeau {pe["z1"]} → {M.H}', "lblx muted", extra=rot(xt + 10, ym)))
     # ⑤ planche à chaussures, patères, applique
     o.append(rect(pl["x0"], pl["y0"], pl["x1"], pl["y1"], "cab"))

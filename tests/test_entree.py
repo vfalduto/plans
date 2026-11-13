@@ -66,6 +66,15 @@ def test_dessins_inchanges(variante, dessin):
     assert _sans_ajouts(svg) == _sans_ajouts(attendu)
 
 
+@pytest.mark.parametrize("variante", DESSINS)
+def test_dessins_sans_point_median(variante):
+    # demande du client : pas de points médians ; les étiquettes séparent leurs parties par des virgules
+    for cle in ("plan", "coupes"):
+        v = vues.vues(variante)[cle]
+        for texte in (v.fiche, *(t for e in v.elements for t in (e.scene, e.fiche))):
+            assert "·" not in texte, (variante, cle, re.findall(r">([^<]*·[^<]*)<", texte))
+
+
 def test_coupes():
     assert [e.k for e in vues.vues("principale")["coupes"].elements] == ["A", "B", "C"]
     assert [e.k for e in vues.vues("victor")["coupes"].elements] == ["A", "B", "C", "D"]
