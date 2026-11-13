@@ -148,7 +148,7 @@ POIGNEES += [(f"abattant_{k}", (x0 + x1) / 2 - 6, (x0 + x1) / 2 + 6, CHAUSSURES[
 
 # ------------------------------------------------------------------ silhouettes de 1,75 m (rendus, homme semi-transparent
 # de rendu.py) : au milieu du couloir devant le meuble à chaussures, et dans la branche d'entrée devant le miroir
-HUMAINS = {"couloir": (150, 95), "entree": (36, 300)}
+POSITIONS_HUMAINS = {"couloir": (150, 95), "entree": (36, 300)}
 
 # ------------------------------------------------------------------ dégagements (cm)
 PASSAGES = [
