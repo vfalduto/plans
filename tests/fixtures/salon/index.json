@@ -1,0 +1,458 @@
+{
+ "amenagement-plan-du-salon.svg": {
+  "page": "salon-v4.html",
+  "rang": 0,
+  "label": "Plan du salon",
+  "section": "Plan",
+  "disposition": "",
+  "config": ""
+ },
+ "amenagement-coupe-a-x-70-regard-vers-l-ouest-f.svg": {
+  "page": "salon-v4.html",
+  "rang": 1,
+  "label": "Coupe à x 70, regard vers l'ouest",
+  "section": "Coupe A-A · mur ouest",
+  "disposition": "",
+  "config": "f"
+ },
+ "amenagement-coupe-a-x-70-regard-vers-l-ouest-o.svg": {
+  "page": "salon-v4.html",
+  "rang": 2,
+  "label": "Coupe à x 70, regard vers l'ouest",
+  "section": "Coupe A-A · mur ouest",
+  "disposition": "",
+  "config": "o"
+ },
+ "amenagement-coupe-a-x-480-regard-vers-l-est-f.svg": {
+  "page": "salon-v4.html",
+  "rang": 3,
+  "label": "Coupe à x 480, regard vers l'est",
+  "section": "Coupe B-B · baie et desserte",
+  "disposition": "",
+  "config": "f"
+ },
+ "amenagement-coupe-a-x-480-regard-vers-l-est-o.svg": {
+  "page": "salon-v4.html",
+  "rang": 4,
+  "label": "Coupe à x 480, regard vers l'est",
+  "section": "Coupe B-B · baie et desserte",
+  "disposition": "",
+  "config": "o"
+ },
+ "amenagement-coupe-a-y-215-regard-vers-le-nord-f.svg": {
+  "page": "salon-v4.html",
+  "rang": 5,
+  "label": "Coupe à y 215, regard vers le nord",
+  "section": "Coupe C-C · à travers la table",
+  "disposition": "",
+  "config": "f"
+ },
+ "amenagement-coupe-a-y-215-regard-vers-le-nord-o.svg": {
+  "page": "salon-v4.html",
+  "rang": 6,
+  "label": "Coupe à y 215, regard vers le nord",
+  "section": "Coupe C-C · à travers la table",
+  "disposition": "",
+  "config": "o"
+ },
+ "amenagement-coupe-a-y-300-regard-vers-le-sud-f.svg": {
+  "page": "salon-v4.html",
+  "rang": 7,
+  "label": "Coupe à y 300, regard vers le sud",
+  "section": "Coupe D-D · mur sud, écran",
+  "disposition": "",
+  "config": "f"
+ },
+ "amenagement-coupe-a-y-300-regard-vers-le-sud-o.svg": {
+  "page": "salon-v4.html",
+  "rang": 8,
+  "label": "Coupe à y 300, regard vers le sud",
+  "section": "Coupe D-D · mur sud, écran",
+  "disposition": "",
+  "config": "o"
+ },
+ "etageres-disposition-actuelle-actuelle.svg": {
+  "page": "salon-etageres.html",
+  "rang": 0,
+  "label": "Disposition Actuelle",
+  "section": "Dispositions",
+  "disposition": "actuelle",
+  "config": ""
+ },
+ "etageres-disposition-rangs-rangs.svg": {
+  "page": "salon-etageres.html",
+  "rang": 1,
+  "label": "Disposition Rangs",
+  "section": "Dispositions",
+  "disposition": "rangs",
+  "config": ""
+ },
+ "etageres-disposition-decalee-decalee.svg": {
+  "page": "salon-etageres.html",
+  "rang": 2,
+  "label": "Disposition Décalée",
+  "section": "Dispositions",
+  "disposition": "decalee",
+  "config": ""
+ },
+ "etageres-disposition-escalier-escalier.svg": {
+  "page": "salon-etageres.html",
+  "rang": 3,
+  "label": "Disposition Escalier",
+  "section": "Dispositions",
+  "disposition": "escalier",
+  "config": ""
+ },
+ "etageres-etageres-vue-iso-disposition-actuelle-actuelle.svg": {
+  "page": "salon-etageres.html",
+  "rang": 4,
+  "label": "Étagères, vue iso, disposition Actuelle",
+  "section": "Vue iso",
+  "disposition": "actuelle",
+  "config": ""
+ },
+ "etageres-etageres-vue-iso-disposition-rangs-rangs.svg": {
+  "page": "salon-etageres.html",
+  "rang": 5,
+  "label": "Étagères, vue iso, disposition Rangs",
+  "section": "Vue iso",
+  "disposition": "rangs",
+  "config": ""
+ },
+ "etageres-etageres-vue-iso-disposition-decalee-decalee.svg": {
+  "page": "salon-etageres.html",
+  "rang": 6,
+  "label": "Étagères, vue iso, disposition Décalée",
+  "section": "Vue iso",
+  "disposition": "decalee",
+  "config": ""
+ },
+ "etageres-etageres-vue-iso-disposition-escalier-escalier.svg": {
+  "page": "salon-etageres.html",
+  "rang": 7,
+  "label": "Étagères, vue iso, disposition Escalier",
+  "section": "Vue iso",
+  "disposition": "escalier",
+  "config": ""
+ },
+ "etageres-etageres-detail-d-une-entaille-en-vue-iso.svg": {
+  "page": "salon-etageres.html",
+  "rang": 8,
+  "label": "Étagères, détail d'une entaille en vue iso",
+  "section": "Vue iso",
+  "disposition": "",
+  "config": ""
+ },
+ "etageres-elevation-du-mur-ouest-disposition-actuelle-actuelle.svg": {
+  "page": "salon-etageres.html",
+  "rang": 9,
+  "label": "Élévation du mur ouest, disposition Actuelle",
+  "section": "Le meuble",
+  "disposition": "actuelle",
+  "config": ""
+ },
+ "etageres-etageres-vues-de-dessus-disposition-actuelle-actuelle.svg": {
+  "page": "salon-etageres.html",
+  "rang": 10,
+  "label": "Étagères vues de dessus, disposition Actuelle",
+  "section": "Le meuble",
+  "disposition": "actuelle",
+  "config": ""
+ },
+ "etageres-elevation-du-mur-ouest-disposition-rangs-rangs.svg": {
+  "page": "salon-etageres.html",
+  "rang": 11,
+  "label": "Élévation du mur ouest, disposition Rangs",
+  "section": "Le meuble",
+  "disposition": "rangs",
+  "config": ""
+ },
+ "etageres-etageres-vues-de-dessus-disposition-rangs-rangs.svg": {
+  "page": "salon-etageres.html",
+  "rang": 12,
+  "label": "Étagères vues de dessus, disposition Rangs",
+  "section": "Le meuble",
+  "disposition": "rangs",
+  "config": ""
+ },
+ "etageres-elevation-du-mur-ouest-disposition-decalee-decalee.svg": {
+  "page": "salon-etageres.html",
+  "rang": 13,
+  "label": "Élévation du mur ouest, disposition Décalée",
+  "section": "Le meuble",
+  "disposition": "decalee",
+  "config": ""
+ },
+ "etageres-etageres-vues-de-dessus-disposition-decalee-decalee.svg": {
+  "page": "salon-etageres.html",
+  "rang": 14,
+  "label": "Étagères vues de dessus, disposition Décalée",
+  "section": "Le meuble",
+  "disposition": "decalee",
+  "config": ""
+ },
+ "etageres-elevation-du-mur-ouest-disposition-escalier-escalier.svg": {
+  "page": "salon-etageres.html",
+  "rang": 15,
+  "label": "Élévation du mur ouest, disposition Escalier",
+  "section": "Le meuble",
+  "disposition": "escalier",
+  "config": ""
+ },
+ "etageres-etageres-vues-de-dessus-disposition-escalier-escalier.svg": {
+  "page": "salon-etageres.html",
+  "rang": 16,
+  "label": "Étagères vues de dessus, disposition Escalier",
+  "section": "Le meuble",
+  "disposition": "escalier",
+  "config": ""
+ },
+ "etageres-profil-d-une-tablette-entaillee-et-de-ses-deux-chevilles.svg": {
+  "page": "salon-etageres.html",
+  "rang": 17,
+  "label": "Profil d'une tablette entaillée et de ses deux chevilles",
+  "section": "Le meuble",
+  "disposition": "",
+  "config": ""
+ },
+ "etageres-une-travee-vue-de-face.svg": {
+  "page": "salon-etageres.html",
+  "rang": 18,
+  "label": "Une travée vue de face",
+  "section": "Le meuble",
+  "disposition": "",
+  "config": ""
+ },
+ "etageres-presentoir-penche-vers-la-piece-profil.svg": {
+  "page": "salon-etageres.html",
+  "rang": 19,
+  "label": "Présentoir penché vers la pièce, profil",
+  "section": "Présentoir",
+  "disposition": "",
+  "config": ""
+ },
+ "etageres-plan-de-decoupe-des-plans-de-travail-en-chene-actuelle.svg": {
+  "page": "salon-etageres.html",
+  "rang": 20,
+  "label": "Plan de découpe des plans de travail en chêne",
+  "section": "Débit et découpe",
+  "disposition": "actuelle",
+  "config": ""
+ },
+ "etageres-debit-des-tasseaux-et-des-ronds-actuelle.svg": {
+  "page": "salon-etageres.html",
+  "rang": 21,
+  "label": "Débit des tasseaux et des ronds",
+  "section": "Débit et découpe",
+  "disposition": "actuelle",
+  "config": ""
+ },
+ "etageres-plan-de-decoupe-des-plans-de-travail-en-chene-rangs.svg": {
+  "page": "salon-etageres.html",
+  "rang": 22,
+  "label": "Plan de découpe des plans de travail en chêne",
+  "section": "Débit et découpe",
+  "disposition": "rangs",
+  "config": ""
+ },
+ "etageres-debit-des-tasseaux-et-des-ronds-rangs.svg": {
+  "page": "salon-etageres.html",
+  "rang": 23,
+  "label": "Débit des tasseaux et des ronds",
+  "section": "Débit et découpe",
+  "disposition": "rangs",
+  "config": ""
+ },
+ "etageres-plan-de-decoupe-des-plans-de-travail-en-chene-decalee.svg": {
+  "page": "salon-etageres.html",
+  "rang": 24,
+  "label": "Plan de découpe des plans de travail en chêne",
+  "section": "Débit et découpe",
+  "disposition": "decalee",
+  "config": ""
+ },
+ "etageres-debit-des-tasseaux-et-des-ronds-decalee.svg": {
+  "page": "salon-etageres.html",
+  "rang": 25,
+  "label": "Débit des tasseaux et des ronds",
+  "section": "Débit et découpe",
+  "disposition": "decalee",
+  "config": ""
+ },
+ "etageres-plan-de-decoupe-des-plans-de-travail-en-chene-escalier.svg": {
+  "page": "salon-etageres.html",
+  "rang": 26,
+  "label": "Plan de découpe des plans de travail en chêne",
+  "section": "Débit et découpe",
+  "disposition": "escalier",
+  "config": ""
+ },
+ "etageres-debit-des-tasseaux-et-des-ronds-escalier.svg": {
+  "page": "salon-etageres.html",
+  "rang": 27,
+  "label": "Débit des tasseaux et des ronds",
+  "section": "Débit et découpe",
+  "disposition": "escalier",
+  "config": ""
+ },
+ "etageres-plan-de-percage-d-un-montant.svg": {
+  "page": "salon-etageres.html",
+  "rang": 28,
+  "label": "Plan de perçage d'un montant",
+  "section": "Débit et découpe",
+  "disposition": "",
+  "config": ""
+ },
+ "etageres-entaille-d-une-tablette.svg": {
+  "page": "salon-etageres.html",
+  "rang": 29,
+  "label": "Entaille d'une tablette",
+  "section": "Débit et découpe",
+  "disposition": "",
+  "config": ""
+ },
+ "enfilade-enfilade-fermee-vue-iso.svg": {
+  "page": "salon-enfilade.html",
+  "rang": 0,
+  "label": "Enfilade fermée, vue iso",
+  "section": "Vue iso",
+  "disposition": "",
+  "config": ""
+ },
+ "enfilade-enfilade-ouverte-vue-iso.svg": {
+  "page": "salon-enfilade.html",
+  "rang": 1,
+  "label": "Enfilade ouverte, vue iso",
+  "section": "Vue iso",
+  "disposition": "",
+  "config": ""
+ },
+ "enfilade-elevation-de-face-cotee-de-l-enfilade.svg": {
+  "page": "salon-enfilade.html",
+  "rang": 2,
+  "label": "Élévation de face cotée de l'enfilade",
+  "section": "Le meuble",
+  "disposition": "",
+  "config": ""
+ },
+ "enfilade-coupes-de-profil-de-l-enfilade.svg": {
+  "page": "salon-enfilade.html",
+  "rang": 3,
+  "label": "Coupes de profil de l'enfilade",
+  "section": "Le meuble",
+  "disposition": "",
+  "config": ""
+ },
+ "enfilade-vue-de-dessus-de-l-enfilade-avec-les-ouvertures.svg": {
+  "page": "salon-enfilade.html",
+  "rang": 4,
+  "label": "Vue de dessus de l'enfilade avec les ouvertures",
+  "section": "Le meuble",
+  "disposition": "",
+  "config": ""
+ },
+ "enfilade-vue-eclatee-de-l-enfilade.svg": {
+  "page": "salon-enfilade.html",
+  "rang": 5,
+  "label": "Vue éclatée de l'enfilade",
+  "section": "Le meuble",
+  "disposition": "",
+  "config": ""
+ },
+ "enfilade-comparaison-des-dimensions-avec-le-buffet-ikea-stockholm-2025.svg": {
+  "page": "salon-enfilade.html",
+  "rang": 6,
+  "label": "Comparaison des dimensions avec le buffet IKEA STOCKHOLM 2025",
+  "section": "Comparaison avec IKEA STOCKHOLM",
+  "disposition": "",
+  "config": ""
+ },
+ "enfilade-comparaison-des-dimensions-avec-trois-caissons-metod-80-composition-mixte.svg": {
+  "page": "salon-enfilade.html",
+  "rang": 7,
+  "label": "Comparaison des dimensions avec trois caissons METOD 80, composition mixte",
+  "section": "Comparaison avec trois METOD 80",
+  "disposition": "",
+  "config": ""
+ },
+ "enfilade-chene-18-n-1-200-60-chute-20.svg": {
+  "page": "salon-enfilade.html",
+  "rang": 8,
+  "label": "chêne 18 n° 1 · 200 × 60 · chute 20 %",
+  "section": "Débit et découpe",
+  "disposition": "",
+  "config": ""
+ },
+ "enfilade-chene-18-n-2-200-60-chute-23.svg": {
+  "page": "salon-enfilade.html",
+  "rang": 9,
+  "label": "chêne 18 n° 2 · 200 × 60 · chute 23 %",
+  "section": "Débit et découpe",
+  "disposition": "",
+  "config": ""
+ },
+ "enfilade-chene-18-n-3-200-60-chute-27.svg": {
+  "page": "salon-enfilade.html",
+  "rang": 10,
+  "label": "chêne 18 n° 3 · 200 × 60 · chute 27 %",
+  "section": "Débit et découpe",
+  "disposition": "",
+  "config": ""
+ },
+ "enfilade-chene-18-n-4-200-60-chute-9.svg": {
+  "page": "salon-enfilade.html",
+  "rang": 11,
+  "label": "chêne 18 n° 4 · 200 × 60 · chute 9 %",
+  "section": "Débit et découpe",
+  "disposition": "",
+  "config": ""
+ },
+ "enfilade-chene-18-n-5-200-60-chute-9.svg": {
+  "page": "salon-enfilade.html",
+  "rang": 12,
+  "label": "chêne 18 n° 5 · 200 × 60 · chute 9 %",
+  "section": "Débit et découpe",
+  "disposition": "",
+  "config": ""
+ },
+ "enfilade-chene-18-n-6-200-60-chute-30.svg": {
+  "page": "salon-enfilade.html",
+  "rang": 13,
+  "label": "chêne 18 n° 6 · 200 × 60 · chute 30 %",
+  "section": "Débit et découpe",
+  "disposition": "",
+  "config": ""
+ },
+ "enfilade-chene-18-n-7-200-60-chute-39.svg": {
+  "page": "salon-enfilade.html",
+  "rang": 14,
+  "label": "chêne 18 n° 7 · 200 × 60 · chute 39 %",
+  "section": "Débit et découpe",
+  "disposition": "",
+  "config": ""
+ },
+ "enfilade-chene-18-n-8-200-60-chute-15.svg": {
+  "page": "salon-enfilade.html",
+  "rang": 15,
+  "label": "chêne 18 n° 8 · 200 × 60 · chute 15 %",
+  "section": "Débit et découpe",
+  "disposition": "",
+  "config": ""
+ },
+ "enfilade-chene-18-n-9-200-60-chute-28.svg": {
+  "page": "salon-enfilade.html",
+  "rang": 16,
+  "label": "chêne 18 n° 9 · 200 × 60 · chute 28 %",
+  "section": "Débit et découpe",
+  "disposition": "",
+  "config": ""
+ },
+ "enfilade-chene-18-n-10-200-60-chute-36.svg": {
+  "page": "salon-enfilade.html",
+  "rang": 17,
+  "label": "chêne 18 n° 10 · 200 × 60 · chute 36 %",
+  "section": "Débit et découpe",
+  "disposition": "",
+  "config": ""
+ }
+}
