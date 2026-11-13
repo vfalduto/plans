@@ -1,8 +1,9 @@
 """Dessins de l'entrée, variante principale : plan vu de dessus, coupes, légende et styles des dessins.
 
-Repris de 3d/entree/plan.py (qui reste en place jusqu'à la tâche 16). Le plan et les coupes sont des projections des
-volumes du modèle : rien n'est dessiné à la main. Chaque fonction reçoit le module de variante `M` (document.py ou
-victor.py) au lieu de le lire dans une variable globale. Le dessin ne change pas : tests/fixtures/entree/.
+Repris de l'ancien générateur 3d/entree/plan.py (retiré à la bascule de l'entrée ; l'historique git le garde). Le plan
+et les coupes sont des projections des volumes du modèle : rien n'est dessiné à la main. Chaque fonction reçoit le
+module de variante `M` (document.py ou victor.py) au lieu de le lire dans une variable globale. Le dessin ne change
+pas : tests/fixtures/entree/.
 
 Calques du plan (classes des éléments SVG, sans groupe en plus) :
   cotes .dim .dimt | passages .pass .passm .passt | coupes .sec .sect | voisines .room .roomt | annotations .lblx .lbls

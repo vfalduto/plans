@@ -273,7 +273,7 @@ def test_plan_appartement(monkeypatch):
     svg = plan_appartement(site)
     liens = re.findall(r'<a href="([^"]*)" aria-label="([^"]*)">', svg)
     assert ("cuisine-v13.html", "Cuisine") in liens
-    assert ("entree-amenagement.html", "Entrée") in liens
+    assert ("entree/amenagement/", "Entrée") in liens
     assert ("chambre-amenagement.html", "Chambre") in liens
     assert not any(nom in ("WC", "Pièce ouest", "Placard") for _, nom in liens)
     # le contour de l'entrée vient de pieces/entree/piece.py, décalé de POSITION
@@ -310,14 +310,36 @@ def test_seulement_rafraichit_le_menu(tmp_path):
 
 
 def test_documents_declares():
+    from pieces.entree.amenagement import document
+
     site = charger_site().SITE
     assert [p.id for p in site.pieces] == ["cuisine", "sdb", "entree", "salon", "chambre"]
     pages = [d.page for p in site.pieces for d in p.documents if isinstance(d, Passerelle)]
     assert pages == ["cuisine-v13.html", "cuisine-v13-porte-cellier.html", "sdb-meuble-bas.html",
-                     "sdb-meuble-haut.html", "entree-amenagement.html", "salon-v4.html", "salon-etageres.html",
+                     "sdb-meuble-haut.html", "salon-v4.html", "salon-etageres.html",
                      "salon-enfilade.html", "chambre-amenagement.html"]
-    assert not any(isinstance(d, Document) for p in site.pieces for d in p.documents)
-    assert charger_site().REDIRECTIONS == ()
+    # l'entrée est migrée (tâche 16) : son document, à sa place dans le menu
+    (entree,) = [p for p in site.pieces if p.id == "entree"]
+    assert entree.documents == (document.DOCUMENT,)
+    assert [d for p in site.pieces for d in p.documents if isinstance(d, Document)] == [document.DOCUMENT]
+
+
+def test_historique_de_l_entree(construit):
+    """Les versions figées de la principale viennent de FIGEES_ANCIENNES (pas de archive/figees.json), avec leur date ;
+    puis le journal de chaque variante."""
+    from pieces.entree.amenagement import document, victor
+
+    historique = _lire(construit.sortie / "entree/amenagement/historique.html")
+    table = construit.sortie / "archive/figees.json"   # test_figer y écrit les variantes d'essai, rien de l'entrée
+    assert not table.exists() or not any(c.startswith("entree/") for c in json.loads(_lire(table)))
+    assert re.findall(r"<h2[^>]*>(.*?)</h2>", historique) == ["Principale", "Victor"]
+    figees = re.findall(r'<ul class="figees">(.*?)</ul>', historique, re.S)
+    assert len(figees) == 1, "seule la principale a des versions figées"
+    for version, chemin in document.FIGEES_ANCIENNES:
+        assert f'<li><a href="../../{chemin}">{version}</a> <span class="date">1 octobre 2026</span></li>' in figees[0]
+        assert (construit.sortie / chemin).is_file(), chemin
+    journaux = re.findall(r'<ol class="fil">(.*?)</ol>', historique, re.S)
+    assert [j.count("<li>") for j in journaux] == [len(document.CHANGEMENTS), len(victor.CHANGEMENTS)]
 
 
 def test_workflow_publie_site():

@@ -1,8 +1,9 @@
 """Dessins de l'entrée, variante Victor : plan et coupes A à D.
 
-Repris de 3d/entree/plan_victor.py. Réutilise le commun de dessin_principale.py (portes, jambages, coupe_svg,
-légende, styles) ; seuls le plan, les coupes et les textes propres à la variante sont ici. Chaque fonction reçoit
-le module `victor` en paramètre. Calques : mêmes classes que dessin_principale.py.
+Repris de l'ancien 3d/entree/plan_victor.py (retiré, dans l'historique git). Réutilise le commun de
+dessin_principale.py (portes, jambages, coupe_svg, légende, styles) ; seuls le plan, les coupes et les textes propres à
+la variante sont ici. Chaque fonction reçoit le module `victor` en paramètre. Calques : mêmes classes que
+dessin_principale.py.
 """
 
 from html import escape

@@ -1,8 +1,7 @@
-# Entrée, version Victor : variante de la V4.3 (modele.py), même relevé, même entrée en India.
+# Entrée, version Victor : variante de la V4.3 (document.py), même relevé, même entrée en India.
 #
-# Copie dans pieces/ (tâche 12) ; les anciens générateurs lisent encore 3d/entree/victor.py.
-# Lu par plan_victor.py (entree-amenagement-victor.html, just entree-victor) et par rendu.py
-# (ENTREE_MODELE=victor, just entree-victor-rendu). Toute modification se fait ici.
+# Lu par les vues de l'entrée (vues.py, dessin_victor.py ; just entree) et par rendu.py (ENTREE_VARIANTE=victor,
+# just entree-rendu). Toute modification se fait ici.
 #
 # Différences avec la V4.3 :
 #   - rien sous le tableau électrique (mur nord libre) ;
@@ -15,6 +14,8 @@
 
 from pieces.entree import piece
 from pieces.entree.amenagement import document
+# noms de la pièce et de la principale que les dessins, les vues et rendu.py lisent à travers ce module (M.SOL,
+# M.CARRELAGE…), comme dans document.py
 from pieces.entree.piece import Bloc, EP, ENVELOPPE, H, H_PORTE, MURS, PORTES, SOL, SURFACE  # noqa: F401
 from pieces.entree.amenagement.document import (CARRELAGE, INDIA, INTERPHONE, MUR_COULEUR, PATERE, PATERES,  # noqa: F401
                                                 TABLEAU)

@@ -1,15 +1,16 @@
 #!/usr/bin/env bash
-# Lance un script de vérification dans le navigateur, sur le site d'essai :
+# Lance un script de vérification dans le navigateur, sur le site d'essai ou sur le vrai site/ :
 #
 #   tests/navigateur/lancer.sh tests/navigateur/navigation.js
 #
-# 1. construit le site d'essai (tests/fixtures/essai/construire.py) dans cache/essai-site/ ;
+# 1. construit le site d'essai (tests/fixtures/essai/construire.py) dans cache/essai-site/ ; un script qui porte la
+#    marque « @site reel » (entree.js) vérifie à la place le vrai site/, construit par python3 site.py ;
 # 2. le sert sur 127.0.0.1:$PORT ;
 # 3. ouvre la session playwright-cli $SESSION, va à la racine du site, puis exécute le script ;
 # 4. ferme la session et arrête le serveur, même en cas d'échec ;
 # 5. sort en erreur si le script n'a pas renvoyé "ok": true.
 #
-# Le script est une fonction `async page => {…}`. Il part de la racine du site d'essai (BASE = l'origine de
+# Le script est une fonction `async page => {…}`. Il part de la racine du site servi (BASE = l'origine de
 # page.url()) et renvoie {ok, echecs: […], erreurs: […]}, où erreurs regroupe les erreurs de console et de page.
 #
 # PORT (8811) et SESSION (refonte-essai) se changent par l'environnement, pour lancer plusieurs vérifications à la
@@ -26,13 +27,20 @@ port="${PORT:-8811}"
 session="${SESSION:-refonte-essai}"
 site="http://127.0.0.1:$port/"
 
-python3 "$racine/tests/fixtures/essai/construire.py"
+if grep -q "@site reel" "$script"; then
+  python3 "$racine/site.py"
+  servi="$racine/site"
+else
+  python3 "$racine/tests/fixtures/essai/construire.py"
+  servi="$racine/cache/essai-site"
+fi
 
 if curl -s -o /dev/null "$site"; then
   echo "lancer.sh : le port $port est déjà pris (PORT=… pour en choisir un autre)" >&2
   exit 2
 fi
-python3 -m http.server "$port" --bind 127.0.0.1 --directory "$racine/cache/essai-site" \
+mkdir -p "$racine/cache"
+python3 -m http.server "$port" --bind 127.0.0.1 --directory "$servi" \
   >"$racine/cache/essai-serveur-$port.log" 2>&1 &
 serveur=$!
 fermer() {

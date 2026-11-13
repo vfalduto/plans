@@ -5,7 +5,7 @@ import re
 from commun.construction import construire
 from commun.modele import Site
 from commun.redirections import Redirection, page_redirection
-from outils import balises
+from outils import balises, charger_site
 
 R = Redirection(
     "ancienne.html", "essai/amenagement/",
@@ -51,3 +51,53 @@ def test_construire_ecrit_la_redirection(tmp_path):
     # une seconde construction ne change rien
     construire(site, (R,), racine, sortie)
     assert (sortie / "ancienne.html").read_text() == page
+
+
+def test_page_redirection_vers_une_autre_page():
+    """`pages` : une ancre qui mène à une autre page que la cible, adresse écrite depuis l'ancienne page."""
+    r = Redirection("ancienne.html", "essai/amenagement/b.html",
+                    pages={"changements": "essai/amenagement/historique.html"})
+    html = page_redirection(r, "dossier/ancienne.html")
+    donnees = json.loads(re.search(r'<script type="application/json" id="traduction">(.*?)</script>', html, re.S)[1])
+    assert donnees["pages"] == {"changements": "../essai/amenagement/historique.html"}
+    assert donnees["cible"] == "../essai/amenagement/b.html"
+
+
+# ------------------------------------------------------------------ redirections de site.py
+
+def _traduire(r: Redirection, ancre: str) -> str:
+    """Le fragment que donne le script de la page pour `ancre` : ancre exacte, puis motifs (`RegExp.exec` cherche
+    n'importe où, comme `re.search`), `{n}` remplacé par le groupe n en majuscules ; sinon aucun."""
+    if ancre in r.ancres:
+        return r.ancres[ancre]
+    for motif, gabarit in r.motifs:
+        m = re.compile(motif).search(ancre)
+        if m:
+            return re.sub(r"\{(\d+)\}", lambda g: (m.group(int(g[1])) or "").upper(), gabarit)
+    return ""
+
+
+def test_motifs_de_site_py():
+    redirections = charger_site().REDIRECTIONS
+    assert redirections
+    for r in redirections:
+        for motif, _ in r.motifs:
+            re.compile(motif)
+        assert _traduire(r, "coupe-b-b-mur-de-la-salle-de-bain") == "coupes?k=B", r.ancienne
+
+
+def test_redirections_de_l_entree():
+    """Les deux anciennes pages de l'entrée : mêmes ancres (plus « Différences avec la V4.3 » chez Victor), chacune vers
+    sa variante ; Changements vers l'historique."""
+    principale, victor = charger_site().REDIRECTIONS
+    assert (principale.ancienne, principale.cible) == ("entree-amenagement.html", "entree/amenagement/")
+    assert (victor.ancienne, victor.cible) == ("entree-amenagement-victor.html", "entree/amenagement/victor.html")
+    explication = ("principe", "achats-ikea-penderie", "materiaux", "points-a-verifier")
+    ancres = {"plan": "plan", "vues-3d": "iso", **dict.fromkeys(explication, "explication")}
+    assert principale.ancres == ancres
+    assert victor.ancres == {**ancres, "differences-avec-la-v4-3": "explication"}
+    for r in (principale, victor):
+        assert r.pages == {"changements": "entree/amenagement/historique.html"}
+        assert _traduire(r, "coupe-a-a-mur-nord") == "coupes?k=A"
+        assert _traduire(r, "coupe-d-d-mur-ouest-de-l-entree") == "coupes?k=D"
+        assert _traduire(r, "inconnue") == ""

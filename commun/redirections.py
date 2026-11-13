@@ -17,18 +17,23 @@ class Redirection:
 
     `ancres` traduit un identifiant d'ancre de l'ancienne page en fragment de la nouvelle (« plan » → « plan »).
     `motifs` : paires (regex, gabarit) essayées quand l'ancre n'est pas dans `ancres` ; `{1}` est le premier groupe,
-    en majuscule (`(r"^coupe-([a-d])-", "coupes?k={1}")`). Sans correspondance, la page s'ouvre sur la vue par défaut."""
+    en majuscule (`(r"^coupe-([a-d])-", "coupes?k={1}")`). Sans correspondance, la page s'ouvre sur la vue par défaut.
+    `pages` : ancres qui mènent à une autre page que `cible`, adresse relative à site/ (« changements » → l'historique
+    du document) ; elles passent avant `ancres` et `motifs`."""
     ancienne: str
     cible: str
     ancres: dict[str, str] = field(default_factory=dict)
     motifs: tuple[tuple[str, str], ...] = ()
+    pages: dict[str, str] = field(default_factory=dict)
 
 
 SCRIPT = """\
 (function () {
   var t = JSON.parse(document.getElementById("traduction").textContent);
   var id = decodeURIComponent(location.hash.slice(1)), frag = "";
-  if (Object.prototype.hasOwnProperty.call(t.ancres, id)) frag = t.ancres[id];
+  var a = function (table) { return Object.prototype.hasOwnProperty.call(table, id); };
+  if (a(t.pages)) { location.replace(t.pages[id]); return; }
+  if (a(t.ancres)) frag = t.ancres[id];
   else for (var i = 0; id && i < t.motifs.length; i++) {
     var m = new RegExp(t.motifs[i][0]).exec(id);
     if (m) { frag = t.motifs[i][1].replace(/\\{(\\d+)\\}/g, function (_, n) { return (m[n] || "").toUpperCase(); }); break; }
@@ -44,9 +49,10 @@ def _json(valeur) -> str:
 
 def page_redirection(r: Redirection, depuis: str) -> str:
     """Page écrite à `depuis` (chemin relatif à site/) : `meta refresh` vers la cible sans fragment, plus un script qui
-    traduit `location.hash` (ancre exacte, puis motifs, sinon aucun fragment) et un lien visible."""
+    traduit `location.hash` (autre page, ancre exacte, puis motifs, sinon aucun fragment) et un lien visible."""
     cible = relatif(r.cible, depuis)
-    donnees = {"cible": cible, "ancres": r.ancres, "motifs": [list(m) for m in r.motifs]}
+    donnees = {"cible": cible, "ancres": r.ancres, "motifs": [list(m) for m in r.motifs],
+               "pages": {ancre: relatif(page, depuis) for ancre, page in r.pages.items()}}
     return f"""<!doctype html>
 <html lang="fr">
 <head>
