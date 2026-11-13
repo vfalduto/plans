@@ -1,5 +1,5 @@
 # Calculs partagés par les deux meubles à fabriquer du salon (étagères et enfilade), repris de 3d/salon/commun.py
-# (qui les tenait de plan.py pour les nombres). Ni HTML ni SVG : la vue iso est dans pieces/salon/dessin.py ; les
+# (nombres : voir plus bas). Ni HTML ni SVG : la vue iso est dans pieces/salon/dessin.py ; les
 # gabarits de page et la galerie des rendus restent aux générateurs de page.
 #
 # Chaque document de meuble décrit ses volumes 3D en Piece (cm, repère du salon : x vers l'est depuis le mur ouest,
@@ -9,15 +9,16 @@
 from dataclasses import dataclass
 
 
-# ------------------------------------------------------------------ nombres (cm, virgule décimale)
-def f(v):
-    """Nombre à 1 décimale au plus, point décimal (coordonnées des dessins)."""
-    return f"{round(v, 1):g}"
+# ------------------------------------------------------------------ nombres
+# f (point décimal, coordonnées) et virg (n décimales fixes, « 240,0 ») sont ceux de commun/dessin.py, que plan.py
+# recopiait. Les pages des meubles écrivaient leurs cotes autrement : une décimale au plus, sans « ,0 » (« 240 »,
+# « 57,7 ») : c'est cote(), ex-virg de enfilade.py et ex-cm de etageres.py.
+from commun.dessin import f, virg  # noqa: E402,F401
 
 
-def virg(v, n=1):
-    """Nombre à n décimales, virgule décimale."""
-    return f"{v:.{n}f}".replace(".", ",")
+def cote(v, n=None):
+    """Cote affichée : 1 décimale au plus, virgule, sans « ,0 » ; n : nombre de décimales imposé (comme virg)."""
+    return f(v).replace(".", ",") if n is None else virg(v, n)
 
 
 # ------------------------------------------------------------------ volumes 3D

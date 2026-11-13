@@ -11,12 +11,7 @@ from collections import Counter
 from pieces.salon.enfilade.document import (BORD, CALE_BOITE, COULISSE, DESSUS, DOS, EP, EP_COUL, ENFILADE as E,
                                             ETAGERES_CAISSONS, FAC, H_BOITE, JEU, MODULES, N, PC, PIEDS_X,
                                             PROF_ETAGERE, RETENUE, TAMPON, TRAV, L, P, Z1, ZP)
-from pieces.salon.meubles import Piece, f, virg as _virg_n
-
-
-def _virg(v, n=None):
-    """Cote affichée : 1 décimale au plus, sans « ,0 » (n : nombre de décimales imposé)."""
-    return f(v).replace(".", ",") if n is None else _virg_n(v, n)
+from pieces.salon.meubles import Piece, cote
 
 
 def bas(v):
@@ -74,7 +69,7 @@ def controle(g=G):
     for k, z in g["etageres"]:
         assert z + EP <= g["zi1"], (k, z)
     assert COULISSE <= PC - 2 and PROF_ETAGERE <= PC - 2
-    return f"{_virg(sum(g['W']))} × {_virg(DOS + PC + TAMPON + FAC, 0)} × {_virg(ZP + g['HC'] + g['ep_d'], 0)}"
+    return f"{cote(sum(g['W']))} × {cote(DOS + PC + TAMPON + FAC, 0)} × {cote(ZP + g['HC'] + g['ep_d'], 0)}"
 
 
 def pieces_3d(ouvert=False, g=G):
@@ -110,7 +105,7 @@ def pieces_3d(ouvert=False, g=G):
             add(f"M{k + 1} dessus", 0, P, g["Y"][k], g["Y"][k + 1], Z1 - g["ep_d"], Z1, "chene")
     for y in g["pieds_y"]:
         for x in PIEDS_X:
-            add(f"pied {_virg(x)} / {_virg(y)}", x - 1.25, x + 1.25, max(y - 1.25, 0), min(y + 1.25, L), 0, ZP, "noir")
+            add(f"pied {cote(x)} / {cote(y)}", x - 1.25, x + 1.25, max(y - 1.25, 0), min(y + 1.25, L), 0, ZP, "noir")
     # façades : portes (numérotées du nord au sud dans leur module) et tiroirs (du bas vers le haut)
     tiroirs = [fc for fc in g["facades"] if fc["type"] == "tiroir"]
     haut = max(tiroirs, key=lambda fc: fc["z0"])

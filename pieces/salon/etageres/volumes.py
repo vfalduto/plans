@@ -4,22 +4,19 @@
 # celui des meubles (3d/salon/rendu_meubles.py) lisent la même liste de Piece (pieces.salon.meubles).
 # Cotes en cm, repère du salon.
 
+import copy
+
 from pieces.salon.etageres.document import DISPOSITIONS, ETAGERES as ET, MONTANTS as MO, NIVEAUX, RA_COTE
-from pieces.salon.meubles import Piece
+from pieces.salon.meubles import Piece, cote
 
 RA = ET["rainure"]
 
 
-def cm(v):
-    """Cote en cm : 1 décimale au plus, virgule."""
-    return f"{round(v, 1):g}".replace(".", ",")
-
-
 def disposition(cle=None):
-    """La disposition de clé `cle` (DISPOSITIONS), par défaut celle du plan du salon."""
+    """Copie de la disposition de clé `cle` (DISPOSITIONS), par défaut celle du plan du salon."""
     if cle is None:
-        return DISPOSITIONS[0]
-    return next(d for d in DISPOSITIONS if d["cle"] == cle)
+        return copy.deepcopy(DISPOSITIONS[0])
+    return copy.deepcopy(next(d for d in DISPOSITIONS if d["cle"] == cle))
 
 
 def tablettes(dispo):
@@ -29,7 +26,7 @@ def tablettes(dispo):
         zs = [z] * (b - a + 1)
         assert all(NIVEAUX[0] <= v <= NIVEAUX[1] and (v - NIVEAUX[0]) % MO["pas_trous"] == 0 for v in zs), zs
         y0, y1 = MO["axes"][a] - ET["debord"], MO["axes"][b] + ET["debord"]
-        t = dict(z=z, a=a, b=b, zs=zs, y0=y0, y1=y1, lh=y1 - y0, l=y1 - y0, n=b - a + 1, type=cm(y1 - y0))
+        t = dict(z=z, a=a, b=b, zs=zs, y0=y0, y1=y1, lh=y1 - y0, l=y1 - y0, n=b - a + 1, type=cote(y1 - y0))
         t["entailles"] = [y1 - MO["axes"][k] for k in range(b, a - 1, -1)]   # depuis le bout sud
         ts.append(t)
     ts.sort(key=lambda t: (min(t["zs"]), -t["y1"]))
@@ -74,8 +71,8 @@ def pieces_3d(dispo=None):
         for j, y in enumerate(axes):
             m, zj = f'M{t["a"] + j + 1}', t["zs"][j]
             for pos, x, zc in (("avant", MO["x_av"], zj + r - MO["decalage"]), ("arriere", MO["x_ar"], zj + r)):
-                for cote, ya, yb in (("nord", y - demi_c, y - demi_m), ("sud", y + demi_m, y + demi_c)):
-                    ps.append(Piece(f'cheville_{t["rep"]}_{m}_{pos}_{cote}', x - r, x + r, ya, yb,
+                for bord, ya, yb in (("nord", y - demi_c, y - demi_m), ("sud", y + demi_m, y + demi_c)):
+                    ps.append(Piece(f'cheville_{t["rep"]}_{m}_{pos}_{bord}', x - r, x + r, ya, yb,
                                     zc - r, zc + r, "acier", forme="cyl_y"))
     return ps
 

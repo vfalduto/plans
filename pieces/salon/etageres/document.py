@@ -215,9 +215,13 @@ SOURCES_TENUE = [
 # ------------------------------------------------------------------ rendus 3D (3d/salon/rendu_meubles.py)
 # Caméras du document, dans le repère du salon ; fichiers salon-meubles-3d/etageres-<id>.jpg. Disposition actuelle
 # seulement (les autres se rendent sur demande).
+# coupes : objets Blender cachés à la caméra ; l'ancien rendu des meubles cachait le plafond à toutes les vues
+SANS_PLAFOND = r"^plafond__"
 CAMERAS = (
-    Camera("iso", "Mur ouest en trois quarts", (15 + 520, 129 + 330, 165 + 260), (15, 129, 160), ortho=3.3),
-    Camera("detail", "Détail d'une entaille", (62, 292, 131), (4, 236, 120.5), focale=50),   # montant M5, tablette T1
+    Camera("iso", "Mur ouest en trois quarts", (15 + 520, 129 + 330, 165 + 260), (15, 129, 160), ortho=3.3,
+           reglages=dict(coupes=SANS_PLAFOND)),
+    Camera("detail", "Détail d'une entaille", (62, 292, 131), (4, 236, 120.5), focale=50,
+           reglages=dict(coupes=SANS_PLAFOND)),   # montant M5, tablette T1
 )
 # (caméra, texte de la page) : section Rendus 3D de salon-etageres.html
 RENDUS = [

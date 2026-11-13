@@ -13,13 +13,8 @@
 import math
 
 from commun.modele import Camera
-from pieces.salon.meubles import f, virg as _virg_n
+from pieces.salon.meubles import cote
 from pieces.salon.piece import PASSAGE, Bloc, Cyl
-
-
-def _virg(v, n=None):
-    """Cote affichée : 1 décimale au plus, sans « ,0 » (n : nombre de décimales imposé)."""
-    return f(v).replace(".", ",") if n is None else _virg_n(v, n)
 
 
 VERSION, DATE = "V1.6", "30/10/2026"
@@ -136,42 +131,45 @@ FORMATS = {
 }
 MELAMINE = ["M30", "M40", "M50", "M60"]
 
-# Quincaillerie et consommables : quantité calculée depuis les comptes du meuble (c).
+HUILE = dict(couches=2, rendement=15)   # m² par litre et par couche (ordre de grandeur, à lire sur le bidon)
+# Quincaillerie et consommables. q : quantité tirée des comptes du meuble (c, calculés par la page), en données pour
+# que l'empreinte des rendus puisse les lire : quantite(q, c) = par × c[compte], arrondi au sachet supérieur s'il y a
+# un sachet ; ou fixe. (L'ancien générateur écrivait des lambdas, mêmes valeurs.)
 QUINC = [
     dict(poste="Charnière invisible Ø 35, 110°, en applique", ref="9154863", mag="weldom", prix=5.35,
-         statut="relevé", url=None, q=lambda c: 2 * c["portes"], note="2 par porte ; prix supposé à l'unité"),
+         statut="relevé", url=None, q=dict(compte="portes", par=2), note="2 par porte ; prix supposé à l'unité"),
     dict(poste="Poussoir magnétique (ouverture par pression)", ref="à choisir", mag="weldom", prix=3.90,
-         statut="estimé", url=None, q=lambda c: c["portes"], note="1 par porte, en haut côté ouverture"),
+         statut="estimé", url=None, q=dict(compte="portes"), note="1 par porte, en haut côté ouverture"),
     dict(poste="Coulisses à billes 500, sortie totale, ouverture par pression (paire)", ref="à choisir", mag="lm",
-         prix=19.90, statut="estimé", url=REF_COUL, q=lambda c: c["tiroirs"],
+         prix=19.90, statut="estimé", url=REF_COUL, q=dict(compte="tiroirs"),
          note="25 kg ; repère : paire Emuca 450 amortie à 13,33 € (500 à relever)"),
     dict(poste="Pied de meuble carré noir 2,5 × 2,5 × 15, patin fileté M10", ref="69165075", mag="lm", prix=3.59,
-         statut="relevé", url=LM_PIED, q=lambda c: c["pieds"], note="50 kg chacun ; platine 6 × 6"),
+         statut="relevé", url=LM_PIED, q=dict(compte="pieds"), note="50 kg chacun ; platine 6 × 6"),
     dict(poste="Tampons silicone 2 mm (sachet de 20)", ref="à choisir", mag="weldom", prix=2.90, statut="estimé",
-         url=None, q=lambda c: math.ceil(4 * c["facades"] / 20), note="4 par façade"),
+         url=None, q=dict(compte="facades", par=4, sachet=20), note="4 par façade"),
     dict(poste="Taquets d'étagère Ø 5 (sachet de 16)", ref="à choisir", mag="weldom", prix=2.90, statut="estimé",
-         url=None, q=lambda c: math.ceil(4 * c["etageres"] / 16), note="4 par étagère"),
+         url=None, q=dict(compte="etageres", par=4, sachet=16), note="4 par étagère"),
     dict(poste="Vis de liaison de meuble Ø 5 pour 2 × 18 (sachet de 4)", ref="à choisir", mag="weldom", prix=3.50,
-         statut="estimé", url=None, q=lambda c: c["jonctions"], note="4 par jonction de caissons"),
+         statut="estimé", url=None, q=dict(compte="jonctions"), note="4 par jonction de caissons"),
     dict(poste="Équerres de fixation à trou oblong (sachet de 4)", ref="à choisir", mag="weldom", prix=3.90,
-         statut="estimé", url=None, q=lambda c: c["caissons"], note="dessus : 4 par caisson, le bois massif travaille"),
+         statut="estimé", url=None, q=dict(compte="caissons"), note="dessus : 4 par caisson, le bois massif travaille"),
     dict(poste="Équerre acier 40 × 40 (anti-basculement)", ref="à choisir", mag="weldom", prix=1.20, statut="estimé",
-         url=None, q=lambda c: c["caissons"], note="1 par caisson, sous la traverse arrière"),
+         url=None, q=dict(compte="caissons"), note="1 par caisson, sous la traverse arrière"),
     dict(poste="Chevilles et vis pour la cloison (selon sa nature)", ref="à choisir", mag="weldom", prix=5.90,
-         statut="estimé", url=None, q=lambda c: 1, note="Molly si plaque de plâtre"),
+         statut="estimé", url=None, q=dict(fixe=1), note="Molly si plaque de plâtre"),
     dict(poste="Vis bois 4 × 50 (boîte de 100)", ref="à choisir", mag="weldom", prix=7.90, statut="estimé",
-         url=None, q=lambda c: 1, note="caissons et boîtes de tiroir, avec avant-trous"),
+         url=None, q=dict(fixe=1), note="caissons et boîtes de tiroir, avec avant-trous"),
     dict(poste="Vis 3,5 × 16 (boîte de 200)", ref="à choisir", mag="weldom", prix=5.90, statut="estimé", url=None,
-         q=lambda c: 1, note="dos, fonds, pieds, coulisses, charnières"),
+         q=dict(fixe=1), note="dos, fonds, pieds, coulisses, charnières"),
     dict(poste="Vis 3,5 × 30 (boîte de 100)", ref="à choisir", mag="weldom", prix=4.90, statut="estimé", url=None,
-         q=lambda c: 1, note="façades de tiroir, dessus"),
+         q=dict(fixe=1), note="façades de tiroir, dessus"),
     dict(poste="Tourillons Ø 8 × 35 et colle à bois", ref="à choisir", mag="weldom", prix=8.80, statut="estimé",
-         url=None, q=lambda c: 1, note="caissons collés, joues sans vis apparente, joints des dessus"),
+         url=None, q=dict(fixe=1), note="caissons collés, joues sans vis apparente, joints des dessus"),
     dict(poste="Huile dure incolore, bidon de 1 L", ref="à choisir", mag="weldom", prix=35.00, statut="estimé",
-         url=REF_HUILE, q=lambda c: math.ceil(c["chene_m2"] * 2 * HUILE["couches"] / HUILE["rendement"]),
+         url=REF_HUILE, q=dict(compte="chene_m2", par=2 * HUILE["couches"], sachet=HUILE["rendement"]),
          note="deux couches, toutes faces ; repère : 0,5 L de Blanchon à 17,50 € (Brico Dépôt)"),
     dict(poste="Abrasifs 120, 180, 240", ref="à choisir", mag="weldom", prix=7.90, statut="estimé", url=None,
-         q=lambda c: 1, note="ponçage avant huile"),
+         q=dict(fixe=1), note="ponçage avant huile"),
 ]
 OUTILLAGE = [   # à acheter seulement si l'atelier ne les a pas (hors total du meuble)
     ("Mèche Forstner Ø 35 avec butée", 12.90),
@@ -195,7 +193,6 @@ VARIANTES = [
     dict(cle="F", nom="Comme C, dessus d'une pièce dans le plan de travail chêne de 36", caisson="C18",
          facade="C18", dessus=(3.6, 1)),
 ]
-HUILE = dict(couches=2, rendement=15)   # m² par litre et par couche (ordre de grandeur, à lire sur le bidon)
 CHANT = dict(rouleau=5, prix=6.90, statut="estimé")   # chant thermocollant décor chêne, rouleau de 5 m
 RETENUE = next(v for v in VARIANTES if v.get("retenu"))
 PREFIXE = {"caisson": "A", "facade": "B", "tiroir": "C", "fond": "D", "dessus": "E"}
@@ -222,6 +219,14 @@ IKEA_FR = "https://www.ikea.com/fr/fr/p/"
 METOD_RELEVE = "30/10/2026"
 LM_PT26 = "https://www.leroymerlin.fr/produits/plan-de-travail-brut-chene-lamelle-l-250-xl-65cm-ep-26-mm-82582160.html"
 METOD_CAISSON = dict(prof=59, h=80, pieds=8)    # profondeur sans rail de suspension, hauteur, pieds METOD
+
+
+def quantite(q, c):
+    """Quantité d'un poste de QUINC pour les comptes c du meuble (portes, tiroirs, pieds, chene_m2…)."""
+    if "fixe" in q:
+        return q["fixe"]
+    n = q.get("par", 1) * c[q["compte"]]
+    return math.ceil(n / q["sachet"]) if "sachet" in q else n
 
 
 def ikea(nom, ref, q, pu, url, note, st="relevé"):
@@ -286,11 +291,11 @@ METOD_MIXTE["postes"] = [
          ou="Weldom", note="2 pour les portes et les faces de 20, 1 pour la face de 40 et une joue, 1 pour l'autre joue"),
     dict(nom="Plan de travail brut chêne lamellé 250 × 65 × 2,6", ref="82582160", q=1, pu=109, st="relevé",
          url=LM_PT26, ou="Leroy Merlin",
-         note=f"chêne massif, d'une pièce, recoupé à {_virg(240 + 2 * EP)} × {_virg(METOD_CAISSON['prof'] + EP)} (découpe sur mesure proposée)"),
+         note=f"chêne massif, d'une pièce, recoupé à {cote(240 + 2 * EP)} × {cote(METOD_CAISSON['prof'] + EP)} (découpe sur mesure proposée)"),
     dict(nom="Équerres de fixation à trou oblong (sachet de 4)", ref="à choisir", q=3, pu=3.90, st="estimé", url=None,
          ou="Weldom", note="plan vissé par en dessous dans les côtés des caissons ; le massif doit pouvoir glisser"),
     dict(nom="Huile dure incolore, bidon de 1 L", ref="à choisir", q=huile_l(_m2), pu=35.00, st="estimé", url=REF_HUILE,
-         ou="Weldom", note=f"{_virg(_m2, 1)} m² de chêne, deux couches, toutes faces"),
+         ou="Weldom", note=f"{cote(_m2, 1)} m² de chêne, deux couches, toutes faces"),
     dict(nom="Vis 3,5 × 30 (boîte de 100) et abrasifs", ref="à choisir", q=1, pu=12.80, st="estimé", url=None,
          ou="Weldom", note="joues vissées depuis l'intérieur des caissons, ponçage avant huile"),
     ANTI]
@@ -309,10 +314,13 @@ NOIRS = [  # façades noires ou presque pour METOD, porte 40 × 80 (ikea.com/fr,
 # ------------------------------------------------------------------ rendus 3D (3d/salon/rendu_meubles.py)
 # Caméras du document, dans le repère du salon ; fichiers salon-meubles-3d/enfilade-<id>.jpg. ouvert : la porte nord
 # de M1, la porte sud de M3 et le tiroir du haut de M2 ouverts (pieces_3d(ouvert=True) de l'ancien générateur).
+# coupes : objets Blender cachés à la caméra ; l'ancien rendu des meubles cachait le plafond à toutes les vues
+SANS_PLAFOND = r"^plafond__"
 CAMERAS = (
-    Camera("iso", "Enfilade fermée", (22 + 520, 129 + 330, 60 + 260), (22, 129, 75), ortho=3.0),
+    Camera("iso", "Enfilade fermée", (22 + 520, 129 + 330, 60 + 260), (22, 129, 75), ortho=3.0,
+           reglages=dict(coupes=SANS_PLAFOND)),
     Camera("ouverte", "Enfilade ouverte", (22 + 520, 129 + 330, 60 + 260), (22, 129, 75), ortho=3.0,
-           reglages=dict(ouvert=True)),
+           reglages=dict(ouvert=True, coupes=SANS_PLAFOND)),
 )
 # (caméra, texte de la page) : section Rendus 3D de salon-enfilade.html
 RENDUS = [
