@@ -16,9 +16,18 @@ if str(RACINE) not in sys.path:
 
 from commun.gabarit import adresse, page_document  # noqa: E402
 from commun.modele import verifier  # noqa: E402
+from commun.redirections import Redirection, page_redirection  # noqa: E402
 
 SORTIE = RACINE / "cache" / "essai-site"
 COMMUNS = ("commun/site.css", "commun/site.js", "favicon.svg")
+
+# anciennes adresses de l'essai (tests/navigateur/redirections.js) : à la racine et dans un sous-dossier
+REDIRECTIONS = (
+    Redirection("ancienne.html", "essai/amenagement/", {"plan": "plan", "iso": "iso"},
+                ((r"^coupe-([a-d])-", "coupes?k={1}"),)),
+    Redirection("vieux/ancienne.html", "essai/amenagement/b.html", {"plan": "plan"},
+                ((r"^coupe-([a-d])-", "coupes?k={1}"),)),
+)
 
 
 def _essai():
@@ -40,6 +49,10 @@ def construire(sortie: Path = SORTIE) -> Path:
         fichier = sortie / (chemin + "index.html" if chemin.endswith("/") else chemin)
         fichier.parent.mkdir(parents=True, exist_ok=True)
         fichier.write_text(page_document(essai.SITE, doc, v, vues), encoding="utf-8")
+    for r in REDIRECTIONS:
+        fichier = sortie / r.ancienne
+        fichier.parent.mkdir(parents=True, exist_ok=True)
+        fichier.write_text(page_redirection(r, r.ancienne), encoding="utf-8")
     for nom in COMMUNS:
         source = RACINE / nom
         if not source.exists():
