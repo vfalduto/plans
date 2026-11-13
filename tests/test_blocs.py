@@ -242,3 +242,19 @@ def test_vue_lecture():
     vue = vue_lecture("achats", "<p>x</p>")
     [el] = vue.elements
     assert (el.k, el.nom, el.titre, el.scene) == ("", "Achats", "Achats", "<p>x</p>")
+
+
+def test_arrondi_demi_vers_le_haut():
+    assert euros(0.125) == "0,13 €"
+    assert euros(2.675) == "2,68 €"
+    html = tableau_achats([Achat("Caisson", "1", 1, 80), Achat("Vis", "2", 3, 1.5)])
+    assert _cellules(html, "total") == [["Total", "", "", "85 €"]]          # 84,5
+    ikea = SectionAchats("IKEA", [Achat("Caisson", "1", 1, 80.5)])
+    weldom = SectionAchats("Weldom", [Achat("Vis", "2", 1, 52)])
+    html = achats([ikea, weldom])
+    assert _cellules(html, "total")[0] == ["Sous-total", "", "", "81 €"]    # 80,5
+    assert '<span class="num">133 €</span>' in html                        # 132,5
+    centimes = achats([SectionAchats("A", [Achat("Clou", "1", 1, 0.005)]),
+                       SectionAchats("B", [Achat("Vis", "2", 1, 0.12)])], arrondi=False)
+    assert _cellules(centimes, "total")[0] == ["Sous-total", "", "", "0,01 €"]   # 0,005
+    assert '<span class="num">0,13 €</span>' in centimes                        # 0,125

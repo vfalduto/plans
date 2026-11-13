@@ -6,6 +6,7 @@ références sont échappés ; les textes longs (`chapo`, `texte` d'une carte, `
 des matériaux) sont insérés tels quels, à la charge de l'appelant.
 """
 from dataclasses import dataclass
+from decimal import ROUND_HALF_UP, Decimal
 from html import escape
 from typing import Sequence
 
@@ -75,9 +76,15 @@ class SectionAchats:
     achats: Sequence[Achat]
 
 
+def _demi(montant, pas):
+    """`montant` arrondi au `pas` (« 1 », « 0.01 »), demi vers le haut, sur son écriture décimale (2.675 -> 2.68)."""
+    return Decimal(str(montant)).quantize(Decimal(pas), rounding=ROUND_HALF_UP)
+
+
 def euros(montant: float) -> str:
-    """Virgule, zéros finaux retirés, pas de séparateur de milliers : 80 -> « 80 € », 12.5 -> « 12,5 € »."""
-    return f"{round(montant, 2):.2f}".rstrip("0").rstrip(".").replace(".", ",") + " €"
+    """Au centime, demi vers le haut ; virgule, zéros finaux retirés, pas de séparateur de milliers : 80 -> « 80 € »,
+    12.5 -> « 12,5 € »."""
+    return f"{_demi(montant, '0.01')}".rstrip("0").rstrip(".").replace(".", ",") + " €"
 
 
 def _somme(achats):
@@ -85,7 +92,7 @@ def _somme(achats):
 
 
 def _arrondi(total, arrondi):
-    return round(total) if arrondi else round(total, 2)
+    return _demi(total, "1" if arrondi else "0.01")
 
 
 def tableau_achats(achats: Sequence[Achat], libelle_total: str = "Total", approx: bool = False,
