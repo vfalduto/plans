@@ -1015,7 +1015,7 @@ def section_charges():
 </ul>
 <h3>Fixation au mur</h3>
 {par_dispo(tenue_dispo)}
-<p>C'est la cloison ouest (cellier et WC) qui porte tout, comme pour les variantes Vitsoe et fait maison de la <a href="salon-bibliotheque-fixation.html">page Fixations</a> : sa nature décide de la quincaillerie. Repère : une cheville fischer DuoPower 8 × 40 est donnée pour 62 kg en brique pleine, 15 kg en plaque de plâtre de 12,5 et ≈ 0,25 kN en carreau de plâtre (fiche fischer, sécurité de 7 comprise ; la colonne du carreau de plâtre est lue dans l'ordre des tailles, à confirmer). Au pire, la vis du haut reçoit ≈ {kn(fx["r"])} kN.</p>
+<p>C'est la cloison ouest (cellier et WC) qui porte tout, comme pour les variantes Vitsoe et fait maison de la <a href="archive/salon-bibliotheque-fixation.html">page Fixations</a> : sa nature décide de la quincaillerie. Repère : une cheville fischer DuoPower 8 × 40 est donnée pour 62 kg en brique pleine, 15 kg en plaque de plâtre de 12,5 et ≈ 0,25 kN en carreau de plâtre (fiche fischer, sécurité de 7 comprise ; la colonne du carreau de plâtre est lue dans l'ordre des tailles, à confirmer). Au pire, la vis du haut reçoit ≈ {kn(fx["r"])} kN.</p>
 <ul class="pistes">
 <li><b>Brique ou béton</b> : {EU["vis"]} vis Ø 6 × 120 par montant (à 5, 60 et 115 du bas, par la face avant), chevilles nylon 8 × 50, têtes noyées dans un lamage Ø 15 bouché et peint : large.</li>
 <li><b>Carreau de plâtre</b> : la vis du haut est à la charge recommandée. Passer à {EU["vis"] + 1} vis par montant (une de plus en haut, à 100), avec des chevilles de 10 (≈ 0,35 kN en carreau de plâtre chez fischer) ou des chevilles spéciales carreau de plâtre.</li>

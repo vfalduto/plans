@@ -1,4 +1,4 @@
-# Rendu Blender (Cycles) de la bibliothèque du mur ouest du salon, quatre systèmes et la version fait maison (salon-bibliotheque.html).
+# Rendu Blender (Cycles) de la bibliothèque du mur ouest du salon, quatre systèmes et la version fait maison (archive/salon-bibliotheque.html).
 # La scène est construite directement dans Blender à partir des cotes du plan (variante B du salon) ;
 # matériaux, ciel, soleil et réglages Cycles viennent de 3d/rendu.py.
 # Lancement (sans interface) :

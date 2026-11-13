@@ -772,7 +772,7 @@ def figer():
     with open(os.path.join(FIGEES, f"{v}.html"), "w", encoding="utf-8") as fh:
         fh.write(c)
     with open(os.path.join(ROOT, "archive", f"salon-{v.lower()}.html"), "w", encoding="utf-8") as fh:
-        fh.write(page([], "../").replace('href="salon-bibliotheque', 'href="../salon-bibliotheque'))
+        fh.write(page([], "../"))
     print(f"{v} figée")
 
 
