@@ -233,8 +233,10 @@ def _fiche(vue: Vue) -> str:
         segments = f'<div class="segments">{boutons}</div>'
     fiches = "".join(f'<div class="fiche-element" data-k="{_e(e.k)}" data-titre="{_e(e.titre)}">{e.fiche}</div>'
                      for e in vue.elements)
-    return (f'<aside class="fiche"><button type="button" class="fiche-tete" aria-expanded="false">'
-            f'<h2>{_e(vue.elements[0].titre)}</h2><i class="chevron"></i></button>'
+    # titre autour du bouton (accordéon accessible) ; le JS change le texte de .fiche-nom
+    return (f'<aside class="fiche"><h2 class="fiche-titre"><button type="button" class="fiche-tete"'
+            f' aria-expanded="false"><span class="fiche-nom">{_e(vue.elements[0].titre)}</span>'
+            '<i class="chevron"></i></button></h2>'
             f'<div class="fiche-corps">{segments}{vue.fiche}{fiches}</div></aside>')
 
 

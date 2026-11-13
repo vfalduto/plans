@@ -159,6 +159,13 @@ def test_sections():
     assert "Pas encore rendu" in iso
 
 
+def test_titre_de_fiche_autour_du_bouton():
+    coupes = _entre(_page("b"), '<section class="vue" data-vue="coupes"', "</section>")
+    tete = _entre(coupes, '<aside class="fiche">', '<div class="fiche-corps">')
+    assert tete == ('<h2 class="fiche-titre"><button type="button" class="fiche-tete" aria-expanded="false">'
+                    '<span class="fiche-nom">Coupe A-A</span><i class="chevron"></i></button></h2>')
+
+
 def test_segment_inactif():
     doc = dataclasses.replace(DOC, generer=lambda v: {
         **DOC.generer(v),
