@@ -34,6 +34,7 @@ def test_positions_humains_victor():
 
 # ------------------------------------------------------------------ tâche 13 : vues Plan et Coupes
 import re  # noqa: E402
+from html import escape  # noqa: E402
 
 import pytest  # noqa: E402
 
@@ -134,12 +135,12 @@ def test_coupes_fiche_position():
     assert [t["data-k"] for t in balises(vues.vues("victor")["coupes"].fiche, "line", classe="sec")] == ["A", "B", "C", "D"]
 
 
-def test_vues_pas_encore_la():
+def test_vues_de_lecture_et_dessinees():
     for variante in ("principale", "victor"):
         v = vues.vues(variante)
         assert list(v) == list(modele.VUES["amenagement"])
         for cle in ("iso", "camera", "explication"):
-            assert v[cle].elements == []
+            assert v[cle].elements
 
 
 def test_document():
@@ -167,3 +168,106 @@ def test_plan_role_group():
         assert len(balises(e.scene, "rect", classe="zone")) == n
     # sans zones, le dessin reste l'image d'origine
     assert 'role="img"' in dessin_principale.plan_svg(document)
+
+
+# ------------------------------------------------------------------ tâche 14 : vues Iso, Caméra et Explication
+RENDUS_SITE = RACINE / "site" / "entree" / "amenagement" / "rendus"
+
+
+def test_iso():
+    for variante in ("principale", "victor"):
+        v = vues.vues(variante)["iso"]
+        assert [e.k for e in v.elements] == ["no", "ne", "so", "se"]
+        actifs = {e.k: e.actif for e in v.elements}
+        assert actifs["ne"] is False
+        assert not (RENDUS_SITE / f"{variante}-iso_ne.jpg").exists()
+        for e in v.elements:
+            assert e.actif == (RENDUS_SITE / f"{variante}-iso_{e.k}.jpg").exists()
+        so = next(e for e in v.elements if e.k == "so")
+        (fig,) = balises(so.scene, "figure")
+        imgs = balises(so.scene, "img")
+        assert imgs[0]["src"] == f"rendus/{variante}-iso_so.jpg" and imgs[0]["alt"]
+        assert imgs[1]["class"] == "calque" and imgs[1]["alt"] == ""
+        assert f"rendus/{variante}-iso_so-masque.png" in imgs[1]["style"]
+        assert "Position" in v.fiche
+        assert len(balises(v.fiche, "g", classe="pdv")) == 4
+
+
+def test_iso_alt_est_le_texte_des_rendus():
+    v = vues.vues("principale")["iso"]
+    so = next(e for e in v.elements if e.k == "so")
+    assert dict(document.RENDUS)["iso_so"] == balises(so.scene, "img")[0]["alt"]
+
+
+def test_camera_communes():
+    for variante in ("principale", "victor"):
+        v = vues.vues(variante)["camera"]
+        assert [e.k for e in v.elements] == ["banc", "couloir"]
+        assert all(e.actif for e in v.elements)
+        banc = v.elements[0]
+        assert "yeux à 112 cm, objectif 17 mm" in banc.fiche
+        assert "yeux à 160 cm, objectif 17 mm" in v.elements[1].fiche
+        assert balises(banc.scene, "img")[0]["src"] == f"rendus/{variante}-banc.jpg"
+        assert "Position" in v.fiche
+        assert len(balises(v.fiche, "g", classe="pdv")) == 2
+
+
+def _explication(variante):
+    (e,) = vues.vues(variante)["explication"].elements
+    return e.scene
+
+
+def test_explication_complete():
+    scene = _explication("principale")
+    (principes,) = re.findall(r'<ol class="principes">(.*?)</ol>', scene, re.S)
+    assert principes.count("<li>") == 5
+    total = round(sum(q * p for _, _, q, p in document.IKEA))
+    assert re.search(rf"Total.*?≈ {total} €", scene, re.S)
+    (liste,) = re.findall(r'<ul class="liste">(.*?)</ul>', scene, re.S)
+    assert liste.count("<li>") == 10
+    assert "Portes pour ce caisson" in scene
+    for variante in ("principale", "victor"):
+        texte = _explication(variante)
+        assert 'type="checkbox"' not in texte
+        for interdit in ("Copier la liste", "À venir", "Vues 3D", "·"):
+            assert interdit not in texte
+        assert "Repère : x vers l'est" in texte
+    victor_total = sum(q * p for _, _, q, p in victor.IKEA)
+    assert re.search(rf"Total.*?{victor_total:g} €", _explication("victor"), re.S)
+    (liste,) = re.findall(r'<ul class="liste">(.*?)</ul>', _explication("victor"), re.S)
+    assert liste.count("<li>") == 8
+
+
+def test_alt_sans_texte_visible():
+    for variante, M in (("principale", document), ("victor", victor)):
+        v = vues.vues(variante)
+        for cle in ("iso", "camera", "explication"):
+            for e in v[cle].elements:
+                visible = re.sub(r'\balt="[^"]*"', "", e.scene + e.fiche + v[cle].fiche)
+                for _, texte in M.RENDUS:
+                    assert escape(texte, quote=True) not in visible and texte not in visible
+
+
+def test_explication_liens_et_differences():
+    scene = _explication("principale")
+    # principe 0 (banc) : première zone du plan, `data-meuble="0"`
+    assert 'href="#plan?k=0"' in scene
+    assert scene.count("Montrer sur le plan") == len({z["principe"] for z in document.ZONES})
+    zones = [z["data-meuble"] for z in balises(vues.vues("principale")["plan"].elements[0].scene, "rect", classe="zone")]
+    for k in re.findall(r'href="#plan\?k=(\d+)"', scene):
+        assert k in zones
+    v = _explication("victor")
+    assert f"Différences avec la {victor.BASE}" in v and "Version Victor" in v
+
+
+def test_liens_internes_connus():
+    """Aucun lien relatif ne vise une page que rien ne génère (principale.html) : seulement `./` ou victor.html."""
+    for variante in ("principale", "victor"):
+        for cle, v in vues.vues(variante).items():
+            for e in v.elements:
+                for a in balises(e.scene + e.fiche + v.fiche, "a"):
+                    href = a.get("href", "")
+                    if href.startswith("#") or href.startswith("rendus/"):
+                        continue
+                    assert href in ("./", "victor.html"), (variante, cle, href)
+    assert 'href="./"' in _explication("victor")
