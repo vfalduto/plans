@@ -142,6 +142,37 @@ async page => {
              `plan en comparaison, toucher le banc : ${JSON.stringify(f)}`);
   });
 
+  // ------------------------------------------------------------------ « Position » : le repère affiché, sur le mini-plan
+  await partie("position", async () => {
+    await page.setViewportSize({width: 1440, height: 900});
+    // marques du mini-plan de la vue (traits de coupe, points de vue) : celles qui portent ici, et leur opacité calculée
+    const position = vue => page.evaluate(v => {
+      const marques = [...document.querySelectorAll(`section[data-vue="${v}"] .mini [data-k]`)];
+      const opacite = x => +getComputedStyle(x)[x.matches("line") ? "strokeOpacity" : "opacity"];
+      return {ici: marques.filter(x => x.classList.contains("ici")).map(x => x.dataset.k), tous: marques.map(x => x.dataset.k),
+              opacite: Object.fromEntries(marques.map(x => [x.dataset.k, opacite(x)]))};
+    }, vue);
+    const marquee = ([v, k]) => {
+      const x = document.querySelector(`section[data-vue="${v}"] .mini [data-k="${k}"]`);
+      return Boolean(x && x.classList.contains("ici"));
+    };
+    for (const [variante, adresse] of Object.entries(VARIANTES)) {
+      for (const [vue, k, autre] of [["coupes", "B", "C"], ["iso", "se", "no"], ["camera", "couloir", "banc"]]) {
+        const t = `${variante}, Position de ${vue}`;
+        await ouvrir(page, `${adresse}#${vue}?k=${k}`);
+        await attendre(page, marquee, [vue, k], `${t} : ${k} n'est pas marqué`);
+        let p = await position(vue);
+        verifier(egal(p.ici, [k]) && p.opacite[k] === 1 && p.tous.every(x => x === k || p.opacite[x] < 0.5),
+                 `${t}, ${k} : ${JSON.stringify(p)}`);
+        if (vue === "iso") verifier(!p.tous.includes("ne"), `${t} : un cône pour NE, coin sans rendu ${JSON.stringify(p.tous)}`);
+        await page.evaluate(([v, k]) => { location.hash = `#${v}?k=${k}`; }, [vue, autre]);
+        await attendre(page, marquee, [vue, autre], `${t} : ${autre} n'est pas marqué après le changement de repère`);
+        p = await position(vue);
+        verifier(egal(p.ici, [autre]), `${t}, puis ${autre} : ${JSON.stringify(p)}`);
+      }
+    }
+  });
+
   // ------------------------------------------------------------------ comparaison
   await partie("comparaison", async () => {
     await ouvrir(page, VARIANTES.victor + "#coupes?k=D&c=principale");

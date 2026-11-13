@@ -386,10 +386,12 @@ function brancherScenes() {
     });
     brancherCalques(section);
   }
-  surMontrer.push((etat, section) => {
+  surMontrer.push((etat, section, k) => {
     const el = elementActif(section);
     if (el) controleur(el);
     montrerMeuble(section, etat.k);
+    // « Position » : le trait de la coupe ou le point de vue de l'élément affiché (même data-k) passe au premier plan
+    for (const x of $$(".mini [data-k]", section)) x.classList.toggle("ici", x.dataset.k === k);
   });
 }
 

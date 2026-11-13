@@ -24,7 +24,7 @@ CALQUES = (("cotes", "Cotes"), ("passages", "Passages libres"), ("coupes", "Trai
 
 # Trait de coupe sur le plan : axe du trait (h : horizontal, à y = repère ; v : vertical, à x = repère), bornes
 RENDUS_SITE = Path(__file__).resolve().parents[3] / "site" / "entree" / "amenagement" / "rendus"
-COINS = ("no", "ne", "so", "se")   # ordre des segments de l'iso, et des cônes de sa fiche « Position »
+COINS = ("no", "ne", "so", "se")   # ordre des segments de l'iso, et des cônes (coins rendus) de sa fiche « Position »
 CAMERAS_PRISES = ("banc", "couloir")
 MARGE_ISO = 26                     # cm entre l'enveloppe des murs et le point de vue d'un coin
 
@@ -169,8 +169,8 @@ def _vue_iso(variante, M):
         actif = _rendu_existe(variante, cle)
         scene = _figure(variante, cle, _alt(M, cle, f"Vue isométrique, coin {k.upper()}")) if actif else ""
         elements.append(Element(k=k, nom=k.upper(), titre=f"Vue iso {k.upper()}", scene=scene, actif=actif))
-    # le JS pose `ici` sur le cône de même rang que l'élément courant
-    cones = [(*coins[k], False) for k in COINS]
+    # un cône par coin rendu ; le JS pose `ici` sur celui de l'élément affiché (g.pdv[data-k])
+    cones = [(e.k, *coins[e.k], False) for e in elements if e.actif]
     return Vue("iso", elements, fiche=_fiche_position(cones))
 
 
@@ -183,7 +183,7 @@ def _vue_camera(variante, M):
         scene = _figure(variante, k, _alt(M, k, c.nom)) if actif else ""
         fiche = f'<p class="cotes">yeux à {c.yeux:g} cm, objectif {c.focale:g} mm</p>'
         elements.append(Element(k=k, nom=c.nom, titre=c.nom, scene=scene, fiche=fiche, actif=actif))
-    cones = [(cameras[k].loc[:2], cameras[k].cible[:2], False) for k in CAMERAS_PRISES]
+    cones = [(k, cameras[k].loc[:2], cameras[k].cible[:2], False) for k in CAMERAS_PRISES]
     return Vue("camera", elements, fiche=_fiche_position(cones))
 
 

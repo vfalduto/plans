@@ -21,13 +21,13 @@ def _ouverture(p):
     return (p["face"], p["a"]), (p["face"], p["b"])
 
 
-def _cone(loc, cible, ici):
+def _cone(k, loc, cible, ici):
     a = math.atan2(cible[1] - loc[1], cible[0] - loc[0])
 
     def pt(t):
         return f"{f(loc[0] + LONGUEUR_CONE * math.cos(a + t))},{f(loc[1] + LONGUEUR_CONE * math.sin(a + t))}"
 
-    return (f'<g class="pdv{" ici" if ici else ""}">'
+    return (f'<g class="pdv{" ici" if ici else ""}" data-k="{escape(k)}">'
             f'<path class="cone" d="M{f(loc[0])},{f(loc[1])} L{pt(-OUVERTURE_CONE)} L{pt(OUVERTURE_CONE)} Z"/>'
             f'<circle class="cam" cx="{f(loc[0])}" cy="{f(loc[1])}" r="9"/></g>')
 
@@ -38,12 +38,12 @@ def mini_plan(sol, portes, traits=(), cones=()) -> str:
     - `sol` : sommets du contour du sol, en cm.
     - `portes` : dicts de la pièce (`mur`, `face`, `a`, `b`) ; chaque ouverture est un trait `ouv`.
     - `traits` : paires (lettre, ((x0, y0), (x1, y1))) ; un `line.sec[data-k=lettre]` chacun.
-    - `cones` : triplets (loc, cible, ici) ; un `g.pdv` chacun, plus `ici` sur le courant.
+    - `cones` : quadruplets (repère, loc, cible, ici) ; un `g.pdv[data-k=repère]` chacun, plus `ici` sur le courant.
     """
     pts = list(sol)
     for _, (a, b) in traits:
         pts += [a, b]
-    for loc, cible, _ in cones:
+    for _, loc, cible, _ in cones:
         a = math.atan2(cible[1] - loc[1], cible[0] - loc[0])
         pts += [loc] + [(loc[0] + LONGUEUR_CONE * math.cos(a + t), loc[1] + LONGUEUR_CONE * math.sin(a + t))
                         for t in (-OUVERTURE_CONE, OUVERTURE_CONE)]

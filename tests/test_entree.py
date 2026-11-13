@@ -248,7 +248,8 @@ def test_iso():
         assert f"rendus/{variante}-iso_so-masque.png" in imgs[1]["style"]
         assert "filter:url(#filtre-teinte)" in imgs[1]["style"]
         assert "Position" in v.fiche
-        assert len(balises(v.fiche, "g", classe="pdv")) == 4
+        # un cône par coin rendu (pas NE), repéré par son coin : le JS pose `ici` sur celui de l'élément affiché
+        assert [g["data-k"] for g in balises(v.fiche, "g", classe="pdv")] == [e.k for e in v.elements if e.actif]
 
 
 def test_iso_alt_est_le_texte_des_rendus():
@@ -267,7 +268,7 @@ def test_camera_communes():
         assert "yeux à 160 cm, objectif 17 mm" in v.elements[1].fiche
         assert balises(banc.scene, "img")[0]["src"] == f"rendus/{variante}-banc.jpg"
         assert "Position" in v.fiche
-        assert len(balises(v.fiche, "g", classe="pdv")) == 2
+        assert [g["data-k"] for g in balises(v.fiche, "g", classe="pdv")] == ["banc", "couloir"]
 
 
 def _explication(variante):
