@@ -141,3 +141,7 @@ achats port="8765":
 # Recherches Leboncoin : tests (sans réseau)
 achats-tests:
     cd .claude/skills/lbc && uv run -q --no-project --with pytest --with lbc==1.1.7 pytest -q tests
+
+# Tests du site (commun/, site.py)
+tests:
+    uv run -q --no-project --with pytest pytest -q tests
