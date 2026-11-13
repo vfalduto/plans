@@ -265,8 +265,27 @@ Soit environ 2 min 30 par variante pour `just entree-rendu`.
     réglages et la version de Blender ;
   - une empreinte par vue est stockée dans `cache/` ;
   - aujourd'hui, chaque commande refait tout.
-- **Seuil de bruit adaptatif à 0,03, au lieu de 0,01 :** l'image est identique à l'œil (écart moyen de 0,03 à 0,14
-  sur 255). Le gain de temps reste à mesurer machine au repos, avant d'adopter ce réglage.
+- **Seuil de bruit adaptatif à 0,03, au lieu de 0,01 : adopté.** Mesure du 13/11/2026, vue `iso_so` de la principale,
+  64 échantillons, 1600 × 1200, trois rendus par réglage en alternance (0,01 puis 0,03, trois fois) :
+  - **Durées** (commande entière, image et masque, démarrage de Blender compris) :
+
+    | Série | 0,01 | 0,03 |
+    |---|---|---|
+    | 1 | 30 s | 21 s |
+    | 2 | 30 s | 24 s |
+    | 3 | 24 s | 23 s |
+    | Médiane | 30 s | 23 s |
+
+  - **Gain :** la médiane baisse de 23 % (seuil de décision : 15 %).
+  - **Écart d'image :** écart moyen absolu par canal entre 0,01 et 0,03, moyenné sur les trois paires : 0,027 sur 255
+    (seuil de décision : 0,5). Référence, deux rendus au même seuil : 0,007 sur 255 à 0,01 et 0,008 à 0,03.
+  - **Machine :** sur secteur, pas au repos : charge moyenne de 3,2 avant la série (7,8 après, que la série fait
+    monter).
+  - **Portée :** indicative. Trois rendus par réglage seulement, et à réglage constant les durées varient déjà de 25 %
+    (24 à 30 s à 0,01), autant que le gain mesuré. Les durées sont celles de la commande entière : le démarrage de
+    Blender et le masque, que le seuil ne change pas, diluent le gain. Le biais joue donc contre 0,03, pas en sa faveur.
+  - **Effet :** `3d/rendu.py` passe le seuil à 0,03. L'empreinte des rendus change, donc le prochain
+    `just entree-rendu` refait toutes les vues ; le cache est périmé d'ici là.
 - **Écartés :**
   - **Moins de rebonds :** le rendu caméra s'assombrit visiblement (écart de 3,6 sur 255).
   - **EEVEE :** l'image s'écarte trop (écart de 20 sur 255 en caméra).
@@ -439,7 +458,10 @@ chaque document.
 Pour chaque document :
 - **Avant de supprimer un ancien générateur :** chaque section de l'ancienne page doit avoir trouvé sa place dans une
   vue, ou être retirée en application d'une décision listée plus bas.
-- **Après la migration :** l'ancienne adresse redirige.
+- **Après la migration :** l'ancienne adresse redirige. Seules les pages sont redirigées : les fichiers isolés que
+  chargeaient les anciennes pages de l'entrée (images de `entree-3d/` et `entree-victor-3d/`) ne le sont pas et
+  répondent 404. Une copie à l'ancien chemin ne montrerait plus le même contenu : avec les caméras partagées, les
+  rendus de Victor ont changé de cadrage ; les rendus servis sont dans `entree/amenagement/rendus/`.
 
 | Page actuelle | Générée par | Devient |
 |---|---|---|

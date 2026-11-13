@@ -21,6 +21,50 @@ def test_empreinte_stable():
     assert len(emp(cam, document)) == 64
 
 
+_EMPREINTES = """
+import json
+from commun import rendu_cache
+from pieces.entree import piece
+from pieces.entree.amenagement import document, victor
+print(json.dumps({m.__name__: {c.id: rendu_cache.empreinte(c, rendu_cache.donnees_variante(piece, m), {"echantillons": 64},
+                                                           "code", "5.2.2") for c in piece.CAMERAS}
+                  for m in (document, victor)}))
+"""
+
+
+def test_empreinte_stable_d_un_processus_a_l_autre():
+    """Deux lancements de `just entree-rendu` doivent voir la même empreinte : rien ne dépend de l'adresse d'un objet
+    en mémoire ni de l'ordre d'un ensemble (graine de hachage différente à chaque processus)."""
+    import json
+    import os
+    import subprocess
+    import sys
+    from tests.outils import RACINE
+    sorties = []
+    for graine in ("1", "2"):
+        env = {**os.environ, "PYTHONHASHSEED": graine}
+        r = subprocess.run([sys.executable, "-c", _EMPREINTES], cwd=RACINE, env=env, capture_output=True, text=True)
+        assert r.returncode == 0, r.stderr
+        sorties.append(json.loads(r.stdout))
+    assert set(sorties[0]) == {"pieces.entree.amenagement.document", "pieces.entree.amenagement.victor"}
+    assert sorties[0] == sorties[1]
+
+
+def test_donnee_non_serialisable_refusee(monkeypatch):
+    # une fonction (ou tout objet que JSON ne sait pas écrire) n'a pas d'écriture stable : l'empreinte la refuse
+    import pytest
+    monkeypatch.setattr(victor, "GARDE", lambda c: c, raising=False)
+    with pytest.raises(TypeError, match=r"victor\.GARDE : function"):
+        emp(cameras()["banc"], victor)
+
+
+def test_document_hors_empreinte():
+    # DOCUMENT, construit à la première lecture, décrit la page : l'avoir lu ne change pas l'empreinte
+    avant = emp(cameras()["banc"], document)
+    document.DOCUMENT
+    assert emp(cameras()["banc"], document) == avant
+
+
 def test_camera_isolee():
     cams = cameras()
     avant = {k: emp(c, document) for k, c in cams.items()}

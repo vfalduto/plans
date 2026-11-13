@@ -156,7 +156,7 @@ function suivreAdresse() {
    Un « élément » de la scène (div.element) contient soit des dessins (<svg> enfants directs, qui partagent la même
    viewBox quand on en superpose plusieurs), soit un rendu (figure.cadre). Le dessin zoome par sa viewBox, le rendu
    par un transform (échelle de 1 à 8). Les gestes sont écoutés sur l'élément ; les boutons de .outils, posés à côté,
-   n'y arrivent pas. */
+   n'y arrivent pas. Au clavier, la scène se prend par Tab : flèches pour déplacer la vue, + et - pour zoomer. */
 const SVG = "http://www.w3.org/2000/svg";
 const noeud = (nom, attrs, parent) => {
   const n = document.createElementNS(SVG, nom);
@@ -246,7 +246,7 @@ function dessin(element, opt = {}) {
     },
   };
   brancherGestes(element, gestes);
-  return {zoomer, recadrer() { v = {...v0}; pose(); tracer(); },
+  return {zoomer, glisser: gestes.glisser, recadrer() { v = {...v0}; pose(); tracer(); },
           mesurer(on) { mesure = on; if (!on) { pm = []; tracer(); } },
           lier(hote) { jumeau = hote; brancherGestes(hote, gestes); pose(); }};
 }
@@ -272,7 +272,7 @@ function vueImage(element, apres) {
   }
   const gestes = {zoomer, glisser(dx, dy) { tx += dx; ty += dy; pose(); }};
   brancherGestes(element, gestes);
-  return {zoomer, recadrer() { k = 1; tx = ty = 0; pose(); },
+  return {zoomer, glisser: gestes.glisser, recadrer() { k = 1; tx = ty = 0; pose(); },
           lier(hote) { jumeau = hote; brancherGestes(hote, gestes); pose(); }};
 }
 
@@ -302,6 +302,9 @@ function controleur(element) {
   return c;
 }
 const elementActif = section => $(".scene > .element:not([hidden]):not(.b)", section);
+/* Flèche -> sens du glissement du contenu : la vue va du côté de la flèche, le dessin part de l'autre ; un appui
+   déplace d'un dixième de la scène. */
+const FLECHES = {ArrowLeft: [1, 0], ArrowRight: [-1, 0], ArrowUp: [0, 1], ArrowDown: [0, -1]}, PAS_CLAVIER = 0.1;
 
 /* Zones de meuble du plan : rect.zone[data-meuble=n] et son <template data-meuble=n data-titre> dans la fiche.
    L'état est dans l'adresse (#plan?k=n) : toucher une zone change l'adresse, montrer() fait le reste. */
@@ -378,18 +381,35 @@ function brancherScenes() {
       for (const el of $$(".scene > .element", section)) { const c = controleurs.get(el); if (c && c.mesurer) c.mesurer(on); }
       if (!on) { const m = $(".bandeau .mes", section); if (m) m.hidden = true; }
     });
+    // au clavier : la scène se prend par Tab (contour de focus dans site.css) ; seules les touches reçues par la scène
+    // elle-même la déplacent ou la zooment, pas celles d'une zone, de la poignée du rideau ni d'un bouton
+    scene.tabIndex = 0;
+    scene.setAttribute("role", "group");
+    scene.setAttribute("aria-label", "Vue : flèches pour la déplacer, + et - pour zoomer");
     scene.addEventListener("keydown", e => {
       if ((e.key === "Enter" || e.key === " ") && e.target.matches && e.target.matches("rect.zone[data-meuble]")) {
         e.preventDefault();
         toucherMeuble(section, e.target);
+        return;
       }
+      if (e.target !== scene || e.altKey || e.ctrlKey || e.metaKey) return;
+      const el = elementActif(section), c = el && controleur(el);
+      if (!c) return;
+      const r = scene.getBoundingClientRect(), sens = FLECHES[e.key];
+      if (sens) c.glisser(sens[0] * r.width * PAS_CLAVIER, sens[1] * r.height * PAS_CLAVIER);
+      else if (e.key === "+" || e.key === "=") c.zoomer(0.7);        // comme les boutons Zoomer et Dézoomer
+      else if (e.key === "-") c.zoomer(1.43);
+      else return;
+      e.preventDefault();
     });
     brancherCalques(section);
   }
-  surMontrer.push((etat, section) => {
+  surMontrer.push((etat, section, k) => {
     const el = elementActif(section);
     if (el) controleur(el);
     montrerMeuble(section, etat.k);
+    // « Position » : le trait de la coupe ou le point de vue de l'élément affiché (même data-k) passe au premier plan
+    for (const x of $$(".mini [data-k]", section)) x.classList.toggle("ici", x.dataset.k === k);
   });
 }
 
@@ -496,8 +516,9 @@ async function comparer(etat) {
 
 /* Barre : « Comparer » pose c (la première autre variante) ou le retire, « avec » change c ; tous deux sont cachés
    hors de COMPARABLES. Le choix de variante charge l'autre page en gardant l'état, et échange c et la base si c devient
-   la base. En comparaison, aucun meuble n'est choisi sur le plan (maquette) : k ne reste que s'il désigne un élément
-   de la vue (coupe, caméra). */
+   la base. En comparaison, aucun meuble n'est choisi sur le plan (maquette), et un meuble ne passe pas d'une variante
+   à l'autre (k est le rang de sa zone, qui désigne un autre meuble ailleurs) : dans les deux cas, k ne reste que s'il
+   désigne un élément de la vue (coupe, caméra). */
 const bComp = $("#c-comp"), choixAutre = $("#c-autre"), avec = choixAutre && choixAutre.closest("label");
 const choixVariante = $("#c-variante"), cases = $(".b-cases");
 function majBarre(etat) {
@@ -506,21 +527,21 @@ function majBarre(etat) {
   if (avec) { avec.hidden = !(comparable && etat.c); if (etat.c) choixAutre.value = etat.c; }
   if (cases) cases.classList.toggle("deux-choix", Boolean(avec && !avec.hidden));
 }
-function repereEnComparaison(etat) {
+function repereDeLaVue(etat) {
   const section = sections.find(s => s.dataset.vue === etat.vue);
   return section && $$(".scene > .element[data-k]:not(.b)", section).some(x => x.dataset.k === etat.k) ? etat.k : "";
 }
 function brancherComparaison() {
   if (bComp) bComp.addEventListener("click", () => {
     const autre = (variantes.find(v => v[0] !== base) || [null])[0];
-    aller({...courant, k: repereEnComparaison(courant), c: courant.c ? null : autre});
+    aller({...courant, k: repereDeLaVue(courant), c: courant.c ? null : autre});
   });
-  if (choixAutre) choixAutre.addEventListener("change", () => aller({...courant, k: repereEnComparaison(courant), c: choixAutre.value}));
+  if (choixAutre) choixAutre.addEventListener("change", () => aller({...courant, k: repereDeLaVue(courant), c: choixAutre.value}));
   if (choixVariante) {
     choixVariante.addEventListener("change", () => {
       const v = variantes.find(x => x[0] === choixVariante.value);
       if (!v || v[0] === base) return;
-      location.assign(v[2] + fragment({...courant, c: courant.c === v[0] ? base : courant.c}));
+      location.assign(v[2] + fragment({...courant, k: repereDeLaVue(courant), c: courant.c === v[0] ? base : courant.c}));
     });
     addEventListener("pageshow", () => { choixVariante.value = base; });   // retour arrière : la variante de la page
   }

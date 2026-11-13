@@ -4,7 +4,9 @@ import re
 
 def css_dessins(css: str, dessins: list[str], prefixe: str) -> str:
     """Garde les règles dont toutes les classes figurent dans `dessins`, sans `@media`, sans règle sans classe ni
-    règle visant `body|html|main|nav|button|table|h1-6`, et préfixe chaque sélecteur par `prefixe`."""
+    règle visant `body|html|main|nav|button|table|h1-6`, et préfixe chaque sélecteur par `prefixe`. Une règle répétée
+    (le CSS d'un document réunit celui de ses variantes, qui partagent leurs règles communes) n'est gardée qu'une fois,
+    à sa première place."""
     css = re.sub(r"/\*.*?\*/", "", css, flags=re.S)
     css = re.sub(r"@media[^{]*\{(?:[^{}]*\{[^{}]*\})*[^{}]*\}", "", css)
     classes = set()
@@ -18,6 +20,7 @@ def css_dessins(css: str, dessins: list[str], prefixe: str) -> str:
             cl = re.findall(r"\.([\w-]+)", s)
             if cl and all(c in classes for c in cl) and not re.search(r"\b(body|html|main|nav|button|table|h\d)\b", s):
                 gardes.append(f"{prefixe} {s.strip()}")
-        if gardes:
-            out.append(",".join(gardes) + "{" + decl.strip() + "}")
+        regle = ",".join(gardes) + "{" + decl.strip() + "}"
+        if gardes and regle not in out:
+            out.append(regle)
     return "\n".join(out)

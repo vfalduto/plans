@@ -34,7 +34,7 @@ def test_positions_humains_victor():
 
 # ------------------------------------------------------------------ tâche 13 : vues Plan et Coupes
 import re  # noqa: E402
-from html import escape  # noqa: E402
+from html import escape, unescape  # noqa: E402
 
 import pytest  # noqa: E402
 
@@ -64,6 +64,15 @@ def test_dessins_inchanges(variante, dessin):
     attendu = (FIXTURES / f"{variante}-{dessin}.svg").read_text(encoding="utf-8")
     assert svg.startswith('<svg class="plan"' if dessin == "plan" else '<svg class="coupe"')
     assert _sans_ajouts(svg) == _sans_ajouts(attendu)
+
+
+@pytest.mark.parametrize("variante", DESSINS)
+def test_dessins_sans_point_median(variante):
+    # demande du client : pas de points médians ; les étiquettes séparent leurs parties par des virgules
+    for cle in ("plan", "coupes"):
+        v = vues.vues(variante)[cle]
+        for texte in (v.fiche, *(t for e in v.elements for t in (e.scene, e.fiche))):
+            assert "·" not in texte, (variante, cle, re.findall(r">([^<]*·[^<]*)<", texte))
 
 
 def test_coupes():
@@ -99,6 +108,63 @@ def test_modele_de_zone():
     assert 'href="#coupes?k=A"' in e.fiche
     assert 'href="#iso?k=so"' in e.fiche
     assert "95 × 38, h 45 cm" in e.fiche
+
+
+def _zones_lues(variante):
+    """Pour chaque zone du plan : son rectangle (x0, y0, x1, y1) et le texte des cotes de sa fiche."""
+    _, e = _plan(variante)
+    rects = balises(e.scene, "rect", classe="zone")
+    cotes = re.findall(r'<template data-meuble="\d+"[^>]*><p class="cotes">([^<]*)</p>', e.fiche)
+    lus = []
+    for r, c in zip(rects, cotes, strict=True):
+        x, y, l, h = (float(r[a]) for a in ("x", "y", "width", "height"))
+        lus.append(((x, y, x + l, y + h), unescape(c)))
+    return lus
+
+
+# ce que montrent aujourd'hui les zones et leurs fiches (les valeurs que la tâche 13 avait recopiées de la maquette)
+ZONES_ATTENDUES = {
+    "principale": [((92, 0, 187, 38), "95 × 38, h 45 cm"), ((85, 208, 110, 374), "166 × 25, h 95 cm"),
+                   ((110, 170, 185, 208), "75 × 35, h 236 cm"),
+                   ((0, 170, 85, 208), "110 × 38, h 46, dessous à 204 cm"), ((-10, 83, 14, 160), "vantail de 77")],
+    "victor": [((73, 171, 194, 208), "121 × 37, h 53 cm"), ((73, 208, 110, 283), "75 × 35, h 236 cm"),
+               ((82, 284, 110, 373), "89 × 28, h 25 cm"), ((0, 215, 9, 350), "mur ouest de l'entrée")],
+}
+
+
+@pytest.mark.parametrize("variante", DESSINS)
+def test_zones_inchangees(variante):
+    assert _zones_lues(variante) == ZONES_ATTENDUES[variante]
+
+
+@pytest.mark.parametrize("variante", DESSINS)
+def test_zone_confrontee_a_son_meuble(variante):
+    """Chaque zone qui nomme un meuble a son emprise (sauf le bord qu'elle déclare) ; sa fiche en donne la longueur."""
+    M = DESSINS[variante][0]
+    meubles = [(z, getattr(M, z["meuble"])) for z in M.ZONES if "meuble" in z]
+    assert len(meubles) >= 3
+    for (rect, cotes), z in zip(_zones_lues(variante), M.ZONES, strict=True):
+        if "meuble" not in z:
+            continue
+        m = getattr(M, z["meuble"])
+        attendu = tuple(z.get(c, m[c]) for c in ("x0", "y0", "x1", "y1"))
+        assert rect == attendu, (variante, z["meuble"])
+        longueur = max(m["x1"] - m["x0"], m["y1"] - m["y0"])
+        assert cotes.startswith(f"{longueur:g} × "), (variante, z["meuble"], cotes)
+
+
+@pytest.mark.parametrize("variante,meuble,bord", [("principale", "BANC", "x1"), ("principale", "MEUBLE_HAUT", "y1"),
+                                                  ("victor", "PLANCHE", "y1"), ("victor", "CHAUSSURES", "z1")])
+def test_zone_suit_son_meuble(monkeypatch, variante, meuble, bord):
+    # un meuble retouché : sa zone et les cotes de sa fiche suivent, sans rien recopier
+    M = DESSINS[variante][0]
+    avant = dict(zip([z.get("meuble") for z in M.ZONES], _zones_lues(variante)))[meuble]
+    monkeypatch.setattr(M, meuble, {**getattr(M, meuble), bord: getattr(M, meuble)[bord] + 10})
+    apres = dict(zip([z.get("meuble") for z in M.ZONES], _zones_lues(variante)))[meuble]
+    assert apres != avant, (variante, meuble, bord)
+    if bord != "z1":
+        assert apres[0] != avant[0]                          # l'emprise
+    assert apres[1] != avant[1]                              # le texte des cotes
 
 
 def test_fiche_plan():
@@ -191,7 +257,8 @@ def test_iso():
         assert f"rendus/{variante}-iso_so-masque.png" in imgs[1]["style"]
         assert "filter:url(#filtre-teinte)" in imgs[1]["style"]
         assert "Position" in v.fiche
-        assert len(balises(v.fiche, "g", classe="pdv")) == 4
+        # un cône par coin rendu (pas NE), repéré par son coin : le JS pose `ici` sur celui de l'élément affiché
+        assert [g["data-k"] for g in balises(v.fiche, "g", classe="pdv")] == [e.k for e in v.elements if e.actif]
 
 
 def test_iso_alt_est_le_texte_des_rendus():
@@ -210,7 +277,7 @@ def test_camera_communes():
         assert "yeux à 160 cm, objectif 17 mm" in v.elements[1].fiche
         assert balises(banc.scene, "img")[0]["src"] == f"rendus/{variante}-banc.jpg"
         assert "Position" in v.fiche
-        assert len(balises(v.fiche, "g", classe="pdv")) == 2
+        assert [g["data-k"] for g in balises(v.fiche, "g", classe="pdv")] == ["banc", "couloir"]
 
 
 def _explication(variante):
@@ -274,19 +341,29 @@ def test_liens_internes_connus():
     assert 'href="./"' in _explication("victor")
 
 
-def test_entree_dessins_styles():
-    # chaque classe portée par un élément du plan de la principale a au moins une règle dans le CSS filtré
-    import re
+def _a_une_regle(classe, css):
+    """Vrai si `css` a une règle qui vise exactement `.classe` (pas `.classe-t`)."""
+    return re.search(rf"\.{re.escape(classe)}(?![\w-])", css) is not None
+
+
+@pytest.mark.parametrize("variante,vue", [(v, cle) for v in DESSINS for cle in ("plan", "coupes")])
+def test_entree_dessins_styles(variante, vue):
+    """Chaque classe portée par un élément d'un dessin (plan ou coupe) a une règle dans dessins.css ou site.css.
+
+    dessins.css est filtré comme le fait la construction : CSS du document, classes lues dans toutes les variantes.
+    Un `<rect>` sans règle est rempli en noir (la penderie de Victor, sans `.talli`, l'était)."""
+    from commun.construction import _dessins
     from commun.css_dessins import css_dessins
-    (e,) = vues.vues("principale")["plan"].elements
-    classes = {c for m in re.findall(r'class="([^"]+)"', e.scene) for c in m.split()}
-    assert {"w", "room"} <= classes
-    css = css_dessins(document.DOCUMENT.css, [e.scene], ".d-entree")
-    # `zone` est stylée par commun/site.css (calque tactile) ; `plan` ne sert que de repère
+    toutes = [t for v in DESSINS for t in _dessins(vues.vues(v))]
+    dessins_css = css_dessins(document.DOCUMENT.css, toutes, ".d-entree")
     site_css = (RACINE / "commun/site.css").read_text(encoding="utf-8")
-    sans_regle = {c for c in classes if not re.search(rf"\.{re.escape(c)}\b", css)}
-    assert sans_regle - {"plan"} <= {c for c in sans_regle if re.search(rf"\.{re.escape(c)}\b", site_css)}
-    assert {"w", "room", "floorbg", "dim", "dimt"} <= classes - sans_regle
+    for e in vues.vues(variante)[vue].elements:
+        # la classe de la balise <svg> elle-même (plan, coupe) n'est qu'un repère : on lit les éléments qu'elle contient
+        interieur = e.scene.split(">", 1)[1]
+        classes = {c for m in re.findall(r'class="([^"]+)"', interieur) for c in m.split()}
+        assert {"w", "dim"} <= classes, (variante, vue, e.k)
+        sans_regle = sorted(c for c in classes if not _a_une_regle(c, dessins_css) and not _a_une_regle(c, site_css))
+        assert sans_regle == [], (variante, vue, e.k, sans_regle)
 
 
 def test_entree_legende_et_mini_plan_styles():

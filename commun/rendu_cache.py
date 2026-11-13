@@ -20,8 +20,9 @@ from pathlib import Path
 from commun.modele import Camera
 
 FICHIER = Path("cache/empreintes.json")
-# textes et constantes de page seulement : le rendu ne les lit pas
-EXCLUES = ("CAMERAS", "CHANGEMENTS", "VERSION", "BASE", "ZONES", "RENDUS", "FIGEES_ANCIENNES")
+# textes et constantes de page seulement : le rendu ne les lit pas (DOCUMENT, construit à la première lecture, décrit
+# la page)
+EXCLUES = ("CAMERAS", "CHANGEMENTS", "VERSION", "BASE", "ZONES", "RENDUS", "FIGEES_ANCIENNES", "DOCUMENT")
 BLENDER = os.environ.get("BLENDER", "/opt/homebrew/bin/blender")
 RACINE = Path(__file__).resolve().parent.parent
 
@@ -33,18 +34,31 @@ CODE = (Path("pieces/entree/amenagement/rendu.py"), Path("3d/rendu.py"))
 
 
 def _json(v):
+    """Écriture JSON de ce que json ne sait pas écrire seul : un objet de données (dataclass) et un ensemble (trié).
+    Tout le reste (fonction, classe, objet quelconque) est refusé : son `repr` porte souvent une adresse mémoire, qui
+    change d'un processus à l'autre et referait les rendus à chaque lancement."""
     if dataclasses.is_dataclass(v) and not isinstance(v, type):
         return dataclasses.asdict(v)
     if isinstance(v, (set, frozenset)):
-        return sorted(v, key=repr)
-    return repr(v)
+        return sorted(v, key=lambda x: json.dumps(x, sort_keys=True, default=_json))
+    raise TypeError(f"{type(v).__name__} n'est pas une donnée du modèle ({v!r:.80})")
 
 
 def donnees_variante(*modules) -> dict:
-    """Constantes en majuscules des modules (la pièce, puis la variante), sans CAMERAS ni CHANGEMENTS."""
-    return {f"{m.__name__}.{k}": v
-            for m in modules for k, v in vars(m).items()
-            if k.isupper() and k not in EXCLUES and not k.startswith("_")}
+    """Constantes en majuscules des modules (la pièce, puis la variante), sans les constantes de page (EXCLUES).
+
+    Ce doivent être des données (nombres, textes, listes, dictionnaires, dataclasses) : une constante que `_json`
+    refuse lève TypeError, avec son nom."""
+    donnees = {f"{m.__name__}.{k}": v
+               for m in modules for k, v in vars(m).items()
+               if k.isupper() and k not in EXCLUES and not k.startswith("_")}
+    for nom, v in donnees.items():
+        try:
+            json.dumps(v, sort_keys=True, default=_json)
+        except TypeError as e:
+            raise TypeError(f"empreinte des rendus, {nom} : {e} ; la renommer en _{nom.rsplit('.', 1)[1]} ou "
+                            "l'ajouter à EXCLUES si le rendu ne la lit pas") from None
+    return donnees
 
 
 def empreinte(camera: Camera, donnees_variante: dict, reglages: dict, code: str, blender: str) -> str:

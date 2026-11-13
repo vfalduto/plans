@@ -5,7 +5,7 @@ from tests.outils import balises
 SOL = piece.SOL
 PORTES = piece.PORTES
 TRAITS = (("A", ((-6, 60), (270, 60))), ("B", ((40, -6), (40, 380))))
-CONES = (((102, 24), (42, 374), True), ((15, 70), (150, 200), False))
+CONES = (("banc", (102, 24), (42, 374), True), ("couloir", (15, 70), (150, 200), False))
 
 
 def test_mini_plan_sol_et_portes():
@@ -28,6 +28,7 @@ def test_mini_plan_cones():
     groupes = balises(svg, "g", classe="pdv")
     assert len(groupes) == 2
     assert [("ici" in g["class"].split()) for g in groupes] == [True, False]
+    assert [g["data-k"] for g in groupes] == ["banc", "couloir"]     # le JS y pose `ici` selon le repère affiché
     assert len(balises(svg, "path", classe="cone")) == 2
     assert len(balises(svg, "circle", classe="cam")) == 2
 

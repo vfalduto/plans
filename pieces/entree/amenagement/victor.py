@@ -32,6 +32,7 @@ BASE = "V4.3"           # version de la page principale dont cette variante est 
 # comme les murs de l'entrée (FORSAND blanc repeint).
 PENDERIE = dict(x0=73, x1=110, y0=208, y1=283, z1=236, socle=0, facade=2, portes=(50, 25), tringle=180,
                 etageres=(196, 216), manteaux=10)
+PENDERIE["caisson"] = PENDERIE["x1"] - PENDERIE["x0"] - PENDERIE["facade"]    # 35 : profondeur sans les portes
 BANDEAU = dict(z0=PENDERIE["z1"], z1=H)
 IKEA = [   # prix IKEA France relevés le 13/11/2026 (fiches produit, blanc)
     ("PAX caisson d'armoire 75 × 35 × 236", "604.582.27", 1, 80),
@@ -163,11 +164,12 @@ PASSAGES = [
 # silhouette de chaque caméra (les caméras elles-mêmes sont celles de la pièce)
 HUMAINS = {"iso_no": "entree", "iso_so": "couloir", "iso_se": "entree"}
 
-# meubles touchables du plan (cm)
+# meubles touchables du plan, comme dans document.py ; plateau : hauteur plateau compris. Le mur ouest n'est pas un
+# meuble et aucune constante ne décrit son décor d'un seul tenant : sa zone (cm) et son texte sont donnés tels quels.
 ZONES = (
-    dict(x0=73, y0=171, x1=194, y1=208, principe=0, cotes="121 × 37, h 53", coupe="C", iso="no"),
-    dict(x0=73, y0=208, x1=110, y1=283, principe=1, cotes="75 × 35, h 236", coupe="B", iso="no"),
-    dict(x0=82, y0=284, x1=110, y1=373, principe=2, cotes="89 × 28, h 25", coupe="B", iso="no"),
+    dict(meuble="CHAUSSURES", plateau=True, principe=0, coupe="C", iso="no"),
+    dict(meuble="PENDERIE", principe=1, coupe="B", iso="no"),
+    dict(meuble="PLANCHE", principe=2, coupe="B", iso="no"),
     dict(x0=0, y0=215, x1=9, y1=350, principe=3, cotes="mur ouest de l'entrée", coupe="D", iso="se"),
 )
 RENDUS = [("iso_no", "Isométrique depuis le nord-ouest : meuble à chaussures arrondi et étagères, penderie PAX, "
