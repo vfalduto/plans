@@ -274,19 +274,29 @@ def test_liens_internes_connus():
     assert 'href="./"' in _explication("victor")
 
 
-def test_entree_dessins_styles():
-    # chaque classe portée par un élément du plan de la principale a au moins une règle dans le CSS filtré
-    import re
+def _a_une_regle(classe, css):
+    """Vrai si `css` a une règle qui vise exactement `.classe` (pas `.classe-t`)."""
+    return re.search(rf"\.{re.escape(classe)}(?![\w-])", css) is not None
+
+
+@pytest.mark.parametrize("variante,vue", [(v, cle) for v in DESSINS for cle in ("plan", "coupes")])
+def test_entree_dessins_styles(variante, vue):
+    """Chaque classe portée par un élément d'un dessin (plan ou coupe) a une règle dans dessins.css ou site.css.
+
+    dessins.css est filtré comme le fait la construction : CSS du document, classes lues dans toutes les variantes.
+    Un `<rect>` sans règle est rempli en noir (la penderie de Victor, sans `.talli`, l'était)."""
+    from commun.construction import _dessins
     from commun.css_dessins import css_dessins
-    (e,) = vues.vues("principale")["plan"].elements
-    classes = {c for m in re.findall(r'class="([^"]+)"', e.scene) for c in m.split()}
-    assert {"w", "room"} <= classes
-    css = css_dessins(document.DOCUMENT.css, [e.scene], ".d-entree")
-    # `zone` est stylée par commun/site.css (calque tactile) ; `plan` ne sert que de repère
+    toutes = [t for v in DESSINS for t in _dessins(vues.vues(v))]
+    dessins_css = css_dessins(document.DOCUMENT.css, toutes, ".d-entree")
     site_css = (RACINE / "commun/site.css").read_text(encoding="utf-8")
-    sans_regle = {c for c in classes if not re.search(rf"\.{re.escape(c)}\b", css)}
-    assert sans_regle - {"plan"} <= {c for c in sans_regle if re.search(rf"\.{re.escape(c)}\b", site_css)}
-    assert {"w", "room", "floorbg", "dim", "dimt"} <= classes - sans_regle
+    for e in vues.vues(variante)[vue].elements:
+        # la classe de la balise <svg> elle-même (plan, coupe) n'est qu'un repère : on lit les éléments qu'elle contient
+        interieur = e.scene.split(">", 1)[1]
+        classes = {c for m in re.findall(r'class="([^"]+)"', interieur) for c in m.split()}
+        assert {"w", "dim"} <= classes, (variante, vue, e.k)
+        sans_regle = sorted(c for c in classes if not _a_une_regle(c, dessins_css) and not _a_une_regle(c, site_css))
+        assert sans_regle == [], (variante, vue, e.k, sans_regle)
 
 
 def test_entree_legende_et_mini_plan_styles():

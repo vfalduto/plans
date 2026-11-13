@@ -294,12 +294,14 @@ def _changements(liste):
 
 
 def _document():
-    from pieces.entree.amenagement import dessin_principale, victor, vues
+    from pieces.entree.amenagement import victor, vues
     principale = Variante("principale", "Principale", VERSION, _changements(CHANGEMENTS), FIGEES_ANCIENNES)
     var_victor = Variante("victor", "Victor", victor.VERSION, _changements(victor.CHANGEMENTS))
+    # dessins.css sert toutes les variantes : il réunit le CSS du module de dessin de chacune (celui de Victor ajoute
+    # .talli et .tallic) ; css_dessins n'en garde qu'une fois les règles communes
+    css = "\n".join(dessin.CSS for _, dessin in vues.VARIANTES.values())
     return Document(piece="entree", id="amenagement", nom="Aménagement", type="amenagement",
-                    variantes=(principale, var_victor), generer=vues.vues, options=(_teinte(),),
-                    css=dessin_principale.CSS)
+                    variantes=(principale, var_victor), generer=vues.vues, options=(_teinte(),), css=css)
 
 
 def __getattr__(nom):
