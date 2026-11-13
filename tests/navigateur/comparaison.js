@@ -187,6 +187,12 @@ async page => {
     try { await page.waitForURL(DOC + "#coupes?k=B&c=c"); } catch (x) { echecs.push(`précédent : adresse ${page.url()}`); }
     await attendre(page, () => document.querySelector("#c-variante").value === "a", null,
                    "précédent après le choix de B : le choix de variante ne montre pas A");
+    // un meuble choisi sur le plan (k = rang de sa zone, qui désigne un autre meuble dans l'autre variante) : retiré
+    await ouvrir(page, DOC + "#plan?k=0");
+    await page.selectOption("#c-variante", "b");
+    try { await page.waitForURL(DOC + "b.html#plan"); } catch (x) { echecs.push(`choix de B depuis #plan?k=0 : adresse ${page.url()}, attendu b.html#plan`); }
+    const meuble = await page.evaluate(() => document.querySelectorAll('section[data-vue="plan"] rect.zone.ici').length);
+    verifier(meuble === 0, `choix de B depuis #plan?k=0 : ${meuble} meuble choisi sur B`);
 
     // Changement d'onglet : Coupes garde c ; Explication cache « Comparer » ; Plan retrouve la comparaison
     await ouvrir(page, DOC + "#plan?c=b");

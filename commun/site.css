@@ -126,6 +126,7 @@ a.b-case[aria-current="page"] > .ico{color:inherit}
 .scene{position:relative;min-width:0;min-height:0;overflow:hidden;background:var(--panel);touch-action:none;container-type:size;user-select:none;-webkit-user-select:none}
 .scene > .element{position:absolute;inset:0;display:grid;place-items:center}
 .element > svg{position:absolute;inset:0;width:100%;height:100%;display:block}
+.scene:focus-visible{outline-offset:-3px}   /* la scène prise au clavier : contour en dedans, que rien ne coupe */
 .scene.dessin{cursor:grab}
 .scene.dessin.mesure{cursor:crosshair}
 .scene svg text{font-family:var(--texte);fill:var(--ink)}

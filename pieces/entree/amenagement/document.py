@@ -13,15 +13,6 @@ VERSION = "V4.8"
 # silhouette de chaque caméra
 HUMAINS = {"iso_so": "couloir", "iso_no": "couloir", "iso_se": "entree"}
 
-# meubles touchables du plan (cm) : principe = rang de l'explication, coupe = repère de la coupe, iso = coin
-ZONES = (
-    dict(x0=92, y0=0, x1=187, y1=38, principe=0, cotes="95 × 38, h 45", coupe="A", iso="so"),
-    dict(x0=85, y0=208, x1=110, y1=374, principe=1, cotes="166 × 25, h 95", coupe="B", iso="so"),
-    dict(x0=110, y0=170, x1=185, y1=208, principe=2, cotes="75 × 35, h 236", coupe="C", iso="no"),
-    dict(x0=0, y0=170, x1=85, y1=208, principe=3, cotes="110 × 38, h 46, dessous à 204", coupe="B", iso="se"),
-    dict(x0=-10, y0=83, x1=14, y1=160, principe=4, cotes="vantail de 77", coupe=None, iso="no"),
-)
-
 # versions figées : (version, chemin sous site/)
 FIGEES_ANCIENNES = (("V3.3", "archive/entree-amenagement-v3.3.html"), ("V2", "archive/entree-amenagement-v2.html"),
                     ("V1", "archive/entree-amenagement-v1.html"))
@@ -58,8 +49,9 @@ ANGLE = dict(x0=85, x1=110, y0=NU_PENDERIE, y1=208, r=25, etageres=(31, 63))
 # 75 × 35 (cadre à deux barres d'avant en arrière, cintres de face, ≈ 5 manteaux par barre, 12 kg), deux tablettes
 # au-dessus, deux étagères à chaussures en bas, lampe LED à détecteur sur pile sous la tablette. Bandeau blanc de 14
 # du caisson (236) au plafond. Montage debout possible dès 237 de hauteur sous plafond (fiche IKEA).
+# caisson : profondeur du caisson PAX (35 sur la fiche IKEA), celle des cotes ; l'emprise (38) compte la porte et le jeu.
 PENDERIE = dict(x0=110, x1=185, y0=NU_PENDERIE, y1=208, z1=236, facade=2, portes=(50, 25), porte_z=(4, 233.4),
-                tringle=195, barres=(129, 166), etageres=(200, 218), chaussures=(10, 32), manteaux=10)
+                tringle=195, barres=(129, 166), etageres=(200, 218), chaussures=(10, 32), manteaux=10, caisson=35)
 IKEA = [   # IKEA France, fiches produit relevées le 13/11/2026, blanc
     ("PAX caisson d'armoire 75 × 35 × 236", "604.582.27", 1, 80),
     ("FORSAND porte avec charnières 50 × 229", "692.443.12", 1, 55),
@@ -204,6 +196,17 @@ CARRELAGE = dict(taille=60, joint=0.3, couleur="#D9D2C6", nuance="#CFC7B9", coul
                  nom="grès cérame 60 × 60 effet pierre claire, comme le salon")
 MUR_COULEUR = "#EFE9DC"
 
+# meubles touchables du plan : meuble = nom du dictionnaire dont la zone prend l'emprise et la fiche ses cotes
+# (vues.py) ; porte = nom de la porte de la pièce ; un bord donné ici (x0…y1) remplace celui du meuble.
+# principe = rang de l'explication, coupe = repère de la coupe, iso = coin
+ZONES = (
+    dict(meuble="BANC", principe=0, coupe="A", iso="so"),
+    dict(meuble="CHAUSSURES", principe=1, coupe="B", iso="so"),
+    dict(meuble="PENDERIE", principe=2, coupe="C", iso="no"),
+    dict(meuble="MEUBLE_HAUT", x1=ANGLE["x0"], principe=3, coupe="B", iso="se"),   # arrêtée à l'angle arrondi, dessous
+    dict(porte="ouest", principe=4, coupe=None, iso="no"),
+)
+
 RENDUS = [("iso_so", "Isométrique depuis le sud-ouest : banc sous le tableau, meuble à chaussures, miroir"),
           ("iso_no", "Isométrique depuis le nord-ouest : penderie, angle arrondi, meuble à chaussures, porte d'entrée"),
           ("iso_se", "Isométrique depuis le sud-est, sur l'entrée : mur ouest en India et interphone, meuble haut côté placard"),
@@ -266,9 +269,6 @@ CHANGEMENTS = [
 # ------------------------------------------------------------------ le document déclaré (tâche 13)
 # DOCUMENT dépend de victor.py, qui lit ce fichier : on le construit à la première lecture (`document.DOCUMENT`),
 # pas à l'import, pour éviter l'import circulaire.
-GROUPES_TEINTE = (("Laque et peinture murale", lambda c: c[3] and c[4]),
-                  ("Laque de façade seulement", lambda c: c[3] and not c[4]),
-                  ("Peinture murale seulement", lambda c: c[4] and not c[3]))
 
 
 def _gamme(c):
@@ -281,9 +281,13 @@ def _gamme(c):
 
 def _teinte():
     from pieces.entree.amenagement import plum
+    # groupes du nuancier, selon la gamme ; ici et non en constante du module, que l'empreinte des rendus lit
+    groupes = (("Laque et peinture murale", lambda c: c[3] and c[4]),
+               ("Laque de façade seulement", lambda c: c[3] and not c[4]),
+               ("Peinture murale seulement", lambda c: c[4] and not c[3]))
     valeurs = tuple(Valeur(code=c[0], nom=c[1], couleur=c[2], groupe=titre, note=_gamme(c),
                            lien=plum.URL_PEINTURE + c[4] if c[4] else "")
-                    for titre, garde in GROUPES_TEINTE for c in plum.PALETTE if garde(c))
+                    for titre, garde in groupes for c in plum.PALETTE if garde(c))
     return Option(id="teinte", nom="Teinte de l'entrée", surfaces=("murs", "plafond", "porte"), type="nuancier",
                   defaut=plum.DEFAUT, valeurs=valeurs, css="--india", filtre=True,
                   portee="Visible sur le plan, les coupes et les rendus.")
@@ -294,12 +298,14 @@ def _changements(liste):
 
 
 def _document():
-    from pieces.entree.amenagement import dessin_principale, victor, vues
+    from pieces.entree.amenagement import victor, vues
     principale = Variante("principale", "Principale", VERSION, _changements(CHANGEMENTS), FIGEES_ANCIENNES)
     var_victor = Variante("victor", "Victor", victor.VERSION, _changements(victor.CHANGEMENTS))
+    # dessins.css sert toutes les variantes : il réunit le CSS du module de dessin de chacune (celui de Victor ajoute
+    # .talli et .tallic) ; css_dessins n'en garde qu'une fois les règles communes
+    css = "\n".join(dessin.CSS for _, dessin in vues.VARIANTES.values())
     return Document(piece="entree", id="amenagement", nom="Aménagement", type="amenagement",
-                    variantes=(principale, var_victor), generer=vues.vues, options=(_teinte(),),
-                    css=dessin_principale.CSS)
+                    variantes=(principale, var_victor), generer=vues.vues, options=(_teinte(),), css=css)
 
 
 def __getattr__(nom):

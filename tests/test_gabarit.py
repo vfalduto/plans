@@ -265,3 +265,11 @@ def test_css_dessins():
     assert "absente" not in sortie                          # classe absente des dessins
     assert "pink" not in sortie                             # règle visant body
     assert "commentaire" not in sortie
+
+
+def test_css_dessins_regle_repetee():
+    # le CSS d'un document réunit celui de ses variantes, qui partagent leurs règles communes : chacune une seule fois
+    sortie = css_dessins(CSS + CSS + ".w{fill:teal}", DESSINS, ".d-entree")
+    assert sortie.count(".d-entree .room{fill:red;fill-opacity:.18}") == 1
+    assert sortie.count(".d-entree .w{fill:blue}") == 1
+    assert sortie.endswith(".d-entree .w{fill:teal}")      # une règle différente, même sélecteur, reste à sa place

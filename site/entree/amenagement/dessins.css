@@ -46,3 +46,4 @@
 .d-entree .sect{fill:var(--tri);fill-opacity:.6;font-weight:800;font-size:11px}
 .d-entree .floorl{stroke:var(--ink);stroke-width:2}
 .d-entree .ceil{stroke:var(--muted);stroke-width:1;stroke-dasharray:6 4}
+.d-entree .talli{fill:var(--india);stroke:var(--ink);stroke-width:.8}

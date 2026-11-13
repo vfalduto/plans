@@ -8,7 +8,7 @@ reprend le texte de `contenu()` des anciens 3d/entree/plan.py et plan_victor.py,
 from html import escape
 from pathlib import Path
 
-from commun.dessin import virg
+from commun.dessin import f, virg
 from commun.modele import Element, Vue
 from commun.position import mini_plan
 from pieces.entree import piece
@@ -24,11 +24,12 @@ CALQUES = (("cotes", "Cotes"), ("passages", "Passages libres"), ("coupes", "Trai
 
 # Trait de coupe sur le plan : axe du trait (h : horizontal, à y = repère ; v : vertical, à x = repère), bornes
 RENDUS_SITE = Path(__file__).resolve().parents[3] / "site" / "entree" / "amenagement" / "rendus"
-COINS = ("no", "ne", "so", "se")   # ordre des segments de l'iso, et des cônes de sa fiche « Position »
+COINS = ("no", "ne", "so", "se")   # ordre des segments de l'iso, et des cônes (coins rendus) de sa fiche « Position »
 CAMERAS_PRISES = ("banc", "couloir")
 MARGE_ISO = 26                     # cm entre l'enveloppe des murs et le point de vue d'un coin
 
 TRAITS = {"A": ("h", -6, 270), "B": ("v", -6, 380), "C": ("h", -6, 360), "D": ("v", -6, 380)}
+SAILLIE_PORTE = 14                 # cm : la zone d'une porte déborde de l'ouverture dans le couloir (maquette)
 
 
 def _e(texte):
@@ -41,13 +42,48 @@ def _trait(D, lettre):
     return (lettre, ((d0, coupe), (d1, coupe)) if axe == "h" else ((coupe, d0), (coupe, d1)))
 
 
+def _nombre(v):
+    return f(v).replace(".", ",")
+
+
+def _cotes(m, plateau=False):
+    """Cotes d'un meuble pour sa fiche : « longueur × profondeur, h hauteur », puis « dessous à z0 » s'il est suspendu.
+    La longueur est le grand côté de l'emprise ; la profondeur, celle du caisson s'il est donné (`caisson`), sinon le
+    petit côté ; la hauteur va du dessous au dessus, plateau compris si la zone le demande."""
+    dx, dy = m["x1"] - m["x0"], m["y1"] - m["y0"]
+    z0 = m.get("z0", 0)
+    h = m["z1"] - z0 + (m["plateau"] if plateau else 0)
+    texte = f"{_nombre(max(dx, dy))} × {_nombre(m.get('caisson', min(dx, dy)))}, h {_nombre(h)}"
+    return texte + (f", dessous à {_nombre(z0)}" if z0 else "")
+
+
+def _emprise_porte(p):
+    """Ouverture d'une porte, de l'épaisseur du mur à `SAILLIE_PORTE` dans le couloir."""
+    vers_couloir = 1 if p["mur"] in "no" else -1     # le couloir est au sud d'un mur nord, à l'est d'un mur ouest
+    d0, d1 = sorted((p["face"] - vers_couloir * piece.EP, p["face"] + vers_couloir * SAILLIE_PORTE))
+    return (d0, p["a"], d1, p["b"]) if p["mur"] in "eo" else (p["a"], d0, p["b"], d1)
+
+
+def _zone(M, z):
+    """Emprise (x0, y0, x1, y1) et cotes d'une zone de `M.ZONES`, tirées du meuble ou de la porte qu'elle nomme ; un
+    bord donné par la zone remplace celui du meuble."""
+    if "meuble" in z:
+        m = getattr(M, z["meuble"])
+        return tuple(z.get(c, m[c]) for c in ("x0", "y0", "x1", "y1")), _cotes(m, z.get("plateau", False))
+    if "porte" in z:
+        p = next(p for p in piece.PORTES if p["nom"] == z["porte"])
+        return _emprise_porte(p), f'vantail de {_nombre(p["b"] - p["a"])}'
+    return (z["x0"], z["y0"], z["x1"], z["y1"]), z["cotes"]
+
+
 def _zones(M, D, legende_principes):
     """Rectangles touchables du plan, un par meuble de `M.ZONES`."""
     rects = []
     for i, z in enumerate(M.ZONES):
         titre = legende_principes[z["principe"]][0]
-        rects.append(f'<rect class="zone" data-meuble="{i}" x="{z["x0"]}" y="{z["y0"]}" width="{z["x1"] - z["x0"]}"'
-                     f' height="{z["y1"] - z["y0"]}" rx="2" tabindex="0" role="button" aria-label="{_e(titre)}"/>')
+        (x0, y0, x1, y1), _ = _zone(M, z)
+        rects.append(f'<rect class="zone" data-meuble="{i}" x="{f(x0)}" y="{f(y0)}" width="{f(x1 - x0)}"'
+                     f' height="{f(y1 - y0)}" rx="2" tabindex="0" role="button" aria-label="{_e(titre)}"/>')
     return "".join(rects)
 
 
@@ -56,7 +92,8 @@ def _modeles(M, principes):
     modeles = []
     for i, z in enumerate(M.ZONES):
         titre, texte = principes[z["principe"]]
-        cotes = z["cotes"] + (" cm" if z["cotes"][0].isdigit() else "")
+        _, cotes = _zone(M, z)
+        cotes += " cm" if cotes[0].isdigit() else ""
         liens = ""
         if z["coupe"]:
             liens += f'<a class="btn" href="#coupes?k={z["coupe"]}">Coupe {z["coupe"]}</a>'
@@ -132,8 +169,8 @@ def _vue_iso(variante, M):
         actif = _rendu_existe(variante, cle)
         scene = _figure(variante, cle, _alt(M, cle, f"Vue isométrique, coin {k.upper()}")) if actif else ""
         elements.append(Element(k=k, nom=k.upper(), titre=f"Vue iso {k.upper()}", scene=scene, actif=actif))
-    # le JS pose `ici` sur le cône de même rang que l'élément courant
-    cones = [(*coins[k], False) for k in COINS]
+    # un cône par coin rendu ; le JS pose `ici` sur celui de l'élément affiché (g.pdv[data-k])
+    cones = [(e.k, *coins[e.k], False) for e in elements if e.actif]
     return Vue("iso", elements, fiche=_fiche_position(cones))
 
 
@@ -146,7 +183,7 @@ def _vue_camera(variante, M):
         scene = _figure(variante, k, _alt(M, k, c.nom)) if actif else ""
         fiche = f'<p class="cotes">yeux à {c.yeux:g} cm, objectif {c.focale:g} mm</p>'
         elements.append(Element(k=k, nom=c.nom, titre=c.nom, scene=scene, fiche=fiche, actif=actif))
-    cones = [(cameras[k].loc[:2], cameras[k].cible[:2], False) for k in CAMERAS_PRISES]
+    cones = [(k, cameras[k].loc[:2], cameras[k].cible[:2], False) for k in CAMERAS_PRISES]
     return Vue("camera", elements, fiche=_fiche_position(cones))
 
 
@@ -210,7 +247,7 @@ def _explication_principale(M, D):
              "Un banc sous le tableau électrique, un meuble à chaussures étroit avec miroir dans la branche d'entrée, "
              "relié par un angle arrondi à une penderie face à la salle de bain. Un meuble suspendu au plafond marque "
              "l'entrée ; au-delà, murs, plafond et porte sont peints en India Yellow.")
-    stats = [(f"PAX {lp} × 35", f"penderie IKEA, ≈ {total} €"), (f"≈ {M.PAIRES} paires", "meuble à chaussures"),
+    stats = [(f"PAX {lp} × {pe['caisson']}", f"penderie IKEA, ≈ {total} €"), (f"≈ {M.PAIRES} paires", "meuble à chaussures"),
              (f'{c["x0"]} cm', "passage le plus étroit"), (f"{virg(M.SURFACE)} m²", "surface du couloir")]
     achats = _achats(M, True, "Prix IKEA France relevés sur les fiches produit le 13/11/2026, en blanc ; les portes « avec "
                      "charnières » comprennent leurs 4 charnières KOMPLEMENT à fermeture silencieuse. Les deux tablettes "

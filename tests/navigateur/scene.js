@@ -166,6 +166,64 @@ async page => {
       [...document.querySelectorAll('section[data-vue="coupes"] .segments button[aria-pressed="true"]')].map(b => b.dataset.k));
     verifier(JSON.stringify(seg) === '["B"]', `k inconnu : segment ${JSON.stringify(seg)} au lieu de ["B"]`);
 
+    // Clavier : la scène se prend au clavier (Maj+Tab depuis la première zone), focus visible ; + et - zooment, les
+    // flèches déplacent la vue ; les flèches d'une zone ou de la poignée du rideau ne la déplacent pas
+    const SCENE = 'section[data-vue="plan"] .scene';
+    await ouvrir(page, DOC + "#plan");
+    const s0 = await vb(page, "plan");
+    await page.focus('section[data-vue="plan"] rect.zone');
+    await page.keyboard.press("Shift+Tab");
+    const prise = await page.evaluate(s => {
+      const e = document.querySelector(s);
+      return {tabindex: e.getAttribute("tabindex"), active: document.activeElement === e,
+              visible: e.matches(":focus-visible") && getComputedStyle(e).outlineStyle !== "none", nom: e.getAttribute("aria-label")};
+    }, SCENE);
+    verifier(prise.tabindex === "0" && prise.active && prise.visible && prise.nom, `clavier : la scène ne se prend pas ${JSON.stringify(prise)}`);
+    await page.keyboard.press("+");
+    v = await vb(page, "plan");
+    verifier(Math.abs(v[2] / s0[2] - 0.7) < 0.01, `clavier, « + » : largeur ${s0[2]} -> ${v[2]} (attendu x 0,7)`);
+    await page.keyboard.press("-");
+    v = await vb(page, "plan");
+    verifier(Math.abs(v[2] / s0[2] - 1.001) < 0.01, `clavier, « - » après « + » : largeur ${v[2]} au lieu de ${s0[2]}`);
+    const avant = await vb(page, "plan");
+    await page.keyboard.press("ArrowRight");
+    await page.keyboard.press("ArrowDown");
+    v = await vb(page, "plan");
+    verifier(v[0] > avant[0] && v[1] > avant[1] && Math.abs(v[2] - avant[2]) < 1e-6,
+             `clavier, flèches droite et bas : viewBox ${v} (avant ${avant}), la vue devait aller à droite et en bas`);
+    await page.keyboard.press("ArrowLeft");
+    await page.keyboard.press("ArrowUp");
+    v = await vb(page, "plan");
+    verifier(v.every((x, i) => Math.abs(x - avant[i]) < 1e-6), `clavier, flèches gauche et haut : viewBox ${v} au lieu de ${avant}`);
+    verifier((await fiche(page)).hash === "#plan", "clavier : les flèches changent l'adresse");
+    await page.focus('section[data-vue="plan"] rect.zone');
+    await page.keyboard.press("ArrowRight");
+    v = await vb(page, "plan");
+    verifier(v.every((x, i) => Math.abs(x - avant[i]) < 1e-6), `clavier, flèche sur une zone : la vue bouge (${v})`);
+    await ouvrir(page, DOC + "#plan?c=b");
+    await attendre(page, () => document.querySelectorAll('section[data-vue="plan"] .bandeau .etiq-var').length === 2,
+                   "clavier : pas de comparaison pour essayer la poignée");
+    const p0 = await vb(page, "plan");
+    await page.focus('section[data-vue="plan"] .poignee');
+    await page.keyboard.press("ArrowRight");
+    const rideau = await page.evaluate(() => document.querySelector('section[data-vue="plan"] .poignee').getAttribute("aria-valuenow"));
+    v = await vb(page, "plan");
+    verifier(rideau === "54" && v.every((x, i) => Math.abs(x - p0[i]) < 1e-6),
+             `clavier, flèche sur la poignée : rideau à ${rideau} (attendu 54), viewBox ${v} (avant ${p0})`);
+    // un rendu : + zoome, une flèche le déplace
+    await ouvrir(page, DOC + "#camera");
+    await page.focus('section[data-vue="camera"] .scene');
+    await page.keyboard.press("+");
+    verifier(await echelle(page) > 1, "clavier, rendu : « + » ne zoome pas");
+    const tx = () => page.evaluate(() => {
+      const m = /translate\((-?[\d.]+)px/.exec(document.querySelector('section[data-vue="camera"] .cadre').style.transform);
+      return m ? +m[1] : NaN;
+    });
+    const t0 = await tx();
+    await page.keyboard.press("ArrowLeft");
+    const t1 = await tx();
+    verifier(t1 > t0, `clavier, rendu : flèche gauche, translation ${t0} -> ${t1} px (le rendu devait glisser vers la droite)`);
+
     // Pincement sur un rendu (tactile émulé par CDP)
     const cdp = await page.context().newCDPSession(page);
     await cdp.send("Emulation.setTouchEmulationEnabled", {enabled: true, maxTouchPoints: 2});

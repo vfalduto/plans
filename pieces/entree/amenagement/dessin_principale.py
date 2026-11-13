@@ -87,7 +87,7 @@ def plan_svg(M, aria="Plan de l'entrée aménagée", zones=""):
     o.append(rect(M.TABLEAU["x0"], -6, M.TABLEAU["x1"], 0, "tech"))
     o.append(rect(b["x0"], b["y0"], b["x1"], b["y1"], "cab"))
     xm = (b["x0"] + b["x1"]) / 2
-    o.append(text(xm, 18.5, f'① Banc {b["x1"] - b["x0"]} × {b["y1"] - b["y0"]} · h {b["z1"]}', "lbls"))
+    o.append(text(xm, 18.5, f'① Banc {b["x1"] - b["x0"]} × {b["y1"] - b["y0"]}, h {b["z1"]}', "lbls"))
     o.append(text(xm, 26.5, "sous le tableau électrique", "lbls"))
     # angle arrondi, meuble à chaussures, miroir, patères
     o.append(coin_arrondi(an["x0"], an["x1"], an["y0"], an["y1"], an["r"], "cab"))
@@ -97,7 +97,7 @@ def plan_svg(M, aria="Plan de l'entrée aménagée", zones=""):
     o.append(f'<line class="app" x1="{an["x0"]}" y1="{an["y1"]}" x2="{an["x1"]}" y2="{an["y1"]}"/>')
     o.append(rect(106.5, mi["y0"], 110, mi["y1"], "mirror"))
     ym = (c["y0"] + c["y1"]) / 2
-    o.append(text(97.5, ym, f'② Chaussures {c["y1"] - c["y0"]} × {c["x1"] - c["x0"]} · h {c["z1"]}', "lbls", extra=rot(97.5, ym)))
+    o.append(text(97.5, ym, f'② Chaussures {c["y1"] - c["y0"]} × {c["x1"] - c["x0"]}, h {c["z1"]}', "lbls", extra=rot(97.5, ym)))
     ymi = (mi["y0"] + mi["y1"]) / 2
     o.append(text(127, ymi, "← miroir au-dessus du meuble", "lblx muted", "start"))
     o.append(text(127, 345, "← 4 patères à droite du miroir", "lblx muted", "start"))
@@ -121,15 +121,15 @@ def plan_svg(M, aria="Plan de l'entrée aménagée", zones=""):
     o.append(f'<path class="swing" d="M{pe["x0"]} {pe["y0"] - l0} A{l0} {l0} 0 0 1 {f(xj)} {pe["y0"]}"/>')
     o.append(f'<path class="swing" d="M{pe["x1"]} {pe["y0"] - l1} A{l1} {l1} 0 0 0 {f(xj)} {pe["y0"]}"/>')
     xp = (pe["x0"] + pe["x1"]) / 2
-    o.append(text(xp, 187, f'③ Penderie PAX {pe["x1"] - pe["x0"]} × 35', "lblx"))
-    o.append(text(xp, 194, f'h {pe["z1"]} + bandeau · cintres de face', "lblx"))
+    o.append(text(xp, 187, f'③ Penderie PAX {pe["x1"] - pe["x0"]} × {pe["caisson"]}', "lblx"))
+    o.append(text(xp, 194, f'h {pe["z1"]} + bandeau, cintres de face', "lblx"))
     # ④ meuble haut (au plafond, tireté) et peinture India (bande le long des murs peints, porte d'entrée)
     mh = M.MEUBLE_HAUT
     yd = mh["y0"] + mh["etagere"]
     o.append(rect(mh["x0"], mh["y0"], mh["x1"], mh["y1"], "upperh"))
     o.append(f'<line class="upper" x1="{mh["x0"]}" y1="{yd}" x2="{mh["x1"]}" y2="{yd}"/>')
     o.append(text(42, mh["y0"] + 9, "④ meuble haut au plafond", "lblx"))
-    o.append(text(42, mh["y1"] - 4, f'étagères ↑ · placard ↓ · dessous à {mh["z0"]}', "lblx muted"))
+    o.append(text(42, mh["y1"] - 4, f'étagères ↑, placard ↓, dessous à {mh["z0"]}', "lblx muted"))
     yi = M.INDIA["y0"]
     for x0, y0, x1, y1 in ((0, yi, 2.5, 374), (107.5, pe["y1"], 110, 374), (0, 371.5, 110, 374)):
         o.append(rect(x0, y0, x1, y1, "indiap"))
@@ -386,7 +386,7 @@ def principes(M):
          f'bois au sud, côté porte (chevilles de chêne Ø {virg(M.PATERE["d"])}, à {M.PATERE["z"]}). Miroir à coins '
          f'arrondis (R {mi["r"]}). Il sert aussi de butée à la porte d\'entrée ouverte.'),
         ("③ Penderie PAX et angle arrondi",
-         f'Contre la face nord de la salle de bain : une penderie IKEA PAX de {lp} × 35 × {pe["z1"]}, la seule largeur qui '
+         f'Contre la face nord de la salle de bain : une penderie IKEA PAX de {lp} × {pe["caisson"]} × {pe["z1"]}, la seule largeur qui '
          "tienne dans les 84 cm du mur (un caisson de 100 mangerait l'huisserie de la salle de bain), et un bandeau "
          f'jusqu\'au plafond. Portes FORSAND de {pe["portes"][0]} et {pe["portes"][1]}. À 35 cm, les cintres ne tiennent '
          f'pas en travers : la tringle KOMPLEMENT de ce caisson a deux barres d\'avant en arrière, cintres de face '
