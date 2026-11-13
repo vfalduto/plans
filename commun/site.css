@@ -1,0 +1,421 @@
+/* Feuille commune des pages de site/, reprise de la maquette validée (plans/maquette/app.html).
+   Le balisage vient de commun/gabarit.py : `main.contenu` (le `main.scene` de la maquette) contient une section
+   `.vue` par vue ; une vue dessinée y a sa `.planche`, faite d'une `.scene` (le `.stage` de la maquette) et d'une
+   `.fiche`. commun/site.js retire la classe sans-js de <html> et montre une vue à la fois ; sans lui, la page se lit de
+   haut en bas, toutes les vues à la suite (fin de fichier). */
+
+/* ------------------------------------------------------------------ jetons
+   Atelier : la navigation en noir à 78 % (#000000c7) ; le jaune des graduations d'un mètre marque « vous êtes ici ».
+   Les dessins gardent leurs couleurs (noms repris des pages : --ink, --wood…).
+   Lettrage : Fira Sans pour le texte, Fira Sans Condensed pour l'interface et les cotes ; chiffres tabulaires. */
+:root{
+  --paper:#EEF0EC; --panel:#FFFFFF; --ink:#1D2A33; --muted:#5E6B73; --line:#CCD3CE; --hair:#E3E7E3;
+  --tapis:#000000c7; --tapis-texte:#F2F2F2; --tapis-muet:#CFCFCF; --tapis-ligne:rgb(255 255 255 / .16); --tapis-survol:rgb(255 255 255 / .08);
+  --repere:#F2CF4A; --sur-repere:#1D2A33;          /* jaune des graduations : « vous êtes ici » */
+  --actif:#000000c7; --sur-actif:#FFFFFF;            /* onglet courant, bouton enfoncé, sur fond clair */
+  --bouton:#E6EAE5; --bouton-survol:#D9DFD9;
+  --coupe:#C8412C;                                 /* rouge du trait de coupe des dessins */
+  --wood:#B07A45; --water:#2F7FB5; --tri:#C8412C; --flow:#2E8B57; --cab:#ECE6DA; --tall:#D8CFBD;
+  --tech:#E1E6E9; --glass:#CFE4F2; --india:#F5D58C;
+  --texte:"Fira Sans",system-ui,-apple-system,"Segoe UI",sans-serif;
+  --ui:"Fira Sans Condensed","Fira Sans",system-ui,-apple-system,sans-serif;
+  --bas:0px;                                       /* hauteur de la barre d'onglets du bas (mobile) */
+  color-scheme:light;
+}
+*{box-sizing:border-box}
+html,body{margin:0;height:100%}
+body{background:var(--paper);color:var(--ink);font:16px/1.5 var(--texte);-webkit-text-size-adjust:100%}
+button,select,input{font:inherit;color:inherit}
+button{cursor:pointer}
+a{color:inherit}
+:focus-visible{outline:2px solid var(--water);outline-offset:2px}
+.num{font-variant-numeric:tabular-nums;white-space:nowrap}
+.sr{position:absolute;width:1px;height:1px;overflow:hidden;clip-path:inset(50%)}
+.tapis{background:linear-gradient(var(--tapis),var(--tapis)),var(--paper);color:var(--tapis-texte)}   /* posé sur le papier : jamais transparent sur le contenu (tiroir mobile) */
+[hidden]{display:none !important}
+
+/* ------------------------------------------------------------------ ossature */
+.app{display:grid;grid-template-columns:264px minmax(0,1fr);grid-template-rows:auto minmax(0,1fr);height:100dvh}
+.rail{grid-row:1 / -1;overflow-y:auto;overflow-x:hidden;padding:0 0 24px}
+.barre{grid-column:2}
+.contenu{grid-column:2;min-height:0;position:relative}
+.ico{width:18px;height:18px;fill:none;stroke:currentColor;stroke-width:1.6;stroke-linecap:round;stroke-linejoin:round;flex:none}
+
+/* une vue à la fois : celle de html[data-vue], posé par le script en tête de page puis tenu à jour par site.js ;
+   une règle par vue de commun.modele.VUES (tests/test_gabarit.py le vérifie) */
+.vue{height:100%}
+html:not(.sans-js) .contenu > .vue{display:none}
+html[data-vue="plan"] .contenu > .vue[data-vue="plan"],
+html[data-vue="coupes"] .contenu > .vue[data-vue="coupes"],
+html[data-vue="iso"] .contenu > .vue[data-vue="iso"],
+html[data-vue="camera"] .contenu > .vue[data-vue="camera"],
+html[data-vue="plans"] .contenu > .vue[data-vue="plans"],
+html[data-vue="decoupe"] .contenu > .vue[data-vue="decoupe"],
+html[data-vue="montage"] .contenu > .vue[data-vue="montage"],
+html[data-vue="achats"] .contenu > .vue[data-vue="achats"],
+html[data-vue="explication"] .contenu > .vue[data-vue="explication"]{display:block}
+.vue > .vide{display:grid;place-items:center;height:100%;margin:0;padding:24px;background:var(--panel);color:var(--muted);font:500 17px var(--ui);text-align:center}
+
+/* ------------------------------------------------------------------ menu de gauche : pièces et documents */
+.rail-tete{display:flex;align-items:center;gap:4px;height:48px;padding:0 6px 0 16px;border-bottom:1px solid var(--tapis-ligne)}
+.rail-accueil{flex:1;min-width:0;display:flex;align-items:center;gap:9px;font:600 16.5px var(--ui);text-decoration:none;white-space:nowrap}
+.rail-accueil .txt{overflow:hidden;text-overflow:ellipsis}
+.rail-btn{display:grid;place-items:center;width:36px;height:36px;border:0;border-radius:4px;background:none;color:var(--tapis-muet);flex:none}
+.rail-btn:hover{background:var(--tapis-survol);color:var(--tapis-texte)}
+.app.rail-reduit .si-deplie,.app:not(.rail-reduit) .si-reduit{display:none}   /* #b-rail : ouvrir quand il est réduit, réduire sinon */
+.rail-fermer{display:none}
+.arbre{list-style:none;margin:0;padding:8px 0 0}
+.arbre > li{padding:3px 0}
+.arbre ul{list-style:none;margin:0;padding:0}
+.arbre a{display:flex;align-items:center;gap:9px;border-left:3px solid transparent;text-decoration:none}
+.arbre .piece{padding:6px 16px 6px 13px;font:600 17px var(--ui)}
+.arbre .piece.ici .ico{color:var(--repere)}
+.arbre ul a{padding:5px 16px 5px 39px;font-size:15px;color:var(--tapis-muet)}
+.arbre ul a .ico{width:16px;height:16px}
+.arbre a:hover{color:var(--tapis-texte);background:var(--tapis-survol)}
+.arbre ul a[aria-current="page"]{color:var(--tapis-texte);font-weight:600;border-left-color:var(--repere);background:var(--tapis-survol)}
+.arbre a .num{margin-left:auto;font:500 13.5px var(--ui);color:var(--tapis-muet)}
+.rail-pied{margin:10px 0 0;padding-top:8px;border-top:1px solid var(--tapis-ligne);font-size:15px}
+.rail-pied a{display:flex;align-items:center;gap:9px;padding:8px 16px 8px 13px;border-left:3px solid transparent;text-decoration:none;color:var(--tapis-muet)}
+.rail-pied a:hover,.rail-pied a[aria-current="page"]{color:var(--tapis-texte);background:var(--tapis-survol)}
+.rail-pied a[aria-current="page"]{font-weight:600;border-left-color:var(--repere)}
+@media (min-width:920px){            /* menu réduit : icônes seules (sans JavaScript, il reste déplié) */
+  html:not(.sans-js) .app.rail-reduit{grid-template-columns:56px minmax(0,1fr)}
+  html:not(.sans-js) .rail-reduit .rail .txt,html:not(.sans-js) .rail-reduit .arbre ul{display:none}
+  html:not(.sans-js) .rail-reduit .rail-tete{flex-direction:column-reverse;height:auto;padding:5px 0 4px;gap:2px}
+  html:not(.sans-js) .rail-reduit .rail-accueil{flex:none;width:44px;height:40px;justify-content:center}
+  html:not(.sans-js) .rail-reduit .arbre .piece,html:not(.sans-js) .rail-reduit .rail-pied a{justify-content:center;padding:0;height:44px}
+  html:not(.sans-js) .rail-reduit .arbre .piece.ici{border-left-color:var(--repere);background:var(--tapis-survol)}
+  html:not(.sans-js) .rail-reduit .rail .ico{width:21px;height:21px}
+}
+
+/* ------------------------------------------------------------------ barre : titre, variante et version, puis onglets et options */
+.barre{display:flex;flex-direction:column;background:var(--panel);border-bottom:1px solid var(--line);container-type:inline-size}
+.b-ligne{display:flex;align-items:stretch;min-width:0}
+.b-haut{height:48px}
+.b-bas{height:40px;padding:0 10px 0 8px;border-top:1px solid var(--hair)}
+.b-menu{display:none}
+.b-titre{display:flex;align-items:center;gap:8px;padding:0 14px 0 20px;min-width:0;flex:1 1 auto;white-space:nowrap}
+.b-titre h1{margin:0;font:700 21px/1.15 var(--ui);overflow:hidden;text-overflow:ellipsis}
+.b-titre .sep{color:var(--muted);font-size:18px}
+.b-titre .doc{font:500 17.5px var(--ui);overflow:hidden;text-overflow:ellipsis}
+select.nu{appearance:none;-webkit-appearance:none;field-sizing:content;border:0;border-radius:0;padding:4px 17px 4px 0;margin:0;cursor:pointer;font:600 15.5px var(--ui);min-width:0;max-width:100%;text-overflow:ellipsis;background-color:transparent;
+  background-image:linear-gradient(45deg,transparent 50%,currentColor 50%),linear-gradient(-45deg,transparent 50%,currentColor 50%);
+  background-position:right 6px center,right 1px center;background-size:5px 5px;background-repeat:no-repeat}
+.b-titre select.nu{font:500 17.5px var(--ui)}
+.b-cases{display:flex;align-items:center;gap:6px;flex:none;padding:0 12px 0 0}
+.b-case{display:inline-flex;align-items:center;gap:7px;height:32px;padding:0 11px;border:0;border-radius:4px;background:var(--bouton);font:600 15.5px var(--ui);text-decoration:none;white-space:nowrap;min-width:0}
+.b-case > .ico{color:var(--muted)}
+a.b-case:hover,button.b-case:hover,label.b-case:hover{background:var(--bouton-survol)}
+.b-case[aria-pressed="true"],button.b-case[aria-pressed="true"]:hover{background:var(--actif);color:var(--sur-actif)}
+.b-case[aria-pressed="true"] > .ico{color:inherit}
+a.b-case[aria-current="page"]{background:var(--actif);color:var(--sur-actif)}
+a.b-case[aria-current="page"] > .ico{color:inherit}
+.b-perso{align-self:center;margin-left:auto}
+.vues{display:flex;align-items:stretch;flex:1 1 auto;min-width:0}
+.vues a{display:flex;align-items:center;gap:7px;padding:3px 12px 0;text-decoration:none;font:500 16px var(--ui);color:var(--muted);border-bottom:3px solid transparent;white-space:nowrap}
+.vues a:hover{color:var(--ink)}
+.vues a[aria-current="page"]{color:var(--actif);font-weight:600;border-bottom-color:var(--actif)}
+.vues a[aria-disabled="true"]{opacity:.45;cursor:not-allowed}   /* vue sans contenu : grisée, sa bulle dit pourquoi */
+.vues a[aria-disabled="true"]:not([aria-current]):hover{color:var(--muted)}
+.badge{display:inline-grid;place-items:center;min-width:19px;height:19px;padding:0 5px;border-radius:10px;background:var(--actif);color:var(--sur-actif);font:600 12.5px/1 var(--ui)}
+@container (max-width:720px){.vues a:not([aria-current]) span{display:none}.vues a{padding:3px 13px 0}}
+
+/* ------------------------------------------------------------------ planche : scène (dessin ou rendu) et fiche */
+.planche{display:grid;grid-template-columns:minmax(0,1fr) 336px;height:100%}
+.scene{position:relative;min-width:0;min-height:0;overflow:hidden;background:var(--panel);touch-action:none;container-type:size;user-select:none;-webkit-user-select:none}
+.scene > .element{position:absolute;inset:0;display:grid;place-items:center}
+.element > svg{position:absolute;inset:0;width:100%;height:100%;display:block}
+.scene.dessin{cursor:grab}
+.scene.dessin.mesure{cursor:crosshair}
+.scene svg text{font-family:var(--texte);fill:var(--ink)}
+.scene .dimt,.scene .passt{font-family:var(--ui) !important;font-weight:600;font-variant-numeric:tabular-nums}   /* cotes des dessins : pas de police à chasse fixe */
+.scene .zone{fill:var(--actif);fill-opacity:.05;stroke:var(--actif);stroke-width:1.6;stroke-dasharray:5 3;stroke-opacity:.9;cursor:pointer;vector-effect:non-scaling-stroke}   /* meuble à toucher sur le plan */
+.scene .zone:hover{fill-opacity:.14}
+.scene .zone.ici{fill:var(--repere);fill-opacity:.35;stroke-opacity:1;stroke-dasharray:none;stroke-width:2.4}
+.scene .trait-mesure{stroke:var(--water);stroke-width:1.6;vector-effect:non-scaling-stroke}
+.scene .pt-mesure{fill:var(--water)}
+.scene .trace-mesure{pointer-events:none}
+.scene .txt-mesure{fill:var(--water) !important;font-family:var(--ui) !important;font-weight:600;font-variant-numeric:tabular-nums;paint-order:stroke;stroke:var(--panel);stroke-width:3px;stroke-linejoin:round}
+
+/* outils posés sur la scène : zoom et mesure */
+.outils{position:absolute;left:12px;top:12px;display:flex;flex-wrap:wrap;gap:6px;z-index:3;max-width:calc(100% - 24px)}
+.outils .groupe{display:flex;border:1px solid var(--line);border-radius:4px;background:var(--panel);overflow:hidden}
+.outils button{display:inline-flex;align-items:center;justify-content:center;gap:6px;border:0;background:none;padding:7px 11px;font:500 15px var(--ui);min-height:36px;min-width:36px;border-left:1px solid var(--line)}
+.outils .groupe button:first-child{border-left:0}
+.outils button:hover{background:var(--paper)}
+.outils button[aria-pressed="true"]{background:var(--actif);color:var(--sur-actif)}
+
+/* bandeau du bas de la scène : variantes comparées, mesure au milieu */
+.bandeau{position:absolute;left:12px;right:12px;bottom:12px;z-index:3;pointer-events:none;display:flex;justify-content:space-between;gap:8px;font:500 14px var(--ui)}
+.bandeau span{background:var(--panel);border:1px solid var(--line);border-radius:3px;padding:3px 9px}
+.bandeau .mes{color:var(--water);border-color:var(--water);font-variant-numeric:tabular-nums}
+.bandeau .etiq-var{background:var(--ink);border-color:var(--ink);color:var(--panel);font-weight:600}
+.bandeau .etiq-var.manque{background:var(--panel);border-color:var(--line);color:var(--muted);font-weight:500}
+
+/* comparaison de deux variantes : rideau ; l'élément de la variante comparée, cloné de son autre page, porte la classe b.
+   Les deux éléments couvrent la scène sans être zoomés (seuls leur SVG ou leur cadre le sont) : découpés à --pos, la
+   coupure reste sous la poignée à tout zoom. Pas de meuble à toucher en comparaison (maquette). */
+.compare > .element:not(.b){clip-path:inset(0 calc(100% - var(--pos,50%)) 0 0)}
+.compare > .element.b{clip-path:inset(0 0 0 var(--pos,50%))}
+.scene.compare .zone{display:none}
+.poignee{position:absolute;top:0;bottom:0;left:var(--pos,50%);width:44px;margin-left:-22px;z-index:2;cursor:ew-resize;touch-action:none;display:grid;place-items:center}
+.poignee::before{content:"";position:absolute;top:0;bottom:0;left:21px;width:2px;background:var(--actif)}
+.poignee::after{content:"‹ ›";position:relative;background:var(--actif);color:var(--sur-actif);font:700 15px/1 var(--ui);padding:7px 7px 8px;border-radius:4px;letter-spacing:1px}
+
+/* rendus */
+.scene.image{background:var(--paper);cursor:grab}
+.cadre{position:relative;width:min(100cqw,calc(100cqh * 4 / 3));aspect-ratio:4 / 3;overflow:hidden;background:var(--panel);transform-origin:0 0}
+.rendu{position:absolute;inset:0;margin:auto}   /* figure.cadre.rendu : un seul élément, centré dans la scène */
+.rendu img{position:absolute;inset:0;width:100%;height:100%;display:block}
+.rendu .calque{-webkit-mask-size:100% 100%;mask-size:100% 100%;pointer-events:none}
+
+/* fiche : panneau latéral (ordinateur) ou feuille basse repliable (mobile) */
+.fiche{border-left:1px solid var(--line);background:var(--paper);overflow-y:auto;min-height:0;display:flex;flex-direction:column}
+.fiche-titre{margin:0;font:700 19px/1.25 var(--ui)}
+.fiche-tete{display:flex;align-items:center;gap:10px;padding:14px 16px 10px;border:0;background:none;text-align:left;width:100%;cursor:default}
+.fiche-nom{flex:1;min-width:0}
+.fiche-tete .chevron{display:none}
+.fiche-corps{padding:0 16px 20px;font-size:15px}
+.fiche-corps h3{margin:18px 0 6px;font:600 15px var(--ui);color:var(--muted)}
+.fiche-corps p{margin:6px 0}
+.fiche-corps .cotes{font:600 15.5px var(--ui);font-variant-numeric:tabular-nums;margin:0 0 8px}
+.fiche .actions{display:flex;flex-wrap:wrap;gap:6px;margin:10px 0 4px}
+.segments{display:flex;flex-wrap:wrap;gap:6px;margin:6px 0}
+.segments button{display:inline-flex;align-items:center;gap:6px;border:1px solid var(--line);background:var(--panel);border-radius:4px;padding:6px 11px;font:500 15px var(--ui);text-align:left;min-height:36px}
+.segments button[aria-pressed="true"]{background:var(--actif);border-color:var(--actif);color:var(--sur-actif)}
+.segments button[disabled]{opacity:.45;cursor:not-allowed}
+/* calques du plan : boutons à bascule (aria-pressed, jamais de cases à cocher) ; la section porte sans-<calque> */
+.calques{display:flex;flex-wrap:wrap;gap:6px}
+.calques button{display:inline-flex;align-items:center;gap:6px;border:1px solid var(--line);background:var(--panel);border-radius:4px;padding:5px 10px;font:500 15px var(--ui);min-height:34px}
+.calques button[aria-pressed="true"]{background:var(--actif);border-color:var(--actif);color:var(--sur-actif)}
+.sans-cotes .scene :is(.dim,.dimt){display:none}
+.sans-passages .scene :is(.pass,.passm,.passt){display:none}
+.sans-coupes .scene :is(.sec,.sect){display:none}
+.sans-voisines .scene :is(.room,.roomt){display:none}
+.sans-annotations .scene :is(.lblx,.lbls){display:none}
+/* « Position » : mini-plan, trait de la coupe courante, points de vue */
+.mini{position:relative;border:1px solid var(--line);background:var(--panel);border-radius:4px;margin:6px 0 4px;padding:26px 30px}
+.mini svg{display:block;width:100%;height:auto;max-height:230px}
+.mini svg text,.mini .dim,.mini .dimt,.mini .pass,.mini .passm,.mini .room,.mini .doorzone,.mini .swing,.mini .hook,.mini .indiap{display:none}
+.mini .sol{fill:var(--line);fill-opacity:.18;stroke:var(--ink);stroke-width:4;stroke-linejoin:round}
+.mini .ouv{stroke:var(--panel);stroke-width:6}
+.mini .sec{stroke-opacity:.25}
+.mini .sec.ici{stroke-opacity:1;stroke-width:5}
+.mini .cam{fill:var(--coupe)}
+.mini .cone{fill:var(--coupe);fill-opacity:.22;stroke:var(--coupe);stroke-width:1.5}
+.mini .pdv{opacity:.3}
+.mini .pdv.ici{opacity:1}
+.btn{display:inline-flex;align-items:center;gap:7px;border:1px solid var(--line);background:var(--panel);border-radius:4px;padding:6px 12px;font:500 15.5px var(--ui);text-decoration:none;min-height:36px}
+.btn:hover{border-color:var(--ink)}
+.btn[aria-pressed="true"],.btn.plein{background:var(--actif);border-color:var(--actif);color:var(--sur-actif)}
+.btn[disabled]{opacity:.45;cursor:not-allowed}
+.remarque{font-size:14px;color:var(--muted)}
+
+/* ------------------------------------------------------------------ vue de lecture (Explication, Découpe, Montage, Achats) et pages simples */
+.lecture{height:100%;overflow-y:auto;padding:28px 32px 72px}
+.lecture > *{max-width:820px}
+.lecture h2{font:700 24px/1.2 var(--ui);margin:40px 0 10px}
+.lecture h2:first-child{margin-top:0}
+.lecture p{margin:8px 0}
+.lecture .sous-titre{margin:-6px 0 16px;color:var(--muted);font:500 16.5px var(--ui)}
+
+/* ------------------------------------------------------------------ panneau « Personnaliser » : une section par option du document */
+.voile{position:fixed;inset:0;z-index:40}
+/* un nuancier long (52 teintes pour l'entrée) fait défiler le panneau : le titre et la croix restent en haut, la valeur
+   choisie (.info) reste en bas tant que les boutons de son option défilent ; scroll-padding garde un bouton atteint au
+   clavier hors de dessous l'un et l'autre */
+.feuille{position:fixed;z-index:41;right:16px;top:96px;width:384px;max-height:calc(100dvh - 116px);overflow-y:auto;scroll-padding:56px 0 96px;background:var(--panel);border:1px solid var(--ink);border-radius:6px;padding:16px 18px 18px}
+.feuille .tete-feuille{position:sticky;top:-16px;z-index:1;display:flex;align-items:flex-start;justify-content:space-between;margin:-16px -18px 0;padding:16px 8px 0 18px;background:var(--panel)}
+.feuille h2{margin:0 0 2px;font:700 21px var(--ui)}
+.feuille .fermer{flex:none;margin-top:-8px;border:0;background:none;display:grid;place-items:center;width:36px;height:36px;border-radius:4px}
+.feuille .fermer:hover{background:var(--paper)}
+.feuille section{border-top:1px solid var(--line);margin-top:14px}
+.feuille h3{margin:14px 0 8px;font:600 17px var(--ui)}
+.feuille h3 span{font:400 14.5px var(--texte);color:var(--muted)}
+.feuille h4{margin:12px 0 6px;font:600 14.5px var(--ui);color:var(--muted)}
+.feuille .info{position:sticky;bottom:-18px;z-index:1;margin:10px -18px 0;padding:8px 18px 10px;background:var(--panel);border-top:1px solid var(--line);font-size:15px}
+.feuille .actions{margin:16px 0 0}
+.feuille .btn:disabled{opacity:.45}
+.nuances{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px}
+.nuances button{border:1px solid var(--line);border-radius:4px;background:var(--panel);padding:0 0 5px;font:500 13.5px/1.2 var(--ui);overflow:hidden}
+.nuances button i{display:block;height:38px;background:var(--c);margin-bottom:5px}
+.choix-opt{display:flex;flex-wrap:wrap;gap:8px}
+.choix-opt button{display:inline-flex;align-items:center;gap:8px;border:1px solid var(--line);border-radius:4px;background:var(--panel);padding:6px 12px 6px 7px;font:500 15.5px var(--ui);min-height:38px}
+.choix-opt button i{width:22px;height:22px;border-radius:3px;border:1px solid var(--line)}
+.nuances button[aria-pressed="true"],.choix-opt button[aria-pressed="true"]{border-color:var(--actif);box-shadow:0 0 0 1px var(--actif)}
+
+/* ------------------------------------------------------------------ mobile : une barre en haut, les onglets en bas */
+@media (max-width:919px){
+  :root{--bas:calc(58px + env(safe-area-inset-bottom))}
+  .app{grid-template-columns:minmax(0,1fr);padding-bottom:var(--bas)}
+  .app.sans-onglets{padding-bottom:0}
+  .barre,.contenu{grid-column:1}
+  .barre{display:grid;grid-template-columns:auto minmax(0,1fr) auto auto;align-items:stretch;height:54px;container-type:normal}
+  .b-ligne{display:contents}
+  /* tiroir : caché aussi au clavier tant qu'il est fermé */
+  .rail{position:fixed;inset:0;z-index:50;transform:translateX(-102%);visibility:hidden;transition:transform .2s ease,visibility 0s .2s}
+  .rail-ouvert .rail{transform:none;visibility:visible;transition:transform .2s ease}
+  .rail-reduire{display:none}
+  .rail-fermer{display:block;border:1px solid var(--tapis-muet);background:none;color:var(--tapis-texte);border-radius:4px;padding:5px 12px;font:500 16px var(--ui);margin-right:6px}
+  .arbre .piece{padding-top:9px;padding-bottom:9px;font-size:18.5px}
+  .arbre ul a{padding-top:10px;padding-bottom:10px;font-size:16.5px}
+  .b-menu{display:grid;place-items:center;width:50px;border:0;border-right:1px solid var(--line);background:none;padding:0}
+  .b-menu .ico{width:23px;height:23px}
+  .b-cases.deux-choix .version{display:none}   /* base + variante comparée : le titre garde sa place, l'historique reste dans le menu */
+  .b-titre{padding:0 6px 0 11px;flex-direction:column;align-items:flex-start;justify-content:center;gap:0}
+  .b-titre h1{font-size:18.5px;max-width:100%}
+  .b-titre .sep{display:none}
+  .b-titre .doc,.b-titre select.nu{font:500 14.5px var(--ui);color:var(--muted);padding-top:0;padding-bottom:0;max-width:100%}
+  .b-cases{gap:4px;padding:0 6px 0 0}
+  .b-case{height:32px;padding:0 8px;font-size:15px}
+  .b-case .lib,.b-cases label .ico,.b-case.version .ico{display:none}
+  .b-case select.nu{font-size:15px;max-width:27vw}
+  .b-perso{align-self:stretch;height:auto;width:46px;padding:0;justify-content:center;border-left:1px solid var(--line);border-radius:0;background:none;gap:0;position:relative}
+  .b-perso .badge{position:absolute;top:7px;right:5px;min-width:17px;height:17px;font-size:11.5px}
+  .voile{background:rgb(10 16 20 / .18)}
+  .long{display:none}
+  .vues{position:fixed;left:0;right:0;bottom:0;z-index:20;height:var(--bas);padding:0 0 env(safe-area-inset-bottom);border-top:1px solid var(--line);background:var(--panel)}
+  .vues a{flex:1;flex-direction:column;justify-content:center;gap:2px;padding:0 2px;font:500 13px var(--ui);border-bottom:0;border-top:3px solid transparent;margin-top:-1px;min-width:0}
+  .vues a .ico{width:22px;height:22px}
+  .vues a[aria-current="page"]{border-top-color:var(--actif)}
+  .planche{display:block;position:relative}
+  .planche .scene{position:absolute;inset:0 0 48px 0}
+  .fiche{position:absolute;left:0;right:0;bottom:0;z-index:6;border-left:0;border-top:1px solid var(--line);max-height:48px;overflow:hidden;transition:max-height .22s ease;background:var(--panel)}
+  .fiche.ouverte{max-height:54%;overflow-y:auto}
+  .fiche-titre{font-size:17px}
+  .fiche-tete{padding:0 14px;min-height:47px;cursor:pointer;flex:none}
+  .fiche-nom{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .fiche.ouverte .fiche-nom{white-space:normal}
+  .fiche-tete .chevron{display:block;width:10px;height:10px;border-left:2px solid var(--ink);border-top:2px solid var(--ink);transform:rotate(45deg);margin:4px 4px 0}
+  .fiche.ouverte .chevron{transform:rotate(225deg);margin-top:-4px}
+  .fiche-corps{padding:0 14px 18px}
+  .lecture{padding:18px 16px 48px}
+  .lecture h2{font-size:21px;margin-top:32px}
+  .feuille{left:0;right:0;top:auto;bottom:0;width:auto;max-height:58dvh;border-radius:8px 8px 0 0;border-width:1px 0 0;padding-bottom:calc(18px + env(safe-area-inset-bottom))}
+  .feuille .info{bottom:calc(-18px - env(safe-area-inset-bottom));padding-bottom:calc(10px + env(safe-area-inset-bottom))}
+  .outils{left:8px;top:8px}
+  .bandeau{left:8px;right:8px;bottom:8px}
+}
+@media (prefers-reduced-motion:reduce){*{transition:none !important}}
+
+/* ------------------------------------------------------------------ sans JavaScript : la page se lit de haut en bas
+   Le menu déplié en tête, la barre sans ses commandes, puis toutes les vues à la suite, chaque élément à sa taille. */
+.sans-js .app{display:block;height:auto;padding-bottom:0}
+.sans-js .rail{position:static;transform:none;visibility:visible;overflow:visible;padding-bottom:8px}
+.sans-js .rail-btn,.sans-js .rail-fermer,.sans-js .b-menu,.sans-js .b-bas,.sans-js .b-cases > :not(.version),
+.sans-js .outils,.sans-js .bandeau,.sans-js .segments,.sans-js .fiche-tete .chevron{display:none}
+.sans-js .barre{display:flex;height:auto}
+.sans-js .b-haut{display:flex}
+.sans-js .contenu > .vue{height:auto;border-top:6px solid var(--line)}
+.sans-js .planche,.sans-js .lecture,.sans-js .vue > .vide{height:auto}
+.sans-js .lecture{overflow:visible}
+.sans-js .planche .scene{position:static;overflow:visible;container-type:normal;touch-action:auto;user-select:auto;-webkit-user-select:auto}
+.sans-js .scene > .element{position:static;display:block}
+.sans-js .element > svg{position:static;height:auto;max-height:80vh}
+.sans-js .fiche{position:static;max-height:none;overflow:visible}
+/* plusieurs éléments (coupes) : chaque fiche porte son titre, celui de l'en-tête ne nommerait que le premier */
+.sans-js .fiche:has(.fiche-element + .fiche-element) .fiche-titre{display:none}
+.sans-js .fiche-corps:has(> .fiche-element + .fiche-element) > .fiche-element::before{content:attr(data-titre);display:block;margin:14px 0 4px;font:600 15px var(--ui)}
+
+/* ------------------------------------------------------------------ pages communes : accueil, journal, historiques, Explication
+   Les jetons (--ink, --ui, --tapis…) sont ceux du début de la feuille. Ce bloc reprend, sans changer le rendu, les
+   styles que la construction écrivait dans un <style> au milieu des pages. */
+.lecture > .accueil{max-width:1120px}
+.tapis-plan{margin:16px 0 8px;padding:clamp(12px,2.6vw,30px);border-radius:6px}
+.plan-appart{display:block;width:100%;height:auto;max-height:min(62vh,620px);margin:0 auto}
+.tapis-plan .pl-hors{fill:var(--tapis-texte)}
+.tapis-plan .pl-nord{stroke:var(--tapis-texte)}
+.lecture .chapo{font-size:19px;line-height:1.5;max-width:720px;margin:0 0 8px}
+.lecture .sous-titre{margin:0 0 12px;color:var(--muted);font:500 16.5px var(--ui)}
+.lecture h3{font:700 18px var(--ui);margin:22px 0 6px}
+.fil{list-style:none;margin:0;padding:0}
+.fil li{display:grid;grid-template-columns:92px minmax(0,1fr);gap:0 16px;padding:12px 0;border-bottom:1px solid var(--line)}
+.fil li[hidden],.journee[hidden],.filtre[hidden]{display:none}
+.fil .quand{font:500 14.5px var(--ui);font-variant-numeric:tabular-nums;color:var(--muted);padding-top:1px}
+.fil .quand b{display:block;color:var(--ink);font-size:16px;font-weight:600}
+.fil .ou{font:600 15px var(--ui);margin-bottom:2px}
+.fil .ou a{text-decoration:none}
+.fil .ou a:hover{text-decoration:underline}
+.fil p{margin:0;font-size:15.5px}
+.lecture .jour{font:700 18px var(--ui);margin:28px 0 0;padding-bottom:6px;border-bottom:2px solid var(--ink);position:sticky;top:-28px;background:var(--paper);z-index:1}
+.filtre{display:flex;align-items:center;gap:8px;margin:14px 0 4px;font:500 15.5px var(--ui)}
+.filtre select{font:inherit;min-height:36px;padding:4px 8px;border:1px solid var(--line);border-radius:4px;background:var(--panel);color:var(--ink)}
+.figees{list-style:none;display:flex;flex-wrap:wrap;gap:6px 22px;margin:8px 0 20px;padding:0;font:500 15.5px var(--ui);font-variant-numeric:tabular-nums}
+.figees .date{color:var(--muted)}
+/* plan de l'appartement de l'accueil (classes pl-*, dessinées par commun/appartement.py) */
+.pl-masse{fill:var(--ink);stroke:var(--ink);stroke-width:50;stroke-linejoin:miter}
+.pl-piece{fill:var(--panel);stroke:var(--ink);stroke-width:6;stroke-linejoin:miter;transition:fill .12s}
+.pl-piece.inerte{fill:var(--hair)}
+a:hover>.pl-piece,a:focus-visible>.pl-piece{fill:color-mix(in srgb,var(--repere) 32%,var(--panel))}
+.pl-baie{fill:var(--panel);pointer-events:none}
+.pl-arc{fill:none;stroke:var(--ink);stroke-width:1.2;vector-effect:non-scaling-stroke;pointer-events:none}
+.pl-vitre{fill:var(--glass);stroke:var(--ink);stroke-width:1;vector-effect:non-scaling-stroke;pointer-events:none}
+.pl-nom{font:600 29px var(--ui);fill:var(--ink);text-anchor:middle;pointer-events:none}
+.pl-cote{font:500 18px var(--ui);font-variant-numeric:tabular-nums;fill:var(--muted);text-anchor:middle;pointer-events:none}
+.pl-cote.serre{font-size:16px}
+.pl-petit{font:500 17px var(--ui);fill:var(--muted);text-anchor:middle;pointer-events:none}
+.pl-nord{fill:none;stroke:var(--muted);stroke-width:1.4;vector-effect:non-scaling-stroke}
+
+/* Explication, repris de la maquette : chapô, chiffres clés, tableaux, points à vérifier */
+.tete-doc{display:grid;grid-template-columns:minmax(0,1.05fr) minmax(0,1fr);gap:28px;align-items:start;max-width:1120px}
+.tete-doc .cadre{width:100%;border-radius:3px}
+.chiffres{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));margin:22px 0 0;border-top:2px solid var(--ink);border-bottom:1px solid var(--line);max-width:1120px}
+.chiffres div{padding:10px 14px 12px 0}
+.chiffres div + div{border-left:1px solid var(--line);padding-left:14px}
+.chiffres dt{font:600 24px/1.2 var(--ui);font-variant-numeric:tabular-nums}
+.chiffres dd{margin:2px 0 0;font-size:14px;color:var(--muted)}
+.lecture table{border-collapse:collapse;width:100%;font-size:15px}
+.lecture th,.lecture td{text-align:left;padding:8px 10px 8px 0;border-bottom:1px solid var(--line);vertical-align:top}
+.lecture th{font:600 14.5px var(--ui);color:var(--muted)}
+.lecture td.num{font-variant-numeric:tabular-nums}
+.lecture td.d,.lecture th.d{text-align:right;padding-right:0}
+.lecture tr.total td{border-top:2px solid var(--ink);border-bottom:0;font-weight:700}
+.defile{overflow-x:auto}
+.liste{list-style:none;margin:0;padding:0;border-top:1px solid var(--line)}
+.liste li{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:4px 12px;align-items:start;padding:11px 0;border-bottom:1px solid var(--line)}
+.liste small{display:block;color:var(--muted);font-size:14px;margin-top:2px}
+.liste .prix{text-align:right;font-variant-numeric:tabular-nums;font-weight:500}
+.lecture > .tete-doc,.lecture > .chiffres{max-width:1120px}
+
+/* ------------------------------------------------------------------ Explication : mesure, cartes, tableaux (tâche 9b) */
+.lecture p,.lecture li{max-width:80ch}
+.lecture .chapo{max-width:min(72ch,100%)}
+.lecture .tete-doc > div{min-width:0}
+.lecture .tete-doc .actions{display:flex;flex-wrap:wrap;gap:6px;margin:14px 0 0}
+.lecture .tete-doc .cadre{width:100%;max-width:none}
+.lecture .tete-doc .rendu{position:relative;inset:auto}
+.lecture h2{max-width:none}
+.lecture .principes{margin:0;padding:0;list-style:none;display:grid;grid-template-columns:repeat(auto-fill,minmax(250px,1fr));gap:12px;border-top:0;max-width:1120px}
+.lecture .principes li{max-width:none;display:flex;flex-direction:column;align-items:flex-start;padding:14px 16px 16px;border:1px solid var(--line);border-radius:6px;background:var(--panel)}
+.lecture .principes h3{margin:0 0 6px;font:600 17.5px/1.3 var(--ui)}
+.lecture .principes p{margin:0 0 10px;font-size:15.5px;max-width:none}
+.lecture .principes .btn{margin-top:auto}
+.lecture .defile{max-width:820px;-webkit-overflow-scrolling:touch}
+.lecture .defile table{min-width:480px}
+.lecture td.d,.lecture th.d{padding-left:14px;white-space:nowrap}
+.lecture tr.total td{background:var(--hair)}
+.lecture > table{max-width:820px}
+.lecture > table th[scope="row"]{width:30%;color:var(--ink);font-weight:600;font-size:15px;padding-right:16px}
+.lecture .liste li{display:block}
+.lecture .liste li span{display:block}
+.lecture > .remarque{margin-top:22px;max-width:70ch}
+.lecture .defile + .remarque{margin:8px 0 0}
+.lecture .remarque + .defile{margin-top:22px}
+@media (max-width:919px){
+  .tete-doc{grid-template-columns:minmax(0,1fr);gap:14px}
+  .chiffres{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .chiffres div:nth-child(3){border-left:0;padding-left:0}
+  .chiffres div:nth-child(n+3){border-top:1px solid var(--line)}
+  .chiffres dt{font-size:21px}
+  .lecture .principes{grid-template-columns:minmax(0,1fr)}
+  .lecture .accueil{max-width:none}
+  .lecture .chapo{font-size:17.5px}
+  .fil li{grid-template-columns:minmax(0,1fr)}
+  .fil .quand{display:flex;gap:10px;margin-bottom:2px}
+  .fil .quand b{display:inline}
+  .lecture .jour{top:-18px}
+  .lecture h3{margin-top:18px}
+  .tapis-plan{padding:10px}
+  .lecture > table{display:block;overflow-x:auto}
+}

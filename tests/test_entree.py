@@ -1,0 +1,300 @@
+from pieces.entree import piece
+from pieces.entree.amenagement import document, plum, victor
+
+
+def test_piece():
+    assert piece.SOL[0] == (0, 0)
+    assert len(piece.SOL) == 8
+    assert piece.H == 250
+    assert {c.id for c in piece.CAMERAS} == {"iso_so", "iso_no", "iso_se", "banc", "couloir"}
+
+
+def test_versions():
+    assert document.VERSION == "V4.8"
+    assert victor.VERSION == "V1.5"
+    assert victor.CHANGEMENTS[0][0] == "V1.5"
+
+
+def test_cameras_communes():
+    assert not hasattr(victor, "VUES")
+
+
+def test_cameras_partagees():
+    cams = {c.id: c for c in piece.CAMERAS}
+    assert set(cams) == {"iso_so", "iso_no", "iso_se", "banc", "couloir"}
+    assert cams["iso_no"].cible == (177, 190, 60)
+    assert cams["banc"].focale == 17
+    assert cams["banc"].yeux == 112
+
+
+def test_positions_humains_victor():
+    assert victor.POSITIONS_HUMAINS == {"couloir": (150, 95), "entree": (36, 300)}
+    assert victor.HUMAINS["iso_no"] == "entree"
+
+
+# ------------------------------------------------------------------ tâche 13 : vues Plan et Coupes
+import re  # noqa: E402
+from html import escape  # noqa: E402
+
+import pytest  # noqa: E402
+
+from commun import modele  # noqa: E402
+from pieces.entree.amenagement import dessin_principale, dessin_victor, vues  # noqa: E402
+from tests.outils import RACINE, balises  # noqa: E402
+
+FIXTURES = RACINE / "tests" / "fixtures" / "entree"
+DESSINS = {
+    "principale": (document, dessin_principale, ("plan", "coupe_a", "coupe_b", "coupe_c")),
+    "victor": (victor, dessin_victor, ("plan", "coupe_a", "coupe_b", "coupe_c", "coupe_d")),
+}
+
+
+def _sans_ajouts(svg):
+    """Retire la classe plan/coupe et l'aria-label de la balise <svg> racine, seuls écarts avec les anciens dessins."""
+    tete, reste = svg.split(">", 1)
+    tete = re.sub(r' class="(plan|coupe)"', "", tete, count=1)
+    tete = re.sub(r' aria-label="[^"]*"', "", tete, count=1)
+    return tete + ">" + reste
+
+
+@pytest.mark.parametrize("variante,dessin", [(v, d) for v, (_, _, ds) in DESSINS.items() for d in ds])
+def test_dessins_inchanges(variante, dessin):
+    M, module, _ = DESSINS[variante]
+    svg = getattr(module, "plan_svg" if dessin == "plan" else dessin)(M)
+    attendu = (FIXTURES / f"{variante}-{dessin}.svg").read_text(encoding="utf-8")
+    assert svg.startswith('<svg class="plan"' if dessin == "plan" else '<svg class="coupe"')
+    assert _sans_ajouts(svg) == _sans_ajouts(attendu)
+
+
+def test_coupes():
+    assert [e.k for e in vues.vues("principale")["coupes"].elements] == ["A", "B", "C"]
+    assert [e.k for e in vues.vues("victor")["coupes"].elements] == ["A", "B", "C", "D"]
+    premier = vues.vues("principale")["coupes"].elements[0]
+    assert premier.nom == "A mur nord"
+    assert premier.titre == "Coupe A-A : mur nord"
+    assert vues.vues("principale")["coupes"].outils == ("zoom", "mesure")
+
+
+def _plan(variante):
+    v = vues.vues(variante)["plan"]
+    (e,) = v.elements
+    return v, e
+
+
+def test_plan_zones():
+    v, e = _plan("principale")
+    assert e.k == ""
+    assert len(balises(e.scene, "rect", classe="zone")) == 5
+    modeles = balises(e.fiche + v.fiche, "template")
+    assert len(modeles) == 5 and all("data-meuble" in m for m in modeles)
+    for z in balises(e.scene, "rect", classe="zone"):
+        assert {"data-meuble", "tabindex", "role", "aria-label"} <= set(z)
+    assert [z["data-meuble"] for z in balises(e.scene, "rect", classe="zone")] == [m["data-meuble"] for m in modeles]
+    assert len(balises(_plan("victor")[1].scene, "rect", classe="zone")) == 4
+    assert v.outils == ("zoom", "mesure")
+
+
+def test_modele_de_zone():
+    _, e = _plan("principale")
+    assert 'href="#coupes?k=A"' in e.fiche
+    assert 'href="#iso?k=so"' in e.fiche
+    assert "95 × 38, h 45 cm" in e.fiche
+
+
+def test_fiche_plan():
+    v, _ = _plan("principale")
+    assert "Touchez un meuble pour afficher sa fiche." in v.fiche
+    assert "Lecture du plan" not in v.fiche
+
+
+def test_calques():
+    v, e = _plan("principale")
+    boutons = balises(v.fiche, "button", **{})
+    calques = [b for b in boutons if "data-calque" in b]
+    assert [b["data-calque"] for b in calques] == ["cotes", "passages", "coupes", "voisines", "annotations"]
+    assert all(b["aria-pressed"] == "true" and b["type"] == "button" for b in calques)
+    assert 'type="checkbox"' not in v.fiche + e.scene + e.fiche
+    assert balises(v.fiche, "div", classe="calques")
+    assert "Cotes" in v.fiche and "Annotations" in v.fiche
+    assert "Légende" in v.fiche and 'class="legend"' in v.fiche
+
+
+def test_aria_label_est_la_legende():
+    _, e = _plan("principale")
+    (svg,) = balises(e.scene, "svg")
+    assert svg["aria-label"].startswith("Plan vu de dessus")
+    for k, c in zip("ABC", vues.vues("principale")["coupes"].elements):
+        assert balises(c.scene, "svg")[0]["aria-label"].startswith(f"Coupe à ")
+
+
+def test_coupes_fiche_position():
+    v = vues.vues("principale")["coupes"]
+    assert "Position" in v.fiche
+    traits = balises(v.fiche, "line", classe="sec")
+    assert [t["data-k"] for t in traits] == ["A", "B", "C"]
+    assert [t["data-k"] for t in balises(vues.vues("victor")["coupes"].fiche, "line", classe="sec")] == ["A", "B", "C", "D"]
+
+
+def test_vues_de_lecture_et_dessinees():
+    for variante in ("principale", "victor"):
+        v = vues.vues(variante)
+        assert list(v) == list(modele.VUES["amenagement"])
+        for cle in ("iso", "camera", "explication"):
+            assert v[cle].elements
+
+
+def test_document():
+    d = document.DOCUMENT
+    assert (d.piece, d.id, d.nom, d.type) == ("entree", "amenagement", "Aménagement", "amenagement")
+    assert [x.id for x in d.variantes] == ["principale", "victor"]
+    assert d.variantes[0].version == "V4.8" and d.variantes[1].version == "V1.5"
+    (teinte,) = d.options
+    assert (teinte.id, teinte.css, teinte.filtre, teinte.defaut) == ("teinte", "--india", True, plum.DEFAUT)
+    assert len(teinte.valeurs) == 52
+    india = next(x for x in teinte.valeurs if x.code == "color_india")
+    assert india.couleur == "#F5D58C" and india.groupe == "Laque de façade seulement"
+    assert "peinture à faire teinter" in india.note and india.lien == ""
+    lin = next(x for x in teinte.valeurs if x.code == "color_lin")
+    assert lin.groupe == "Laque et peinture murale" and lin.lien.endswith("2500P-S26")
+    for variante in d.variantes:
+        modele.verifier(d, d.generer(variante.id))
+
+
+def test_plan_role_group():
+    for variante, n in (("principale", 5), ("victor", 4)):
+        _, e = _plan(variante)
+        (svg,) = balises(e.scene, "svg")
+        assert svg["role"] == "group" and svg["aria-label"]
+        assert len(balises(e.scene, "rect", classe="zone")) == n
+    # sans zones, le dessin reste l'image d'origine
+    assert 'role="img"' in dessin_principale.plan_svg(document)
+
+
+# ------------------------------------------------------------------ tâche 14 : vues Iso, Caméra et Explication
+RENDUS_SITE = RACINE / "site" / "entree" / "amenagement" / "rendus"
+
+
+def test_iso():
+    for variante in ("principale", "victor"):
+        v = vues.vues(variante)["iso"]
+        assert [e.k for e in v.elements] == ["no", "ne", "so", "se"]
+        actifs = {e.k: e.actif for e in v.elements}
+        assert actifs["ne"] is False
+        assert not (RENDUS_SITE / f"{variante}-iso_ne.jpg").exists()
+        for e in v.elements:
+            assert e.actif == (RENDUS_SITE / f"{variante}-iso_{e.k}.jpg").exists()
+        so = next(e for e in v.elements if e.k == "so")
+        (fig,) = balises(so.scene, "figure")
+        imgs = balises(so.scene, "img")
+        assert imgs[0]["src"] == f"rendus/{variante}-iso_so.jpg" and imgs[0]["alt"]
+        assert imgs[1]["class"] == "calque" and imgs[1]["alt"] == ""
+        assert f"rendus/{variante}-iso_so-masque.png" in imgs[1]["style"]
+        assert "filter:url(#filtre-teinte)" in imgs[1]["style"]
+        assert "Position" in v.fiche
+        assert len(balises(v.fiche, "g", classe="pdv")) == 4
+
+
+def test_iso_alt_est_le_texte_des_rendus():
+    v = vues.vues("principale")["iso"]
+    so = next(e for e in v.elements if e.k == "so")
+    assert dict(document.RENDUS)["iso_so"] == balises(so.scene, "img")[0]["alt"]
+
+
+def test_camera_communes():
+    for variante in ("principale", "victor"):
+        v = vues.vues(variante)["camera"]
+        assert [e.k for e in v.elements] == ["banc", "couloir"]
+        assert all(e.actif for e in v.elements)
+        banc = v.elements[0]
+        assert "yeux à 112 cm, objectif 17 mm" in banc.fiche
+        assert "yeux à 160 cm, objectif 17 mm" in v.elements[1].fiche
+        assert balises(banc.scene, "img")[0]["src"] == f"rendus/{variante}-banc.jpg"
+        assert "Position" in v.fiche
+        assert len(balises(v.fiche, "g", classe="pdv")) == 2
+
+
+def _explication(variante):
+    (e,) = vues.vues(variante)["explication"].elements
+    return e.scene
+
+
+def test_explication_complete():
+    scene = _explication("principale")
+    (principes,) = re.findall(r'<ol class="principes">(.*?)</ol>', scene, re.S)
+    assert principes.count("<li>") == 5
+    total = round(sum(q * p for _, _, q, p in document.IKEA))
+    assert re.search(rf"Total.*?≈ {total} €", scene, re.S)
+    (liste,) = re.findall(r'<ul class="liste">(.*?)</ul>', scene, re.S)
+    assert liste.count("<li>") == 10
+    assert "Portes pour ce caisson" in scene
+    for variante in ("principale", "victor"):
+        texte = _explication(variante)
+        assert 'type="checkbox"' not in texte
+        for interdit in ("Copier la liste", "À venir", "Vues 3D", "·"):
+            assert interdit not in texte
+        assert "Repère : x vers l'est" in texte
+    victor_total = sum(q * p for _, _, q, p in victor.IKEA)
+    assert re.search(rf"Total.*?{victor_total:g} €", _explication("victor"), re.S)
+    (liste,) = re.findall(r'<ul class="liste">(.*?)</ul>', _explication("victor"), re.S)
+    assert liste.count("<li>") == 8
+
+
+def test_alt_sans_texte_visible():
+    for variante, M in (("principale", document), ("victor", victor)):
+        v = vues.vues(variante)
+        for cle in ("iso", "camera", "explication"):
+            for e in v[cle].elements:
+                visible = re.sub(r'\balt="[^"]*"', "", e.scene + e.fiche + v[cle].fiche)
+                for _, texte in M.RENDUS:
+                    assert escape(texte, quote=True) not in visible and texte not in visible
+
+
+def test_explication_liens_et_differences():
+    scene = _explication("principale")
+    # principe 0 (banc) : première zone du plan, `data-meuble="0"`
+    assert 'href="#plan?k=0"' in scene
+    assert scene.count("Montrer sur le plan") == len({z["principe"] for z in document.ZONES})
+    zones = [z["data-meuble"] for z in balises(vues.vues("principale")["plan"].elements[0].scene, "rect", classe="zone")]
+    for k in re.findall(r'href="#plan\?k=(\d+)"', scene):
+        assert k in zones
+    v = _explication("victor")
+    assert f"Différences avec la {victor.BASE}" in v and "Version Victor" in v
+
+
+def test_liens_internes_connus():
+    """Aucun lien relatif ne vise une page que rien ne génère (principale.html) : seulement `./` ou victor.html."""
+    for variante in ("principale", "victor"):
+        for cle, v in vues.vues(variante).items():
+            for e in v.elements:
+                for a in balises(e.scene + e.fiche + v.fiche, "a"):
+                    href = a.get("href", "")
+                    if href.startswith("#") or href.startswith("rendus/"):
+                        continue
+                    assert href in ("./", "victor.html"), (variante, cle, href)
+    assert 'href="./"' in _explication("victor")
+
+
+def test_entree_dessins_styles():
+    # chaque classe portée par un élément du plan de la principale a au moins une règle dans le CSS filtré
+    import re
+    from commun.css_dessins import css_dessins
+    (e,) = vues.vues("principale")["plan"].elements
+    classes = {c for m in re.findall(r'class="([^"]+)"', e.scene) for c in m.split()}
+    assert {"w", "room"} <= classes
+    css = css_dessins(document.DOCUMENT.css, [e.scene], ".d-entree")
+    # `zone` est stylée par commun/site.css (calque tactile) ; `plan` ne sert que de repère
+    site_css = (RACINE / "commun/site.css").read_text(encoding="utf-8")
+    sans_regle = {c for c in classes if not re.search(rf"\.{re.escape(c)}\b", css)}
+    assert sans_regle - {"plan"} <= {c for c in sans_regle if re.search(rf"\.{re.escape(c)}\b", site_css)}
+    assert {"w", "room", "floorbg", "dim", "dimt"} <= classes - sans_regle
+
+
+def test_entree_legende_et_mini_plan_styles():
+    from commun.css_dessins import css_dessins
+    # la fiche (légende, mini-plan) est lue avec les scènes : ses classes gardent leurs règles
+    v = vues.vues("principale")["plan"]
+    css = css_dessins(document.DOCUMENT.css, [v.fiche, *(e.fiche for e in v.elements)], ".d-entree")
+    assert ".d-entree .legend svg{width:26px;height:14px;flex:none}" in css
+    # le mini-plan de la fiche (sol, ouvertures) est stylé par commun/site.css
+    site_css = (RACINE / "commun/site.css").read_text(encoding="utf-8")
+    assert ".mini .sol{" in site_css and ".mini .ouv{" in site_css

@@ -7,28 +7,46 @@ site := "https://vfalduto.github.io/plans/"
 default:
     @just --list
 
-# Commit tout, pull --rebase, push puis attend le redéploiement GitHub Pages
+# Construit site/ (toutes les pièces, ou seulement celles données : just site entree/amenagement)
+site *args:
+    python3 site.py {{args}}
+
+# Construit site/ puis le sert sur http://127.0.0.1:8800/ et l'ouvre
+apercu:
+    #!/usr/bin/env bash
+    set -euo pipefail
+    python3 site.py
+    ( sleep 1; open http://127.0.0.1:8800/ ) &
+    python3 -m http.server 8800 --bind 127.0.0.1 --directory site
+
+# Construit site/ (la passerelle recopie les pages que les anciens générateurs viennent de réécrire à la racine),
+# commit tout, pull --rebase, push puis attend la publication par GitHub Action
 sync message="Mise à jour des plans":
+    python3 site.py
     git add -A
     git diff --cached --quiet || git commit -m "{{message}}"
     git pull --rebase --quiet
     git push --quiet
     @just pages-wait
 
-# Attend la fin du build GitHub Pages pour le dernier commit
+# Attend la fin de l'exécution de pages.yml pour le dernier commit
 pages-wait:
     #!/usr/bin/env bash
     set -euo pipefail
     sha=$(git rev-parse HEAD)
-    echo "Déploiement GitHub Pages de ${sha:0:7}…"
-    for _ in $(seq 1 60); do
-      read -r status commit < <(gh api repos/{{repo}}/pages/builds/latest --jq '"\(.status) \(.commit)"')
-      if [ "$commit" = "$sha" ] && [ "$status" = built ]; then echo "En ligne : {{site}}"; exit 0; fi
-      if [ "$commit" = "$sha" ] && [ "$status" = errored ]; then echo "Échec du build Pages" >&2; exit 1; fi
-      sleep 5
+    echo "Publication GitHub Actions de ${sha:0:7}…"
+    id=""
+    for _ in $(seq 1 30); do
+      id=$(gh run list --repo {{repo}} --workflow pages.yml --commit "$sha" --json databaseId --jq '.[0].databaseId // empty')
+      [ -n "$id" ] && break
+      sleep 2
     done
-    echo "Délai dépassé, vérifier : https://github.com/{{repo}}/actions" >&2
-    exit 1
+    if [ -z "$id" ]; then
+      echo "Aucune exécution de pages.yml pour ${sha:0:7} : https://github.com/{{repo}}/actions" >&2
+      exit 1
+    fi
+    gh run watch "$id" --repo {{repo}} --exit-status
+    echo "En ligne : {{site}}"
 
 # Variante A (proposition 9 V2 A figée) : modèle 3D (FreeCAD) et rendus (Blender) → cuisine-3d/*.jpg
 rendu-3d echantillons="256":
@@ -79,30 +97,46 @@ v13-apercu *vues:
 v13-figer:
     python3 3d/v13/plan.py --figer
 
-# Salon V4 : régénère salon-v4.html et les pages des meubles (étagères, enfilade) depuis 3d/salon/modele.py
-# Entrée : régénère entree-amenagement.html (plan, coupes, vues 3D) depuis 3d/entree/modele.py
+# Entrée : reconstruit les pages des deux variantes (site/entree/amenagement/) depuis pieces/entree/
 entree:
-    python3 3d/entree/plan.py
+    python3 site.py entree/amenagement
 
-# Entrée : vues 3D (Blender) depuis 3d/entree/modele.py → entree-3d/*.jpg, surfaces India en gris neutre + masques
-# *-masque.png (recolorés dans la page par le sélecteur Plum Living, courbes dans 3d/entree/plum_lut.json), puis la page
+# Entrée : rendus 3D (Blender) des deux variantes → site/entree/amenagement/rendus/<variante>-<caméra>.jpg + masques India,
+# puis la page. Ne rend que les caméras dont l'empreinte a changé (cache/empreintes.json, commun/rendu_cache.py) ; avec des
+# noms de caméras (just entree-rendu 64 banc), rend celles-là. Un seul lancement de Blender par variante.
 entree-rendu echantillons="64" *vues:
-    /Applications/Blender.app/Contents/MacOS/Blender -b --python 3d/entree/rendu.py -- {{echantillons}} {{vues}}
-    mkdir -p entree-3d
-    for f in 3d/sortie/entree-rendu-*.png; do n="$(basename "$f" .png | sed 's/entree-rendu-//')"; case "$n" in *-masque) cp "$f" "entree-3d/$n.png";; *) sips -s format jpeg -s formatOptions 85 "$f" --out "entree-3d/$n.jpg" >/dev/null;; esac; done
-    python3 3d/entree/plan.py
+    #!/usr/bin/env bash
+    set -euo pipefail
+    dest=site/entree/amenagement/rendus
+    sortie="${ENTREE_SORTIE:-3d/sortie}"   # le dossier où rendu.py écrit
+    mkdir -p "$dest"
+    for v in principale victor; do
+      cams=$(python3 -m commun.rendu_cache liste "$v" {{echantillons}} {{vues}})
+      if [ -z "$cams" ]; then echo "$v : rien à rendre"; continue; fi
+      echo "$v : $cams"
+      for c in $cams; do rm -f "$sortie/entree-$v-$c.png" "$sortie/entree-$v-$c-masque.png"; done   # aucun reste d'un ancien rendu à copier
+      ENTREE_VARIANTE="$v" "${BLENDER:-/opt/homebrew/bin/blender}" -b --python-exit-code 1 --python pieces/entree/amenagement/rendu.py -- {{echantillons}} $cams
+      for c in $cams; do
+        sips -s format jpeg -s formatOptions 85 "$sortie/entree-$v-$c.png" --out "$dest/$v-$c.jpg" >/dev/null
+        cp "$sortie/entree-$v-$c-masque.png" "$dest/$v-$c-masque.png"
+      done
+      python3 -m commun.rendu_cache noter "$v" {{echantillons}} $cams
+    done
+    python3 site.py entree/amenagement
 
-# Entrée, version Victor : régénère entree-amenagement-victor.html depuis 3d/entree/victor.py
-entree-victor:
-    python3 3d/entree/plan_victor.py
+# Entrée : aperçu rapide (16 échantillons, 800 × 600) des deux variantes → cache/apercu/entree-<variante>-<caméra>.png, sans
+# cache ni copie dans site/ ; ouvre les images
+entree-apercu *vues:
+    #!/usr/bin/env bash
+    set -euo pipefail
+    mkdir -p cache/apercu
+    for v in principale victor; do
+      ENTREE_VARIANTE="$v" ENTREE_APERCU=1 ENTREE_SORTIE="$PWD/cache/apercu" "${BLENDER:-/opt/homebrew/bin/blender}" -b --python-exit-code 1 --python pieces/entree/amenagement/rendu.py -- 16 {{vues}}
+    done
+    images=$(ls cache/apercu/entree-*.png | grep -v -- '-masque.png')
+    open $images
 
-# Entrée, version Victor : vues 3D (Blender) → entree-victor-3d/*.jpg + masques India, puis regénère la page
-entree-victor-rendu echantillons="64" *vues:
-    ENTREE_MODELE=victor /Applications/Blender.app/Contents/MacOS/Blender -b --python 3d/entree/rendu.py -- {{echantillons}} {{vues}}
-    mkdir -p entree-victor-3d
-    for f in 3d/sortie/entree-victor-rendu-*.png; do n="$(basename "$f" .png | sed 's/entree-victor-rendu-//')"; case "$n" in *-masque) cp "$f" "entree-victor-3d/$n.png";; *) sips -s format jpeg -s formatOptions 85 "$f" --out "entree-victor-3d/$n.jpg" >/dev/null;; esac; done
-    python3 3d/entree/plan_victor.py
-
+# Salon V4 : régénère salon-v4.html et les pages des meubles (étagères, enfilade) depuis 3d/salon/modele.py
 salon:
     python3 3d/salon/plan.py
     python3 3d/salon/etageres.py
@@ -141,3 +175,7 @@ achats port="8765":
 # Recherches Leboncoin : tests (sans réseau)
 achats-tests:
     cd .claude/skills/lbc && uv run -q --no-project --with pytest --with lbc==1.1.7 pytest -q tests
+
+# Tests du site (commun/, site.py)
+tests:
+    uv run -q --no-project --with pytest pytest -q tests
