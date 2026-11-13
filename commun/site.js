@@ -81,17 +81,19 @@ const onglets = $$("nav.vues a[data-vue]");
 const vues = sections.map(s => s.dataset.vue);   // dans l'ordre des onglets : la première est la vue par défaut
 const variantes = donnees("variantes", []);      // [[id, nom, adresse relative]]
 const base = document.body.dataset.variante || "";
+const figee = document.body.hasAttribute("data-figee");   // version figée (archive/) : jamais comparée
 let courant = null;                              // l'état montré
 const surMontrer = [];                           // fonctions (etat, section, k) appelées après chaque montrer()
 
-/* Un état valide depuis le fragment : vue inconnue → la première ; c inconnu ou égal à la base → pas de comparaison ;
-   ancien c=1 → l'autre variante (la première qui n'est pas la base). k est gardé tel quel : montrer() le vérifie. */
+/* Un état valide depuis le fragment : vue inconnue → la première ; c inconnu, égal à la base ou sur une version figée
+   → pas de comparaison ; ancien c=1 → l'autre variante (la première qui n'est pas la base). k est gardé tel quel :
+   montrer() le vérifie. */
 function lireEtat(hash) {
   const [chemin, requete = ""] = String(hash || "").replace(/^#/, "").split("?");
   const q = new URLSearchParams(requete), ids = variantes.map(v => v[0]);
   let c = q.get("c");
   if (c === "1") c = ids.find(x => x !== base) || null;
-  if (!ids.includes(c) || c === base) c = null;
+  if (figee || !ids.includes(c) || c === base) c = null;
   return {vue: vues.includes(chemin) ? chemin : vues[0], k: q.get("k") || "", c};
 }
 function fragment(etat) {
@@ -111,7 +113,7 @@ function ecrireEtat(etat, {remplace = courant !== null && etat.vue === courant.v
 
 /* Montre la vue de l'état (html[data-vue], que site.css suit) et, dans sa section, l'élément k (le premier si k est
    inconnu) avec sa fiche et son segment ; marque l'onglet courant. Les onglets portent l'état (c) pour s'ouvrir tel
-   quel dans un autre onglet. */
+   quel dans un autre onglet. L'élément cloné d'une autre variante (.element.b, comparaison) n'en fait pas partie. */
 function montrer(etat) {
   courant = etat;
   const section = sections.find(s => s.dataset.vue === etat.vue);
@@ -121,7 +123,7 @@ function montrer(etat) {
     else a.removeAttribute("aria-current");
     a.setAttribute("href", fragment({vue: a.dataset.vue, k: "", c: etat.c}));
   }
-  const elements = $$(".scene > .element[data-k]", section);
+  const elements = $$(".scene > .element[data-k]:not(.b)", section);
   // un élément grisé (bouton du segment désactivé) n'est jamais montré : k absent, inconnu ou grisé donne le premier actif
   const grises = $$(".segments button[data-k]:disabled", section).map(b => b.dataset.k);
   const actifs = elements.filter(x => !grises.includes(x.dataset.k));
@@ -202,9 +204,12 @@ function brancherGestes(hote, {glisser, zoomer, clic}) {
 
 /* Dessin SVG dans `element` : zoom par la viewBox (de 1/14 à 1,25 de la largeur d'origine, marges comprises),
    déplacement, mesure de deux points. opt.mesure(distance | null) est appelé à chaque mesure, null quand elle s'efface ;
-   opt.touche(cible) à chaque clic sans glisser hors mesure. Renvoie {zoomer(f, x, y), recadrer(), mesurer(on)}. */
+   opt.touche(cible) à chaque clic sans glisser hors mesure. Renvoie {zoomer(f, x, y), recadrer(), mesurer(on), lier(hote)} :
+   lier(hote) donne la même viewBox aux SVG d'un autre élément (la variante comparée) et y écoute les mêmes gestes,
+   jusqu'à ce qu'il quitte la page. */
 function dessin(element, opt = {}) {
-  const svgs = () => $$(":scope > svg", element), premier = svgs()[0];
+  let jumeau = null;
+  const svgs = () => [element, jumeau].filter(e => e && e.isConnected).flatMap(e => $$(":scope > svg", e)), premier = svgs()[0];
   const b = premier.viewBox.baseVal, v0 = {x: b.x - b.width * 0.03, y: b.y - b.height * 0.13, w: b.width * 1.06, h: b.height * 1.22};
   let v = {...v0}, mesure = false, pm = [];
   const trace = noeud("g", {class: "trace-mesure"}, premier);
@@ -232,24 +237,32 @@ function dessin(element, opt = {}) {
     pose(); tracer();
   }
   pose();
-  brancherGestes(element, {
+  const gestes = {
     zoomer,
     glisser(dx, dy) { const m = premier.getScreenCTM(); v.x -= dx / m.a; v.y -= dy / m.d; pose(); },
     clic(e, cible) {
       if (mesure) { const p = versPlan(e.clientX, e.clientY); pm = pm.length === 2 ? [p] : [...pm, p]; tracer(); }
       else if (opt.touche) opt.touche(cible);
     },
-  });
+  };
+  brancherGestes(element, gestes);
   return {zoomer, recadrer() { v = {...v0}; pose(); tracer(); },
-          mesurer(on) { mesure = on; if (!on) { pm = []; tracer(); } }};
+          mesurer(on) { mesure = on; if (!on) { pm = []; tracer(); } },
+          lier(hote) { jumeau = hote; brancherGestes(hote, gestes); pose(); }};
 }
 
 /* Rendu dans `element` (son figure.cadre) : déplacement et zoom par transform, échelle de 1 à 8 ;
-   apres() est appelé après chaque changement (la comparaison s'en sert pour caler le rideau). */
+   apres() est appelé après chaque changement. lier(hote) applique la même transformation au cadre d'un autre élément
+   (la variante comparée) et y écoute les mêmes gestes. */
 function vueImage(element, apres) {
   const cadre = $(":scope > .cadre", element);
-  let k = 1, tx = 0, ty = 0;
-  const pose = () => { cadre.style.transform = `translate(${tx}px,${ty}px) scale(${k})`; if (apres) apres(); };
+  let k = 1, tx = 0, ty = 0, jumeau = null;
+  const pose = () => {
+    const t = `translate(${tx}px,${ty}px) scale(${k})`, autre = jumeau && jumeau.isConnected && $(":scope > .cadre", jumeau);
+    cadre.style.transform = t;
+    if (autre) autre.style.transform = t;
+    if (apres) apres();
+  };
   function zoomer(f, cx, cy) {
     const r = element.getBoundingClientRect(), px = (cx ?? r.left + r.width / 2) - r.left, py = (cy ?? r.top + r.height / 2) - r.top;
     const k2 = Math.min(8, Math.max(1, k / f)), g = k2 / k, ox = cadre.offsetLeft, oy = cadre.offsetTop;
@@ -257,8 +270,10 @@ function vueImage(element, apres) {
     if (k === 1) tx = ty = 0;
     pose();
   }
-  brancherGestes(element, {zoomer, glisser(dx, dy) { tx += dx; ty += dy; pose(); }});
-  return {zoomer, recadrer() { k = 1; tx = ty = 0; pose(); }};
+  const gestes = {zoomer, glisser(dx, dy) { tx += dx; ty += dy; pose(); }};
+  brancherGestes(element, gestes);
+  return {zoomer, recadrer() { k = 1; tx = ty = 0; pose(); },
+          lier(hote) { jumeau = hote; brancherGestes(hote, gestes); pose(); }};
 }
 
 /* Le contrôleur d'un élément de scène, créé à son premier affichage (getScreenCTM demande qu'il soit visible). */
@@ -286,7 +301,7 @@ function controleur(element) {
   controleurs.set(element, c);
   return c;
 }
-const elementActif = section => $(".scene > .element:not([hidden])", section);
+const elementActif = section => $(".scene > .element:not([hidden]):not(.b)", section);
 
 /* Zones de meuble du plan : rect.zone[data-meuble=n] et son <template data-meuble=n data-titre> dans la fiche.
    L'état est dans l'adresse (#plan?k=n) : toucher une zone change l'adresse, montrer() fait le reste. */
@@ -378,8 +393,143 @@ function brancherScenes() {
   });
 }
 
+/* ------------------------------------------------------------------ comparaison de deux variantes
+   #<vue>?c=<variante> : la page de la variante comparée est chargée (fetch), et son élément de même vue et de même
+   repère est cloné dans la scène, après celui de la base, avec la classe b. La poignée règle le rideau : --pos sur la
+   scène, et site.css découpe chacun des deux éléments à cette position. Les éléments couvrent toute la scène et ne
+   sont jamais zoomés eux-mêmes (seuls leurs SVG ou leur cadre le sont) : la coupure reste sous la poignée à tout zoom,
+   sans le calage de la maquette. Le contrôleur de la base pilote aussi le clone (lier) : zoom, déplacement et mesure
+   valent pour les deux. Bandeau : la base à gauche, la variante comparée à droite. Une version figée n'est jamais
+   comparée. */
+const COMPARABLES = ["plan", "coupes", "iso", "camera", "plans"];   // vues où deux variantes se superposent
+const nomVariante = id => (variantes.find(v => v[0] === id) || [id, id])[1];
+
+const pages = new Map();   // id de variante -> Promise<Document>
+function chargerVariante(id) {
+  if (!pages.has(id)) {
+    const v = variantes.find(x => x[0] === id);
+    const p = (v ? fetch(v[2]) : Promise.reject(new Error("variante inconnue : " + id)))
+      .then(r => { if (!r.ok) throw new Error(`${v[2]} : ${r.status}`); return r.text(); })
+      .then(html => new DOMParser().parseFromString(html, "text/html"));
+    pages.set(id, p);
+    p.catch(() => { if (pages.get(id) === p) pages.delete(id); });   // un échec (réseau, 404, file://) se retente
+  }
+  return pages.get(id);
+}
+
+/* Rideau : la poignée se glisse (souris, doigt) ou se règle aux flèches du clavier, de 4 points, entre 4 et 96 %.
+   La position reste sur la scène quand la comparaison change de repère ou de variante. */
+const POIGNEE = '<div class="poignee" role="slider" tabindex="0" aria-label="Rideau de comparaison" aria-valuemin="0" aria-valuemax="100" aria-valuenow="50"></div>';
+function rideau(scene, poignee) {
+  const actuelle = () => parseFloat(scene.style.getPropertyValue("--pos")) || 50;
+  const poser = t => {
+    t = Math.max(4, Math.min(96, t));
+    scene.style.setProperty("--pos", t + "%");
+    poignee.setAttribute("aria-valuenow", Math.round(t));
+  };
+  poignee.addEventListener("pointerdown", e => { poignee.setPointerCapture(e.pointerId); e.preventDefault(); });
+  poignee.addEventListener("pointermove", e => {
+    if (!poignee.hasPointerCapture(e.pointerId)) return;
+    const r = scene.getBoundingClientRect();
+    poser((e.clientX - r.left) / r.width * 100);
+  });
+  poignee.addEventListener("keydown", e => {
+    if (e.key !== "ArrowLeft" && e.key !== "ArrowRight") return;
+    e.preventDefault();
+    poser(actuelle() + (e.key === "ArrowLeft" ? -4 : 4));
+  });
+  poser(actuelle());
+}
+const etiquette = (texte, manque) => {
+  const s = document.createElement("span");
+  s.className = manque ? "etiq-var manque" : "etiq-var";
+  s.textContent = texte;
+  return s;
+};
+
+let comparaison = null, tour = 0;   // la comparaison posée ou en chargement ; tour écarte un chargement dépassé
+function retirerComparaison() {
+  if (!comparaison) return;
+  for (const n of comparaison.poses) n.remove();
+  comparaison.scene.classList.remove("compare");
+  comparaison = null;
+}
+async function comparer(etat) {
+  const section = sections.find(s => s.dataset.vue === etat.vue), scene = section && $(".scene", section);
+  const el = scene && elementActif(section);
+  const voulue = Boolean(!figee && etat.c && COMPARABLES.includes(etat.vue) && el);
+  if (voulue && comparaison && comparaison.el === el && comparaison.c === etat.c) return;   // déjà posée ou en chargement
+  retirerComparaison();
+  const jeton = ++tour;
+  if (!voulue) return;
+  const c = etat.c, poses = [];
+  comparaison = {scene, el, c, poses};
+  let page = null;
+  try { page = await chargerVariante(c); } catch (e) { /* étiquette « comparaison indisponible » */ }
+  if (jeton !== tour) return;
+  const k = el.dataset.k, autre = page && $$("section.vue", page).find(s => s.dataset.vue === etat.vue);
+  const original = autre && $$(".scene > .element[data-k]", autre).find(x => x.dataset.k === k);
+  const grise = autre && $$(".segments button[data-k]:disabled", autre).some(b => b.dataset.k === k);
+  let droite;
+  if (!page) droite = etiquette(nomVariante(c) + " : comparaison indisponible", true);
+  else if (!original || grise) droite = etiquette(nomVariante(c) + " : pas d'équivalent", true);
+  else {
+    const clone = document.importNode(original, true), modele = document.createElement("template");
+    modele.innerHTML = POIGNEE;
+    const poignee = modele.content.firstElementChild, outils = $(":scope > .outils", scene);
+    clone.classList.add("b");
+    clone.hidden = false;
+    for (const z of $$(".zone", clone)) z.remove();   // les meubles se touchent sur la base seule
+    scene.insertBefore(clone, outils);
+    scene.insertBefore(poignee, outils);
+    scene.classList.add("compare");
+    poses.push(clone, poignee);
+    const ctl = controleur(el);
+    if (ctl && ctl.lier) ctl.lier(clone);
+    rideau(scene, poignee);
+    droite = etiquette(nomVariante(c));
+  }
+  const gauche = etiquette(nomVariante(base)), bandeau = $(":scope > .bandeau", scene);
+  poses.push(gauche, droite);
+  if (bandeau) { bandeau.prepend(gauche); bandeau.append(droite); }
+}
+
+/* Barre : « Comparer » pose c (la première autre variante) ou le retire, « avec » change c ; tous deux sont cachés
+   hors de COMPARABLES. Le choix de variante charge l'autre page en gardant l'état, et échange c et la base si c devient
+   la base. En comparaison, aucun meuble n'est choisi sur le plan (maquette) : k ne reste que s'il désigne un élément
+   de la vue (coupe, caméra). */
+const bComp = $("#c-comp"), choixAutre = $("#c-autre"), avec = choixAutre && choixAutre.closest("label");
+const choixVariante = $("#c-variante"), cases = $(".b-cases");
+function majBarre(etat) {
+  const comparable = !figee && COMPARABLES.includes(etat.vue);
+  if (bComp) { bComp.hidden = !comparable; bComp.setAttribute("aria-pressed", String(!!etat.c)); }
+  if (avec) { avec.hidden = !(comparable && etat.c); if (etat.c) choixAutre.value = etat.c; }
+  if (cases) cases.classList.toggle("deux-choix", Boolean(avec && !avec.hidden));
+}
+function repereEnComparaison(etat) {
+  const section = sections.find(s => s.dataset.vue === etat.vue);
+  return section && $$(".scene > .element[data-k]:not(.b)", section).some(x => x.dataset.k === etat.k) ? etat.k : "";
+}
+function brancherComparaison() {
+  if (bComp) bComp.addEventListener("click", () => {
+    const autre = (variantes.find(v => v[0] !== base) || [null])[0];
+    aller({...courant, k: repereEnComparaison(courant), c: courant.c ? null : autre});
+  });
+  if (choixAutre) choixAutre.addEventListener("change", () => aller({...courant, k: repereEnComparaison(courant), c: choixAutre.value}));
+  if (choixVariante) {
+    choixVariante.addEventListener("change", () => {
+      const v = variantes.find(x => x[0] === choixVariante.value);
+      if (!v || v[0] === base) return;
+      location.assign(v[2] + fragment({...courant, c: courant.c === v[0] ? base : courant.c}));
+    });
+    addEventListener("pageshow", () => { choixVariante.value = base; });   // retour arrière : la variante de la page
+  }
+  surMontrer.push(etat => { majBarre(etat); comparer(etat); });
+}
+
 if (sections.length) {
   brancherScenes();
+  brancherComparaison();
   for (const a of onglets) a.addEventListener("click", e => {
     if (a.getAttribute("aria-disabled") === "true") { e.preventDefault(); return; }   // vue sans contenu
     if (e.button !== 0 || e.metaKey || e.ctrlKey || e.shiftKey || e.altKey) return;     // autre onglet du navigateur
