@@ -5,6 +5,7 @@
 #
 # Cotes en cm : x vers l'est depuis le mur ouest du couloir, y vers le sud depuis son mur nord, z depuis le sol fini.
 
+from commun.modele import Changement, Document, Option, Valeur, Variante
 from pieces.entree.piece import Bloc, EP, ENVELOPPE, H, H_PORTE, MURS, PORTES, SOL, SURFACE  # noqa: F401
 
 VERSION = "V4.8"
@@ -260,3 +261,48 @@ CHANGEMENTS = [
      "à chaussures 160 × 25 avec miroir le long de la salle de bain, banc 82 × 38 avec patères face au nord. Plan et "
      "trois élévations."),
 ]
+
+
+# ------------------------------------------------------------------ le document déclaré (tâche 13)
+# DOCUMENT dépend de victor.py, qui lit ce fichier : on le construit à la première lecture (`document.DOCUMENT`),
+# pas à l'import, pour éviter l'import circulaire.
+GROUPES_TEINTE = (("Laque et peinture murale", lambda c: c[3] and c[4]),
+                  ("Laque de façade seulement", lambda c: c[3] and not c[4]),
+                  ("Peinture murale seulement", lambda c: c[4] and not c[3]))
+
+
+def _gamme(c):
+    if c[3] and c[4]:
+        return "laque de façade et peinture murale"
+    if c[3]:
+        return "laque de façade seulement, peinture à faire teinter"
+    return "peinture murale seulement, pas de laque de façade"
+
+
+def _teinte():
+    from pieces.entree.amenagement import plum
+    valeurs = tuple(Valeur(code=c[0], nom=c[1], couleur=c[2], groupe=titre, note=_gamme(c),
+                           lien=plum.URL_PEINTURE + c[4] if c[4] else "")
+                    for titre, garde in GROUPES_TEINTE for c in plum.PALETTE if garde(c))
+    return Option(id="teinte", nom="Teinte de l'entrée", surfaces=("murs", "plafond", "porte"), type="nuancier",
+                  defaut=plum.DEFAUT, valeurs=valeurs, css="--india", filtre=True,
+                  portee="Visible sur le plan, les coupes et les rendus.")
+
+
+def _changements(liste):
+    return tuple(Changement(*c) for c in liste)
+
+
+def _document():
+    from pieces.entree.amenagement import victor, vues
+    principale = Variante("principale", "Principale", VERSION, _changements(CHANGEMENTS), FIGEES_ANCIENNES)
+    var_victor = Variante("victor", "Victor", victor.VERSION, _changements(victor.CHANGEMENTS))
+    return Document(piece="entree", id="amenagement", nom="Aménagement", type="amenagement",
+                    variantes=(principale, var_victor), generer=vues.vues, options=(_teinte(),))
+
+
+def __getattr__(nom):
+    if nom == "DOCUMENT":
+        globals()["DOCUMENT"] = _document()
+        return globals()["DOCUMENT"]
+    raise AttributeError(f"module {__name__!r} has no attribute {nom!r}")
