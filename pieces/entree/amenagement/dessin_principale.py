@@ -121,7 +121,7 @@ def plan_svg(M, aria="Plan de l'entrée aménagée", zones=""):
     o.append(f'<path class="swing" d="M{pe["x0"]} {pe["y0"] - l0} A{l0} {l0} 0 0 1 {f(xj)} {pe["y0"]}"/>')
     o.append(f'<path class="swing" d="M{pe["x1"]} {pe["y0"] - l1} A{l1} {l1} 0 0 0 {f(xj)} {pe["y0"]}"/>')
     xp = (pe["x0"] + pe["x1"]) / 2
-    o.append(text(xp, 187, f'③ Penderie PAX {pe["x1"] - pe["x0"]} × 35', "lblx"))
+    o.append(text(xp, 187, f'③ Penderie PAX {pe["x1"] - pe["x0"]} × {pe["caisson"]}', "lblx"))
     o.append(text(xp, 194, f'h {pe["z1"]} + bandeau · cintres de face', "lblx"))
     # ④ meuble haut (au plafond, tireté) et peinture India (bande le long des murs peints, porte d'entrée)
     mh = M.MEUBLE_HAUT
@@ -386,7 +386,7 @@ def principes(M):
          f'bois au sud, côté porte (chevilles de chêne Ø {virg(M.PATERE["d"])}, à {M.PATERE["z"]}). Miroir à coins '
          f'arrondis (R {mi["r"]}). Il sert aussi de butée à la porte d\'entrée ouverte.'),
         ("③ Penderie PAX et angle arrondi",
-         f'Contre la face nord de la salle de bain : une penderie IKEA PAX de {lp} × 35 × {pe["z1"]}, la seule largeur qui '
+         f'Contre la face nord de la salle de bain : une penderie IKEA PAX de {lp} × {pe["caisson"]} × {pe["z1"]}, la seule largeur qui '
          "tienne dans les 84 cm du mur (un caisson de 100 mangerait l'huisserie de la salle de bain), et un bandeau "
          f'jusqu\'au plafond. Portes FORSAND de {pe["portes"][0]} et {pe["portes"][1]}. À 35 cm, les cintres ne tiennent '
          f'pas en travers : la tringle KOMPLEMENT de ce caisson a deux barres d\'avant en arrière, cintres de face '

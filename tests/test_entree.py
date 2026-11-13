@@ -34,7 +34,7 @@ def test_positions_humains_victor():
 
 # ------------------------------------------------------------------ tâche 13 : vues Plan et Coupes
 import re  # noqa: E402
-from html import escape  # noqa: E402
+from html import escape, unescape  # noqa: E402
 
 import pytest  # noqa: E402
 
@@ -99,6 +99,63 @@ def test_modele_de_zone():
     assert 'href="#coupes?k=A"' in e.fiche
     assert 'href="#iso?k=so"' in e.fiche
     assert "95 × 38, h 45 cm" in e.fiche
+
+
+def _zones_lues(variante):
+    """Pour chaque zone du plan : son rectangle (x0, y0, x1, y1) et le texte des cotes de sa fiche."""
+    _, e = _plan(variante)
+    rects = balises(e.scene, "rect", classe="zone")
+    cotes = re.findall(r'<template data-meuble="\d+"[^>]*><p class="cotes">([^<]*)</p>', e.fiche)
+    lus = []
+    for r, c in zip(rects, cotes, strict=True):
+        x, y, l, h = (float(r[a]) for a in ("x", "y", "width", "height"))
+        lus.append(((x, y, x + l, y + h), unescape(c)))
+    return lus
+
+
+# ce que montrent aujourd'hui les zones et leurs fiches (les valeurs que la tâche 13 avait recopiées de la maquette)
+ZONES_ATTENDUES = {
+    "principale": [((92, 0, 187, 38), "95 × 38, h 45 cm"), ((85, 208, 110, 374), "166 × 25, h 95 cm"),
+                   ((110, 170, 185, 208), "75 × 35, h 236 cm"),
+                   ((0, 170, 85, 208), "110 × 38, h 46, dessous à 204 cm"), ((-10, 83, 14, 160), "vantail de 77")],
+    "victor": [((73, 171, 194, 208), "121 × 37, h 53 cm"), ((73, 208, 110, 283), "75 × 35, h 236 cm"),
+               ((82, 284, 110, 373), "89 × 28, h 25 cm"), ((0, 215, 9, 350), "mur ouest de l'entrée")],
+}
+
+
+@pytest.mark.parametrize("variante", DESSINS)
+def test_zones_inchangees(variante):
+    assert _zones_lues(variante) == ZONES_ATTENDUES[variante]
+
+
+@pytest.mark.parametrize("variante", DESSINS)
+def test_zone_confrontee_a_son_meuble(variante):
+    """Chaque zone qui nomme un meuble a son emprise (sauf le bord qu'elle déclare) ; sa fiche en donne la longueur."""
+    M = DESSINS[variante][0]
+    meubles = [(z, getattr(M, z["meuble"])) for z in M.ZONES if "meuble" in z]
+    assert len(meubles) >= 3
+    for (rect, cotes), z in zip(_zones_lues(variante), M.ZONES, strict=True):
+        if "meuble" not in z:
+            continue
+        m = getattr(M, z["meuble"])
+        attendu = tuple(z.get(c, m[c]) for c in ("x0", "y0", "x1", "y1"))
+        assert rect == attendu, (variante, z["meuble"])
+        longueur = max(m["x1"] - m["x0"], m["y1"] - m["y0"])
+        assert cotes.startswith(f"{longueur:g} × "), (variante, z["meuble"], cotes)
+
+
+@pytest.mark.parametrize("variante,meuble,bord", [("principale", "BANC", "x1"), ("principale", "MEUBLE_HAUT", "y1"),
+                                                  ("victor", "PLANCHE", "y1"), ("victor", "CHAUSSURES", "z1")])
+def test_zone_suit_son_meuble(monkeypatch, variante, meuble, bord):
+    # un meuble retouché : sa zone et les cotes de sa fiche suivent, sans rien recopier
+    M = DESSINS[variante][0]
+    avant = dict(zip([z.get("meuble") for z in M.ZONES], _zones_lues(variante)))[meuble]
+    monkeypatch.setattr(M, meuble, {**getattr(M, meuble), bord: getattr(M, meuble)[bord] + 10})
+    apres = dict(zip([z.get("meuble") for z in M.ZONES], _zones_lues(variante)))[meuble]
+    assert apres != avant, (variante, meuble, bord)
+    if bord != "z1":
+        assert apres[0] != avant[0]                          # l'emprise
+    assert apres[1] != avant[1]                              # le texte des cotes
 
 
 def test_fiche_plan():
