@@ -156,7 +156,7 @@ function suivreAdresse() {
    Un « élément » de la scène (div.element) contient soit des dessins (<svg> enfants directs, qui partagent la même
    viewBox quand on en superpose plusieurs), soit un rendu (figure.cadre). Le dessin zoome par sa viewBox, le rendu
    par un transform (échelle de 1 à 8). Les gestes sont écoutés sur l'élément ; les boutons de .outils, posés à côté,
-   n'y arrivent pas. */
+   n'y arrivent pas. Au clavier, la scène se prend par Tab : flèches pour déplacer la vue, + et - pour zoomer. */
 const SVG = "http://www.w3.org/2000/svg";
 const noeud = (nom, attrs, parent) => {
   const n = document.createElementNS(SVG, nom);
@@ -246,7 +246,7 @@ function dessin(element, opt = {}) {
     },
   };
   brancherGestes(element, gestes);
-  return {zoomer, recadrer() { v = {...v0}; pose(); tracer(); },
+  return {zoomer, glisser: gestes.glisser, recadrer() { v = {...v0}; pose(); tracer(); },
           mesurer(on) { mesure = on; if (!on) { pm = []; tracer(); } },
           lier(hote) { jumeau = hote; brancherGestes(hote, gestes); pose(); }};
 }
@@ -272,7 +272,7 @@ function vueImage(element, apres) {
   }
   const gestes = {zoomer, glisser(dx, dy) { tx += dx; ty += dy; pose(); }};
   brancherGestes(element, gestes);
-  return {zoomer, recadrer() { k = 1; tx = ty = 0; pose(); },
+  return {zoomer, glisser: gestes.glisser, recadrer() { k = 1; tx = ty = 0; pose(); },
           lier(hote) { jumeau = hote; brancherGestes(hote, gestes); pose(); }};
 }
 
@@ -302,6 +302,9 @@ function controleur(element) {
   return c;
 }
 const elementActif = section => $(".scene > .element:not([hidden]):not(.b)", section);
+/* Flèche -> sens du glissement du contenu : la vue va du côté de la flèche, le dessin part de l'autre ; un appui
+   déplace d'un dixième de la scène. */
+const FLECHES = {ArrowLeft: [1, 0], ArrowRight: [-1, 0], ArrowUp: [0, 1], ArrowDown: [0, -1]}, PAS_CLAVIER = 0.1;
 
 /* Zones de meuble du plan : rect.zone[data-meuble=n] et son <template data-meuble=n data-titre> dans la fiche.
    L'état est dans l'adresse (#plan?k=n) : toucher une zone change l'adresse, montrer() fait le reste. */
@@ -378,11 +381,26 @@ function brancherScenes() {
       for (const el of $$(".scene > .element", section)) { const c = controleurs.get(el); if (c && c.mesurer) c.mesurer(on); }
       if (!on) { const m = $(".bandeau .mes", section); if (m) m.hidden = true; }
     });
+    // au clavier : la scène se prend par Tab (contour de focus dans site.css) ; seules les touches reçues par la scène
+    // elle-même la déplacent ou la zooment, pas celles d'une zone, de la poignée du rideau ni d'un bouton
+    scene.tabIndex = 0;
+    scene.setAttribute("role", "group");
+    scene.setAttribute("aria-label", "Vue : flèches pour la déplacer, + et - pour zoomer");
     scene.addEventListener("keydown", e => {
       if ((e.key === "Enter" || e.key === " ") && e.target.matches && e.target.matches("rect.zone[data-meuble]")) {
         e.preventDefault();
         toucherMeuble(section, e.target);
+        return;
       }
+      if (e.target !== scene || e.altKey || e.ctrlKey || e.metaKey) return;
+      const el = elementActif(section), c = el && controleur(el);
+      if (!c) return;
+      const r = scene.getBoundingClientRect(), sens = FLECHES[e.key];
+      if (sens) c.glisser(sens[0] * r.width * PAS_CLAVIER, sens[1] * r.height * PAS_CLAVIER);
+      else if (e.key === "+" || e.key === "=") c.zoomer(0.7);        // comme les boutons Zoomer et Dézoomer
+      else if (e.key === "-") c.zoomer(1.43);
+      else return;
+      e.preventDefault();
     });
     brancherCalques(section);
   }
