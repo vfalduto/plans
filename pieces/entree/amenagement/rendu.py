@@ -527,7 +527,16 @@ def rendre_masque(sc, fichier):
 
 
 if __name__ == "__main__":
+    inconnues = [n for n in VUES_DEMANDEES if n not in VIEWS]
+    if inconnues:
+        raise SystemExit(f"caméra inconnue : {', '.join(inconnues)}")
     vues = {n: v for n, v in VIEWS.items() if not VUES_DEMANDEES or n in VUES_DEMANDEES}
     sc = build_scene()
     for name, v in vues.items():
         rendre(sc, name, v, f"{PREFIXE}-{name}.png")
+    # un rendu qui n'a pas écrit son fichier fait échouer le lancement (la recette ne note rien)
+    attendus = [f"{PREFIXE}-{n}{suffixe}.png" for n in vues
+                for suffixe in ("", "-masque") if suffixe == "" or INDIA_MODE == "neutre"]   # sans masque si ENTREE_INDIA
+    manquants = [f for f in attendus if not os.path.exists(os.path.join(OUT, f))]
+    if manquants:
+        raise SystemExit(f"rendus manquants : {', '.join(manquants)}")

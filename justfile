@@ -91,15 +91,17 @@ entree-rendu echantillons="64" *vues:
     #!/usr/bin/env bash
     set -euo pipefail
     dest=site/entree/amenagement/rendus
+    sortie="${ENTREE_SORTIE:-3d/sortie}"   # le dossier où rendu.py écrit
     mkdir -p "$dest"
     for v in principale victor; do
       cams=$(python3 -m commun.rendu_cache liste "$v" {{echantillons}} {{vues}})
       if [ -z "$cams" ]; then echo "$v : rien à rendre"; continue; fi
       echo "$v : $cams"
-      ENTREE_VARIANTE="$v" "${BLENDER:-/opt/homebrew/bin/blender}" -b --python pieces/entree/amenagement/rendu.py -- {{echantillons}} $cams
+      for c in $cams; do rm -f "$sortie/entree-$v-$c.png" "$sortie/entree-$v-$c-masque.png"; done   # aucun reste d'un ancien rendu à copier
+      ENTREE_VARIANTE="$v" "${BLENDER:-/opt/homebrew/bin/blender}" -b --python-exit-code 1 --python pieces/entree/amenagement/rendu.py -- {{echantillons}} $cams
       for c in $cams; do
-        sips -s format jpeg -s formatOptions 85 "3d/sortie/entree-$v-$c.png" --out "$dest/$v-$c.jpg" >/dev/null
-        cp "3d/sortie/entree-$v-$c-masque.png" "$dest/$v-$c-masque.png"
+        sips -s format jpeg -s formatOptions 85 "$sortie/entree-$v-$c.png" --out "$dest/$v-$c.jpg" >/dev/null
+        cp "$sortie/entree-$v-$c-masque.png" "$dest/$v-$c-masque.png"
       done
       python3 -m commun.rendu_cache noter "$v" {{echantillons}} $cams
     done
@@ -112,7 +114,7 @@ entree-apercu *vues:
     set -euo pipefail
     mkdir -p cache/apercu
     for v in principale victor; do
-      ENTREE_VARIANTE="$v" ENTREE_APERCU=1 ENTREE_SORTIE="$PWD/cache/apercu" "${BLENDER:-/opt/homebrew/bin/blender}" -b --python pieces/entree/amenagement/rendu.py -- 16 {{vues}}
+      ENTREE_VARIANTE="$v" ENTREE_APERCU=1 ENTREE_SORTIE="$PWD/cache/apercu" "${BLENDER:-/opt/homebrew/bin/blender}" -b --python-exit-code 1 --python pieces/entree/amenagement/rendu.py -- 16 {{vues}}
     done
     images=$(ls cache/apercu/entree-*.png | grep -v -- '-masque.png')
     open $images
