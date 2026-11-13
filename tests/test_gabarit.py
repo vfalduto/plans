@@ -6,7 +6,7 @@ import json
 from outils import RACINE, balises
 
 from commun.gabarit import adresse, menu, page_document, page_simple, relatif
-from commun.modele import Passerelle, Piece, Site
+from commun.modele import VUES, Passerelle, Piece, Site
 
 
 def _charger_essai():
@@ -108,6 +108,24 @@ def test_choix_du_document():
 def test_sans_js():
     # le doctype reste en tête : sans lui, le navigateur passe en mode quirks
     assert _page().startswith('<!doctype html>\n<html lang="fr" class="sans-js">')
+
+
+def test_script_de_tete_avant_les_feuilles():
+    # pas de flash des vues : le script en ligne pose html.js et html[data-vue] avant toute feuille de style
+    for page, vues in ((_page("b"), '["plan", "coupes", "iso", "camera", "explication"]'),
+                       (page_simple(ESSAI.SITE, "Journal", "", "journal.html"), "[]")):
+        tete = _entre(page, "<head>", "</head>")
+        assert "<script>" in tete
+        assert tete.index("<script>") < tete.index("<link")
+        script = _entre(tete, "<script>", "</script>")
+        assert vues in script and "sans-js" in script and "data-vue" in script
+
+
+def test_css_une_regle_par_vue():
+    css = (RACINE / "commun/site.css").read_text(encoding="utf-8")
+    assert "html:not(.sans-js) .contenu > .vue{display:none}" in css
+    for k in {v for vues in VUES.values() for v in vues}:
+        assert f'html[data-vue="{k}"] .contenu > .vue[data-vue="{k}"]' in css, k
 
 
 def test_textes_interdits():
