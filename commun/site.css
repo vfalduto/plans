@@ -423,7 +423,7 @@ a:hover>.pl-piece,a:focus-visible>.pl-piece{fill:color-mix(in srgb,var(--repere)
 
 /* ------------------------------------------------------------------ Construction : Plans, Découpe, Montage, Achats, rendus
    Repris de la maquette : liste de débit (en cartes sur mobile), calepinage, étapes numérotées, rendus deux par ligne. */
-.lecture .cartes td.d,.lecture .cartes th.d{padding-right:18px}
+.cartes td.d,.cartes th.d{padding-right:18px}
 .debit{overflow-x:auto}
 .etapes{list-style:none;margin:0;padding:0;counter-reset:e var(--debut,0)}
 .etapes li{display:grid;grid-template-columns:34px minmax(0,1fr);gap:0 12px;padding:14px 0;border-bottom:1px solid var(--line);counter-increment:e}

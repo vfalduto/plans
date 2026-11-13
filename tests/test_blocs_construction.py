@@ -12,7 +12,7 @@ from tests.outils import RACINE, balises
 ELEVATION = DessinMeuble("elevation", "Élévation", '<svg viewBox="0 0 100 50"><rect/></svg>')
 ISO = DessinMeuble("iso", "Vue iso", '<svg viewBox="0 0 100 50"><path/></svg>', mesure=False)
 COLONNES = (Colonne("Repère", "repere"), Colonne("Pièce"), Colonne("Nb", "nombre"),
-            Colonne("Dimensions (cm)", "cote"), Colonne("Matière"), Colonne("Tirée de", "note"))
+            Colonne("Dimensions (cm)", "cote"), Colonne("Matière", "detail"), Colonne("Tirée de", "note"))
 LIGNE = ("A", "Montant", 2, "80 × 2.5", "Chêne & pin", "panneau 1")
 CSS = (RACINE / "commun" / "site.css").read_text(encoding="utf-8")
 
@@ -80,7 +80,7 @@ def test_tableau_debit():
                            '<div class="debit"><table class="cartes"><thead><tr>')
     assert [t.get("class", "") for t in balises(html, "th")] == ["", "", "d", "", "", ""]
     assert ('<td class="num"><b>A</b></td><td>Montant</td><td class="num d" data-l="×">2</td>'
-            '<td class="num large" data-l="Dimensions (cm)">80 × 2.5</td><td>Chêne &amp; pin</td>'
+            '<td class="num large" data-l="Dimensions (cm)">80 × 2.5</td><td class="large" data-l="Matière">Chêne &amp; pin</td>'
             '<td class="large remarque" data-l="Tirée de">panneau 1</td>') in html
     assert '<td class="num d" data-l="×">2,5</td>' in html
     assert html.endswith("</tbody></table></div>")
@@ -90,6 +90,12 @@ def test_tableau_debit():
         tableau_debit(COLONNES, [LIGNE[:5]])
     with pytest.raises(ValueError):
         tableau_debit((Colonne("X", "autre"),), [("a",)])
+    with pytest.raises(ValueError, match=r"Matière.*detail"):
+        tableau_debit((Colonne("Rep.", "repere"), Colonne("Pièce"), Colonne("Matière")), [])
+    amp = tableau_debit((Colonne("Pièce"), Colonne("Bois & finition", "detail"), Colonne("L & l", "cote")),
+                        [("Montant", "Chêne", 3)])
+    assert '<td class="large" data-l="Bois &amp; finition">Chêne</td>' in amp
+    assert '<td class="num large" data-l="L &amp; l">3</td>' in amp
 
 
 def test_calepinage():
