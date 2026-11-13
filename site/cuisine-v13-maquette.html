@@ -1,0 +1,164 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Cuisine V13 · Maquette 3D</title>
+<link rel="icon" href="favicon.svg" type="image/svg+xml">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wght@400;500;700;800&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+<style>
+:root{
+  --paper:#F7F8F6; --ink:#1D2A33; --muted:#5E6B73; --line:#C9D0D4; --panel:#FFFFFF; --accent:#3C524C; color-scheme:light;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --paper:#141A1F; --ink:#E4EAED; --muted:#9AA7AE; --line:#34414A; --panel:#1B2329; --accent:#8FB3A8; color-scheme:dark;
+  }
+}
+:root[data-theme="dark"]{
+  --paper:#141A1F; --ink:#E4EAED; --muted:#9AA7AE; --line:#34414A; --panel:#1B2329; --accent:#8FB3A8; color-scheme:dark;
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--paper);color:var(--ink);font:16px/1.5 Archivo,system-ui,sans-serif}
+main{max-width:1200px;margin:0 auto;padding:24px 16px 40px}
+.kicker{font:600 12px/1 "JetBrains Mono",monospace;letter-spacing:.08em;text-transform:uppercase;color:var(--muted)}
+.kicker a{color:inherit}
+h1{font-weight:800;font-size:clamp(26px,4vw,38px);margin:8px 0 4px}
+p.sous{margin:0 0 16px;color:var(--muted)}
+.vue{position:relative;height:min(72vh,760px);min-height:360px;border:1px solid var(--line);border-radius:10px;
+  overflow:hidden;background:var(--panel)}
+.vue canvas{display:block;width:100%;height:100%;touch-action:none}
+.attente{position:absolute;inset:0;display:grid;place-items:center;color:var(--muted);font:500 14px "JetBrains Mono",monospace}
+.barre{display:flex;flex-wrap:wrap;gap:8px;margin:12px 0 0}
+button{font:500 14px Archivo,sans-serif;color:var(--ink);background:var(--panel);border:1px solid var(--line);
+  border-radius:6px;padding:7px 12px;cursor:pointer}
+button[aria-pressed="true"]{background:var(--accent);border-color:var(--accent);color:var(--paper)}
+.aide{margin:10px 0 0;color:var(--muted);font-size:14px}
+</style>
+</head>
+<body>
+<main>
+  <div class="kicker"><a href="cuisine-v13.html">Cuisine V13</a> · Maquette 3D</div>
+  <h1>Maquette 3D</h1>
+  <p class="sous">Cuisine et cellier en vue isométrique, mannequin de 1,75 m au centre. Les murs côté caméra s'effacent.</p>
+  <div class="vue" id="vue"><div class="attente" id="attente">Chargement de la maquette…</div></div>
+  <div class="barre">
+    <button id="rotation" aria-pressed="true">Rotation automatique</button>
+    <button id="murs" aria-pressed="true">Murs effacés côté caméra</button>
+    <button id="iso">Revenir à la vue iso</button>
+  </div>
+  <p class="aide">Glisser pour tourner, molette ou pincement pour zoomer, clic droit (ou deux doigts) pour déplacer.</p>
+</main>
+<script src="cuisine-v13-maquette/modele.js"></script>
+<script type="importmap">
+{"imports":{"three":"https://cdn.jsdelivr.net/npm/three@0.170.0/build/three.module.js",
+            "three/addons/":"https://cdn.jsdelivr.net/npm/three@0.170.0/examples/jsm/"}}
+</script>
+<script type="module">
+import * as THREE from "three";
+import { OrbitControls } from "three/addons/controls/OrbitControls.js";
+import { GLTFLoader } from "three/addons/loaders/GLTFLoader.js";
+
+// murs, cloisons et ce qui est posé dessus : effacés quand ils sont du côté de la caméra (même règle que 3d/v13/video.py)
+const MURS = /^(mur__|allege__|linteau__|cloison__|porte__entree|ardoise__|aimant__|peinture__|socle__plinthe_|verre__|alu__|pan__|papier__|tech__)/;
+const SEUIL = 0.10;            // m
+const ELEVATION = 42;          // degrés au-dessus de l'horizon, comme la vidéo
+const DEPART = Math.atan2(5.8, -6.3);   // vue iso de la page : depuis le sud-ouest (plan : x est, z sud)
+
+const vue = document.getElementById("vue");
+const renderer = new THREE.WebGLRenderer({ antialias: true });
+renderer.setPixelRatio(Math.min(devicePixelRatio, 2));
+renderer.outputColorSpace = THREE.SRGBColorSpace;
+renderer.toneMapping = THREE.AgXToneMapping;
+renderer.shadowMap.enabled = true;
+renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+vue.appendChild(renderer.domElement);
+
+const scene = new THREE.Scene();
+const fond = () => scene.background = new THREE.Color(getComputedStyle(document.documentElement).getPropertyValue("--panel").trim());
+fond();
+matchMedia("(prefers-color-scheme: dark)").addEventListener("change", fond);
+
+const camera = new THREE.OrthographicCamera(-1, 1, 1, -1, 0.1, 200);
+const controls = new OrbitControls(camera, renderer.domElement);
+controls.enableDamping = true;
+controls.autoRotate = true;
+controls.autoRotateSpeed = 2;   // un tour en 30 s
+controls.minPolarAngle = THREE.MathUtils.degToRad(5);
+controls.maxPolarAngle = THREE.MathUtils.degToRad(88);
+
+scene.add(new THREE.HemisphereLight(0xffffff, 0x8a857b, 1.6));
+const soleil = new THREE.DirectionalLight(0xfff1e0, 2.2);
+soleil.castShadow = true;
+soleil.shadow.mapSize.set(2048, 2048);
+soleil.shadow.bias = -0.0005;
+scene.add(soleil, soleil.target);
+
+let centre = new THREE.Vector3(), taille = 1, murs = [], effacer = true;
+
+function cadrer() {
+  const w = vue.clientWidth, h = vue.clientHeight, a = w / h;
+  const demi = taille / 2;
+  camera.left = -demi * Math.max(a, 1); camera.right = demi * Math.max(a, 1);
+  camera.top = demi / Math.min(a, 1); camera.bottom = -demi / Math.min(a, 1);
+  camera.updateProjectionMatrix();
+  renderer.setSize(w, h, false);
+}
+
+function iso() {
+  const e = THREE.MathUtils.degToRad(ELEVATION), r = 20;
+  camera.position.set(centre.x + r * Math.cos(e) * Math.cos(DEPART), centre.y + r * Math.sin(e),
+                      centre.z + r * Math.cos(e) * Math.sin(DEPART));
+  camera.zoom = 1;
+  controls.target.copy(centre);
+  controls.update();
+}
+
+const bin = Uint8Array.from(atob(window.MODELE_GLB), c => c.charCodeAt(0));
+new GLTFLoader().parse(bin.buffer, "", gltf => {
+  const modele = gltf.scene;
+  modele.traverse(o => {
+    if (!o.isMesh) return;
+    o.castShadow = o.receiveShadow = true;
+    let n = o;
+    while (n && !MURS.test(n.name)) n = n.parent;
+    if (n && !murs.some(m => m.objet === n)) murs.push({ objet: n, centre: new THREE.Box3().setFromObject(n).getCenter(new THREE.Vector3()) });
+  });
+  scene.add(modele);
+  const boite = new THREE.Box3().setFromObject(modele);
+  boite.getCenter(centre);
+  const dim = boite.getSize(new THREE.Vector3());
+  taille = Math.hypot(dim.x, dim.z) * 0.92;
+  soleil.position.set(centre.x - 6, centre.y + 9, centre.z + 4);
+  soleil.target.position.copy(centre);
+  const s = soleil.shadow.camera, r = Math.hypot(dim.x, dim.y, dim.z) / 2 + 1;
+  s.left = s.bottom = -r; s.right = s.top = r; s.near = 0.1; s.far = 40;
+  cadrer(); iso();
+  document.getElementById("attente").remove();
+  renderer.setAnimationLoop(rendre);
+}, err => { document.getElementById("attente").textContent = "Maquette illisible : " + err; });
+
+const dir = new THREE.Vector3();
+function rendre() {
+  controls.update();
+  dir.subVectors(camera.position, controls.target).setY(0).normalize();
+  for (const m of murs) {
+    m.objet.visible = !effacer || (m.centre.x - centre.x) * dir.x + (m.centre.z - centre.z) * dir.z < SEUIL;
+  }
+  renderer.render(scene, camera);
+}
+
+new ResizeObserver(cadrer).observe(vue);
+const bascule = (id, f) => document.getElementById(id).addEventListener("click", e => {
+  const b = e.currentTarget, v = b.getAttribute("aria-pressed") !== "true";
+  b.setAttribute("aria-pressed", v); f(v);
+});
+bascule("rotation", v => controls.autoRotate = v);
+bascule("murs", v => effacer = v);
+document.getElementById("iso").addEventListener("click", iso);
+</script>
+</body>
+</html>
