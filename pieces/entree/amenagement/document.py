@@ -266,9 +266,6 @@ CHANGEMENTS = [
 # ------------------------------------------------------------------ le document déclaré (tâche 13)
 # DOCUMENT dépend de victor.py, qui lit ce fichier : on le construit à la première lecture (`document.DOCUMENT`),
 # pas à l'import, pour éviter l'import circulaire.
-GROUPES_TEINTE = (("Laque et peinture murale", lambda c: c[3] and c[4]),
-                  ("Laque de façade seulement", lambda c: c[3] and not c[4]),
-                  ("Peinture murale seulement", lambda c: c[4] and not c[3]))
 
 
 def _gamme(c):
@@ -281,9 +278,13 @@ def _gamme(c):
 
 def _teinte():
     from pieces.entree.amenagement import plum
+    # groupes du nuancier, selon la gamme ; ici et non en constante du module, que l'empreinte des rendus lit
+    groupes = (("Laque et peinture murale", lambda c: c[3] and c[4]),
+               ("Laque de façade seulement", lambda c: c[3] and not c[4]),
+               ("Peinture murale seulement", lambda c: c[4] and not c[3]))
     valeurs = tuple(Valeur(code=c[0], nom=c[1], couleur=c[2], groupe=titre, note=_gamme(c),
                            lien=plum.URL_PEINTURE + c[4] if c[4] else "")
-                    for titre, garde in GROUPES_TEINTE for c in plum.PALETTE if garde(c))
+                    for titre, garde in groupes for c in plum.PALETTE if garde(c))
     return Option(id="teinte", nom="Teinte de l'entrée", surfaces=("murs", "plafond", "porte"), type="nuancier",
                   defaut=plum.DEFAUT, valeurs=valeurs, css="--india", filtre=True,
                   portee="Visible sur le plan, les coupes et les rendus.")
