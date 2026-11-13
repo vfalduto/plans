@@ -527,6 +527,90 @@ function brancherComparaison() {
   surMontrer.push(etat => { majBarre(etat); comparer(etat); });
 }
 
+/* ------------------------------------------------------------------ options du document (« Personnaliser »)
+   #options liste les Option du document (nom, surfaces, type, valeurs, css, filtre, ref). Le choix de chacune est
+   mémorisé sous « <pièce>/<document>:<id> », donc partagé entre les variantes ; il est aussi gardé dans `choix`, pour
+   que la page le suive sans stockage. appliquer() pose la variable CSS sur <html> (les dessins la suivent) et, pour
+   une option à filtre, règle les pentes de #filtre-<id> : les rendus recolorés (img.calque, sous masque, portant
+   filter:url(#filtre-<id>)) suivent, clone de la comparaison compris, puisque le filtre est global à la page. */
+const options = donnees("options", []);
+const echapper = t => String(t).replace(/[&<>"]/g, c => ({"&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;"}[c]));
+const cleOption = o => `${document.body.dataset.piece}/${document.body.dataset.document}:${o.id}`;
+const valeurDe = (o, code) => o.valeurs.find(v => v.code === code);
+const choix = {};   // option.id -> code choisi
+for (const o of options) { const m = memo.lit(cleOption(o), o.defaut); choix[o.id] = valeurDe(o, m) ? m : o.defaut; }
+
+/* Applique la valeur `code` de l'option : variable CSS, filtre, puis mémoire (sauf `memoriser` faux, au chargement). */
+function appliquer(option, code, memoriser = true) {
+  const v = valeurDe(option, code) || valeurDe(option, option.defaut);
+  if (!v) return;
+  choix[option.id] = v.code;
+  if (option.css) racine.style.setProperty(option.css, v.couleur);
+  if (option.filtre) {
+    ["R", "G", "B"].forEach((c, i) => {
+      const f = $(`#filtre-${option.id} feFunc${c}`);
+      if (f) f.setAttribute("slope", (parseInt(v.couleur.substr(1 + 2 * i, 2), 16) / 255 / option.ref).toFixed(4));
+    });
+  }
+  if (memoriser) memo.pose(cleOption(option), v.code);
+}
+const nbChangees = () => options.filter(o => choix[o.id] !== o.defaut).length;
+
+function blocOption(o) {
+  const bouton = v => `<button type="button" data-v="${echapper(v.code)}" style="--c:${echapper(v.couleur)}" aria-pressed="false">` +
+    (o.type === "nuancier" ? "<i></i>" : `<i style="background:${echapper(v.couleur)}"></i>`) + `${echapper(v.nom)}</button>`;
+  const grille = o.type === "nuancier" ? "nuances" : "choix-opt";
+  const commande = [...new Set(o.valeurs.map(v => v.groupe))].map(g => (g ? `<h4>${echapper(g)}</h4>` : "") +
+    `<div class="${grille}">${o.valeurs.filter(v => v.groupe === g).map(bouton).join("")}</div>`).join("");
+  return `<section data-o="${echapper(o.id)}"><h3>${echapper(o.nom)}` +
+    (o.surfaces.length ? ` <span>(${echapper(o.surfaces.join(", "))})</span>` : "") + `</h3>${commande}<p class="info"></p>` +
+    (o.portee ? `<p class="remarque">${echapper(o.portee)}</p>` : "") + "</section>";
+}
+function brancherOptions() {
+  const panneau = $("#panneau-options"), voile = $("#voile-options"), ouvreur = $("#c-options");
+  if (!options.length || !panneau || !voile) return;
+  panneau.innerHTML = '<button type="button" class="fermer" aria-label="Fermer"><svg class="ico" viewBox="0 0 24 24" aria-hidden="true">' +
+    '<path d="M6 6l12 12M18 6L6 18"/></svg></button><h2>Personnaliser</h2>' + options.map(blocOption).join("") +
+    '<p class="actions"><button type="button" class="btn" id="b-origine">Valeurs d\'origine</button></p>';
+  const afficher = () => {
+    for (const o of options) {
+      const v = valeurDe(o, choix[o.id]), bloc = $(`section[data-o="${o.id}"]`, panneau);
+      for (const b of $$("[data-v]", bloc)) b.setAttribute("aria-pressed", String(b.dataset.v === v.code));
+      $(".info", bloc).innerHTML = `<b>${echapper(v.nom)}</b> <span class="num">${echapper(v.couleur)}</span>` +
+        (v.note ? `, ${echapper(v.note)}` : "") +
+        (v.lien ? ` <a href="${echapper(v.lien)}" target="_blank" rel="noopener">Voir la fiche</a>` : "");
+    }
+    const n = nbChangees(), pastille = $("#n-options");
+    $("#b-origine", panneau).disabled = n === 0;
+    if (pastille) {
+      pastille.hidden = n === 0;
+      pastille.textContent = n;
+      pastille.setAttribute("aria-label", `${n} option${n > 1 ? "s" : ""} modifiée${n > 1 ? "s" : ""}`);
+    }
+  };
+  for (const b of $$("[data-v]", panneau)) b.addEventListener("click", () => {
+    appliquer(options.find(o => o.id === b.closest("section").dataset.o), b.dataset.v);
+    afficher();
+  });
+  $("#b-origine", panneau).addEventListener("click", () => {
+    for (const o of options) appliquer(o, o.defaut);
+    afficher();
+  });
+  const montrerPanneau = ouvert => {
+    panneau.hidden = voile.hidden = !ouvert;
+    if (ouvreur) ouvreur.setAttribute("aria-expanded", String(ouvert));
+    if (ouvert) $(".fermer", panneau).focus();
+    else if (ouvreur && panneau.contains(document.activeElement)) ouvreur.focus();
+  };
+  if (ouvreur) { ouvreur.setAttribute("aria-haspopup", "dialog"); ouvreur.addEventListener("click", () => montrerPanneau(panneau.hidden)); }
+  $(".fermer", panneau).addEventListener("click", () => montrerPanneau(false));
+  voile.addEventListener("click", () => montrerPanneau(false));
+  document.addEventListener("keydown", e => { if (e.key === "Escape" && !panneau.hidden) montrerPanneau(false); });
+  for (const o of options) appliquer(o, choix[o.id], false);
+  afficher();
+}
+brancherOptions();
+
 if (sections.length) {
   brancherScenes();
   brancherComparaison();
