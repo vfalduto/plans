@@ -10,6 +10,7 @@ import posixpath
 import re
 import shutil
 from dataclasses import dataclass
+from html import unescape
 from pathlib import Path
 
 import pytest
@@ -52,6 +53,15 @@ class Construit:
     avant: dict
 
 
+def _communs_d_essai(racine):
+    """site.css et site.js vides s'ils manquent (tâche 5), pour que les liens de l'en-tête mènent à un fichier."""
+    for rel in ("commun/site.css", "commun/site.js"):
+        f = racine / rel
+        if not f.exists():
+            f.parent.mkdir(parents=True, exist_ok=True)
+            f.write_text("")
+
+
 @pytest.fixture(scope="module")
 def construit(tmp_path_factory):
     racine = tmp_path_factory.mktemp("racine")
@@ -62,6 +72,7 @@ def construit(tmp_path_factory):
             shutil.copytree(f, racine / f.name)
         else:
             shutil.copy2(f, racine / f.name)
+    _communs_d_essai(racine)
     site = Site(charger_site().SITE.pieces + ESSAI.SITE.pieces)
     avant = _instantane(racine)
     construire(site, (), racine, racine / "site")
@@ -82,6 +93,32 @@ def _references(html):
         if v:
             res.add(v)
     return res
+
+
+def _liens_morts(sortie, rel):
+    """Adresses relatives d'une page de site/ (href, src, documents de #c-doc, #variantes) sans fichier derrière."""
+    html = _lire(sortie / rel)
+    urls = re.findall(r'(?:href|src)="([^"]*)"', html)
+    choix = re.search(r'<select class="nu" id="c-doc".*?</select>', html, flags=re.S)
+    if choix:
+        urls += [o["value"] for o in balises(choix.group(0), "option")]
+    variantes = re.search(r'<script type="application/json" id="variantes">(.*?)</script>', html, flags=re.S)
+    urls += [v[2] for v in json.loads(variantes.group(1))]
+    morts = []
+    for u in urls:
+        u = unescape(u)
+        if u.startswith(("#", "//")) or re.match(r"^[a-z][a-z0-9+.-]*:", u):
+            continue
+        cible = sortie / posixpath.normpath(posixpath.join(posixpath.dirname(rel), u.split("#")[0].split("?")[0]))
+        if cible.is_dir():
+            cible = cible / "index.html"
+        if not cible.is_file():
+            morts.append(u)
+    return morts
+
+
+def _contenu(html):
+    return re.search(r'<main class="contenu" id="contenu">.*</main>', html, flags=re.S).group(0)
 
 
 def _rail(html, depuis):
@@ -153,6 +190,28 @@ def test_figer(construit):
     historique = _lire(sortie / "essai/amenagement/historique.html")
     assert 'href="../../archive/essai-amenagement-b-v0.3/"' in historique
     assert "13 novembre 2026" in historique
+
+    # la page figée se lit telle quelle : sans choix de variante ni comparaison, et sans lien mort
+    page = _lire(dossier / "index.html")
+    assert balises(page, "body")[0].get("data-figee") == "V0.3"
+    assert not balises(page, "select", id="c-variante")
+    assert not balises(page, "button", id="c-comp")
+    assert not balises(page, "select", id="c-autre") and not balises(page, "label", classe="b-avec")
+    assert balises(page, "a", classe="version")[0]["href"] == "../../essai/amenagement/historique.html"
+    assert _liens_morts(sortie, "archive/essai-amenagement-b-v0.3/index.html") == []
+    assert _contenu(page) == _contenu(_lire(sortie / "essai/amenagement/b.html"))
+
+
+def test_figer_sans_lien_mort_entre_documents(tmp_path):
+    """Les liens vers les autres documents de la pièce (menu, choix du document) mènent aux pages en cours."""
+    _communs_d_essai(tmp_path)
+    autre = dataclasses.replace(ESSAI.DOCUMENT, id="autre", nom="Autre")
+    site = Site((Piece("essai", "Essai", (ESSAI.DOCUMENT, autre)),))
+    construire(site, (), tmp_path, tmp_path / "site")
+    figer(site, tmp_path, tmp_path / "site", "essai/autre/c")
+    page = _lire(tmp_path / "site/archive/essai-autre-c-v0.1/index.html")
+    assert [o["value"] for o in balises(page, "option")] == ["../../essai/amenagement/", "../../essai/autre/"]
+    assert _liens_morts(tmp_path / "site", "archive/essai-autre-c-v0.1/index.html") == []
 
 
 def test_construire_n_ecrit_que_site_et_cache(construit):

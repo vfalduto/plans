@@ -424,13 +424,69 @@ def construire(site: Site, redirections, racine: Path, sortie: Path, seulement: 
     _ecrire_accueil(site, sortie)
 
 
+# ------------------------------------------------------------------ versions figées
+
+BARRE = re.compile(r'<header class="barre" id="barre">.*?</header>', re.S)
+CHOIX_DOCUMENT = re.compile(r'<select class="nu" id="c-doc".*?</select>', re.S)
+VARIANTES = re.compile(r'(<script type="application/json" id="variantes">).*?(</script>)', re.S)
+# choix de variante, « Comparer », « avec » : (balise, marque dans la balise ou son contenu)
+COMPARAISON = (("label", 'id="c-variante"'), ("button", 'id="c-comp"'), ("label", "b-avec"))
+
+
+def _retirer(html: str, balise: str, marque: str) -> str:
+    """Retire le premier élément `balise` (sans imbrication) qui contient `marque`."""
+    motif = rf"<{balise}\b(?:(?!</{balise}>).)*?{re.escape(marque)}(?:(?!</{balise}>).)*</{balise}>"
+    return re.sub(motif, "", html, count=1, flags=re.S)
+
+
+def _rebaser(url: str, depuis: str, vers: str) -> str:
+    """`url`, écrite pour la page `depuis`, vue depuis la page `vers` (les deux relatives à site/)."""
+    if not url or url.startswith(("#", "/")) or SCHEMA.match(url):
+        return url
+    chemin, suite = re.match(r"([^?#]*)(.*)", url, re.S).groups()
+    if not chemin:
+        return url
+    cible = posixpath.normpath(posixpath.join(posixpath.dirname(depuis), chemin))
+    if chemin.endswith("/") or posixpath.basename(chemin) in (".", ".."):
+        cible = "" if cible == "." else cible + "/"
+    return relatif(cible, vers) + suite
+
+
+def _page_figee(site: Site, doc: Document, variante: Variante, html: str, depuis: str, vers: str) -> str:
+    """La page d'une variante, écrite pour `depuis`, telle qu'elle se lit dans archive/<nom>/ (`vers`).
+
+    - `body` porte `data-figee="<version>"` ;
+    - plus de choix de variante, de « Comparer » ni de « avec », et #variantes ne garde que cette variante ;
+    - le menu est refait depuis l'archive ; la pastille de version et le choix du document mènent aux pages en
+      cours (historique.html du document, autres documents de la pièce) ;
+    - les sections des vues ne changent pas : leurs rendus/ sont copiés à côté."""
+    debut, main, reste = html.partition('<main class="contenu" id="contenu">')
+    contenu, fin_main, fin = reste.rpartition("</main>")
+
+    def barre(m):
+        b = m.group(0)
+        for balise, marque in COMPARAISON:
+            b = _retirer(b, balise, marque)
+        b = CHOIX_DOCUMENT.sub(lambda s: re.sub(
+            r'value="([^"]*)"', lambda v: f'value="{_e(_rebaser(unescape(v.group(1)), depuis, vers))}"', s.group(0)), b)
+        return re.sub(r'href="([^"]*)"', lambda h: f'href="{_e(_rebaser(unescape(h.group(1)), depuis, vers))}"', b)
+
+    debut = RAIL.sub(lambda _: menu(site, (doc.piece, doc.id), vers), debut, count=1)
+    debut = BARRE.sub(barre, debut, count=1)
+    debut = debut.replace("<body", f'<body data-figee="{_e(variante.version)}"', 1)
+    seule = json.dumps([[variante.id, variante.nom, "./"]], ensure_ascii=False).replace("<", "\\u003c")
+    fin = VARIANTES.sub(lambda m: m.group(1) + seule + m.group(2), fin, count=1)
+    return debut + main + contenu + fin_main + fin
+
+
 def figer(site: Site, racine: Path, sortie: Path, cible: str) -> Path:
     """Copie la page en cours d'une variante et ses rendus/ dans archive/<piece>-<document>[-<variante>]-<version>/.
 
     La variante est la première si `cible` ne la nomme pas ; son id n'entre dans le nom du dossier que si ce n'est
     pas la première (comme dans les adresses). La version est mise en minuscules, comme les archives existantes
     (entree-amenagement-v3.3.html). L'entrée [version, chemin] s'ajoute à archive/figees.json, sous la clé
-    <piece>/<document>/<variante>, une seule fois par version. La page est d'abord régénérée depuis les sources."""
+    <piece>/<document>/<variante>, une seule fois par version. La page est d'abord régénérée depuis les sources, puis
+    adaptée à l'archive par `_page_figee` (pas de comparaison, aucun lien mort)."""
     sortie = Path(sortie)
     parties = cible.strip("/").split("/")
     doc = _trouver(site, "/".join(parties[:2])) if len(parties) in (2, 3) else None
@@ -446,7 +502,9 @@ def figer(site: Site, racine: Path, sortie: Path, cible: str) -> Path:
     premiere = variante.id == doc.variantes[0].id
     nom = "-".join([doc.piece, doc.id] + ([] if premiere else [variante.id]) + [variante.version.lower()])
     dossier = sortie / "archive" / nom
-    _ecrire(dossier / "index.html", page.read_bytes())
+    html = _page_figee(site, doc, variante, page.read_text(encoding="utf-8"), adresse(doc, variante.id),
+                       f"archive/{nom}/")
+    _ecrire(dossier / "index.html", html)
     rendus = page.parent / "rendus"
     if rendus.is_dir():
         shutil.copytree(rendus, dossier / "rendus", dirs_exist_ok=True)
