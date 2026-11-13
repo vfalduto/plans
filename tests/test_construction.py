@@ -318,3 +318,13 @@ def test_documents_declares():
                      "salon-enfilade.html", "chambre-amenagement.html"]
     assert not any(isinstance(d, Document) for p in site.pieces for d in p.documents)
     assert charger_site().REDIRECTIONS == ()
+
+
+def test_workflow_publie_site():
+    """Le workflow publie site/ et aucun fichier de site/ n'est un lien symbolique."""
+    flux = (RACINE / ".github" / "workflows" / "pages.yml").read_text(encoding="utf-8")
+    assert "path: site" in flux
+    assert "upload-pages-artifact@v3" in flux
+    assert "deploy-pages@v4" in flux
+    liens = [p for p in (RACINE / "site").rglob("*") if p.is_symlink()]
+    assert not liens, f"liens symboliques dans site/ : {liens[:5]}"

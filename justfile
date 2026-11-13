@@ -7,28 +7,46 @@ site := "https://vfalduto.github.io/plans/"
 default:
     @just --list
 
-# Commit tout, pull --rebase, push puis attend le redéploiement GitHub Pages
+# Construit site/ (toutes les pièces, ou seulement celles données : just site entree/amenagement)
+site *args:
+    python3 site.py {{args}}
+
+# Construit site/ puis le sert sur http://127.0.0.1:8800/ et l'ouvre
+apercu:
+    #!/usr/bin/env bash
+    set -euo pipefail
+    python3 site.py
+    ( sleep 1; open http://127.0.0.1:8800/ ) &
+    python3 -m http.server 8800 --bind 127.0.0.1 --directory site
+
+# Construit site/ (la passerelle recopie les pages que les anciens générateurs viennent de réécrire à la racine),
+# commit tout, pull --rebase, push puis attend la publication par GitHub Action
 sync message="Mise à jour des plans":
+    python3 site.py
     git add -A
     git diff --cached --quiet || git commit -m "{{message}}"
     git pull --rebase --quiet
     git push --quiet
     @just pages-wait
 
-# Attend la fin du build GitHub Pages pour le dernier commit
+# Attend la fin de l'exécution de pages.yml pour le dernier commit
 pages-wait:
     #!/usr/bin/env bash
     set -euo pipefail
     sha=$(git rev-parse HEAD)
-    echo "Déploiement GitHub Pages de ${sha:0:7}…"
-    for _ in $(seq 1 60); do
-      read -r status commit < <(gh api repos/{{repo}}/pages/builds/latest --jq '"\(.status) \(.commit)"')
-      if [ "$commit" = "$sha" ] && [ "$status" = built ]; then echo "En ligne : {{site}}"; exit 0; fi
-      if [ "$commit" = "$sha" ] && [ "$status" = errored ]; then echo "Échec du build Pages" >&2; exit 1; fi
-      sleep 5
+    echo "Publication GitHub Actions de ${sha:0:7}…"
+    id=""
+    for _ in $(seq 1 30); do
+      id=$(gh run list --repo {{repo}} --workflow pages.yml --commit "$sha" --json databaseId --jq '.[0].databaseId // empty')
+      [ -n "$id" ] && break
+      sleep 2
     done
-    echo "Délai dépassé, vérifier : https://github.com/{{repo}}/actions" >&2
-    exit 1
+    if [ -z "$id" ]; then
+      echo "Aucune exécution de pages.yml pour ${sha:0:7} : https://github.com/{{repo}}/actions" >&2
+      exit 1
+    fi
+    gh run watch "$id" --repo {{repo}} --exit-status
+    echo "En ligne : {{site}}"
 
 # Variante A (proposition 9 V2 A figée) : modèle 3D (FreeCAD) et rendus (Blender) → cuisine-3d/*.jpg
 rendu-3d echantillons="256":
