@@ -232,34 +232,6 @@ def _fichiers_communs(racine: Path, sortie: Path) -> None:
     _ecrire(sortie / "apple-touch-icon.png", icone_apple())
 
 
-# ------------------------------------------------------------------ styles des pages simples
-
-# accueil, journal, historiques ; les jetons (--ink, --ui…) viennent de site.css
-STYLE = """<style>
-.lecture > .accueil{max-width:1120px}
-.tapis-plan{margin:16px 0 8px;padding:clamp(12px,2.6vw,30px);border-radius:6px}
-.plan-appart{display:block;width:100%;height:auto;max-height:min(62vh,620px);margin:0 auto}
-.tapis-plan .pl-hors{fill:var(--tapis-texte)}
-.tapis-plan .pl-nord{stroke:var(--tapis-texte)}
-.lecture .chapo{font-size:19px;line-height:1.5;max-width:720px;margin:0 0 8px}
-.lecture .sous-titre{margin:0 0 12px;color:var(--muted);font:500 16.5px var(--ui)}
-.lecture h3{font:700 18px var(--ui);margin:22px 0 6px}
-.fil{list-style:none;margin:0;padding:0}
-.fil li{display:grid;grid-template-columns:92px minmax(0,1fr);gap:0 16px;padding:12px 0;border-bottom:1px solid var(--line)}
-.fil li[hidden],.journee[hidden],.filtre[hidden]{display:none}
-.fil .quand{font:500 14.5px var(--ui);font-variant-numeric:tabular-nums;color:var(--muted);padding-top:1px}
-.fil .quand b{display:block;color:var(--ink);font-size:16px;font-weight:600}
-.fil .ou{font:600 15px var(--ui);margin-bottom:2px}
-.fil .ou a{text-decoration:none}
-.fil .ou a:hover{text-decoration:underline}
-.fil p{margin:0;font-size:15.5px}
-.lecture .jour{font:700 18px var(--ui);margin:28px 0 0;padding-bottom:6px;border-bottom:2px solid var(--ink);position:sticky;top:-28px;background:var(--paper);z-index:1}
-.filtre{display:flex;align-items:center;gap:8px;margin:14px 0 4px;font:500 15.5px var(--ui)}
-.filtre select{font:inherit;min-height:36px;padding:4px 8px;border:1px solid var(--line);border-radius:4px;background:var(--panel);color:var(--ink)}
-.figees{list-style:none;display:flex;flex-wrap:wrap;gap:6px 22px;margin:8px 0 20px;padding:0;font:500 15.5px var(--ui);font-variant-numeric:tabular-nums}
-.figees .date{color:var(--muted)}
-</style>"""
-
 # filtre du journal par pièce ; sans JavaScript, le choix reste caché et tout le journal se lit
 FILTRE = """<script>
 (() => {
@@ -342,7 +314,7 @@ def _ecrire_historique(site: Site, doc: Document, table: dict, sortie: Path) -> 
             h.append(f'<h3>Changements</h3><ol class="fil">{lignes}</ol>')
         blocs.append(f'<section class="variante">{"".join(h)}</section>')
     titre = f"{piece.nom} › {doc.nom} : historique"
-    _ecrire(sortie / depuis, page_simple(site, titre, STYLE + "".join(blocs), depuis, courant=(doc.piece, doc.id)))
+    _ecrire(sortie / depuis, page_simple(site, titre, "".join(blocs), depuis, courant=(doc.piece, doc.id)))
 
 
 RAIL = re.compile(r'<nav class="rail tapis" id="rail".*?</nav>', re.S)
@@ -372,8 +344,7 @@ def _ecrire_journal(site: Site, racine: Path, sortie: Path) -> None:
         jours.setdefault(e.date_iso, []).append(e)
     choix = f'<option value="">Toutes les pièces ({len(lignes)})</option>' + "".join(
         f'<option value="{_e(p.id)}">{_e(p.nom)} ({comptes[p.id]})</option>' for p in site.pieces if comptes[p.id])
-    corps = [STYLE,
-             f'<p class="chapo">{_pluriel(len(lignes), "changement")} en {_pluriel(len(jours), "jour")} de travail.</p>',
+    corps = [f'<p class="chapo">{_pluriel(len(lignes), "changement")} en {_pluriel(len(jours), "jour")} de travail.</p>',
              f'<label class="filtre" hidden>Pièce <select id="filtre-piece">{choix}</select></label>']
     for jour, es in jours.items():
         items = "".join(
@@ -388,7 +359,7 @@ def _ecrire_journal(site: Site, racine: Path, sortie: Path) -> None:
 
 def _ecrire_accueil(site: Site, sortie: Path) -> None:
     documents = sum(len(p.documents) for p in site.pieces)
-    corps = (f'{STYLE}<div class="accueil"><p class="chapo">{_pluriel(len(site.pieces), "pièce")}, '
+    corps = (f'<div class="accueil"><p class="chapo">{_pluriel(len(site.pieces), "pièce")}, '
              f'{_pluriel(documents, "document")}. Touchez une pièce pour ouvrir ses plans.</p>'
              f'<div class="tapis-plan tapis">{plan_appartement(site)}</div></div>')
     _ecrire(sortie / "index.html", page_simple(site, "Plans de l'appartement", corps, "index.html"))

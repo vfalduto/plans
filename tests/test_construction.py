@@ -318,3 +318,16 @@ def test_documents_declares():
                      "salon-enfilade.html", "chambre-amenagement.html"]
     assert not any(isinstance(d, Document) for p in site.pieces for d in p.documents)
     assert charger_site().REDIRECTIONS == ()
+
+
+def test_pas_de_style_dans_le_corps(construit):
+    """Les styles sont dans commun/site.css : aucune page construite ne porte de <style> après <body.
+
+    Les pages de la passerelle, recopiées telles quelles, gardent leurs styles : on ne regarde que celles qui ont
+    le menu de la refonte.
+    """
+    pages = [p for p in sorted(construit.sortie.rglob("*.html")) if 'id="rail"' in _lire(p)]
+    assert len(pages) > 5
+    fautives = [p.relative_to(construit.sortie).as_posix() for p in pages
+                if "<style" in _lire(p)[_lire(p).index("<body"):]]
+    assert not fautives, fautives

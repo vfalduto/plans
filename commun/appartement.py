@@ -71,24 +71,6 @@ VITRES = ((-245, -204, -220, -62), (-245, 24, -220, 148), (821, -190, 846, 14), 
 
 MARGE = 62
 
-# styles du plan, portés par le SVG lui-même ; les jetons (--ink, --panel…) viennent de site.css
-STYLE = (
-    ".pl-masse{fill:var(--ink);stroke:var(--ink);stroke-width:50;stroke-linejoin:miter}"
-    ".pl-piece{fill:var(--panel);stroke:var(--ink);stroke-width:6;stroke-linejoin:miter;transition:fill .12s}"
-    ".pl-piece.inerte{fill:var(--hair)}"
-    "a:hover>.pl-piece,a:focus-visible>.pl-piece{fill:color-mix(in srgb,var(--repere) 32%,var(--panel))}"
-    ".pl-baie{fill:var(--panel);pointer-events:none}"
-    ".pl-arc{fill:none;stroke:var(--ink);stroke-width:1.2;vector-effect:non-scaling-stroke;pointer-events:none}"
-    ".pl-vitre{fill:var(--glass);stroke:var(--ink);stroke-width:1;vector-effect:non-scaling-stroke;"
-    "pointer-events:none}"
-    ".pl-nom{font:600 29px var(--ui);fill:var(--ink);text-anchor:middle;pointer-events:none}"
-    ".pl-cote{font:500 18px var(--ui);font-variant-numeric:tabular-nums;fill:var(--muted);text-anchor:middle;"
-    "pointer-events:none}"
-    ".pl-cote.serre{font-size:16px}"
-    ".pl-petit{font:500 17px var(--ui);fill:var(--muted);text-anchor:middle;pointer-events:none}"
-    ".pl-nord{fill:none;stroke:var(--muted);stroke-width:1.4;vector-effect:non-scaling-stroke}"
-)
-
 
 def _e(texte) -> str:
     return escape(str(texte), quote=True)
@@ -192,4 +174,4 @@ def plan_appartement(site: Site) -> str:
              f'<path class="pl-nord" d="M{_n(x0 + 30)},{_n(y0 + 60)} v-36 m-9,13 l9,-13 l9,13"/>'
              f'<text class="pl-petit pl-hors" x="{_n(x0 + 30)}" y="{_n(y0 + 80)}">N</text>')
     return (f'<svg class="plan-appart" viewBox="{_n(x0)} {_n(y0)} {_n(w)} {_n(h)}" role="group"'
-            f' aria-label="Plan de l\'appartement"><style>{STYLE}</style>{"".join(o)}</svg>')
+            f' aria-label="Plan de l\'appartement">{"".join(o)}</svg>')
