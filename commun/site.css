@@ -153,10 +153,12 @@ a.b-case[aria-current="page"] > .ico{color:inherit}
 .bandeau .etiq-var{background:var(--ink);border-color:var(--ink);color:var(--panel);font-weight:600}
 .bandeau .etiq-var.manque{background:var(--panel);border-color:var(--line);color:var(--muted);font-weight:500}
 
-/* comparaison de deux variantes : rideau ; l'élément de la variante comparée porte la classe b */
+/* comparaison de deux variantes : rideau ; l'élément de la variante comparée, cloné de son autre page, porte la classe b.
+   Les deux éléments couvrent la scène sans être zoomés (seuls leur SVG ou leur cadre le sont) : découpés à --pos, la
+   coupure reste sous la poignée à tout zoom. Pas de meuble à toucher en comparaison (maquette). */
 .compare > .element:not(.b){clip-path:inset(0 calc(100% - var(--pos,50%)) 0 0)}
 .compare > .element.b{clip-path:inset(0 0 0 var(--pos,50%))}
-.cadre .b{clip-path:inset(0 0 0 var(--pos-l,50%))}   /* --pos-l : la position de la poignée, ramenée au rendu zoomé */
+.scene.compare .zone{display:none}
 .poignee{position:absolute;top:0;bottom:0;left:var(--pos,50%);width:44px;margin-left:-22px;z-index:2;cursor:ew-resize;touch-action:none;display:grid;place-items:center}
 .poignee::before{content:"";position:absolute;top:0;bottom:0;left:21px;width:2px;background:var(--actif)}
 .poignee::after{content:"‹ ›";position:relative;background:var(--actif);color:var(--sur-actif);font:700 15px/1 var(--ui);padding:7px 7px 8px;border-radius:4px;letter-spacing:1px}
