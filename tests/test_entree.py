@@ -236,3 +236,15 @@ def test_alt_sans_texte_visible():
                 visible = re.sub(r'\balt="[^"]*"', "", e.scene + e.fiche + v[cle].fiche)
                 for _, texte in M.RENDUS:
                     assert escape(texte, quote=True) not in visible and texte not in visible
+
+
+def test_explication_liens_et_differences():
+    scene = _explication("principale")
+    # principe 0 (banc) : première zone du plan, `data-meuble="0"`
+    assert 'href="#plan?k=0"' in scene
+    assert scene.count("Montrer sur le plan") == len({z["principe"] for z in document.ZONES})
+    zones = [z["data-meuble"] for z in balises(vues.vues("principale")["plan"].elements[0].scene, "rect", classe="zone")]
+    for k in re.findall(r'href="#plan\?k=(\d+)"', scene):
+        assert k in zones
+    v = _explication("victor")
+    assert f"Différences avec la {victor.BASE}" in v and "Version Victor" in v

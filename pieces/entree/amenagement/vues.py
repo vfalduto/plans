@@ -154,8 +154,14 @@ def _chiffres(stats):
     return "".join(f"<div><dt>{_e(a)}</dt><dd>{_e(b)}</dd></div>" for a, b in stats)
 
 
-def _principes(cartes):
-    return "".join(f"<li><h3>{_e(t)}</h3><p>{x}</p></li>" for t, x in cartes)
+def _principes(M, cartes):
+    """Cartes « Principe » ; celles qui ont un meuble sur le plan lient vers sa zone (`rect.zone[data-meuble]`)."""
+    zones = {}
+    for i, z in enumerate(M.ZONES):
+        zones.setdefault(z["principe"], i)
+    def lien(r):
+        return f'<a class="btn" href="#plan?k={zones[r]}">Montrer sur le plan</a>' if r in zones else ""
+    return "".join(f"<li><h3>{_e(t)}</h3><p>{x}</p>{lien(r)}</li>" for r, (t, x) in enumerate(cartes))
 
 
 def _achats(M, approx, note):
@@ -179,7 +185,7 @@ def _materiaux(lignes):
     return f"<table><tbody>{corps}</tbody></table>"
 
 
-def _article(M, cle, chapo, stats, cartes, achats, materiaux, verifier, source):
+def _article(M, cle, chapo, stats, cartes, achats, materiaux, verifier, source, avant=""):
     liste = "".join(f"<li><span>{x}</span></li>" for x in verifier)
     # le premier rendu du coin sud-ouest, quand il existe, ouvre la page ; son texte est l'alt
     tete = _figure(cle, "iso_so", _alt(M, "iso_so", "Vue isométrique depuis le sud-ouest")) if _rendu_existe(cle, "iso_so") else ""
@@ -187,7 +193,7 @@ def _article(M, cle, chapo, stats, cartes, achats, materiaux, verifier, source):
             '<p class="actions"><a class="btn plein" href="#plan">Ouvrir le plan</a><a class="btn" href="#iso">Voir en iso</a></p>'
             f'</div>{tete}</div>'
             f'<dl class="chiffres">{_chiffres(stats)}</dl>'
-            f'<h2>Principe</h2><ol class="principes">{_principes(cartes)}</ol>'
+            f'{avant}<h2>Principe</h2><ol class="principes">{_principes(M, cartes)}</ol>'
             f'<h2>Achats IKEA pour la penderie</h2>{achats}'
             f'<h2>Matériaux</h2>{materiaux}'
             f'<h2>Points à vérifier</h2><ul class="liste">{liste}</ul>'
@@ -287,8 +293,30 @@ def _explication_victor(M, D):
         "de plâtre, placo) et la charge admise.",
         f'<b>Interphone</b> : le miroir est calé {M.INTERPHONE["y0"] - mi["y1"]} cm à côté ; sa position est à relever.',
         f'<b>Tableau électrique, plafond</b> : mêmes points que la <a href="principale.html">{M.BASE}</a>.']
+    c = M.CHAUSSURES
+    lpl, ppl = pl["y1"] - pl["y0"], pl["x1"] - pl["x0"]
+    ncd = cd["colonnes"] * cd["rangs"]
+    diff = [
+        ("Sous le tableau électrique", "Banc 95 × 38", "Rien : mur libre"),
+        ("Face nord de la salle de bain", "Penderie 84 × 40 toute hauteur",
+         f'Meuble à chaussures {c["x1"] - c["xa"]} × {b["y1"] - b["y0"]}, un niveau d\'abattants, arrondi jusqu\'au PAX, '
+         "deux étagères flottantes au-dessus"),
+        ("Angle", "Quart de cercle R 25 à étagères ouvertes",
+         f'Quart de cercle plein R {b["r"]} centré sur le coin de la salle de bain, bout du meuble à chaussures'),
+        ("Cloison de la salle de bain, après le coin", "Meuble à chaussures, premier module (83)",
+         f'Penderie IKEA PAX {lp} × {pp} × {pe["z1"]}, bandeau jusqu\'au plafond'),
+        ("Cloison de la salle de bain, côté porte", "Meuble à chaussures, second module (83), miroir",
+         f'Planche à chaussures {lpl} × {ppl} à {pl["z1"]}, les 4 patères au-dessus, applique'),
+        ("Meuble haut", "En travers de la branche d'entrée, 110 × 40", "Supprimé : deux tablettes en haut de la penderie"),
+        ("Mur ouest de l'entrée", "Interphone",
+         f'{ncd} cadres, miroir {mi["y1"] - mi["y0"]} × {mi["z1"] - mi["z0"]}, interphone'),
+        ("Chaussures", "≈ 24 paires", f"≈ {M.PAIRES} paires"),
+        ("Passage le plus étroit", "85 (devant le meuble à chaussures)", f'{pe["x0"]} (devant la penderie)')]
+    lignes = "".join(f"<tr><td>{_e(a)}</td><td>{_e(x)}</td><td>{_e(y)}</td></tr>" for a, x, y in diff)
+    avant = (f'<h2>Différences avec la {M.BASE}</h2><div class="defile"><table><thead><tr><th>Élément</th>'
+             f'<th>{M.BASE}</th><th>Version Victor</th></tr></thead><tbody>{lignes}</tbody></table></div>')
     return _article(M, "victor", chapo, stats, D.principes(M), achats, materiaux, verifier,
-                    "Dimensions : pieces/entree/amenagement/victor.py.")
+                    "Dimensions : pieces/entree/amenagement/victor.py.", avant)
 
 
 def _vue_explication(variante, M, D):
