@@ -174,6 +174,12 @@ async page => {
     const cx = r.x + r.w / 2, cy = r.y + r.h / 2;
     const doigts = (a) => [{x: cx - a, y: cy, id: 0}, {x: cx + a, y: cy, id: 1}];
     verifier(await echelle(page) === 1, "rendu : échelle initiale différente de 1");
+    const centre = await page.evaluate(() => {
+      const s = document.querySelector('section[data-vue="camera"] .scene').getBoundingClientRect();
+      const c = document.querySelector('section[data-vue="camera"] .cadre').getBoundingClientRect();
+      return [c.left + c.width / 2 - (s.left + s.width / 2), c.top + c.height / 2 - (s.top + s.height / 2)];
+    });
+    verifier(centre.every(d => Math.abs(d) < 2), `rendu : le cadre n'est pas centré dans la scène (${centre})`);
     await cdp.send("Input.dispatchTouchEvent", {type: "touchStart", touchPoints: doigts(30)});
     for (const a of [50, 80, 110]) await cdp.send("Input.dispatchTouchEvent", {type: "touchMove", touchPoints: doigts(a)});
     await cdp.send("Input.dispatchTouchEvent", {type: "touchEnd", touchPoints: []});
