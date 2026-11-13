@@ -95,6 +95,12 @@ def _arrondi(total, arrondi):
     return _demi(total, "1" if arrondi else "0.01")
 
 
+def total_achats(sections: Sequence[SectionAchats], approx: bool = False, arrondi: bool = True) -> str:
+    """Texte du total général d'`achats` : somme exacte des lignes chiffrées, section par section, puis arrondie."""
+    total = _arrondi(sum(_somme(s.achats) for s in sections), arrondi)
+    return f'{"≈ " if approx else ""}{euros(total)}'
+
+
 def tableau_achats(achats: Sequence[Achat], libelle_total: str = "Total", approx: bool = False,
                    arrondi: bool = True) -> str:
     lignes = []
@@ -103,11 +109,11 @@ def tableau_achats(achats: Sequence[Achat], libelle_total: str = "Total", approx
         prix = "non chiffré" if a.unitaire is None else euros(a.quantite * a.unitaire)
         lignes.append(f'<tr><td>{_e(a.article)}{note}</td><td class="num">{_e(a.reference)}</td>'
                       f'<td class="num d">{f"{a.quantite:g}".replace(".", ",")}</td><td class="num d">{prix}</td></tr>')
-    total = euros(_arrondi(_somme(achats), arrondi))
+    total = total_achats([SectionAchats("", achats)], approx, arrondi)
     return ('<div class="defile"><table><thead><tr><th>Article</th><th>Référence</th><th class="d">Qté</th>'
             f'<th class="d">Prix</th></tr></thead><tbody>{"".join(lignes)}'
             f'<tr class="total"><td>{_e(libelle_total)}</td><td></td><td></td>'
-            f'<td class="num d">{"≈ " if approx else ""}{total}</td></tr></tbody></table></div>')
+            f'<td class="num d">{total}</td></tr></tbody></table></div>')
 
 
 def achats(sections: Sequence[SectionAchats], titre: str = "Achats", note: str = "", approx: bool = False,
@@ -121,9 +127,8 @@ def achats(sections: Sequence[SectionAchats], titre: str = "Achats", note: str =
             morceaux.append(f"<h3>{_e(s.titre)}</h3>")
         morceaux.append(tableau_achats(s.achats, libelle, approx, arrondi))
     if len(sections) > 1:
-        total = _arrondi(sum(_somme(s.achats) for s in sections), arrondi)
         morceaux.append(f'<p class="total-achats"><span>Total</span>'
-                        f'<span class="num">{"≈ " if approx else ""}{euros(total)}</span></p>')
+                        f'<span class="num">{total_achats(sections, approx, arrondi)}</span></p>')
     if note:
         morceaux.append(note_source(note))
     return "".join(morceaux)

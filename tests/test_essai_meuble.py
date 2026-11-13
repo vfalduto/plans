@@ -73,6 +73,16 @@ def test_meuble_vues_remplies():
     assert '<a class="btn plein" href="#plans">Plans détaillés</a>' in explication
 
 
+def test_meuble_total_de_l_explication():
+    vues = MEUBLE.vues("actuelle")
+    total = re.search(r'<p class="total-achats"><span>Total</span><span class="num">([^<]+)</span>',
+                      _scene(vues["achats"])).group(1)
+    assert f"<dt>{total}</dt><dd>Total</dd>" in _scene(vues["explication"])
+    etapes = re.search(r"<dt>([^<]+)</dt><dd>Étapes</dd>", _scene(vues["explication"])).group(1)
+    assert etapes == "3"
+    assert "<dt>0</dt><dd>Étapes</dd>" in _scene(MEUBLE.vues("rangs")["explication"])
+
+
 def test_meuble_sans_cote_en_dur(monkeypatch):
     avant = MEUBLE.vues("actuelle")
     assert "120 + 80 + 80 cm" in avant["plans"].fiche

@@ -4,9 +4,7 @@ Toutes ses longueurs viennent de `TABLETTES`, `PROFONDEUR` et `EPAISSEUR`. `actu
 (Plans à deux dessins, l'iso sans Mesurer) ; `rangs` n'a pas de Montage (« Sans objet ») ; `escalier` n'a qu'une
 élévation et une ligne d'achat non chiffrée.
 """
-from decimal import ROUND_HALF_UP, Decimal
-
-from commun.blocs import Achat, SectionAchats, achats, chiffres, euros, nombre, tete, vue_lecture
+from commun.blocs import Achat, SectionAchats, achats, chiffres, nombre, tete, total_achats, vue_lecture
 from commun.blocs_construction import (Calepin, Colonne, DessinMeuble, Etape, calepinage, etapes, tableau_debit,
                                        vue_plans)
 from commun.modele import Changement, Document, Piece, Site, Variante, Vue
@@ -110,28 +108,30 @@ def _calepin(v):
     return calepinage([Calepin("Planche 1, chêne massif", svg)])
 
 
-def _montage(v):
+def _etapes(v):
+    """Étapes du montage ; aucune pour `rangs` (Montage sans objet)."""
     if v == "rangs":
-        return ""
+        return []
     poser = Etape("Poser les tasseaux", "<p>Tracer les niveaux au laser, percer, cheviller, visser les tasseaux.</p>",
                   figure=_elevation(v) if v == "actuelle" else "")
-    liste = [Etape("Préparer les tablettes", "<p>Poncer, huiler deux couches, laisser sécher une nuit.</p>"),
-             poser,
-             Etape("Enfiler les tablettes", "<p>Enfiler chaque tablette sur ses tiges, de bas en haut.</p>")]
+    return [Etape("Préparer les tablettes", "<p>Poncer, huiler deux couches, laisser sécher une nuit.</p>"),
+            poser,
+            Etape("Enfiler les tablettes", "<p>Enfiler chaque tablette sur ses tiges, de bas en haut.</p>")]
+
+
+def _montage(liste, v):
+    if not liste:
+        return ""
     outils = "<p>Laser, perceuse, foret à béton, visseuse, ponceuse.</p>" if v == "actuelle" else ""
     return etapes(liste, outils=outils)
-
-
-def _total(sections):
-    somme = sum(a.quantite * a.unitaire for s in sections for a in s.achats if a.unitaire is not None)
-    return euros(Decimal(str(somme)).quantize(Decimal("1"), rounding=ROUND_HALF_UP))
 
 
 def vues(variante: str) -> dict[str, Vue]:
     nom = NOMS[variante]
     formule = " + ".join(nombre(l) for l in TABLETTES[variante]) + " cm"
+    liste = _etapes(variante)
     contenus = {"decoupe": _debit(variante) + (_calepin(variante) if variante == "actuelle" else ""),
-                "montage": _montage(variante)}
+                "montage": _montage(liste, variante)}
     dessins = [DessinMeuble("elevation", "Élévation", _elevation(variante))]
     if variante != "escalier":
         dessins.append(DessinMeuble("iso", "Vue iso", _iso(variante), mesure=False))
@@ -139,8 +139,8 @@ def vues(variante: str) -> dict[str, Vue]:
     explication = tete(CHAPOS[variante], liens) + chiffres((
         (formule, "Tablettes"),
         (str(len(_reperes(variante))), "Repères"),
-        (str(contenus["montage"].count("<li>")), "Étapes"),
-        (_total(ACHATS[variante]), "Total"),
+        (str(len(liste)), "Étapes"),
+        (total_achats(ACHATS[variante]), "Total"),
     ))
     return {
         "plans": vue_plans(dessins, titre=f"Étagère {nom}", formule=formule,

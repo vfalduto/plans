@@ -15,7 +15,8 @@ from pathlib import Path
 from typing import Mapping, Sequence
 
 from commun.blocs_lecture import (Achat, Carte, SectionAchats, a_verifier, achats, chiffres, euros,  # noqa: F401
-                                  materiaux, note_source, principes, tableau_achats, tete, vue_lecture)
+                                  materiaux, note_source, principes, tableau_achats, tete, total_achats,
+                                  vue_lecture)
 from commun.dessin import f
 from commun.modele import Camera, Element, Vue
 from commun.position import mini_plan

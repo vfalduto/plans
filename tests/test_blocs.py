@@ -2,7 +2,7 @@ from pathlib import Path
 
 from commun.blocs import (CALQUES, INVITE, Achat, Carte, Coupe, Lieu, SectionAchats, Zone, a_verifier, achats,
                           cotes_meuble, euros, figure_rendu, points_iso, principes, rendu, tableau_achats, tete,
-                          vue_camera, vue_coupes, vue_iso, vue_lecture, vue_plan, zones_svg)
+                          total_achats, vue_camera, vue_coupes, vue_iso, vue_lecture, vue_plan, zones_svg)
 from commun.modele import Camera
 from tests.outils import RACINE, balises
 
@@ -192,6 +192,22 @@ def test_achats_sections():
     assert "total-achats" not in seule and "remarque" not in seule
     exact = achats([ikea, weldom], arrondi=False)
     assert '<span class="num">84,8 €</span>' in exact and '<td class="num d">4,4 €</td></tr></tbody>' in exact
+
+
+def test_total_achats_est_celui_d_achats():
+    ikea = SectionAchats("IKEA", [Achat("Caisson", "1", 1, 80.4), Achat("Porte", "3", 1, None)])
+    weldom = SectionAchats("Weldom", [Achat("Vis", "2", 4, 1.1)])
+    assert total_achats([ikea, weldom]) == "85 €"
+    assert total_achats([ikea, weldom], approx=True, arrondi=False) == "≈ 84,8 €"
+    for sections in ([ikea], [ikea, weldom]):
+        for approx in (False, True):
+            for arrondi in (False, True):
+                html = achats(sections, approx=approx, arrondi=arrondi)
+                total = total_achats(sections, approx=approx, arrondi=arrondi)
+                if len(sections) == 1:
+                    assert _cellules(html, "total") == [["Total", "", "", total]]
+                else:
+                    assert f'<p class="total-achats"><span>Total</span><span class="num">{total}</span></p>' in html
 
 
 def test_achat_non_chiffre():
