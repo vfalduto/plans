@@ -1,6 +1,6 @@
 # Calculs partagés par les deux meubles à fabriquer du salon (étagères et enfilade), repris de 3d/salon/commun.py
-# (qui les tenait de plan.py pour les nombres). Ni HTML ni SVG : les vues iso, les gabarits de page et la galerie
-# des rendus restent aux générateurs de page.
+# (qui les tenait de plan.py pour les nombres). Ni HTML ni SVG : la vue iso est dans pieces/salon/dessin.py ; les
+# gabarits de page et la galerie des rendus restent aux générateurs de page.
 #
 # Chaque document de meuble décrit ses volumes 3D en Piece (cm, repère du salon : x vers l'est depuis le mur ouest,
 # y vers le sud depuis le mur nord, z depuis le sol). La même liste sert à la vue iso et aux rendus Blender :
