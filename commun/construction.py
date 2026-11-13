@@ -20,6 +20,7 @@ from pathlib import Path
 from urllib.parse import unquote
 
 from commun.appartement import plan_appartement
+from commun.css_dessins import css_dessins
 from commun.gabarit import MOIS, adresse, menu, page_document, page_simple, relatif
 from commun.journal import entrees
 from commun.modele import Document, Passerelle, Site, Variante, verifier
@@ -262,11 +263,18 @@ def _trouver(site: Site, chemin: str) -> Document | Passerelle:
     raise CibleInconnue(f"« {chemin} » : document inconnu (attendu : <piece>/<document>)")
 
 
-def _ecrire_variante(site: Site, doc: Document, variante: Variante, sortie: Path) -> Path:
+def _dessins(vues: dict) -> list[str]:
+    """Les scènes et les fiches d'une variante, d'où se lisent les classes des dessins."""
+    return [t for v in vues.values() for t in (v.fiche, *(x for e in v.elements for x in (e.scene, e.fiche))) if t]
+
+
+def _ecrire_variante(site: Site, doc: Document, variante: Variante, sortie: Path, dessins: list[str] | None = None) -> Path:
     vues = doc.generer(variante.id)
     verifier(doc, vues)
     chemin = _fichier(sortie, adresse(doc, variante.id))
     _ecrire(chemin, page_document(site, doc, variante, vues))
+    if dessins is not None:
+        dessins += _dessins(vues)
     return chemin
 
 
@@ -396,8 +404,12 @@ def construire(site: Site, redirections, racine: Path, sortie: Path, seulement: 
     _fichiers_communs(racine, sortie)
     table = _lire_figees(sortie)
     for doc in documents:
+        dessins = []
         for v in doc.variantes:
-            _ecrire_variante(site, doc, v, sortie)
+            _ecrire_variante(site, doc, v, sortie, dessins)
+        if doc.css:
+            _ecrire(_fichier(sortie, adresse(doc, doc.variantes[0].id)).parent / "dessins.css",
+                    css_dessins(doc.css, dessins, f".d-{doc.piece}") + "\n")
         _ecrire_historique(site, doc, table, sortie)
     _ecrire_journal(site, racine, sortie)
     _ecrire_accueil(site, sortie)

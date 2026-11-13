@@ -268,7 +268,7 @@ TETE_JS = ('(function(vues){var h=document.documentElement,v=location.hash.slice
            'if(vues.length)h.setAttribute("data-vue",vues.indexOf(v)>=0?v:vues[0])})')
 
 
-def _tete(titre: str, depuis: str, vues: list[str]) -> str:
+def _tete(titre: str, depuis: str, vues: list[str], dessins: bool = False) -> str:
     return (
         '<!doctype html>\n<html lang="fr" class="sans-js">\n<head>\n<meta charset="utf-8">\n'
         f'<script>{TETE_JS}({_json(vues)})</script>\n'
@@ -279,16 +279,17 @@ def _tete(titre: str, depuis: str, vues: list[str]) -> str:
         '<link rel="preconnect" href="https://fonts.googleapis.com">\n'
         '<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>\n'
         f'<link href="{POLICES}" rel="stylesheet">\n'
-        f'<link rel="stylesheet" href="{relatif("commun/site.css", depuis)}">\n'
+        + ('<link rel="stylesheet" href="dessins.css">\n' if dessins else '')
+        + f'<link rel="stylesheet" href="{relatif("commun/site.css", depuis)}">\n'
         f'<script src="{relatif("commun/site.js", depuis)}" defer></script>\n'
         '</head>\n'
     )
 
 
-def _page(titre, depuis, corps_attrs, classes, rail, barre, contenu, variantes, options, noms) -> str:
+def _page(titre, depuis, corps_attrs, classes, rail, barre, contenu, variantes, options, noms, dessins="") -> str:
     return (
-        f'{_tete(titre, depuis, list(noms))}<body{corps_attrs}>\n'
-        f'<div class="{classes}" id="app">\n{rail}\n{barre}\n<main class="contenu" id="contenu">{contenu}</main>\n</div>\n'
+        f'{_tete(titre, depuis, list(noms), bool(dessins))}<body{corps_attrs}>\n'
+        f'<div class="{classes}" id="app">\n{rail}\n{barre}\n<main class="contenu{dessins and " d-" + dessins}" id="contenu">{contenu}</main>\n</div>\n'
         f'<script type="application/json" id="variantes">{_json(variantes)}</script>\n'
         f'<script type="application/json" id="options">{_json(options)}</script>\n'
         f'<script type="application/json" id="noms-vues">{_json(noms)}</script>\n'
@@ -313,6 +314,7 @@ def page_document(site: Site, doc: Document, variante: Variante, vues: dict[str,
         [[v.id, v.nom, relatif(adresse(doc, v.id), depuis)] for v in doc.variantes],
         [dataclasses.asdict(o) for o in doc.options],
         {k: NOMS_VUES[k] for k in VUES[doc.type]},
+        doc.piece if doc.css else "",
     )
 
 

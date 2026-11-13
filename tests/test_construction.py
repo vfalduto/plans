@@ -341,3 +341,21 @@ def test_pas_de_style_dans_le_corps(construit):
     fautives = [p.relative_to(construit.sortie).as_posix() for p in pages
                 if "<style" in _lire(p)[_lire(p).index("<body"):]]
     assert not fautives, fautives
+
+
+def test_dessins_css_ecrit(tmp_path):
+    from commun.css_dessins import css_dessins
+    css = ".room{fill:red}.absente{fill:blue}svg text{fill:black}"
+    doc = dataclasses.replace(ESSAI.DOCUMENT, css=css)
+    site = Site((Piece("essai", "Essai", (doc,)),))
+    racine, sortie = tmp_path / "racine", tmp_path / "site"
+    racine.mkdir()
+    _communs_d_essai(racine)
+    construire(site, (), racine, sortie)
+    ecrit = (sortie / "essai/amenagement/dessins.css").read_text(encoding="utf-8")
+    scenes = [e.scene for v in ESSAI.VARIANTES for vue in doc.generer(v.id).values() for e in vue.elements]
+    assert ecrit == css_dessins(css, scenes, ".d-essai") + "\n"
+    # sans css : aucun fichier
+    sortie2 = tmp_path / "site2"
+    construire(ESSAI.SITE, (), racine, sortie2)
+    assert not (sortie2 / "essai/amenagement/dessins.css").exists()

@@ -271,3 +271,18 @@ def test_liens_internes_connus():
                         continue
                     assert href in ("./", "victor.html"), (variante, cle, href)
     assert 'href="./"' in _explication("victor")
+
+
+def test_entree_dessins_styles():
+    # chaque classe portée par un élément du plan de la principale a au moins une règle dans le CSS filtré
+    import re
+    from commun.css_dessins import css_dessins
+    (e,) = vues.vues("principale")["plan"].elements
+    classes = {c for m in re.findall(r'class="([^"]+)"', e.scene) for c in m.split()}
+    assert {"w", "room"} <= classes
+    css = css_dessins(document.DOCUMENT.css, [e.scene], ".d-entree")
+    # `zone` est stylée par commun/site.css (calque tactile) ; `plan` ne sert que de repère
+    site_css = (RACINE / "commun/site.css").read_text(encoding="utf-8")
+    sans_regle = {c for c in classes if not re.search(rf"\.{re.escape(c)}\b", css)}
+    assert sans_regle - {"plan"} <= {c for c in sans_regle if re.search(rf"\.{re.escape(c)}\b", site_css)}
+    assert {"w", "room", "floorbg", "dim", "dimt"} <= classes - sans_regle
