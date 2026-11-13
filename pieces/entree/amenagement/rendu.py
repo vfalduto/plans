@@ -535,7 +535,8 @@ if __name__ == "__main__":
     for name, v in vues.items():
         rendre(sc, name, v, f"{PREFIXE}-{name}.png")
     # un rendu qui n'a pas écrit son fichier fait échouer le lancement (la recette ne note rien)
-    manquants = [f for n in vues for f in (f"{PREFIXE}-{n}.png", f"{PREFIXE}-{n}-masque.png")
-                 if not os.path.exists(os.path.join(OUT, f))]
+    attendus = [f"{PREFIXE}-{n}{suffixe}.png" for n in vues
+                for suffixe in ("", "-masque") if suffixe == "" or INDIA_MODE == "neutre"]   # sans masque si ENTREE_INDIA
+    manquants = [f for f in attendus if not os.path.exists(os.path.join(OUT, f))]
     if manquants:
         raise SystemExit(f"rendus manquants : {', '.join(manquants)}")
