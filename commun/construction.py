@@ -23,6 +23,7 @@ from commun.appartement import plan_appartement
 from commun.gabarit import MOIS, adresse, menu, page_document, page_simple, relatif
 from commun.journal import entrees
 from commun.modele import Document, Passerelle, Site, Variante, verifier
+from commun.redirections import page_redirection
 
 USAGE = """Construction de site/ :
   python3 site.py                                          construit tout
@@ -396,20 +397,27 @@ def _ecrire_accueil(site: Site, sortie: Path) -> None:
 
 # ------------------------------------------------------------------ construction
 
+def _ecrire_redirections(redirections, sortie: Path) -> None:
+    for r in redirections:
+        _ecrire(sortie / r.ancienne, page_redirection(r, r.ancienne))
+
+
 def construire(site: Site, redirections, racine: Path, sortie: Path, seulement: str | None = None) -> None:
     """Écrit site/ : passerelle, fichiers communs, pages et historiques des documents, journal et accueil.
 
     `seulement` (« <piece>/<document> ») : ce document, le menu des autres pages déjà construites, l'accueil et le
-    journal. Les pages de `redirections` (tâche 10) sont exclues de la passerelle."""
+    journal. Chaque `Redirection` écrit une page à l'ancienne adresse, exclue de la passerelle."""
     racine, sortie = Path(racine), Path(sortie)
     exclues = {r.ancienne for r in redirections} | GENERES
     if seulement is None:
         copier_passerelle(racine, sortie, exclues)
+        _ecrire_redirections(redirections, sortie)
         documents = [d for p in site.pieces for d in p.documents if isinstance(d, Document)]
     else:
         cible = _trouver(site, seulement)
         if isinstance(cible, Passerelle):
             copier_passerelle(racine, sortie, exclues)
+            _ecrire_redirections(redirections, sortie)
             documents = []
         else:
             documents = [cible]
