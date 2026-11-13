@@ -2,6 +2,7 @@
 import dataclasses
 import importlib.util
 import json
+import re
 
 from outils import RACINE, balises
 
@@ -135,6 +136,23 @@ def test_textes_interdits():
         for interdit in ('type="checkbox"', "Copier la liste", "À venir", "prefers-color-scheme",
                          "Lecture du plan", "Lecture de la coupe"):
             assert interdit not in page, (v, interdit)
+
+
+def test_filtre_et_panneau_des_options():
+    page = _page("b")
+    # un filtre par option recolorée, à la valeur d'origine (v1 #EEEBE3, clarté de référence 0,80)
+    (filtre,) = balises(page, "filter", id="filtre-teinte")
+    pentes = re.findall(r'<feFunc([RGB]) type="linear" slope="([\d.]+)"', _entre(page, 'id="filtre-teinte"', "</filter>"))
+    assert [c for c, _ in pentes] == ["R", "G", "B"]
+    assert [float(p) for _, p in pentes] == [round(int(h, 16) / 255 / 0.8, 4) for h in ("EE", "EB", "E3")]
+    # le panneau est vide : site.js le remplit
+    (panneau,) = balises(page, "div", id="panneau-options")
+    assert panneau["role"] == "dialog" and "hidden" in panneau
+    assert balises(page, "div", id="voile-options")
+    assert 'id="n-options"' in page
+    # une page sans option n'a ni filtre ni panneau
+    simple = page_simple(ESSAI.SITE, "Journal", "<p>x</p>", "journal.html")
+    assert "filtre-" not in simple and "panneau-options" not in simple
 
 
 def test_corps_et_donnees():

@@ -229,6 +229,10 @@ a.b-case[aria-current="page"] > .ico{color:inherit}
 .feuille section{border-top:1px solid var(--line);margin-top:14px}
 .feuille h3{margin:14px 0 8px;font:600 17px var(--ui)}
 .feuille h3 span{font:400 14.5px var(--texte);color:var(--muted)}
+.feuille h4{margin:12px 0 6px;font:600 14.5px var(--ui);color:var(--muted)}
+.feuille .info{margin:10px 0 0;font-size:15px}
+.feuille .actions{margin:16px 0 0}
+.feuille .btn:disabled{opacity:.45}
 .nuances{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px}
 .nuances button{border:1px solid var(--line);border-radius:4px;background:var(--panel);padding:0 0 5px;font:500 13.5px/1.2 var(--ui);overflow:hidden}
 .nuances button i{display:block;height:38px;background:var(--c);margin-bottom:5px}

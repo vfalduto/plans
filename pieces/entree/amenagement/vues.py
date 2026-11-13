@@ -98,12 +98,12 @@ def _rendu_existe(variante, cle):
 
 
 def _figure(variante, cle, alt):
-    """Le rendu et, par-dessus, sa copie recolorée par le filtre de l'option (masque des surfaces India)."""
+    """Le rendu et, par-dessus, sa copie recolorée par le filtre de l'option `teinte` (masque des surfaces India)."""
     base = f"rendus/{variante}-{cle}"
     masque = f"url({base}-masque.png)"
     return (f'<figure class="cadre rendu"><img src="{base}.jpg" alt="{_e(alt)}" draggable="false">'
             f'<img class="calque" src="{base}.jpg" alt="" aria-hidden="true" draggable="false"'
-            f' style="-webkit-mask-image:{masque};mask-image:{masque}"></figure>')
+            f' style="filter:url(#filtre-teinte);-webkit-mask-image:{masque};mask-image:{masque}"></figure>')
 
 
 def _alt(M, cle, repli):

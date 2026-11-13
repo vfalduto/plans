@@ -286,10 +286,38 @@ def _tete(titre: str, depuis: str, vues: list[str], dessins: bool = False) -> st
     )
 
 
+def _pentes(couleur: str, ref: float) -> list[float]:
+    """Pente de chaque canal du filtre : la couleur visée sur la clarté de référence des murs du rendu neutre."""
+    return [int(couleur[i:i + 2], 16) / 255 / ref for i in (1, 3, 5)]
+
+
+def _filtres(options: list[dict]) -> str:
+    """Un filtre SVG `filtre-<id>` par option recolorant les rendus (`filtre`), à la valeur d'origine ; site.js
+    en change les pentes (`appliquer`)."""
+    filtres = ""
+    for o in options:
+        if not o["filtre"]:
+            continue
+        defaut = next(v for v in o["valeurs"] if v["code"] == o["defaut"])
+        pentes = "".join(f'<feFunc{c} type="linear" slope="{p:.4f}"/>'
+                         for c, p in zip("RGB", _pentes(defaut["couleur"], o["ref"])))
+        filtres += (f'<filter id="filtre-{_e(o["id"])}" color-interpolation-filters="sRGB">'
+                    f'<feComponentTransfer>{pentes}</feComponentTransfer></filter>')
+    return f'<svg width="0" height="0" style="position:absolute" aria-hidden="true">{filtres}</svg>\n' if filtres else ""
+
+
+def _panneau(options: list[dict]) -> str:
+    """Le voile et le panneau « Personnaliser », vides : site.js les remplit depuis #options."""
+    if not options:
+        return ""
+    return ('<div class="voile" id="voile-options" hidden></div>\n'
+            '<div class="feuille" id="panneau-options" role="dialog" aria-modal="true" aria-label="Personnaliser" hidden></div>\n')
+
+
 def _page(titre, depuis, corps_attrs, classes, rail, barre, contenu, variantes, options, noms, dessins="") -> str:
     return (
-        f'{_tete(titre, depuis, list(noms), bool(dessins))}<body{corps_attrs}>\n'
-        f'<div class="{classes}" id="app">\n{rail}\n{barre}\n<main class="contenu{dessins and " d-" + dessins}" id="contenu">{contenu}</main>\n</div>\n'
+        f'{_tete(titre, depuis, list(noms), bool(dessins))}<body{corps_attrs}>\n{_filtres(options)}'
+        f'<div class="{classes}" id="app">\n{rail}\n{barre}\n<main class="contenu{dessins and " d-" + dessins}" id="contenu">{contenu}</main>\n</div>\n{_panneau(options)}'
         f'<script type="application/json" id="variantes">{_json(variantes)}</script>\n'
         f'<script type="application/json" id="options">{_json(options)}</script>\n'
         f'<script type="application/json" id="noms-vues">{_json(noms)}</script>\n'

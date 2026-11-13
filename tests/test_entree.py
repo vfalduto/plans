@@ -189,6 +189,7 @@ def test_iso():
         assert imgs[0]["src"] == f"rendus/{variante}-iso_so.jpg" and imgs[0]["alt"]
         assert imgs[1]["class"] == "calque" and imgs[1]["alt"] == ""
         assert f"rendus/{variante}-iso_so-masque.png" in imgs[1]["style"]
+        assert "filter:url(#filtre-teinte)" in imgs[1]["style"]
         assert "Position" in v.fiche
         assert len(balises(v.fiche, "g", classe="pdv")) == 4
 

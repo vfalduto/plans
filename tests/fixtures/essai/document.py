@@ -46,9 +46,15 @@ CALQUES = ('<h3>Calques</h3><div class="calques">'
            '<button type="button" data-calque="cotes" aria-pressed="true">Cotes</button>'
            '<button type="button" data-calque="passages" aria-pressed="true">Passages libres</button></div>')
 # rendu d'essai : une image de 40 x 30 en data URI, dans le cadre des vues Iso et Caméra
+MASQUE = ('data:image/svg+xml,%3Csvg%20xmlns=%27http://www.w3.org/2000/svg%27%20viewBox=%270%200%2040%2030%27%3E%3Crect'
+          '%20width=%2720%27%20height=%2730%27/%3E%3C/svg%3E')
 RENDU = ('<figure class="cadre rendu"><img alt="Depuis le banc" draggable="false" src="data:image/svg+xml,'
          '%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 40 30%27%3E%3Crect width=%2740%27 height=%2730%27'
-         ' fill=%27%23ccc%27/%3E%3C/svg%3E"></figure>')
+         ' fill=%27%23ccc%27/%3E%3C/svg%3E"><img class="calque" alt="" aria-hidden="true" draggable="false"'
+         ' src="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 40 30%27%3E%3Crect'
+         ' width=%2740%27 height=%2730%27 fill=%27%23ccc%27/%3E%3C/svg%3E"'
+         ' style="filter:url(#filtre-teinte);-webkit-mask-image:url('+MASQUE+');mask-image:url('+MASQUE+')">'
+         '</figure>')
 
 
 def vues(variante):
