@@ -1,4 +1,5 @@
-"""Blocs des vues d'un document : Plan, Coupes, Iso, Caméra, et le nommage des rendus.
+"""Blocs des vues d'un document : Plan, Coupes, Iso, Caméra, et le nommage des rendus ; ceux de l'Explication et des
+achats viennent de `commun.blocs_lecture` et se lisent ici sous les mêmes noms.
 
 Chaque bloc est une fonction pure qui rend du HTML (ou une `Vue`) à partir de ce que la page lui donne : rien ici
 n'importe `pieces`, et les chemins (dossier des rendus) arrivent en argument. Titres, noms, libellés et cotes sont
@@ -13,6 +14,8 @@ from html import escape
 from pathlib import Path
 from typing import Mapping, Sequence
 
+from commun.blocs_lecture import (Achat, Carte, SectionAchats, a_verifier, achats, chiffres, euros,  # noqa: F401
+                                  materiaux, note_source, principes, tableau_achats, tete, vue_lecture)
 from commun.dessin import f
 from commun.modele import Camera, Element, Vue
 from commun.position import mini_plan

@@ -1,7 +1,8 @@
 from pathlib import Path
 
-from commun.blocs import (CALQUES, INVITE, Coupe, Lieu, Zone, cotes_meuble, figure_rendu, points_iso, rendu,
-                          vue_camera, vue_coupes, vue_iso, vue_plan, zones_svg)
+from commun.blocs import (CALQUES, INVITE, Achat, Carte, Coupe, Lieu, SectionAchats, Zone, a_verifier, achats,
+                          cotes_meuble, euros, figure_rendu, points_iso, principes, rendu, tableau_achats, tete,
+                          vue_camera, vue_coupes, vue_iso, vue_lecture, vue_plan, zones_svg)
 from commun.modele import Camera
 from tests.outils import RACINE, balises
 
@@ -147,3 +148,97 @@ def test_commun_n_importe_pas_pieces():
     for chemin in sorted(Path(RACINE / "commun").glob("*.py")):
         texte = chemin.read_text(encoding="utf-8")
         assert "import pieces" not in texte and "from pieces" not in texte, chemin.name
+
+
+# ------------------------------------------------------------------ Explication et achats
+def test_euros():
+    assert euros(80) == "80 €"
+    assert euros(12.5) == "12,5 €"
+    assert euros(38.97) == "38,97 €"
+    assert euros(0.1 + 0.2) == "0,3 €"
+    assert euros(100) == "100 €"
+    assert euros(12345.67) == "12345,67 €"
+
+
+def _cellules(html, classe):
+    """Textes des cellules de la ligne `tr.<classe>` (une liste par ligne)."""
+    lignes = html.split(f'<tr class="{classe}">')[1:]
+    return [[c.split(">", 1)[1] for c in ligne.split("</tr>")[0].split("</td>")[:-1]] for ligne in lignes]
+
+
+def test_tableau_achats_forme_de_l_entree():
+    html = tableau_achats([Achat("Caisson", "604.582.27", 1, 80), Achat("Tablette", "702.779.95", 2, 27.5)],
+                          approx=True)
+    assert "<thead><tr><th>Article</th><th>Référence</th><th class=\"d\">Qté</th><th class=\"d\">Prix</th></tr></thead>" in html
+    assert '<td class="num d">80 €</td>' in html and '<td class="num d">55 €</td>' in html
+    assert '<td class="num d">2</td>' in html
+    assert _cellules(html, "total") == [["Total", "", "", "≈ 135 €"]]
+    assert html.startswith('<div class="defile"><table>') and html.endswith("</tbody></table></div>")
+
+
+def test_achats_sections():
+    ikea = SectionAchats("IKEA", [Achat("Caisson", "1", 1, 80.4)])
+    weldom = SectionAchats("Weldom", [Achat("Vis", "2", 4, 1.1)])
+    html = achats([ikea, weldom], note="Prix relevés.")
+    assert html.startswith("<h2>Achats</h2>")
+    assert html.count("<h3>") == 2 and "<h3>IKEA</h3>" in html and "<h3>Weldom</h3>" in html
+    assert _cellules(html, "total") == [["Sous-total", "", "", "80 €"], ["Sous-total", "", "", "4 €"]]
+    # arrondi depuis la somme exacte (84,8), pas depuis les sous-totaux arrondis (80 + 4)
+    assert '<p class="total-achats"><span>Total</span><span class="num">85 €</span></p>' in html
+    assert html.endswith('<p class="remarque">Prix relevés.</p>')
+    seule = achats([SectionAchats("", [Achat("Caisson", "1", 1, 80)])], titre="Achats IKEA", approx=True)
+    assert seule.startswith("<h2>Achats IKEA</h2>") and "<h3>" not in seule
+    assert _cellules(seule, "total") == [["Total", "", "", "≈ 80 €"]]
+    assert "total-achats" not in seule and "remarque" not in seule
+    exact = achats([ikea, weldom], arrondi=False)
+    assert '<span class="num">84,8 €</span>' in exact and '<td class="num d">4,4 €</td></tr></tbody>' in exact
+
+
+def test_achat_non_chiffre():
+    html = tableau_achats([Achat("Porte", "P1", 1, None), Achat("Poignée", "P2", 2, 4.5)])
+    assert '<td class="num d">non chiffré</td>' in html
+    assert _cellules(html, "total") == [["Total", "", "", "9 €"]]
+    assert "0 €" not in html
+
+
+def test_achat_note():
+    html = tableau_achats([Achat("Vis & chevilles", "R<1>", 1, 3, note="Weldom, réf. magasin")])
+    assert "<td>Vis &amp; chevilles<small>Weldom, réf. magasin</small></td>" in html
+    assert '<td class="num">R&lt;1&gt;</td>' in html
+    assert "<small>" not in tableau_achats([Achat("Vis", "R1", 1, 3)])
+
+
+def test_principes_montrer_sur_le_plan():
+    html = principes([Carte("Banc & coffre", "Un <b>banc</b>.", meuble="banc"), Carte("Couleur", "India.")])
+    assert html.startswith('<h2>Principe</h2><ol class="principes">') and html.endswith("</ol>")
+    assert [a["href"] for a in balises(html, "a")] == ["#plan?k=banc"]
+    assert ('<li><h3>Banc &amp; coffre</h3><p>Un <b>banc</b>.</p>'
+            '<a class="btn" href="#plan?k=banc">Montrer sur le plan</a></li>') in html
+    assert "<li><h3>Couleur</h3><p>India.</p></li>" in html
+
+
+def test_tete():
+    assert tete("Un <b>couloir</b>.") == '<p class="chapo">Un <b>couloir</b>.</p>'
+    avec = tete("Chapô", [("#plan", "Ouvrir le plan"), ("#iso", "Voir en iso")], "<figure>f</figure>")
+    assert avec == ('<div class="tete-doc"><div><p class="chapo">Chapô</p><p class="actions">'
+                    '<a class="btn plein" href="#plan">Ouvrir le plan</a><a class="btn" href="#iso">Voir en iso</a></p>'
+                    "</div><figure>f</figure></div>")
+    figure = tete("Chapô", figure="<figure>f</figure>")
+    assert figure == '<div class="tete-doc"><div><p class="chapo">Chapô</p></div><figure>f</figure></div>'
+    assert balises(figure, "p", classe="actions") == []
+
+
+def test_a_verifier_sans_case():
+    html = a_verifier(["<b>Prise</b> : à relever.", "Plafond."])
+    assert html == ('<h2>À vérifier sur place</h2><ul class="liste"><li><span><b>Prise</b> : à relever.</span></li>'
+                    "<li><span>Plafond.</span></li></ul>")
+    assert "<input" not in html
+    assert a_verifier(["x"], titre="Points à vérifier").startswith("<h2>Points à vérifier</h2>")
+
+
+def test_vue_lecture():
+    vide = vue_lecture("explication", "")
+    assert vide.id == "explication" and vide.elements == [] and vide.vide == "Sans objet"
+    vue = vue_lecture("achats", "<p>x</p>")
+    [el] = vue.elements
+    assert (el.k, el.nom, el.titre, el.scene) == ("", "Achats", "Achats", "<p>x</p>")
