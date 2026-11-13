@@ -286,3 +286,14 @@ def test_entree_dessins_styles():
     sans_regle = {c for c in classes if not re.search(rf"\.{re.escape(c)}\b", css)}
     assert sans_regle - {"plan"} <= {c for c in sans_regle if re.search(rf"\.{re.escape(c)}\b", site_css)}
     assert {"w", "room", "floorbg", "dim", "dimt"} <= classes - sans_regle
+
+
+def test_entree_legende_et_mini_plan_styles():
+    from commun.css_dessins import css_dessins
+    # la fiche (légende, mini-plan) est lue avec les scènes : ses classes gardent leurs règles
+    v = vues.vues("principale")["plan"]
+    css = css_dessins(document.DOCUMENT.css, [v.fiche, *(e.fiche for e in v.elements)], ".d-entree")
+    assert ".d-entree .legend svg{width:26px;height:14px;flex:none}" in css
+    # le mini-plan de la fiche (sol, ouvertures) est stylé par commun/site.css
+    site_css = (RACINE / "commun/site.css").read_text(encoding="utf-8")
+    assert ".mini .sol{" in site_css and ".mini .ouv{" in site_css

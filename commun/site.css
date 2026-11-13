@@ -196,6 +196,8 @@ a.b-case[aria-current="page"] > .ico{color:inherit}
 .mini{position:relative;border:1px solid var(--line);background:var(--panel);border-radius:4px;margin:6px 0 4px;padding:26px 30px}
 .mini svg{display:block;width:100%;height:auto;max-height:230px}
 .mini svg text,.mini .dim,.mini .dimt,.mini .pass,.mini .passm,.mini .room,.mini .doorzone,.mini .swing,.mini .hook,.mini .indiap{display:none}
+.mini .sol{fill:var(--line);fill-opacity:.18;stroke:var(--ink);stroke-width:4;stroke-linejoin:round}
+.mini .ouv{stroke:var(--panel);stroke-width:6}
 .mini .sec{stroke-opacity:.25}
 .mini .sec.ici{stroke-opacity:1;stroke-width:5}
 .mini .cam{fill:var(--coupe)}
