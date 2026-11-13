@@ -498,8 +498,9 @@ async function comparer(etat) {
 
 /* Barre : « Comparer » pose c (la première autre variante) ou le retire, « avec » change c ; tous deux sont cachés
    hors de COMPARABLES. Le choix de variante charge l'autre page en gardant l'état, et échange c et la base si c devient
-   la base. En comparaison, aucun meuble n'est choisi sur le plan (maquette) : k ne reste que s'il désigne un élément
-   de la vue (coupe, caméra). */
+   la base. En comparaison, aucun meuble n'est choisi sur le plan (maquette), et un meuble ne passe pas d'une variante
+   à l'autre (k est le rang de sa zone, qui désigne un autre meuble ailleurs) : dans les deux cas, k ne reste que s'il
+   désigne un élément de la vue (coupe, caméra). */
 const bComp = $("#c-comp"), choixAutre = $("#c-autre"), avec = choixAutre && choixAutre.closest("label");
 const choixVariante = $("#c-variante"), cases = $(".b-cases");
 function majBarre(etat) {
@@ -508,21 +509,21 @@ function majBarre(etat) {
   if (avec) { avec.hidden = !(comparable && etat.c); if (etat.c) choixAutre.value = etat.c; }
   if (cases) cases.classList.toggle("deux-choix", Boolean(avec && !avec.hidden));
 }
-function repereEnComparaison(etat) {
+function repereDeLaVue(etat) {
   const section = sections.find(s => s.dataset.vue === etat.vue);
   return section && $$(".scene > .element[data-k]:not(.b)", section).some(x => x.dataset.k === etat.k) ? etat.k : "";
 }
 function brancherComparaison() {
   if (bComp) bComp.addEventListener("click", () => {
     const autre = (variantes.find(v => v[0] !== base) || [null])[0];
-    aller({...courant, k: repereEnComparaison(courant), c: courant.c ? null : autre});
+    aller({...courant, k: repereDeLaVue(courant), c: courant.c ? null : autre});
   });
-  if (choixAutre) choixAutre.addEventListener("change", () => aller({...courant, k: repereEnComparaison(courant), c: choixAutre.value}));
+  if (choixAutre) choixAutre.addEventListener("change", () => aller({...courant, k: repereDeLaVue(courant), c: choixAutre.value}));
   if (choixVariante) {
     choixVariante.addEventListener("change", () => {
       const v = variantes.find(x => x[0] === choixVariante.value);
       if (!v || v[0] === base) return;
-      location.assign(v[2] + fragment({...courant, c: courant.c === v[0] ? base : courant.c}));
+      location.assign(v[2] + fragment({...courant, k: repereDeLaVue(courant), c: courant.c === v[0] ? base : courant.c}));
     });
     addEventListener("pageshow", () => { choixVariante.value = base; });   // retour arrière : la variante de la page
   }
