@@ -359,3 +359,31 @@ def test_dessins_css_ecrit(tmp_path):
     sortie2 = tmp_path / "site2"
     construire(ESSAI.SITE, (), racine, sortie2)
     assert not (sortie2 / "essai/amenagement/dessins.css").exists()
+
+
+def test_figer_garde_le_css_des_dessins(tmp_path):
+    """Une version figée est autonome : son dessins.css, et chaque lien de l'en-tête mène à un fichier."""
+    _communs_d_essai(tmp_path)
+    def generer(variante):
+        vues = ESSAI.DOCUMENT.generer(variante)
+        for vue in vues.values():
+            for e in vue.elements:
+                e.scene = e.scene.replace("<rect ", '<rect class="room" ')
+        return vues
+
+    doc = dataclasses.replace(ESSAI.DOCUMENT, css=".room{fill:red}.absente{fill:blue}", generer=generer)
+    site = Site((Piece("essai", "Essai", (doc,)),))
+    sortie = tmp_path / "site"
+    construire(site, (), tmp_path, sortie)
+    dossier = figer(site, tmp_path, sortie, "essai/amenagement/b")
+    page = _lire(dossier / "index.html")
+    assert 'href="dessins.css"' in page
+    assert (dossier / "dessins.css").is_file()
+    assert _lire(dossier / "dessins.css") == ".d-essai .room{fill:red}\n"
+    assert _lire(dossier / "dessins.css") == _lire(sortie / "essai/amenagement/dessins.css")
+    assert balises(page, "main")[0]["class"] == "contenu d-essai"
+    assert len(balises(page, "section", classe="vue")) == 5
+    tete = page.split("</head>")[0]
+    for u in _references(tete):
+        assert (dossier / u).resolve().is_file(), u
+    assert _liens_morts(sortie, "archive/essai-amenagement-b-v0.3/index.html") == []

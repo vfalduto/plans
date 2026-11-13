@@ -451,7 +451,8 @@ def _page_figee(site: Site, doc: Document, variante: Variante, html: str, depuis
     - le menu est refait depuis l'archive ; la pastille de version et le choix du document mènent aux pages en
       cours (historique.html du document, autres documents de la pièce) ;
     - les sections des vues ne changent pas : leurs rendus/ sont copiés à côté."""
-    debut, main, reste = html.partition('<main class="contenu" id="contenu">')
+    ouvrant = re.search(r'<main class="contenu[^"]*" id="contenu">', html)   # `d-<piece>` s'ajoute si le document a un css
+    debut, main, reste = html[:ouvrant.start()], ouvrant.group(0), html[ouvrant.end():]
     contenu, fin_main, fin = reste.rpartition("</main>")
 
     def barre(m):
@@ -462,6 +463,12 @@ def _page_figee(site: Site, doc: Document, variante: Variante, html: str, depuis
             r'value="([^"]*)"', lambda v: f'value="{_e(_rebaser(unescape(v.group(1)), depuis, vers))}"', s.group(0)), b)
         return re.sub(r'href="([^"]*)"', lambda h: f'href="{_e(_rebaser(unescape(h.group(1)), depuis, vers))}"', b)
 
+    # feuilles, scripts et icônes de l'en-tête, écrits pour `depuis` ; dessins.css est copié à côté de la page figée
+    tete, sep, corps = debut.partition("</head>")
+    tete = re.sub(r'(<(?:link|script)\b[^>]*?\b(?:href|src)=")([^"]*)(")',
+                  lambda m: m.group(1) + (m.group(2) if m.group(2) == "dessins.css"
+                                          else _e(_rebaser(unescape(m.group(2)), depuis, vers))) + m.group(3), tete)
+    debut = tete + sep + corps
     debut = RAIL.sub(lambda _: menu(site, (doc.piece, doc.id), vers), debut, count=1)
     debut = BARRE.sub(barre, debut, count=1)
     debut = debut.replace("<body", f'<body data-figee="{_e(variante.version)}"', 1)
@@ -496,6 +503,9 @@ def figer(site: Site, racine: Path, sortie: Path, cible: str) -> Path:
     html = _page_figee(site, doc, variante, page.read_text(encoding="utf-8"), adresse(doc, variante.id),
                        f"archive/{nom}/")
     _ecrire(dossier / "index.html", html)
+    if doc.css:   # la copie figée est autonome : son propre dessins.css, filtré sur toutes les variantes
+        scenes = [d for v in doc.variantes for d in _dessins(doc.generer(v.id))]
+        _ecrire(dossier / "dessins.css", css_dessins(doc.css, scenes, f".d-{doc.piece}") + "\n")
     rendus = page.parent / "rendus"
     if rendus.is_dir():
         shutil.copytree(rendus, dossier / "rendus", dirs_exist_ok=True)
