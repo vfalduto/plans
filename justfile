@@ -84,12 +84,24 @@ v13-figer:
 entree:
     python3 3d/entree/plan.py
 
-# Entrée : vues isométriques (Blender) depuis 3d/entree/modele.py → entree-3d/*.jpg, puis regénère la page
+# Entrée : vues 3D (Blender) depuis 3d/entree/modele.py → entree-3d/*.jpg, surfaces India en gris neutre + masques
+# *-masque.png (recolorés dans la page par le sélecteur Plum Living, courbes dans 3d/entree/plum_lut.json), puis la page
 entree-rendu echantillons="64" *vues:
     /Applications/Blender.app/Contents/MacOS/Blender -b --python 3d/entree/rendu.py -- {{echantillons}} {{vues}}
     mkdir -p entree-3d
-    for f in 3d/sortie/entree-rendu-*.png; do sips -s format jpeg -s formatOptions 85 "$f" --out "entree-3d/$(basename "$f" .png | sed 's/entree-rendu-//').jpg" >/dev/null; done
+    for f in 3d/sortie/entree-rendu-*.png; do n="$(basename "$f" .png | sed 's/entree-rendu-//')"; case "$n" in *-masque) cp "$f" "entree-3d/$n.png";; *) sips -s format jpeg -s formatOptions 85 "$f" --out "entree-3d/$n.jpg" >/dev/null;; esac; done
     python3 3d/entree/plan.py
+
+# Entrée, version Victor : régénère entree-amenagement-victor.html depuis 3d/entree/victor.py
+entree-victor:
+    python3 3d/entree/plan_victor.py
+
+# Entrée, version Victor : vues 3D (Blender) → entree-victor-3d/*.jpg + masques India, puis regénère la page
+entree-victor-rendu echantillons="64" *vues:
+    ENTREE_MODELE=victor /Applications/Blender.app/Contents/MacOS/Blender -b --python 3d/entree/rendu.py -- {{echantillons}} {{vues}}
+    mkdir -p entree-victor-3d
+    for f in 3d/sortie/entree-victor-rendu-*.png; do n="$(basename "$f" .png | sed 's/entree-victor-rendu-//')"; case "$n" in *-masque) cp "$f" "entree-victor-3d/$n.png";; *) sips -s format jpeg -s formatOptions 85 "$f" --out "entree-victor-3d/$n.jpg" >/dev/null;; esac; done
+    python3 3d/entree/plan_victor.py
 
 salon:
     python3 3d/salon/plan.py

@@ -12,7 +12,7 @@ import math
 import os
 from dataclasses import dataclass
 
-VERSION = "V13.27"
+VERSION = "V13.30"
 H = 250  # hauteur sous plafond
 
 
@@ -913,8 +913,38 @@ RENDUS_VERSION.update({v: "V13.24" for v in RENDUS_VERSION})   # V13.24 : toutes
 RENDUS_VERSION.update({v: "V13.26" for v in RENDUS_VERSION})   # V13.26 : bas et colonnes METOD
 RENDUS_VERSION["iso_no"] = "V13.27"
 
+# ------------------------------------------------------------------ hauteur du plan de travail (V13.28)
+# Hauteurs de coude mesurées (sol → dessous du coude, avant-bras à 90°), en cm.
+COUDES = {"Vincent": 104, "Victor": 113}
+# Règle (Bora, Neff) : plan 10 à 15 sous le coude ; plaque ≈ 20 sous le coude (Siemens).
+PT_SOUS_COUDE = (10, 15)
+PLAQUE_SOUS_COUDE = 20
+# Ergonomie du travail debout (HSE, Bodyspace) : gestes légers 5 à 10 sous le coude, tâches avec appui 10 à 25.
+HSE_LEGER, HSE_APPUI = (5, 10), (10, 25)
+PT_RECO = 96   # proposition, pas encore appliquée à PT_Z1
+# Hauteurs candidates : (hauteur du plan, pieds, comment l'obtenir) ; caisson METOD 80 + plan 4 dans tous les cas.
+PT_CANDIDATS = [
+    (92, 8, "actuel : pieds METOD 8, plinthe IKEA 8"),
+    (94, 10, "pieds METOD réglés vers le haut de leur course (≈ 10,5 au plus, à vérifier), plinthe recoupée à 10"),
+    (96, 12, "pieds de 12 d'une autre marque (type SoTech), plinthe sur mesure de 12"),
+    (98, 14, "pieds de 14 d'une autre marque, plinthe sur mesure de 14"),
+    (101, 17, "pieds de 17, plinthe sur mesure de 17"),
+]
+
 # ------------------------------------------------------------------ historique (section Changements)
 CHANGEMENTS = [
+    ("V13.30", "13/11/2026",
+     "Encart renommé « Hauteur du plan de travail (étude) », avec une mention en tête : rien n'est appliqué, plan "
+     "toujours à 92. Lien dans le sommaire : #hauteur-du-plan-de-travail-etude."),
+    ("V13.29", "13/11/2026",
+     "Encart « Hauteur du plan de travail » refait après une recherche élargie : ergonomie du travail debout (HSE, "
+     "Bodyspace, NIOSH : gestes légers 5 à 10 sous le coude, appui 10 à 25), table de Neff, évier mesuré au fond du "
+     "bac, plaque (pas de consensus), étude en cantine, solutions pour un couple de tailles différentes, essai "
+     "grandeur nature. Plan conseillé 96, modèle toujours à 92 en attendant le choix."),
+    ("V13.28", "13/11/2026",
+     "Encart « Hauteur du plan de travail » après la coupe A-A, à partir des coudes mesurés (Vincent 104, Victor 113) : "
+     "règle du coude (plan 10 à 15 dessous, plaque ≈ 20 dessous), hauteurs candidates 92 → 101 avec l'écart au coude "
+     "de chacun et la façon de les obtenir en METOD. Modèle inchangé (plan toujours à 92) en attendant le choix."),
     ("V13.27", "09/11/2026",
      "Rendu isométrique depuis le nord-ouest : porte du cellier fermée, dans sa cloison (cloison et linteau du cellier "
      "n'étaient plus dessinés), machine à café retirée de la vue avec la rangée nord coupée."),

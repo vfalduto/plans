@@ -615,6 +615,86 @@ TAILLE_JS = """
 """
 
 
+# ------------------------------------------------------------------ hauteur du plan de travail (V13.28)
+def hors_fourchette(h, coude, regle=None):
+    """Écart (cm) entre le plan h et la fourchette coude − hi → coude − lo ; > 0 trop haut, < 0 trop bas, 0 dedans."""
+    lo_s, hi_s = regle or M.PT_SOUS_COUDE
+    lo, hi = coude - hi_s, coude - lo_s
+    return h - hi if h > hi else (h - lo if h < lo else 0)
+
+
+def hauteur_pt_svg():
+    zmin, zmax, k, y0 = 78, 118, 8, 24
+    Y = lambda z: y0 + (zmax - z) * k
+    o = []
+    for z in range(zmin, zmax + 1, 2):
+        o.append(f'<line class="hpg" x1="70" y1="{Y(z)}" x2="470" y2="{Y(z)}"/>')
+        if z % 4 == 2:
+            o.append(f'<text class="hpt" x="62" y="{Y(z) + 4}" text-anchor="end">{z}</text>')
+    for h, _, _ in M.PT_CANDIDATS:
+        cls = "hpc act" if h == M.PT_Z1 else ("hpc rec" if h == M.PT_RECO else "hpc")
+        lib = f"{h} actuel" if h == M.PT_Z1 else (f"{h} conseillé" if h == M.PT_RECO else str(h))
+        o.append(f'<line class="{cls}" x1="80" y1="{Y(h)}" x2="470" y2="{Y(h)}"/>'
+                 f'<text class="hpt {cls}" x="476" y="{Y(h) + 4}">{lib}</text>')
+    (al, ah), (ll, lh) = M.HSE_APPUI, M.HSE_LEGER
+    for i, (nom, c) in enumerate(M.COUDES.items()):
+        x0, x1 = 110 + i * 210, 240 + i * 210
+        # bandes HSE : appui à gauche, geste léger à droite (bornées au cadre du schéma)
+        for xb, (s0, s1), cls in ((x0 - 12, M.HSE_APPUI, "hsa"), (x1 + 4, M.HSE_LEGER, "hsl")):
+            z0, z1 = max(zmin, c - s1), min(zmax, c - s0)
+            o.append(f'<rect class="{cls}" x="{xb}" y="{Y(z1)}" width="8" height="{(z1 - z0) * k}" rx="2"/>')
+        lo, hi = c - M.PT_SOUS_COUDE[1], c - M.PT_SOUS_COUDE[0]
+        o.append(f'<rect class="z1 hpb" x="{x0}" y="{Y(hi)}" width="{x1 - x0}" height="{(hi - lo) * k}" rx="3"/>')
+        o.append(f'<text class="hpt on" x="{(x0 + x1) / 2}" y="{Y((lo + hi) / 2) + 4}" text-anchor="middle">plan {lo} → {hi}</text>')
+        zp = c - M.PLAQUE_SOUS_COUDE
+        o.append(f'<line class="hpp" x1="{x0}" y1="{Y(zp)}" x2="{x1}" y2="{Y(zp)}"/>'
+                 f'<text class="hpt hph" x="{x0 - 16}" y="{Y(zp) + 4}" text-anchor="end">plaque {zp}</text>')
+        o.append(f'<line class="rep" x1="{x0}" y1="{Y(c)}" x2="{x1}" y2="{Y(c)}" style="stroke-width:1.5"/>'
+                 f'<text class="hpt rept" x="{(x0 + x1) / 2}" y="{Y(c) - 6}" text-anchor="middle">coude {c}</text>')
+        o.append(f'<text class="hpn" x="{(x0 + x1) / 2}" y="14" text-anchor="middle">{nom}</text>')
+    return f'<svg viewBox="0 0 570 {Y(zmin) + 12}" role="img" aria-label="Hauteur du plan de travail selon le coude">{"".join(o)}</svg>'
+
+
+def etat(e):
+    return "oui" if e == 0 else (f"{e} trop haut" if e > 0 else f"{-e} trop bas")
+
+
+def section_hauteur_pt():
+    noms = list(M.COUDES)
+    ent = "".join(f"<th>{n} (coude {M.COUDES[n]})</th>" for n in noms)
+    lignes = []
+    for h, _, comment in M.PT_CANDIDATS:
+        cells = []
+        for n in noms:
+            c = M.COUDES[n]
+            e, el, ea = (hors_fourchette(h, c, r) for r in (M.PT_SOUS_COUDE, M.HSE_LEGER, M.HSE_APPUI))
+            cells.append(f'<td class="{"ok" if e == 0 else ""}"><span class="mono">coude − {c - h}</span><br>'
+                         f'cuisinistes : {etat(e)}<br><span class="note">léger : {etat(el)} · appui : {etat(ea)}</span></td>')
+        tot = sum(abs(hors_fourchette(h, M.COUDES[n])) for n in noms)
+        rec = ' class="hpr"' if h == M.PT_RECO else ""
+        lignes.append(f'<tr{rec}><td class="mono"><b>{h}</b>{" (actuel)" if h == M.PT_Z1 else ""}</td>{"".join(cells)}'
+                      f'<td class="mono">{tot}</td><td class="mono">{M.HAUT_Z0 - h}</td><td>{escape(comment)}</td></tr>')
+    vi, vc = M.COUDES["Vincent"], M.COUDES["Victor"]
+    (ll, lh), (al, ah) = M.HSE_LEGER, M.HSE_APPUI
+    r = M.PT_RECO
+    return f"""<h2>Hauteur du plan de travail (étude)</h2>
+<div class="fig"><p class="cap"><b>Étude seulement</b> : rien n'est appliqué au plan, le plan de travail reste à {M.PT_Z1} dans le modèle, les coupes et les rendus.</p><div class="scroll hpw">{hauteur_pt_svg()}</div>
+<p class="cap">Coudes mesurés debout, du sol au dessous du coude, avant-bras plié à 90° : Vincent {vi}, Victor {vc} ({vc - vi} d'écart). <b>Bande verte</b> : règle des cuisinistes, plan 10 à 15 sous le coude. <b>Barres fines</b> de part et d'autre (ergonomie du travail debout, HSE / <i>Bodyspace</i>) : à gauche, tâches avec appui (couper du dur, pétrir, presser), {al} à {ah} sous le coude ; à droite, gestes légers et précis (éplucher, garnir), {ll} à {lh} sous le coude. <b>Trait ocre</b> : plaque idéale, 20 sous le coude (Siemens). Tireté rouge : coude. Traits horizontaux : hauteurs candidates (plein : actuelle {M.PT_Z1} ; bleu : conseillée {r}).</p>
+<table class="hpt-tab"><thead><tr><th>Plan</th>{ent}<th>Hors fourchette cuisinistes (total)</th><th>Plan → hauts</th><th>Comment l'obtenir (caisson METOD 80 + plan 4)</th></tr></thead><tbody>{"".join(lignes)}</tbody></table>
+<div class="txt">
+<p><b>Ce que disent les sources.</b> Tout le monde part du coude, mais pas avec le même écart. Les cuisinistes (Bora, Neff, guides allemands) disent 10 à 15 sous le coude ; la table de Neff donne coude 107 → plan 92, coude 114 → 99, coude 125 → 110. Les références d'ergonomie du travail debout (HSE, Pheasant et Haslegrave, <i>Bodyspace</i> ; NIOSH d'après Grandjean) distinguent la tâche : gestes légers {ll} à {lh} sous le coude, tâches avec appui {al} à {ah} sous le coude, travail de précision au-dessus du coude. La règle des cuisinistes (10 à 15) est un compromis entre les deux, pour une cuisine où l'on fait de tout.</p>
+<p><b>Ce que ça change pour vous deux.</b> Avec la règle des cuisinistes, les fourchettes ne se recouvrent pas (Vincent {vi - 15} → {vi - 10}, Victor {vc - 15} → {vc - 10}). Avec la règle par tâche, elles se recouvrent : de {vi - lh} à {vi - ll}, le plan est « léger » pour Vincent et « appui » pour Victor, donc correct pour les deux, à condition que Victor fasse surtout la découpe et la pâte, et Vincent les gestes fins. Le plan conseillé, <b>{r}</b>, est au milieu de ce recouvrement et partage l'écart à la règle des cuisinistes : 2 de trop pour Vincent, 2 de trop peu pour Victor.</p>
+<p><b>Trop haut ou trop bas ?</b> Une étude sur onze cuisines de cantine a trouvé le plan de découpe trop haut pour un tiers des cuisiniers, d'après leur coude ; les douleurs de nuque et d'épaule y étaient plus fréquentes chez les plus petits. Un plan trop haut fait lever les épaules ; un plan trop bas fait pencher le dos. Les deux fatiguent ; on compense facilement un plan trop bas (planche épaisse de 4 à 5 pour le plus grand), pas un plan trop haut.</p>
+<p><b>Évier : il pousse vers le haut.</b> Neff mesure l'évier au <i>fond du bac</i> : c'est lui qui doit être à la hauteur de travail (coude − 15), et le bord peut monter jusqu'à 15 au-dessus. Avec un bac d'environ 18 à 20 de profondeur (à vérifier sur le modèle), le fond est à ≈ {r - 19} pour un plan à {r} : {vi - 15 - (r - 19)} sous la hauteur de travail de Vincent ({vi - 15}), {vc - 15 - (r - 19)} sous celle de Victor ({vc - 15}). Aucun plan standard ne met le fond du bac à la bonne hauteur : la vaisselle est le poste où l'on se penche le plus, Victor surtout, et chaque centimètre gagné sur le plan y compte. À {M.PT_Z1}, le fond serait à ≈ {M.PT_Z1 - 19}. Un bac moins profond, ou un égouttoir / bassine posé dans le bac pour la vaisselle à la main, réduit l'écart.</p>
+<p><b>Plaque : elle pousse vers le bas.</b> Le bord de la casserole donne la hauteur de travail : Neff conseille la plaque 15 sous le plan, Siemens 20 sous le coude (Vincent {vi - M.PLAQUE_SOUS_COUDE}, Victor {vc - M.PLAQUE_SOUS_COUDE}) ; certains guides allemands la mettent au contraire au même niveau que l'évier, 10 sous le coude. Pas de consensus. Sur un plan continu, la plaque est à la hauteur du plan : à {r}, haute pour Vincent dans une grande casserole, correcte pour Victor.</p>
+<p><b>Couples de tailles différentes.</b> Les designers proposent trois réponses : choisir la hauteur de celui qui cuisine le plus, faire des zones à deux hauteurs (souvent un îlot plus haut que le linéaire), ou un plan réglable. Ici, sans îlot, une zone à deux hauteurs voudrait dire un ressaut dans le plan du mur nord, par exemple l'évier (B{M.B_EVIER}) et B{M.B_ETROIT} plus hauts que la plaque et les tiroirs (B1 → B{M.B_TIROIRS_2}) ; c'est faisable avec des pieds différents mais cela casse la ligne du plan, de la crédence et des façades.</p>
+<p><b>Avant de décider : essayer.</b> Comme pour l'implantation (V13.17), un essai grandeur nature tranche mieux que les règles : un plateau posé sur des cales à 92, 96 puis 98, et chacun y coupe des légumes, y pétrit, y tient une casserole pendant quelques minutes.</p>
+<p><b>Conséquences d'un plan plus haut.</b> Les colonnes C1 et C2 sont sur les mêmes pieds : elles montent d'autant (dessus {M.COL_Z1} + Δ, fileur au-dessus réduit). Les meubles hauts restent à h {M.HAUT_Z0} : l'espace plan → hauts diminue (colonne « Plan → hauts ») ; vérifier la distance minimale plaque → hotte imposée par la notice de la hotte intégrée dans H1. Au-delà de 94, la plinthe IKEA de 8 ne suffit plus : plinthe sur mesure (même façade). Four sous la plaque et lave-vaisselle en hauteur dans C1 : non concernés.</p>
+<p class="src">Sources. Règle des cuisinistes : <a href="https://www.bora.com/fr-fr/guide/la-cuisine-ergonomique-lignes-directrices-conseils">Bora</a> ; <a href="https://neff-home.com/fr/decouvrez-neff/conseils-pour-amenager-votre-cuisine/etapes/ergonomie">Neff</a> (plan, plaque, évier) et sa <a href="https://www.neff-home.com/de/neff-entdecken/kuechenplanung/schritte/ergonomie">table coude → plan</a> ; <a href="https://www.hausjournal.net/hoehe-kuechenarbeitsflaeche">Hausjournal</a> (évier et plaque 10 sous le coude) ; <a href="https://www.siemens-home.bsh-group.com/fr/inspiration-siemens/design/votre-projet-cuisine/table-de-cuisson">Siemens</a> (plaque 20 sous le coude). Ergonomie du travail debout : <a href="https://www.hse.gov.uk/MSD/uld/art/posture.htm">HSE</a> ; <a href="https://www.msdprevention.com/resource-library/standing-workstation-height-manual-tasks">CRE-MSD</a> ; <a href="https://webarchive.library.unt.edu/eot2008/20080923002046/http://www.cdc.gov/niosh/pdfs/97-117-f.pdf">NIOSH, <i>Elements of Ergonomics Programs</i></a> (d'après Grandjean). Étude en cantine : <a href="https://pubmed.ncbi.nlm.nih.gov/15676673/">PubMed 15676673</a> (résumé seul). Couples : <a href="https://www.livingetc.com/advice/should-a-kitchen-island-be-the-same-height-as-the-counters">Livingetc</a>, <a href="https://www.homesandgardens.com/kitchens/should-a-kitchen-island-be-the-same-height-as-the-counters">Homes &amp; Gardens</a>. Pieds METOD (≈ 7 → 10,5, chiffre de forum, non confirmé par IKEA) : <a href="https://www.forumconstruire.com/construire/topic-407503-remplacer-pieds-elements-metod.php">Forumconstruire</a>, <a href="https://www.ikea.com/fr/fr/p/metod-pied-70556067">fiche IKEA</a>.</p>
+</div></div>
+"""
+
+
 # ------------------------------------------------------------------ porte du cellier : Mantion Tango (V13.14)
 def virg(v):
     """Cote à une décimale au plus, virgule française (68,7 ; 60)."""
@@ -861,7 +941,7 @@ CSS = """
 *{box-sizing:border-box}
 .z1{fill:#5B9E6A;opacity:.85}.z2{fill:#A9CF8F;opacity:.85}.z3{fill:#E8C26A;opacity:.85}.z4{fill:#D9826B;opacity:.85}
 .rep{stroke:#C8412C;stroke-width:.5;stroke-dasharray:3 2;opacity:.7}.rept{fill:#C8412C}
-.lblz{font-size:3.8px;fill:var(--ink)}.lblz.rept{fill:#C8412C}.regle{display:none}html[data-taille="175"] .regle[data-t="175"],html[data-taille="180"] .regle[data-t="180"]{display:inline}
+.lblz{font-size:3.8px;fill:var(--ink)}.hpw svg{max-width:690px;display:block;margin:0 auto}.hsa{fill:#C98A1E;opacity:.45}.hsl{fill:#2F7FB5;opacity:.4}tr.hpr td{background:color-mix(in srgb,#2F7FB5 10%,transparent)}.hpb{opacity:.92}text.hph{fill:#C98A1E;font-weight:600;paint-order:stroke;stroke:var(--panel);stroke-width:4px}.hpg{stroke:var(--line);stroke-width:.6}.hpt{font-size:12px;fill:var(--muted)}.hpt.on{fill:#fff;font-weight:600}.hpt.rept{fill:#C8412C}.hpn{font-size:15px;font-weight:700;fill:var(--ink)}.hpp{stroke:#C98A1E;stroke-width:2}.hpc{stroke:var(--ink);stroke-width:1;stroke-dasharray:5 4;opacity:.7}.hpc.act{stroke-dasharray:none;stroke-width:2;opacity:1}.hpc.rec{stroke:#2F7FB5;opacity:1}text.hpc{stroke:none;fill:var(--ink);font-weight:600}text.hpc.rec{fill:#2F7FB5}.lblz.rept{fill:#C8412C}.regle{display:none}html[data-taille="175"] .regle[data-t="175"],html[data-taille="180"] .regle[data-t="180"]{display:inline}
 .leg .sw{display:inline-block;width:12px;height:9px;border-radius:2px;margin:0 3px 0 8px;vertical-align:middle}
 html,body{margin:0}
 body{background:var(--paper);color:var(--ink);font-family:Archivo,system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;line-height:1.55;font-size:16px}
@@ -1235,6 +1315,7 @@ def contenu():
 <div class="fig">{TAILLE_BTN}<div class="scroll">{regle(coupe_a(), -20, 494)}</div>
 <p class="cap">Coupe à y {COUPE_A}, regard vers le nord. Pieds et plinthe {M.SOCLE} (METOD), caissons bas de {M.CAISSON_H - M.SOCLE} h {M.SOCLE} → {M.CAISSON_H}, plan de travail 4 (h {M.CAISSON_H} → {M.PT_Z1}), meubles hauts h {M.HAUT_Z0} → {M.HAUT_Z1}, fileur de {M.H - M.HAUT_Z1} jusqu'au plafond ({M.H}). <b>Ruban LED</b> (jaune) sous H1 → H{M.N_HAUTS}, vers l'avant, pour éclairer le plan de travail. <b>Façades</b> : tout en tiroirs en bas ; en haut (V13.24), caissons METOD de 80 à deux portes battantes de 40 superposées : porte basse (h {M.HAUT_Z0} → {M.HAUT_JOINT}) pour le quotidien, porte haute (h {M.HAUT_JOINT} → {M.HAUT_Z1}) pour le rare ; les traits épais sont les poignées. <b>Règle à droite</b> (V13.23) : hauteurs de rangement pour la personne qui cuisine (bouton Taille : 1,75 m, 1,80 m ou masquée), le quotidien dans la zone d'or, rien au-dessus de la main levée sans escabeau ; en tireté rouge, coude, épaule, yeux et main levée estimés par les proportions moyennes du corps. {TAILLE_LEG}</p></div>
 
+{section_hauteur_pt()}
 <h2>Coupe B-B · mur sud</h2>
 <div class="fig"><div class="scroll">{coupe_b()}</div>
 <p class="cap">Coupe à y {COUPE_B}, regard vers le sud : l'est est à gauche. <b>Porte d'entrée</b> : baie {f(M.ENTREE["x1"] - M.ENTREE["x0"])} × {M.ENTREE["h"]}, porte à galandage, vantail {f(M.ENTREE["vantail"])} × {M.ENTREE["h"]} (fermé), qui rentre à droite dans le caisson du doublage (poche {f(M.ENTREE["poche"][1] - M.ENTREE["poche"][0])}). Sur le caisson, <b>tableau noir</b> h 120 → 200 et <b>zone aimantée</b> h 70 → 118. Banquette (de profil, contre la fenêtre) et table au fond, devant le bas de mur en chêne et le papier peint Hermione, avec l'étagère P25 au-dessus (h {f(M.ETAGERE_BANQ["z0"])} → {f(M.ETAGERE_BANQ["z1"])}) et l'enceinte audio ; à gauche, la colonne C2 coupée (C1 derrière). À droite, la fenêtre coupée ; au centre, la baie d'entrée et son vantail fermé.</p></div>
