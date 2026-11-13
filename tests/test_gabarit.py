@@ -5,6 +5,7 @@ import json
 
 from outils import RACINE, balises
 
+from commun.css_dessins import css_dessins
 from commun.gabarit import adresse, menu, page_document, page_simple, relatif
 from commun.modele import VUES, Passerelle, Piece, Site
 
@@ -205,3 +206,44 @@ def test_page_simple():
     historique = page_simple(ESSAI.SITE, "Historique", "", "essai/amenagement/historique.html",
                              courant=("essai", "amenagement"))
     assert balises(historique, "a", href="./", **{"aria-current": "page"})
+
+
+def test_page_lie_les_dessins():
+    # avec css : dessins.css avant site.css (les surcharges de site.css gagnent), classe d-<piece> sur main.contenu
+    avec = dataclasses.replace(DOC, css=".room{fill:red}")
+    html = _page(doc=avec)
+    tete = _entre(html, "<head>", "</head>")
+    assert '<link rel="stylesheet" href="dessins.css">' in tete
+    assert tete.index('href="dessins.css"') < tete.index("commun/site.css")
+    (main,) = balises(html, "main")
+    assert main["class"].split() == ["contenu", f"d-{DOC.piece}"]
+    # sans css : rien
+    sans = _page()
+    assert "dessins.css" not in sans
+    (main,) = balises(sans, "main")
+    assert main["class"] == "contenu"
+
+
+CSS = """
+/* commentaire */
+svg text{fill:black}
+.room{fill:red;fill-opacity:.18}
+.w, .absente{fill:blue}
+.absente{fill:green}
+body .w{fill:pink}
+@media (max-width:600px){.room{fill:none}}
+.w .room{stroke:red}
+"""
+DESSINS = ['<svg><rect class="room w"/></svg>', '<g class="room"/>']
+
+
+def test_css_dessins():
+    sortie = css_dessins(CSS, DESSINS, ".d-entree")
+    assert ".d-entree .room{fill:red;fill-opacity:.18}" in sortie
+    assert ".d-entree .w{fill:blue}" in sortie        # le sélecteur à classe absente est écarté, pas la règle
+    assert ".d-entree .w .room{stroke:red}" in sortie
+    assert "@media" not in sortie and "none" not in sortie    # @media retiré
+    assert "svg text" not in sortie                         # règle sans classe retirée
+    assert "absente" not in sortie                          # classe absente des dessins
+    assert "pink" not in sortie                             # règle visant body
+    assert "commentaire" not in sortie

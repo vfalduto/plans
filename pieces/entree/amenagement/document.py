@@ -294,11 +294,12 @@ def _changements(liste):
 
 
 def _document():
-    from pieces.entree.amenagement import victor, vues
+    from pieces.entree.amenagement import dessin_principale, victor, vues
     principale = Variante("principale", "Principale", VERSION, _changements(CHANGEMENTS), FIGEES_ANCIENNES)
     var_victor = Variante("victor", "Victor", victor.VERSION, _changements(victor.CHANGEMENTS))
     return Document(piece="entree", id="amenagement", nom="Aménagement", type="amenagement",
-                    variantes=(principale, var_victor), generer=vues.vues, options=(_teinte(),))
+                    variantes=(principale, var_victor), generer=vues.vues, options=(_teinte(),),
+                    css=dessin_principale.CSS)
 
 
 def __getattr__(nom):

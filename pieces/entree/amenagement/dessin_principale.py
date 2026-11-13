@@ -267,6 +267,9 @@ def coupe_c(M, aria=None):
 
 # Styles des dessins (le reste de la page vient de commun/site.css).
 CSS = """
+.legend{display:flex;flex-wrap:wrap;gap:6px 14px;font-size:13.5px;margin:6px 0}
+.legend span{display:inline-flex;align-items:center;gap:6px}
+.legend svg{width:26px;height:14px;flex:none}
 svg text{font-family:Archivo,system-ui,sans-serif;fill:var(--ink)}
 .room{fill:var(--line);fill-opacity:.18}
 .roomt{fill:var(--muted);font-size:9px;font-weight:600;text-anchor:middle}

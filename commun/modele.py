@@ -109,6 +109,7 @@ class Document:
     variantes: tuple[Variante, ...]
     generer: Callable[[str], dict[str, Vue]]
     options: tuple[Option, ...] = ()
+    css: str = ""  # règles des dessins, filtrées et écrites dans dessins.css
 
 
 @dataclass
