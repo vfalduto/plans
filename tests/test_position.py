@@ -33,6 +33,13 @@ def test_mini_plan_cones():
     assert len(balises(svg, "circle", classe="cam")) == 2
 
 
+def test_mini_plan_aria():
+    assert balises(mini_plan(SOL, PORTES), "svg")[0]["aria-label"] == "Position"
+    svg = mini_plan(SOL, PORTES, aria="Position dans la chambre")
+    assert balises(svg, "svg")[0]["aria-label"] == "Position dans la chambre"
+    assert 'aria-label="Pièce &amp; couloir"' in mini_plan(SOL, PORTES, aria="Pièce & couloir")
+
+
 def test_mini_plan_sans_texte_ni_case():
     svg = mini_plan(SOL, PORTES, traits=TRAITS, cones=CONES)
     assert "<text" not in svg and "checkbox" not in svg

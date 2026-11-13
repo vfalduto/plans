@@ -8,26 +8,21 @@ reprend le texte de `contenu()` des anciens 3d/entree/plan.py et plan_victor.py,
 from html import escape
 from pathlib import Path
 
-from commun.dessin import f, virg
+from commun.blocs import (Coupe, Lieu, Zone, cotes_meuble, figure_rendu, nombre, points_iso, rendu, vue_camera,
+                          vue_coupes, vue_iso, vue_plan, zones_svg)
+from commun.dessin import virg
 from commun.modele import Element, Vue
-from commun.position import mini_plan
 from pieces.entree import piece
 from pieces.entree.amenagement import dessin_principale, dessin_victor, document, victor
 
 # (module de variante, module de dessin)
 VARIANTES = {"principale": (document, dessin_principale), "victor": (victor, dessin_victor)}
 
-# Calques du plan : (id, nom). Chaque id correspond à la classe `sans-<id>` posée sur la section par le JS ; les
-# éléments SVG qu'il masque portent déjà ces classes (voir l'en-tête de dessin_principale.py).
-CALQUES = (("cotes", "Cotes"), ("passages", "Passages libres"), ("coupes", "Traits de coupe"),
-           ("voisines", "Pièces voisines"), ("annotations", "Annotations"))
+RENDUS_SITE = Path(__file__).resolve().parents[3] / "site" / "entree" / "amenagement" / "rendus"
+CAMERAS_PRISES = ("banc", "couloir")
+LIEU = Lieu(piece.SOL, piece.PORTES, "Position dans l'entrée")
 
 # Trait de coupe sur le plan : axe du trait (h : horizontal, à y = repère ; v : vertical, à x = repère), bornes
-RENDUS_SITE = Path(__file__).resolve().parents[3] / "site" / "entree" / "amenagement" / "rendus"
-COINS = ("no", "ne", "so", "se")   # ordre des segments de l'iso, et des cônes (coins rendus) de sa fiche « Position »
-CAMERAS_PRISES = ("banc", "couloir")
-MARGE_ISO = 26                     # cm entre l'enveloppe des murs et le point de vue d'un coin
-
 TRAITS = {"A": ("h", -6, 270), "B": ("v", -6, 380), "C": ("h", -6, 360), "D": ("v", -6, 380)}
 SAILLIE_PORTE = 14                 # cm : la zone d'une porte déborde de l'ouverture dans le couloir (maquette)
 
@@ -39,22 +34,7 @@ def _e(texte):
 def _trait(D, lettre):
     axe, d0, d1 = TRAITS[lettre]
     coupe = getattr(D, f"COUPE_{lettre}")
-    return (lettre, ((d0, coupe), (d1, coupe)) if axe == "h" else ((coupe, d0), (coupe, d1)))
-
-
-def _nombre(v):
-    return f(v).replace(".", ",")
-
-
-def _cotes(m, plateau=False):
-    """Cotes d'un meuble pour sa fiche : « longueur × profondeur, h hauteur », puis « dessous à z0 » s'il est suspendu.
-    La longueur est le grand côté de l'emprise ; la profondeur, celle du caisson s'il est donné (`caisson`), sinon le
-    petit côté ; la hauteur va du dessous au dessus, plateau compris si la zone le demande."""
-    dx, dy = m["x1"] - m["x0"], m["y1"] - m["y0"]
-    z0 = m.get("z0", 0)
-    h = m["z1"] - z0 + (m["plateau"] if plateau else 0)
-    texte = f"{_nombre(max(dx, dy))} × {_nombre(m.get('caisson', min(dx, dy)))}, h {_nombre(h)}"
-    return texte + (f", dessous à {_nombre(z0)}" if z0 else "")
+    return ((d0, coupe), (d1, coupe)) if axe == "h" else ((coupe, d0), (coupe, d1))
 
 
 def _emprise_porte(p):
@@ -69,122 +49,50 @@ def _zone(M, z):
     bord donné par la zone remplace celui du meuble."""
     if "meuble" in z:
         m = getattr(M, z["meuble"])
-        return tuple(z.get(c, m[c]) for c in ("x0", "y0", "x1", "y1")), _cotes(m, z.get("plateau", False))
+        return tuple(z.get(c, m[c]) for c in ("x0", "y0", "x1", "y1")), cotes_meuble(m, z.get("plateau", False))
     if "porte" in z:
         p = next(p for p in piece.PORTES if p["nom"] == z["porte"])
-        return _emprise_porte(p), f'vantail de {_nombre(p["b"] - p["a"])}'
+        return _emprise_porte(p), f'vantail de {nombre(p["b"] - p["a"])}'
     return (z["x0"], z["y0"], z["x1"], z["y1"]), z["cotes"]
 
 
-def _zones(M, D, legende_principes):
-    """Rectangles touchables du plan, un par meuble de `M.ZONES`."""
-    rects = []
-    for i, z in enumerate(M.ZONES):
-        titre = legende_principes[z["principe"]][0]
-        (x0, y0, x1, y1), _ = _zone(M, z)
-        rects.append(f'<rect class="zone" data-meuble="{i}" x="{f(x0)}" y="{f(y0)}" width="{f(x1 - x0)}"'
-                     f' height="{f(y1 - y0)}" rx="2" tabindex="0" role="button" aria-label="{_e(titre)}"/>')
-    return "".join(rects)
-
-
-def _modeles(M, principes):
-    """Un `<template data-meuble>` par zone : le JS le recopie dans la fiche quand on touche le meuble."""
-    modeles = []
+def _zones(M, D):
+    """Meubles touchables du plan, un par zone de `M.ZONES` ; leur id est leur rang."""
+    principes = D.principes(M)
+    zones = []
     for i, z in enumerate(M.ZONES):
         titre, texte = principes[z["principe"]]
-        _, cotes = _zone(M, z)
-        cotes += " cm" if cotes[0].isdigit() else ""
-        liens = ""
-        if z["coupe"]:
-            liens += f'<a class="btn" href="#coupes?k={z["coupe"]}">Coupe {z["coupe"]}</a>'
-        liens += f'<a class="btn" href="#iso?k={z["iso"]}">Iso</a>'
-        modeles.append(f'<template data-meuble="{i}" data-titre="{_e(titre)}"><p class="cotes">{_e(cotes)}</p>'
-                       f'<p>{texte}</p><div class="actions">{liens}</div></template>')
-    return "".join(modeles)
-
-
-def _fiche_plan(D):
-    boutons = "".join(f'<button type="button" data-calque="{k}" aria-pressed="true">{n}</button>' for k, n in CALQUES)
-    return ('<div class="fiche-meuble"><p>Touchez un meuble pour afficher sa fiche.</p></div>'
-            f'<h3>Calques</h3><div class="calques">{boutons}</div>'
-            f'<h3>Légende</h3>{dessin_principale.legende()}')
+        emprise, cotes = _zone(M, z)
+        zones.append(Zone(id=str(i), titre=titre, emprise=emprise, cotes=cotes, texte=texte,
+                          coupe=z["coupe"] or "", iso=z["iso"]))
+    return zones
 
 
 def _vue_plan(M, D):
-    legendes, principes = D.legendes(M), D.principes(M)
+    zones = _zones(M, D)
     # role="group" (et non "img") : les zones sont des boutons, que les enfants d'une image masqueraient
-    svg = D.plan_svg(M, aria=legendes["plan"], zones=_zones(M, D, principes))
-    element = Element(k="", nom="Plan", titre="Plan", scene=svg, fiche=_modeles(M, principes))
-    return Vue("plan", [element], fiche=_fiche_plan(D), outils=("zoom", "mesure"))
+    svg = D.plan_svg(M, aria=D.legendes(M)["plan"], zones=zones_svg(zones))
+    return vue_plan(svg, zones, dessin_principale.legende())
 
 
 def _vue_coupes(M, D):
     legendes = D.legendes(M)
-    lettres = list(D.SUJETS)
-    elements = []
-    for lettre in lettres:
-        sujet = D.SUJETS[lettre]
-        scene = getattr(D, f"coupe_{lettre.lower()}")(M, aria=legendes[lettre])
-        elements.append(Element(k=lettre, nom=f"{lettre} {sujet}", titre=f"Coupe {lettre}-{lettre} : {sujet}", scene=scene))
-    mini = mini_plan(piece.SOL, piece.PORTES, traits=[_trait(D, k) for k in lettres])
-    return Vue("coupes", elements, fiche=f'<h3>Position</h3><div class="mini">{mini}</div>', outils=("zoom", "mesure"))
-
-
-def _rendu_existe(variante, cle):
-    return (RENDUS_SITE / f"{variante}-{cle}.jpg").exists()
-
-
-def _figure(variante, cle, alt):
-    """Le rendu et, par-dessus, sa copie recolorée par le filtre de l'option `teinte` (masque des surfaces India)."""
-    base = f"rendus/{variante}-{cle}"
-    masque = f"url({base}-masque.png)"
-    return (f'<figure class="cadre rendu"><img src="{base}.jpg" alt="{_e(alt)}" draggable="false">'
-            f'<img class="calque" src="{base}.jpg" alt="" aria-hidden="true" draggable="false"'
-            f' style="filter:url(#filtre-teinte);-webkit-mask-image:{masque};mask-image:{masque}"></figure>')
-
-
-def _alt(M, cle, repli):
-    return dict(M.RENDUS).get(cle, repli)
-
-
-def _coins_iso():
-    """Position du point de vue de chaque coin : à `MARGE_ISO` de l'enveloppe des murs, visant son centre."""
-    x0, x1 = min(b.x0 for b in piece.MURS), max(b.x1 for b in piece.MURS)
-    y0, y1 = min(b.y0 for b in piece.MURS), max(b.y1 for b in piece.MURS)
-    centre = ((x0 + x1) / 2, (y0 + y1) / 2)
-    ou = {"no": (x0 - MARGE_ISO, y0 - MARGE_ISO), "ne": (x1 + MARGE_ISO, y0 - MARGE_ISO),
-          "so": (x0 - MARGE_ISO, y1 + MARGE_ISO), "se": (x1 + MARGE_ISO, y1 + MARGE_ISO)}
-    return {k: (ou[k], centre) for k in COINS}
-
-
-def _fiche_position(cones):
-    return f'<h3>Position</h3><div class="mini">{mini_plan(piece.SOL, piece.PORTES, cones=cones)}</div>'
+    coupes = [Coupe(k=lettre, nom=f"{lettre} {sujet}", titre=f"Coupe {lettre}-{lettre} : {sujet}",
+                    scene=getattr(D, f"coupe_{lettre.lower()}")(M, aria=legendes[lettre]), trait=_trait(D, lettre))
+              for lettre, sujet in D.SUJETS.items()]
+    return vue_coupes(coupes, LIEU)
 
 
 def _vue_iso(variante, M):
-    coins = _coins_iso()
-    elements = []
-    for k in COINS:
-        cle = f"iso_{k}"
-        actif = _rendu_existe(variante, cle)
-        scene = _figure(variante, cle, _alt(M, cle, f"Vue isométrique, coin {k.upper()}")) if actif else ""
-        elements.append(Element(k=k, nom=k.upper(), titre=f"Vue iso {k.upper()}", scene=scene, actif=actif))
-    # un cône par coin rendu ; le JS pose `ici` sur celui de l'élément affiché (g.pdv[data-k])
-    cones = [(e.k, *coins[e.k], False) for e in elements if e.actif]
-    return Vue("iso", elements, fiche=_fiche_position(cones))
+    enveloppe = (min(b.x0 for b in piece.MURS), min(b.y0 for b in piece.MURS),
+                 max(b.x1 for b in piece.MURS), max(b.y1 for b in piece.MURS))
+    return vue_iso(RENDUS_SITE, variante, LIEU, points_iso(enveloppe), alts=dict(M.RENDUS), filtre="teinte")
 
 
 def _vue_camera(variante, M):
     cameras = {c.id: c for c in piece.CAMERAS}
-    elements = []
-    for k in CAMERAS_PRISES:
-        c = cameras[k]
-        actif = _rendu_existe(variante, k)
-        scene = _figure(variante, k, _alt(M, k, c.nom)) if actif else ""
-        fiche = f'<p class="cotes">yeux à {c.yeux:g} cm, objectif {c.focale:g} mm</p>'
-        elements.append(Element(k=k, nom=c.nom, titre=c.nom, scene=scene, fiche=fiche, actif=actif))
-    cones = [(k, cameras[k].loc[:2], cameras[k].cible[:2], False) for k in CAMERAS_PRISES]
-    return Vue("camera", elements, fiche=_fiche_position(cones))
+    return vue_camera(RENDUS_SITE, variante, LIEU, [cameras[k] for k in CAMERAS_PRISES], alts=dict(M.RENDUS),
+                      filtre="teinte")
 
 
 # ------------------------------------------------------------------ Explication
@@ -226,7 +134,8 @@ def _materiaux(lignes):
 def _article(M, cle, chapo, stats, cartes, achats, materiaux, verifier, source, avant=""):
     liste = "".join(f"<li><span>{x}</span></li>" for x in verifier)
     # le premier rendu du coin sud-ouest, quand il existe, ouvre la page ; son texte est l'alt
-    tete = _figure(cle, "iso_so", _alt(M, "iso_so", "Vue isométrique depuis le sud-ouest")) if _rendu_existe(cle, "iso_so") else ""
+    tete = figure_rendu(rendu(RENDUS_SITE, cle, "iso_so"), dict(M.RENDUS).get("iso_so", "Vue isométrique depuis le sud-ouest"),
+                        filtre="teinte")
     return (f'<div class="tete-doc"><div><p class="chapo">{chapo}</p>'
             '<p class="actions"><a class="btn plein" href="#plan">Ouvrir le plan</a><a class="btn" href="#iso">Voir en iso</a></p>'
             f'</div>{tete}</div>'

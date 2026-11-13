@@ -14,6 +14,11 @@ LONGUEUR_CONE = 95  # cm
 OUVERTURE_CONE = 0.75  # rad, de part et d'autre de l'axe de visée
 
 
+def _attribut(texte):
+    """Échappé pour un attribut entre guillemets doubles ; l'apostrophe reste telle quelle (« l'entrée »)."""
+    return escape(texte, quote=False).replace('"', "&quot;")
+
+
 def _ouverture(p):
     """Segment de l'ouverture d'une porte, posé sur le nu du mur côté couloir."""
     if p["mur"] in "ns":
@@ -32,13 +37,14 @@ def _cone(k, loc, cible, ici):
             f'<circle class="cam" cx="{f(loc[0])}" cy="{f(loc[1])}" r="9"/></g>')
 
 
-def mini_plan(sol, portes, traits=(), cones=()) -> str:
+def mini_plan(sol, portes, traits=(), cones=(), aria="Position") -> str:
     """SVG du mini-plan.
 
     - `sol` : sommets du contour du sol, en cm.
     - `portes` : dicts de la pièce (`mur`, `face`, `a`, `b`) ; chaque ouverture est un trait `ouv`.
     - `traits` : paires (lettre, ((x0, y0), (x1, y1))) ; un `line.sec[data-k=lettre]` chacun.
     - `cones` : quadruplets (repère, loc, cible, ici) ; un `g.pdv[data-k=repère]` chacun, plus `ici` sur le courant.
+    - `aria` : aria-label du SVG (« Position dans l'entrée »).
     """
     pts = list(sol)
     for _, (a, b) in traits:
@@ -56,5 +62,5 @@ def mini_plan(sol, portes, traits=(), cones=()) -> str:
     for lettre, (a, b) in traits:
         o.append(f'<line class="sec" data-k="{escape(lettre)}" x1="{f(a[0])}" y1="{f(a[1])}" x2="{f(b[0])}" y2="{f(b[1])}"/>')
     o += [_cone(*c) for c in cones]
-    return (f'<svg viewBox="{f(x0)} {f(y0)} {f(x1 - x0)} {f(y1 - y0)}" role="img" aria-label="Position dans l\'entrée">'
+    return (f'<svg viewBox="{f(x0)} {f(y0)} {f(x1 - x0)} {f(y1 - y0)}" role="img" aria-label="{_attribut(aria)}">'
             f'{"".join(o)}</svg>')
