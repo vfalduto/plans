@@ -260,7 +260,7 @@ def _explication_victor(M, D):
     b, pe, mi, pl, cd = M.CHAUSSURES, M.PENDERIE, M.MIROIR, M.PLANCHE, M.CADRES
     lp, pp = pe["y1"] - pe["y0"], pe["x1"] - pe["x0"] - pe["facade"]
     total = round(sum(q * p for _, _, q, p in M.IKEA))
-    chapo = (f'Variante de l\'<a href="principale.html">aménagement {M.BASE}</a>. Le mur sous le tableau électrique reste '
+    chapo = (f'Variante de l\'<a href="./">aménagement {M.BASE}</a>. Le mur sous le tableau électrique reste '
              "libre. Un meuble à chaussures bas à abattants, deux étagères flottantes au-dessus, prend la place de la "
              "penderie face à la salle de bain ; il file jusqu'à la penderie et s'y termine en arrondi. La penderie, un "
              "PAX d'IKEA de 75 × 35 qui monte presque au plafond, passe dans la branche d'entrée ; une planche à "
@@ -292,7 +292,7 @@ def _explication_victor(M, D):
         "<b>Étagères flottantes</b> : fixations cachées dans la cloison de la salle de bain : vérifier sa nature (carreaux "
         "de plâtre, placo) et la charge admise.",
         f'<b>Interphone</b> : le miroir est calé {M.INTERPHONE["y0"] - mi["y1"]} cm à côté ; sa position est à relever.',
-        f'<b>Tableau électrique, plafond</b> : mêmes points que la <a href="principale.html">{M.BASE}</a>.']
+        f'<b>Tableau électrique, plafond</b> : mêmes points que la <a href="./">{M.BASE}</a>.']
     c = M.CHAUSSURES
     lpl, ppl = pl["y1"] - pl["y0"], pl["x1"] - pl["x0"]
     ncd = cd["colonnes"] * cd["rangs"]

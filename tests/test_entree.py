@@ -248,3 +248,16 @@ def test_explication_liens_et_differences():
         assert k in zones
     v = _explication("victor")
     assert f"Différences avec la {victor.BASE}" in v and "Version Victor" in v
+
+
+def test_liens_internes_connus():
+    """Aucun lien relatif ne vise une page que rien ne génère (principale.html) : seulement `./` ou victor.html."""
+    for variante in ("principale", "victor"):
+        for cle, v in vues.vues(variante).items():
+            for e in v.elements:
+                for a in balises(e.scene + e.fiche + v.fiche, "a"):
+                    href = a.get("href", "")
+                    if href.startswith("#") or href.startswith("rendus/"):
+                        continue
+                    assert href in ("./", "victor.html"), (variante, cle, href)
+    assert 'href="./"' in _explication("victor")
