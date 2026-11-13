@@ -38,17 +38,31 @@ def _svg(variante, sujet):
             f'<rect x="10" y="10" width="{LARGEUR[variante]}" height="30"/></svg>')
 
 
+ZONE = ('<rect class="zone" data-meuble="0" x="10" y="10" width="20" height="15" rx="2" tabindex="0" role="button"'
+        ' aria-label="Banc"/>')
+MODELE = ('<template data-meuble="0" data-titre="Banc"><p class="cotes">95 cm</p>'
+          '<div class="actions"><a class="btn" href="#coupes?k=A">Coupe A</a></div></template>')
+CALQUES = ('<h3>Calques</h3><div class="calques">'
+           '<button type="button" data-calque="cotes" aria-pressed="true">Cotes</button>'
+           '<button type="button" data-calque="passages" aria-pressed="true">Passages libres</button></div>')
+# rendu d'essai : une image de 40 x 30 en data URI, dans le cadre des vues Iso et Caméra
+RENDU = ('<figure class="cadre rendu"><img alt="Depuis le banc" draggable="false" src="data:image/svg+xml,'
+         '%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 40 30%27%3E%3Crect width=%2740%27 height=%2730%27'
+         ' fill=%27%23ccc%27/%3E%3C/svg%3E"></figure>')
+
+
 def vues(variante):
     coupes = [Element(k=l, nom=l, titre=f"Coupe {l}-{l}", scene=_svg(variante, f"Coupe {l}"),
                       fiche=f"<p>Coupe {l} de la variante {variante.upper()}.</p>") for l in COUPES[variante]]
     return {
-        "plan": Vue("plan", [Element(k="", nom="Plan", titre="Plan", scene=_svg(variante, "Plan"))],
-                    fiche="<p>Touchez un meuble pour afficher sa fiche.</p>", outils=("zoom", "mesure")),
+        "plan": Vue("plan", [Element(k="", nom="Plan", titre="Plan", scene=_svg(variante, "Plan").replace("</svg>", ZONE + "</svg>"),
+                                    fiche=MODELE)],
+                    fiche='<div class="fiche-meuble"><p>Touchez un meuble pour afficher sa fiche.</p></div>' + CALQUES, outils=("zoom", "mesure")),
         "coupes": Vue("coupes", coupes, fiche="<h3>Position</h3><p>Trait de coupe sur le mini-plan.</p>",
                       outils=("zoom", "mesure")),
         "iso": Vue("iso", []),
         "camera": Vue("camera", [Element(k="banc", nom="Assis sur le banc", titre="Assis sur le banc",
-                                         scene=_svg(variante, "Depuis le banc"),
+                                         scene=RENDU,
                                          fiche="<p class=\"cotes\">yeux à 112 cm, objectif 17 mm</p>")]),
         "explication": Vue("explication", [Element(k="", nom="Explication", titre="Explication",
                                                    scene=f"<h2>Principe</h2><p>Variante {variante.upper()}.</p>")]),
