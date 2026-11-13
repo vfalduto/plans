@@ -80,6 +80,17 @@ v13-figer:
     python3 3d/v13/plan.py --figer
 
 # Salon V4 : régénère salon-v4.html et les pages des meubles (étagères, enfilade) depuis 3d/salon/modele.py
+# Entrée : régénère entree-amenagement.html (plan, coupes, vues 3D) depuis 3d/entree/modele.py
+entree:
+    python3 3d/entree/plan.py
+
+# Entrée : vues isométriques (Blender) depuis 3d/entree/modele.py → entree-3d/*.jpg, puis regénère la page
+entree-rendu echantillons="64" *vues:
+    /Applications/Blender.app/Contents/MacOS/Blender -b --python 3d/entree/rendu.py -- {{echantillons}} {{vues}}
+    mkdir -p entree-3d
+    for f in 3d/sortie/entree-rendu-*.png; do sips -s format jpeg -s formatOptions 85 "$f" --out "entree-3d/$(basename "$f" .png | sed 's/entree-rendu-//').jpg" >/dev/null; done
+    python3 3d/entree/plan.py
+
 salon:
     python3 3d/salon/plan.py
     python3 3d/salon/etageres.py
