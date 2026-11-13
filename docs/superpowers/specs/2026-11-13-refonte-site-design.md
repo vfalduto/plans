@@ -265,8 +265,25 @@ Soit environ 2 min 30 par variante pour `just entree-rendu`.
     réglages et la version de Blender ;
   - une empreinte par vue est stockée dans `cache/` ;
   - aujourd'hui, chaque commande refait tout.
-- **Seuil de bruit adaptatif à 0,03, au lieu de 0,01 :** l'image est identique à l'œil (écart moyen de 0,03 à 0,14
-  sur 255). Le gain de temps reste à mesurer machine au repos, avant d'adopter ce réglage.
+- **Seuil de bruit adaptatif à 0,03, au lieu de 0,01 : adopté.** Mesure du 13/11/2026, machine au repos, vue `iso_so`
+  de la principale, 64 échantillons, 1600 × 1200, trois rendus par réglage en alternance (0,01 puis 0,03, trois fois) :
+  - **Durées** (commande entière, image et masque, démarrage de Blender compris) :
+
+    | Série | 0,01 | 0,03 |
+    |---|---|---|
+    | 1 | 30 s | 21 s |
+    | 2 | 30 s | 24 s |
+    | 3 | 24 s | 23 s |
+    | Médiane | 30 s | 23 s |
+
+  - **Gain :** la médiane baisse de 23 % (seuil de décision : 15 %).
+  - **Écart d'image :** écart moyen absolu par canal entre 0,01 et 0,03, moyenné sur les trois paires : 0,027 sur 255
+    (seuil de décision : 0,5). Référence, deux rendus au même seuil : 0,007 sur 255 à 0,01 et 0,008 à 0,03.
+  - **Machine :** sur secteur, avant et après la série ; charge de 3,2 avant et de 7,8 après (la moyenne sur une minute
+    suit la série elle-même). Un agent de relecture en lecture seule et un serveur HTTP inactif tournaient en même
+    temps.
+  - **Effet :** `3d/rendu.py` passe le seuil à 0,03. L'empreinte des rendus change, donc le prochain
+    `just entree-rendu` refait toutes les vues ; le cache est périmé d'ici là.
 - **Écartés :**
   - **Moins de rebonds :** le rendu caméra s'assombrit visiblement (écart de 3,6 sur 255).
   - **EEVEE :** l'image s'écarte trop (écart de 20 sur 255 en caméra).
