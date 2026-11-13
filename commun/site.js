@@ -20,8 +20,9 @@ const memo = {
 };
 const donnees = (id, defaut) => { try { return JSON.parse($("#" + id).textContent); } catch (e) { return defaut; } };
 
-const app = $("#app");
-document.documentElement.classList.remove("sans-js");
+const racine = document.documentElement, app = $("#app");
+racine.classList.remove("sans-js");   // déjà fait par le script en tête de page (gabarit.TETE_JS), sauf s'il a échoué
+racine.classList.add("js");
 const mobile = matchMedia("(max-width:919px)");
 
 /* ------------------------------------------------------------------ menu de gauche
@@ -108,12 +109,13 @@ function ecrireEtat(etat, {remplace = courant !== null && etat.vue === courant.v
   history[remplace ? "replaceState" : "pushState"](null, "", h);
 }
 
-/* Montre la vue de l'état et, dans sa section, l'élément k (le premier si k est inconnu) avec sa fiche et son
-   segment ; marque l'onglet courant. Les onglets portent l'état (c) pour s'ouvrir tel quel dans un autre onglet. */
+/* Montre la vue de l'état (html[data-vue], que site.css suit) et, dans sa section, l'élément k (le premier si k est
+   inconnu) avec sa fiche et son segment ; marque l'onglet courant. Les onglets portent l'état (c) pour s'ouvrir tel
+   quel dans un autre onglet. */
 function montrer(etat) {
   courant = etat;
   const section = sections.find(s => s.dataset.vue === etat.vue);
-  for (const s of sections) s.classList.toggle("courante", s === section);
+  racine.dataset.vue = etat.vue;
   for (const a of onglets) {
     if (a.dataset.vue === etat.vue) a.setAttribute("aria-current", "page");
     else a.removeAttribute("aria-current");

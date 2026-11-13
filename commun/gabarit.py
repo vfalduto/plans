@@ -260,9 +260,18 @@ def _section(k: str, vue: Vue) -> str:
 
 # ------------------------------------------------------------------ pages
 
-def _tete(titre: str, depuis: str) -> str:
+# Script en ligne, en tête et avant toute feuille de style, pour que la page ne montre jamais toutes ses vues le temps
+# que site.js (defer) arrive : il remplace sans-js par js et pose html[data-vue], la vue de l'adresse (#coupes?k=B)
+# ou la première ; site.css ne montre que cette section. Sans JavaScript, sans-js reste et les vues se suivent.
+TETE_JS = ('(function(vues){var h=document.documentElement,v=location.hash.slice(1).split("?")[0];'
+           'h.classList.replace("sans-js","js");'
+           'if(vues.length)h.setAttribute("data-vue",vues.indexOf(v)>=0?v:vues[0])})')
+
+
+def _tete(titre: str, depuis: str, vues: list[str]) -> str:
     return (
         '<!doctype html>\n<html lang="fr" class="sans-js">\n<head>\n<meta charset="utf-8">\n'
+        f'<script>{TETE_JS}({_json(vues)})</script>\n'
         '<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">\n'
         f'<title>{_e(titre)}</title>\n'
         f'<link rel="icon" href="{relatif("favicon.svg", depuis)}" type="image/svg+xml">\n'
@@ -278,7 +287,7 @@ def _tete(titre: str, depuis: str) -> str:
 
 def _page(titre, depuis, corps_attrs, classes, rail, barre, contenu, variantes, options, noms) -> str:
     return (
-        f'{_tete(titre, depuis)}<body{corps_attrs}>\n'
+        f'{_tete(titre, depuis, list(noms))}<body{corps_attrs}>\n'
         f'<div class="{classes}" id="app">\n{rail}\n{barre}\n<main class="contenu" id="contenu">{contenu}</main>\n</div>\n'
         f'<script type="application/json" id="variantes">{_json(variantes)}</script>\n'
         f'<script type="application/json" id="options">{_json(options)}</script>\n'

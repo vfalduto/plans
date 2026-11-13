@@ -41,9 +41,19 @@ a{color:inherit}
 .contenu{grid-column:2;min-height:0;position:relative}
 .ico{width:18px;height:18px;fill:none;stroke:currentColor;stroke-width:1.6;stroke-linecap:round;stroke-linejoin:round;flex:none}
 
-/* une vue à la fois : site.js pose .courante sur la section montrée */
+/* une vue à la fois : celle de html[data-vue], posé par le script en tête de page puis tenu à jour par site.js ;
+   une règle par vue de commun.modele.VUES (tests/test_gabarit.py le vérifie) */
 .vue{height:100%}
-html:not(.sans-js) .contenu > .vue:not(.courante){display:none}
+html:not(.sans-js) .contenu > .vue{display:none}
+html[data-vue="plan"] .contenu > .vue[data-vue="plan"],
+html[data-vue="coupes"] .contenu > .vue[data-vue="coupes"],
+html[data-vue="iso"] .contenu > .vue[data-vue="iso"],
+html[data-vue="camera"] .contenu > .vue[data-vue="camera"],
+html[data-vue="plans"] .contenu > .vue[data-vue="plans"],
+html[data-vue="decoupe"] .contenu > .vue[data-vue="decoupe"],
+html[data-vue="montage"] .contenu > .vue[data-vue="montage"],
+html[data-vue="achats"] .contenu > .vue[data-vue="achats"],
+html[data-vue="explication"] .contenu > .vue[data-vue="explication"]{display:block}
 .vue > .vide{display:grid;place-items:center;height:100%;margin:0;padding:24px;background:var(--panel);color:var(--muted);font:500 17px var(--ui);text-align:center}
 
 /* ------------------------------------------------------------------ menu de gauche : pièces et documents */

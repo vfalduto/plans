@@ -47,6 +47,25 @@ async page => {
   await preparer(page);
 
   try {
+    // Pas de flash : avant même site.js (retenu ici), #coupes ne montre que la vue Coupes
+    await page.setViewportSize({width: 1440, height: 900});
+    let lacher;
+    const retenu = new Promise(r => { lacher = r; });
+    await page.route("**/commun/site.js", async r => { await retenu; await r.continue(); });
+    await page.goto("about:blank");
+    await page.goto(DOC + "#coupes", {waitUntil: "commit"});
+    await page.waitForSelector("#contenu > section.vue:last-of-type", {state: "attached"});
+    await page.waitForFunction(() => [...document.styleSheets].some(s => (s.href || "").endsWith("/commun/site.css")));
+    const avant = await page.evaluate(() => ({
+      vues: [...document.querySelectorAll("#contenu > section.vue")].filter(s => s.checkVisibility()).map(s => s.dataset.vue),
+      onglets: [...document.querySelectorAll("nav.vues a[aria-current='page']")].map(a => a.dataset.vue),
+    }));
+    lacher();
+    await page.waitForLoadState("load");
+    await page.unroute("**/commun/site.js");
+    verifier(egal(avant.onglets, ["plan"]), `avant site.js : onglet courant ${JSON.stringify(avant.onglets)} (site.js a déjà tourné ?)`);
+    verifier(egal(avant.vues, ["coupes"]), `avant site.js, #coupes : vues visibles ${JSON.stringify(avant.vues)}, attendu ["coupes"]`);
+
     for (const [largeur, hauteur] of [[1440, 900], [390, 844]]) {
       await page.setViewportSize({width: largeur, height: hauteur});
       const t = `${largeur} px, `;
