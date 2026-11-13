@@ -496,7 +496,7 @@ def reglages_cycles(sc):
     cy = sc.cycles
     cy.samples = SAMPLES
     cy.use_adaptive_sampling = True
-    cy.adaptive_threshold = 0.01          # s'arrête plus tôt dans les zones déjà propres
+    cy.adaptive_threshold = 0.03          # s'arrête plus tôt dans les zones déjà propres
     cy.max_bounces = 16
     cy.diffuse_bounces = 8                 # la lumière rebondit beaucoup dans une petite pièce claire
     cy.glossy_bounces = 6
