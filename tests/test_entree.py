@@ -96,7 +96,7 @@ def test_plan_zones():
 def test_modele_de_zone():
     _, e = _plan("principale")
     assert 'href="#coupes?k=A"' in e.fiche
-    assert 'href="#iso?k=iso_so"' in e.fiche
+    assert 'href="#iso?k=so"' in e.fiche
     assert "95 × 38, h 45 cm" in e.fiche
 
 

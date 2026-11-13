@@ -52,7 +52,7 @@ def _modeles(M, principes):
         liens = ""
         if z["coupe"]:
             liens += f'<a class="btn" href="#coupes?k={z["coupe"]}">Coupe {z["coupe"]}</a>'
-        liens += f'<a class="btn" href="#iso?k=iso_{z["iso"]}">Iso</a>'
+        liens += f'<a class="btn" href="#iso?k={z["iso"]}">Iso</a>'
         modeles.append(f'<template data-meuble="{i}" data-titre="{_e(titre)}"><p class="cotes">{_e(cotes)}</p>'
                        f'<p>{texte}</p><div class="actions">{liens}</div></template>')
     return "".join(modeles)
