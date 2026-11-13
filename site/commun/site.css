@@ -135,6 +135,7 @@ a.b-case[aria-current="page"] > .ico{color:inherit}
 .scene .zone.ici{fill:var(--repere);fill-opacity:.35;stroke-opacity:1;stroke-dasharray:none;stroke-width:2.4}
 .scene .trait-mesure{stroke:var(--water);stroke-width:1.6;vector-effect:non-scaling-stroke}
 .scene .pt-mesure{fill:var(--water)}
+.scene .trace-mesure{pointer-events:none}
 .scene .txt-mesure{fill:var(--water) !important;font-family:var(--ui) !important;font-weight:600;font-variant-numeric:tabular-nums;paint-order:stroke;stroke:var(--panel);stroke-width:3px;stroke-linejoin:round}
 
 /* outils posés sur la scène : zoom et mesure */
@@ -163,7 +164,7 @@ a.b-case[aria-current="page"] > .ico{color:inherit}
 /* rendus */
 .scene.image{background:var(--paper);cursor:grab}
 .cadre{position:relative;width:min(100cqw,calc(100cqh * 4 / 3));aspect-ratio:4 / 3;overflow:hidden;background:var(--panel);transform-origin:0 0}
-.rendu{position:absolute;inset:0;margin:0}
+.rendu{position:absolute;inset:0;margin:auto}   /* figure.cadre.rendu : un seul élément, centré dans la scène */
 .rendu img{position:absolute;inset:0;width:100%;height:100%;display:block}
 .rendu .calque{-webkit-mask-size:100% 100%;mask-size:100% 100%;pointer-events:none}
 
@@ -190,7 +191,7 @@ a.b-case[aria-current="page"] > .ico{color:inherit}
 .sans-passages .scene :is(.pass,.passm,.passt){display:none}
 .sans-coupes .scene :is(.sec,.sect){display:none}
 .sans-voisines .scene :is(.room,.roomt){display:none}
-.sans-notes .scene :is(.lblx,.lbls){display:none}
+.sans-annotations .scene :is(.lblx,.lbls){display:none}
 /* « Position » : mini-plan, trait de la coupe courante, points de vue */
 .mini{position:relative;border:1px solid var(--line);background:var(--panel);border-radius:4px;margin:6px 0 4px;padding:26px 30px}
 .mini svg{display:block;width:100%;height:auto;max-height:230px}
