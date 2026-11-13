@@ -304,3 +304,105 @@ a.b-case[aria-current="page"] > .ico{color:inherit}
 /* plusieurs éléments (coupes) : chaque fiche porte son titre, celui de l'en-tête ne nommerait que le premier */
 .sans-js .fiche:has(.fiche-element + .fiche-element) .fiche-titre{display:none}
 .sans-js .fiche-corps:has(> .fiche-element + .fiche-element) > .fiche-element::before{content:attr(data-titre);display:block;margin:14px 0 4px;font:600 15px var(--ui)}
+
+/* ------------------------------------------------------------------ pages communes : accueil, journal, historiques, Explication
+   Les jetons (--ink, --ui, --tapis…) sont ceux du début de la feuille. Ce bloc reprend, sans changer le rendu, les
+   styles que la construction écrivait dans un <style> au milieu des pages. */
+.lecture > .accueil{max-width:1120px}
+.tapis-plan{margin:16px 0 8px;padding:clamp(12px,2.6vw,30px);border-radius:6px}
+.plan-appart{display:block;width:100%;height:auto;max-height:min(62vh,620px);margin:0 auto}
+.tapis-plan .pl-hors{fill:var(--tapis-texte)}
+.tapis-plan .pl-nord{stroke:var(--tapis-texte)}
+.lecture .chapo{font-size:19px;line-height:1.5;max-width:720px;margin:0 0 8px}
+.lecture .sous-titre{margin:0 0 12px;color:var(--muted);font:500 16.5px var(--ui)}
+.lecture h3{font:700 18px var(--ui);margin:22px 0 6px}
+.fil{list-style:none;margin:0;padding:0}
+.fil li{display:grid;grid-template-columns:92px minmax(0,1fr);gap:0 16px;padding:12px 0;border-bottom:1px solid var(--line)}
+.fil li[hidden],.journee[hidden],.filtre[hidden]{display:none}
+.fil .quand{font:500 14.5px var(--ui);font-variant-numeric:tabular-nums;color:var(--muted);padding-top:1px}
+.fil .quand b{display:block;color:var(--ink);font-size:16px;font-weight:600}
+.fil .ou{font:600 15px var(--ui);margin-bottom:2px}
+.fil .ou a{text-decoration:none}
+.fil .ou a:hover{text-decoration:underline}
+.fil p{margin:0;font-size:15.5px}
+.lecture .jour{font:700 18px var(--ui);margin:28px 0 0;padding-bottom:6px;border-bottom:2px solid var(--ink);position:sticky;top:-28px;background:var(--paper);z-index:1}
+.filtre{display:flex;align-items:center;gap:8px;margin:14px 0 4px;font:500 15.5px var(--ui)}
+.filtre select{font:inherit;min-height:36px;padding:4px 8px;border:1px solid var(--line);border-radius:4px;background:var(--panel);color:var(--ink)}
+.figees{list-style:none;display:flex;flex-wrap:wrap;gap:6px 22px;margin:8px 0 20px;padding:0;font:500 15.5px var(--ui);font-variant-numeric:tabular-nums}
+.figees .date{color:var(--muted)}
+/* plan de l'appartement de l'accueil (classes pl-*, dessinées par commun/appartement.py) */
+.pl-masse{fill:var(--ink);stroke:var(--ink);stroke-width:50;stroke-linejoin:miter}
+.pl-piece{fill:var(--panel);stroke:var(--ink);stroke-width:6;stroke-linejoin:miter;transition:fill .12s}
+.pl-piece.inerte{fill:var(--hair)}
+a:hover>.pl-piece,a:focus-visible>.pl-piece{fill:color-mix(in srgb,var(--repere) 32%,var(--panel))}
+.pl-baie{fill:var(--panel);pointer-events:none}
+.pl-arc{fill:none;stroke:var(--ink);stroke-width:1.2;vector-effect:non-scaling-stroke;pointer-events:none}
+.pl-vitre{fill:var(--glass);stroke:var(--ink);stroke-width:1;vector-effect:non-scaling-stroke;pointer-events:none}
+.pl-nom{font:600 29px var(--ui);fill:var(--ink);text-anchor:middle;pointer-events:none}
+.pl-cote{font:500 18px var(--ui);font-variant-numeric:tabular-nums;fill:var(--muted);text-anchor:middle;pointer-events:none}
+.pl-cote.serre{font-size:16px}
+.pl-petit{font:500 17px var(--ui);fill:var(--muted);text-anchor:middle;pointer-events:none}
+.pl-nord{fill:none;stroke:var(--muted);stroke-width:1.4;vector-effect:non-scaling-stroke}
+
+/* Explication, repris de la maquette : chapô, chiffres clés, tableaux, points à vérifier */
+.tete-doc{display:grid;grid-template-columns:minmax(0,1.05fr) minmax(0,1fr);gap:28px;align-items:start;max-width:1120px}
+.tete-doc .cadre{width:100%;border-radius:3px}
+.chiffres{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));margin:22px 0 0;border-top:2px solid var(--ink);border-bottom:1px solid var(--line);max-width:1120px}
+.chiffres div{padding:10px 14px 12px 0}
+.chiffres div + div{border-left:1px solid var(--line);padding-left:14px}
+.chiffres dt{font:600 24px/1.2 var(--ui);font-variant-numeric:tabular-nums}
+.chiffres dd{margin:2px 0 0;font-size:14px;color:var(--muted)}
+.lecture table{border-collapse:collapse;width:100%;font-size:15px}
+.lecture th,.lecture td{text-align:left;padding:8px 10px 8px 0;border-bottom:1px solid var(--line);vertical-align:top}
+.lecture th{font:600 14.5px var(--ui);color:var(--muted)}
+.lecture td.num{font-variant-numeric:tabular-nums}
+.lecture td.d,.lecture th.d{text-align:right;padding-right:0}
+.lecture tr.total td{border-top:2px solid var(--ink);border-bottom:0;font-weight:700}
+.defile{overflow-x:auto}
+.liste{list-style:none;margin:0;padding:0;border-top:1px solid var(--line)}
+.liste li{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:4px 12px;align-items:start;padding:11px 0;border-bottom:1px solid var(--line)}
+.liste small{display:block;color:var(--muted);font-size:14px;margin-top:2px}
+.liste .prix{text-align:right;font-variant-numeric:tabular-nums;font-weight:500}
+.lecture > .tete-doc,.lecture > .chiffres{max-width:1120px}
+
+/* ------------------------------------------------------------------ Explication : mesure, cartes, tableaux (tâche 9b) */
+.lecture p,.lecture li{max-width:80ch}
+.lecture .chapo{max-width:min(72ch,100%)}
+.lecture .tete-doc > div{min-width:0}
+.lecture .tete-doc .actions{display:flex;flex-wrap:wrap;gap:6px;margin:14px 0 0}
+.lecture .tete-doc .cadre{width:100%;max-width:none}
+.lecture .tete-doc .rendu{position:relative;inset:auto}
+.lecture h2{max-width:none}
+.lecture .principes{margin:0;padding:0;list-style:none;display:grid;grid-template-columns:repeat(auto-fill,minmax(250px,1fr));gap:12px;border-top:0;max-width:1120px}
+.lecture .principes li{max-width:none;display:flex;flex-direction:column;align-items:flex-start;padding:14px 16px 16px;border:1px solid var(--line);border-radius:6px;background:var(--panel)}
+.lecture .principes h3{margin:0 0 6px;font:600 17.5px/1.3 var(--ui)}
+.lecture .principes p{margin:0 0 10px;font-size:15.5px;max-width:none}
+.lecture .principes .btn{margin-top:auto}
+.lecture .defile{max-width:820px;-webkit-overflow-scrolling:touch}
+.lecture .defile table{min-width:480px}
+.lecture td.d,.lecture th.d{padding-left:14px;white-space:nowrap}
+.lecture tr.total td{background:var(--hair)}
+.lecture > table{max-width:820px}
+.lecture > table th[scope="row"]{width:30%;color:var(--ink);font-weight:600;font-size:15px;padding-right:16px}
+.lecture .liste li{display:block}
+.lecture .liste li span{display:block}
+.lecture > .remarque{margin-top:22px;max-width:70ch}
+.lecture .defile + .remarque{margin:8px 0 0}
+.lecture .remarque + .defile{margin-top:22px}
+@media (max-width:919px){
+  .tete-doc{grid-template-columns:minmax(0,1fr);gap:14px}
+  .chiffres{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .chiffres div:nth-child(3){border-left:0;padding-left:0}
+  .chiffres div:nth-child(n+3){border-top:1px solid var(--line)}
+  .chiffres dt{font-size:21px}
+  .lecture .principes{grid-template-columns:minmax(0,1fr)}
+  .lecture .accueil{max-width:none}
+  .lecture .chapo{font-size:17.5px}
+  .fil li{grid-template-columns:minmax(0,1fr)}
+  .fil .quand{display:flex;gap:10px;margin-bottom:2px}
+  .fil .quand b{display:inline}
+  .lecture .jour{top:-18px}
+  .lecture h3{margin-top:18px}
+  .tapis-plan{padding:10px}
+  .lecture > table{display:block;overflow-x:auto}
+}
