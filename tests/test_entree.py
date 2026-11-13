@@ -157,3 +157,13 @@ def test_document():
     assert lin.groupe == "Laque et peinture murale" and lin.lien.endswith("2500P-S26")
     for variante in d.variantes:
         modele.verifier(d, d.generer(variante.id))
+
+
+def test_plan_role_group():
+    for variante, n in (("principale", 5), ("victor", 4)):
+        _, e = _plan(variante)
+        (svg,) = balises(e.scene, "svg")
+        assert svg["role"] == "group" and svg["aria-label"]
+        assert len(balises(e.scene, "rect", classe="zone")) == n
+    # sans zones, le dessin reste l'image d'origine
+    assert 'role="img"' in dessin_principale.plan_svg(document)

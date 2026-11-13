@@ -60,7 +60,7 @@ def _jambages(M):
 
 
 # ------------------------------------------------------------------ plan vu de dessus
-def plan_svg(M, aria="Plan de l'entrée aménagée"):
+def plan_svg(M, aria="Plan de l'entrée aménagée", zones=""):
     b, c, an, pe, mi = M.BANC, M.CHAUSSURES, M.ANGLE, M.PENDERIE, M.MIROIR
     o = []
     # pièces voisines
@@ -148,7 +148,7 @@ def plan_svg(M, aria="Plan de l'entrée aménagée"):
     o.append(text(COUPE_B + 7, 368, "B", "sect", "start"))
     o.append(f'<line class="sec" x1="-6" y1="{COUPE_C}" x2="360" y2="{COUPE_C}"/>')
     o.append(text(-8, COUPE_C + 4, "C", "sect", "end"))
-    return f'<svg class="plan" viewBox="-150 -130 595 560" role="img" aria-label="{escape(aria)}">{"".join(o)}</svg>'
+    return f'<svg class="plan" viewBox="-150 -130 595 560" role="{"group" if zones else "img"}" aria-label="{escape(aria)}">{"".join(o)}{zones}</svg>'
 
 
 # ------------------------------------------------------------------ coupes

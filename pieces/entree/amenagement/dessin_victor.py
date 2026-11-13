@@ -24,7 +24,7 @@ COUPE_D = 60     # x, regard vers l'ouest : mur ouest de l'entrée, cadres, miro
 
 
 # ------------------------------------------------------------------ plan vu de dessus
-def plan_svg(M, aria="Plan de l'entrée, version Victor"):
+def plan_svg(M, aria="Plan de l'entrée, version Victor", zones=""):
     b, pe, mi, et, pl, cd = M.CHAUSSURES, M.PENDERIE, M.MIROIR, M.ETAGERES, M.PLANCHE, M.CADRES
     o = []
     for x0, y0, x1, y1, nom, tx, ty in ((-140, -120, 90, -10, "Cuisine", -25, -60), (150, -120, 274, -10, "WC", 212, -60),
@@ -110,7 +110,7 @@ def plan_svg(M, aria="Plan de l'entrée, version Victor"):
     o.append(text(-8, COUPE_C + 4, "C", "sect", "end"))
     o.append(f'<line class="sec" x1="{COUPE_D}" y1="-6" x2="{COUPE_D}" y2="380"/>')
     o.append(text(COUPE_D + 3, 368, "D", "sect", "start"))
-    return f'<svg class="plan" viewBox="-150 -130 595 560" role="img" aria-label="{escape(aria)}">{"".join(o)}</svg>'
+    return f'<svg class="plan" viewBox="-150 -130 595 560" role="{"group" if zones else "img"}" aria-label="{escape(aria)}">{"".join(o)}{zones}</svg>'
 
 
 # ------------------------------------------------------------------ coupes

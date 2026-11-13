@@ -67,7 +67,8 @@ def _fiche_plan(D):
 
 def _vue_plan(M, D):
     legendes, principes = D.legendes(M), D.principes(M)
-    svg = D.plan_svg(M, aria=legendes["plan"]).replace("</svg>", _zones(M, D, principes) + "</svg>")
+    # role="group" (et non "img") : les zones sont des boutons, que les enfants d'une image masqueraient
+    svg = D.plan_svg(M, aria=legendes["plan"], zones=_zones(M, D, principes))
     element = Element(k="", nom="Plan", titre="Plan", scene=svg, fiche=_modeles(M, principes))
     return Vue("plan", [element], fiche=_fiche_plan(D), outils=("zoom", "mesure"))
 
