@@ -1,7 +1,9 @@
 """Construction de site/ : passerelle, accueil, journal, historiques et versions figées.
 
-Le site d'essai est celui de site.py (passerelles), plus le document d'essai, construit dans une copie réduite de la
-racine (pages, archives et images, sans le code ni les rendus Blender).
+Le site d'essai est celui de site.py, plus la pièce d'essai (le document d'essai et une passerelle vers la page d'essai
+de tests/fixtures/passerelle/), construit dans une copie réduite de la racine (pages, archives et images, sans le code
+ni les rendus Blender). Les tests sur le site réel n'y supposent rien de l'avancée de la migration : ils valent avec
+huit passerelles comme avec aucune.
 """
 import dataclasses
 import importlib.util
@@ -9,6 +11,7 @@ import json
 import posixpath
 import re
 import shutil
+from collections import Counter
 from dataclasses import dataclass
 from html import unescape
 from pathlib import Path
@@ -17,6 +20,7 @@ import pytest
 from outils import RACINE, balises, charger_site
 
 from commun.construction import commande, construire, copier_passerelle, figer
+from commun.gabarit import adresse
 from commun.journal import depuis_page
 from commun.modele import Document, Passerelle, Piece, Site
 
@@ -32,6 +36,17 @@ def _charger_essai():
 
 
 ESSAI = _charger_essai()
+
+# page d'avant la refonte, recopiée à la racine du site d'essai avec les images qu'elle cite
+PAGES_D_ESSAI = RACINE / "tests/fixtures/passerelle"
+PASSERELLE = Passerelle("essai", "ancienne", "Ancienne page", "construction", "essai-ancienne.html")
+IMAGES_D_ESSAI = {"essai-ancienne-3d/V1.1/plan.svg", "essai-ancienne-3d/V1.1/coupe.svg",
+                  "essai-ancienne-3d/V1.0/plan.svg"}
+IMAGES = (".jpg", ".jpeg", ".png", ".svg", ".webp")
+
+# pages de la racine qui ne sont pas des documents (annexes, pages destinées aux archives) : permises si présentes
+HORS_DOCUMENTS = {"index.html", "cuisine-plan.html", "cuisine-couleurs.html", "cuisine-v13-imprimable.html",
+                  "cuisine-v13-maquette.html", "sdb-meuble-achats.html"}
 
 
 def _instantane(racine, sauf=("site", "cache")):
@@ -73,7 +88,8 @@ def construit(tmp_path_factory):
         else:
             shutil.copy2(f, racine / f.name)
     _communs_d_essai(racine)
-    site = Site(charger_site().SITE.pieces + ESSAI.SITE.pieces)
+    shutil.copytree(PAGES_D_ESSAI, racine, dirs_exist_ok=True)
+    site = Site(charger_site().SITE.pieces + (Piece("essai", "Essai", (ESSAI.DOCUMENT, PASSERELLE)),))
     avant = _instantane(racine)
     construire(site, (), racine, racine / "site")
     return Construit(racine, racine / "site", site, avant)
@@ -117,6 +133,14 @@ def _liens_morts(sortie, rel):
     return morts
 
 
+def _passerelles(site):
+    return [d for p in site.pieces for d in p.documents if isinstance(d, Passerelle)]
+
+
+def _documents(site):
+    return [d for p in site.pieces for d in p.documents if isinstance(d, Document)]
+
+
 def _contenu(html):
     return re.search(r'<main class="contenu" id="contenu">.*</main>', html, flags=re.S).group(0)
 
@@ -133,12 +157,17 @@ def _rail(html, depuis):
 
 def test_passerelle_garde_les_adresses(construit):
     sortie = construit.sortie
-    page = sortie / "cuisine-v13.html"
-    assert page.exists()
-    images = [r for r in _references(_lire(page)) if r.lower().endswith((".jpg", ".jpeg", ".png", ".svg", ".webp"))]
-    assert len(images) > 10
-    manquantes = [r for r in images if not (sortie / r).is_file()]
-    assert manquantes == []
+    # la page d'essai et ses images, recopiées telles quelles à la même adresse
+    page = sortie / PASSERELLE.page
+    assert page.read_bytes() == (PAGES_D_ESSAI / PASSERELLE.page).read_bytes()
+    images = {r for r in _references(_lire(page)) if r.lower().endswith(IMAGES)}
+    assert images == IMAGES_D_ESSAI
+    for r in images:
+        assert (sortie / r).read_bytes() == (PAGES_D_ESSAI / r).read_bytes(), r
+    # chaque passerelle du site réel, s'il en reste : sa page et les images qu'elle cite
+    for doc in _passerelles(construit.site):
+        images = [r for r in _references(_lire(sortie / doc.page)) if r.lower().endswith(IMAGES)]
+        assert [r for r in images if not (sortie / r).is_file()] == [], doc.page
     assert (sortie / "archive/entree-amenagement-v1.html").exists()
     accueil = _lire(sortie / "index.html")
     assert balises(accueil, "svg", classe="plan-appart")
@@ -146,17 +175,21 @@ def test_passerelle_garde_les_adresses(construit):
 
 
 def test_journal_complet(construit):
-    attendu = 0
-    for piece in construit.site.pieces:
-        for doc in piece.documents:
-            if isinstance(doc, Passerelle):
-                attendu += len(depuis_page(_lire(construit.racine / doc.page)))
-            else:
-                attendu += sum(len(v.changements) for v in doc.variantes)
+    """Chaque document a dans le journal autant de lignes, sous son lien, qu'il a de changements (lus dans sa page
+    pour une passerelle, déclarés pour un document) ; ceux de la page d'essai y sont, avec leur version."""
+    attendu = Counter()
+    for doc in _passerelles(construit.site):
+        attendu[doc.page] += len(depuis_page(_lire(construit.racine / doc.page)))
+    for doc in _documents(construit.site):
+        for v in doc.variantes:
+            attendu[adresse(doc, v.id)] += len(v.changements)
     journal = _lire(construit.sortie / "journal.html")
-    lignes = [li for li in balises(journal, "li") if "data-piece" in li]
-    assert attendu > 100
-    assert len(lignes) == attendu
+    lignes = re.findall(r'<li data-piece="[^"]*">(.*?)</li>', journal, flags=re.S)
+    vu = Counter(re.search(r'<a href="([^"]*)"', li).group(1) for li in lignes)
+    assert vu == +attendu
+    essai = [li for li in lignes if f'href="{PASSERELLE.page}"' in li]
+    assert [re.search(r"<b>(.*?)</b>", li).group(1) for li in essai] == ["V1.1", "V1.0"]
+    assert "Coupe A-A ajoutée, plan &amp; cotes repris." in essai[0]
     assert balises(journal, "select", id="filtre-piece")
 
 
@@ -166,7 +199,10 @@ def test_menu_identique(construit):
              "essai/amenagement/index.html": "essai/amenagement/"}
     rails = {f: _rail(_lire(sortie / f), depuis) for f, depuis in pages.items()}
     assert rails["index.html"] == rails["journal.html"] == rails["essai/amenagement/index.html"]
-    assert 'href="cuisine-v13.html"' in rails["index.html"]
+    # le menu mène à chaque document : page de la passerelle telle quelle, dossier d'un document migré
+    assert f'href="{PASSERELLE.page}"' in rails["index.html"]
+    for doc in _passerelles(construit.site) + _documents(construit.site):
+        assert f'href="{posixpath.normpath(adresse(doc))}"' in rails["index.html"], adresse(doc)
 
 
 def test_figer(construit):
@@ -272,10 +308,14 @@ def test_plan_appartement(monkeypatch):
     site = charger_site().SITE
     svg = plan_appartement(site)
     liens = re.findall(r'<a href="([^"]*)" aria-label="([^"]*)">', svg)
-    assert ("cuisine-v13.html", "Cuisine") in liens
+    # chaque pièce mène à son premier document, passerelle ou document migré
+    assert {href for href, _ in liens} == {adresse(p.documents[0]) for p in site.pieces}
     assert ("entree/amenagement/", "Entrée") in liens
-    assert ("chambre-amenagement.html", "Chambre") in liens
     assert not any(nom in ("WC", "Pièce ouest", "Placard") for _, nom in liens)
+    # une pièce en passerelle mène à la page de la passerelle
+    chambre = Piece("chambre", "Chambre", (dataclasses.replace(PASSERELLE, piece="chambre"),))
+    assert re.findall(r'<a href="([^"]*)" aria-label="([^"]*)">', plan_appartement(Site((chambre,)))) == [
+        (PASSERELLE.page, "Chambre")]
     # le contour de l'entrée vient de pieces/entree/piece.py, décalé de POSITION
     monkeypatch.setattr(entree, "POSITION", (10, 20, 0))
     decale = " ".join(f"{x + 10},{y + 20}" for x, y in entree.SOL)
@@ -309,19 +349,36 @@ def test_seulement_rafraichit_le_menu(tmp_path):
         assert '<span class="num txt">V9.9</span>' in _lire(tmp_path / "site" / f), f
 
 
-def test_documents_declares():
+def test_documents_declares(construit):
+    """Propriétés de site.py vraies à chaque étape de la migration, quelles que soient les pages déjà migrées."""
     from pieces.entree.amenagement import document
 
-    site = charger_site().SITE
+    module = charger_site()
+    site = module.SITE
     assert [p.id for p in site.pieces] == ["cuisine", "sdb", "entree", "salon", "chambre"]
-    pages = [d.page for p in site.pieces for d in p.documents if isinstance(d, Passerelle)]
-    assert pages == ["cuisine-v13.html", "cuisine-v13-porte-cellier.html", "sdb-meuble-bas.html",
-                     "sdb-meuble-haut.html", "salon-v4.html", "salon-etageres.html",
-                     "salon-enfilade.html", "chambre-amenagement.html"]
     # l'entrée est migrée (tâche 16) : son document, à sa place dans le menu
     (entree,) = [p for p in site.pieces if p.id == "entree"]
     assert entree.documents == (document.DOCUMENT,)
-    assert [d for p in site.pieces for d in p.documents if isinstance(d, Document)] == [document.DOCUMENT]
+    # chaque passerelle désigne une page de la racine
+    for doc in _passerelles(site):
+        assert (RACINE / doc.page).is_file(), doc.page
+    # chaque document se construit : ses pages et son historique, sans lien mort (les rendus/ viennent des recettes
+    # de rendu, pas de la construction)
+    for doc in _documents(site):
+        for rel in [adresse(doc, v.id) for v in doc.variantes] + [f"{doc.piece}/{doc.id}/historique.html"]:
+            rel = rel + "index.html" if rel.endswith("/") else rel
+            morts = [u for u in _liens_morts(construit.sortie, rel) if not u.startswith("rendus/")]
+            assert morts == [], (rel, morts)
+    # chaque page de la racine est celle d'une passerelle, une ancienne adresse redirigée ou une page hors documents :
+    # l'ancienne page d'un document migré ne reste pas à la racine sans redirection
+    connues = {d.page for d in _passerelles(site)} | {r.ancienne for r in module.REDIRECTIONS} | HORS_DOCUMENTS
+    assert sorted(p.name for p in RACINE.glob("*.html") if p.name not in connues) == []
+    # chaque redirection mène à une page qu'écrit la construction : celle d'un document ou son historique
+    construites = {a for d in _documents(site) for a in [adresse(d, v.id) for v in d.variantes]
+                   + [f"{d.piece}/{d.id}/historique.html"]}
+    for r in module.REDIRECTIONS:
+        for cible in (r.cible, *r.pages.values()):
+            assert cible in construites, (r.ancienne, cible)
 
 
 def test_historique_de_l_entree(construit):

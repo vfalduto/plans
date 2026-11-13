@@ -1,5 +1,4 @@
 """Journal des changements lu dans les pages publiées."""
-import re
 from pathlib import Path
 
 from commun.journal import EntreeJournal, depuis_page, entrees, version_depuis_page
@@ -62,11 +61,20 @@ def test_entrees_une_seule_variante(tmp_path):
     assert e.variante is None and e.piece == "Pièce" and e.document == "Doc" and e.version == "V1"
 
 
+def test_page_d_essai():
+    """Une page d'avant la refonte (format des pages en passerelle) : ses changements et sa version."""
+    html = (RACINE / "tests/fixtures/passerelle/essai-ancienne.html").read_text(encoding="utf-8")
+    assert depuis_page(html) == [
+        Changement("V1.1", "12/11/2026", "Coupe A-A ajoutée, plan & cotes repris."),
+        Changement("V1.0", "02/11/2026", "Premier plan."),
+    ]
+    assert version_depuis_page(html) == "V1.1"
+
+
 def test_pages_reelles():
-    pages = [p for p in sorted(RACINE.glob("*.html")) if 'id="changements"' in p.read_text(encoding="utf-8")]
-    assert pages
-    for p in pages:
-        assert depuis_page(p.read_text(encoding="utf-8")), p.name
-    cuisine = (RACINE / "cuisine-v13.html").read_text(encoding="utf-8")
-    assert version_depuis_page(cuisine) == re.search(r'class="kicker">[^<]*?(V[\d.]+)<', cuisine).group(1)
-    assert depuis_page(cuisine)[0].version.startswith("V")
+    """Chaque page de la racine qui a une section Changements se lit (il n'en reste plus une fois tout migré)."""
+    for p in sorted(RACINE.glob("*.html")):
+        html = p.read_text(encoding="utf-8")
+        if 'id="changements"' in html:
+            changements = depuis_page(html)
+            assert changements and changements[0].version.startswith("V"), p.name

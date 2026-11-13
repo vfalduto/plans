@@ -78,18 +78,19 @@ def _traduire(r: Redirection, ancre: str) -> str:
 
 
 def test_motifs_de_site_py():
+    """Les motifs de chaque redirection se compilent (un meuble n'a pas de coupes : pas de motif attendu)."""
     redirections = charger_site().REDIRECTIONS
     assert redirections
     for r in redirections:
         for motif, _ in r.motifs:
             re.compile(motif)
-        assert _traduire(r, "coupe-b-b-mur-de-la-salle-de-bain") == "coupes?k=B", r.ancienne
 
 
 def test_redirections_de_l_entree():
     """Les deux anciennes pages de l'entrée : mêmes ancres (plus « Différences avec la V4.3 » chez Victor), chacune vers
     sa variante ; Changements vers l'historique."""
-    principale, victor = charger_site().REDIRECTIONS
+    par_ancienne = {r.ancienne: r for r in charger_site().REDIRECTIONS}
+    principale, victor = par_ancienne["entree-amenagement.html"], par_ancienne["entree-amenagement-victor.html"]
     assert (principale.ancienne, principale.cible) == ("entree-amenagement.html", "entree/amenagement/")
     assert (victor.ancienne, victor.cible) == ("entree-amenagement-victor.html", "entree/amenagement/victor.html")
     explication = ("principe", "achats-ikea-penderie", "materiaux", "points-a-verifier")
@@ -99,5 +100,6 @@ def test_redirections_de_l_entree():
     for r in (principale, victor):
         assert r.pages == {"changements": "entree/amenagement/historique.html"}
         assert _traduire(r, "coupe-a-a-mur-nord") == "coupes?k=A"
+        assert _traduire(r, "coupe-b-b-mur-de-la-salle-de-bain") == "coupes?k=B"
         assert _traduire(r, "coupe-d-d-mur-ouest-de-l-entree") == "coupes?k=D"
         assert _traduire(r, "inconnue") == ""
