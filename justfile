@@ -101,6 +101,16 @@ v13-figer:
 entree:
     python3 site.py entree/amenagement
 
+# Modèle des deux recettes de rendu d'un autre document (déclaration CACHE_RENDU dans son document.py) :
+#   <piece>-<document>-rendu echantillons="64" *vues : pour chaque variante de
+#     `rendu_cache variantes <piece>/<document>` (`-` : sans variante), cams=$(rendu_cache liste <piece>/<document>
+#     <variante> echantillons vues), rien si vide ; effacer les anciennes sorties de ces caméras ; un seul Blender par
+#     variante ; copier vers site/<piece>/<document>/rendus/<variante>-<caméra>.jpg (+ <variante>-<caméra>-masque.png
+#     s'il y a un masque ; sans variante : <caméra>.jpg, <caméra>-masque.png) ; rendu_cache noter … $cams ; enfin
+#     python3 site.py <piece>/<document>.
+#   <piece>-<document>-apercu *vues : même boucle, 16 échantillons, sortie dans cache/apercu/, ni cache ni copie
+#     dans site/. (rendu_cache = python3 -m commun.rendu_cache ; entree-rendu et entree-apercu en sont l'exemple.)
+
 # Entrée : rendus 3D (Blender) des deux variantes → site/entree/amenagement/rendus/<variante>-<caméra>.jpg + masques India,
 # puis la page. Ne rend que les caméras dont l'empreinte a changé (cache/empreintes.json, commun/rendu_cache.py) ; avec des
 # noms de caméras (just entree-rendu 64 banc), rend celles-là. Un seul lancement de Blender par variante.
@@ -110,8 +120,9 @@ entree-rendu echantillons="64" *vues:
     dest=site/entree/amenagement/rendus
     sortie="${ENTREE_SORTIE:-3d/sortie}"   # le dossier où rendu.py écrit
     mkdir -p "$dest"
-    for v in principale victor; do
-      cams=$(python3 -m commun.rendu_cache liste "$v" {{echantillons}} {{vues}})
+    variantes=$(python3 -m commun.rendu_cache variantes entree/amenagement)   # affectation : set -e arrête sur une erreur
+    for v in $variantes; do
+      cams=$(python3 -m commun.rendu_cache liste entree/amenagement "$v" {{echantillons}} {{vues}})
       if [ -z "$cams" ]; then echo "$v : rien à rendre"; continue; fi
       echo "$v : $cams"
       for c in $cams; do rm -f "$sortie/entree-$v-$c.png" "$sortie/entree-$v-$c-masque.png"; done   # aucun reste d'un ancien rendu à copier
@@ -120,7 +131,7 @@ entree-rendu echantillons="64" *vues:
         sips -s format jpeg -s formatOptions 85 "$sortie/entree-$v-$c.png" --out "$dest/$v-$c.jpg" >/dev/null
         cp "$sortie/entree-$v-$c-masque.png" "$dest/$v-$c-masque.png"
       done
-      python3 -m commun.rendu_cache noter "$v" {{echantillons}} $cams
+      python3 -m commun.rendu_cache noter entree/amenagement "$v" {{echantillons}} $cams
     done
     python3 site.py entree/amenagement
 
@@ -130,7 +141,8 @@ entree-apercu *vues:
     #!/usr/bin/env bash
     set -euo pipefail
     mkdir -p cache/apercu
-    for v in principale victor; do
+    variantes=$(python3 -m commun.rendu_cache variantes entree/amenagement)   # affectation : set -e arrête sur une erreur
+    for v in $variantes; do
       ENTREE_VARIANTE="$v" ENTREE_APERCU=1 ENTREE_SORTIE="$PWD/cache/apercu" "${BLENDER:-/opt/homebrew/bin/blender}" -b --python-exit-code 1 --python pieces/entree/amenagement/rendu.py -- 16 {{vues}}
     done
     images=$(ls cache/apercu/entree-*.png | grep -v -- '-masque.png')
