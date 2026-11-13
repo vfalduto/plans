@@ -325,6 +325,6 @@ def test_workflow_publie_site():
     flux = (RACINE / ".github" / "workflows" / "pages.yml").read_text(encoding="utf-8")
     assert "path: site" in flux
     assert "upload-pages-artifact@v3" in flux
-    assert "deploy-pages@v4" in flux
+    assert "deploy-pages@v5" in flux
     liens = [p for p in (RACINE / "site").rglob("*") if p.is_symlink()]
     assert not liens, f"liens symboliques dans site/ : {liens[:5]}"
