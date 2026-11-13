@@ -222,15 +222,19 @@ a.b-case[aria-current="page"] > .ico{color:inherit}
 
 /* ------------------------------------------------------------------ panneau « Personnaliser » : une section par option du document */
 .voile{position:fixed;inset:0;z-index:40}
-.feuille{position:fixed;z-index:41;right:16px;top:96px;width:384px;max-height:calc(100dvh - 116px);overflow-y:auto;background:var(--panel);border:1px solid var(--ink);border-radius:6px;padding:16px 18px 18px}
+/* un nuancier long (52 teintes pour l'entrée) fait défiler le panneau : le titre et la croix restent en haut, la valeur
+   choisie (.info) reste en bas tant que les boutons de son option défilent ; scroll-padding garde un bouton atteint au
+   clavier hors de dessous l'un et l'autre */
+.feuille{position:fixed;z-index:41;right:16px;top:96px;width:384px;max-height:calc(100dvh - 116px);overflow-y:auto;scroll-padding:56px 0 96px;background:var(--panel);border:1px solid var(--ink);border-radius:6px;padding:16px 18px 18px}
+.feuille .tete-feuille{position:sticky;top:-16px;z-index:1;display:flex;align-items:flex-start;justify-content:space-between;margin:-16px -18px 0;padding:16px 8px 0 18px;background:var(--panel)}
 .feuille h2{margin:0 0 2px;font:700 21px var(--ui)}
-.feuille .fermer{position:absolute;right:8px;top:8px;border:0;background:none;display:grid;place-items:center;width:36px;height:36px;border-radius:4px}
+.feuille .fermer{flex:none;margin-top:-8px;border:0;background:none;display:grid;place-items:center;width:36px;height:36px;border-radius:4px}
 .feuille .fermer:hover{background:var(--paper)}
 .feuille section{border-top:1px solid var(--line);margin-top:14px}
 .feuille h3{margin:14px 0 8px;font:600 17px var(--ui)}
 .feuille h3 span{font:400 14.5px var(--texte);color:var(--muted)}
 .feuille h4{margin:12px 0 6px;font:600 14.5px var(--ui);color:var(--muted)}
-.feuille .info{margin:10px 0 0;font-size:15px}
+.feuille .info{position:sticky;bottom:-18px;z-index:1;margin:10px -18px 0;padding:8px 18px 10px;background:var(--panel);border-top:1px solid var(--line);font-size:15px}
 .feuille .actions{margin:16px 0 0}
 .feuille .btn:disabled{opacity:.45}
 .nuances{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px}
@@ -289,6 +293,7 @@ a.b-case[aria-current="page"] > .ico{color:inherit}
   .lecture{padding:18px 16px 48px}
   .lecture h2{font-size:21px;margin-top:32px}
   .feuille{left:0;right:0;top:auto;bottom:0;width:auto;max-height:58dvh;border-radius:8px 8px 0 0;border-width:1px 0 0;padding-bottom:calc(18px + env(safe-area-inset-bottom))}
+  .feuille .info{bottom:calc(-18px - env(safe-area-inset-bottom));padding-bottom:calc(10px + env(safe-area-inset-bottom))}
   .outils{left:8px;top:8px}
   .bandeau{left:8px;right:8px;bottom:8px}
 }

@@ -569,8 +569,8 @@ function blocOption(o) {
 function brancherOptions() {
   const panneau = $("#panneau-options"), voile = $("#voile-options"), ouvreur = $("#c-options");
   if (!options.length || !panneau || !voile) return;
-  panneau.innerHTML = '<button type="button" class="fermer" aria-label="Fermer"><svg class="ico" viewBox="0 0 24 24" aria-hidden="true">' +
-    '<path d="M6 6l12 12M18 6L6 18"/></svg></button><h2>Personnaliser</h2>' + options.map(blocOption).join("") +
+  panneau.innerHTML = '<div class="tete-feuille"><h2>Personnaliser</h2><button type="button" class="fermer" aria-label="Fermer">' +
+    '<svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg></button></div>' + options.map(blocOption).join("") +
     '<p class="actions"><button type="button" class="btn" id="b-origine">Valeurs d\'origine</button></p>';
   const afficher = () => {
     for (const o of options) {

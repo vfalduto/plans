@@ -3,7 +3,7 @@
 `vues(variante)` rend le dictionnaire des vues du type « aménagement ». Le plan et les coupes viennent de
 dessin_principale.py et dessin_victor.py ; le texte long qui suivait chaque dessin est devenu son aria-label. Iso et
 Caméra sont les rendus de `site/entree/amenagement/rendus/` (le texte d'origine de `RENDUS` en est l'alt). Explication
-reprend le texte de `contenu()` de 3d/entree/plan.py et plan_victor.py, sans la section « Vues 3D ».
+reprend le texte de `contenu()` des anciens 3d/entree/plan.py et plan_victor.py, sans la section « Vues 3D ».
 """
 from html import escape
 from pathlib import Path

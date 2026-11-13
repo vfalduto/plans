@@ -1,4 +1,4 @@
-"""Fonctions de dessin SVG communes aux générateurs (reprises de 3d/entree/plan.py)."""
+"""Fonctions de dessin SVG communes aux générateurs (reprises de l'ancien 3d/entree/plan.py)."""
 import math
 from html import escape
 

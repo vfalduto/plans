@@ -461,6 +461,40 @@ Pour chaque document :
 | `chambre-amenagement.html` | à la main | `chambre/amenagement/` |
 | `archive/*.html` (59 pages) | figées | `archives/`, une copie par version |
 
+### Entrée : chaque section de l'ancienne page, et la vue qui la reprend
+
+Relu le 13/11/2026 sur `entree-amenagement.html` (V4.8) et `entree-amenagement-victor.html` (V1.5), dans leur
+dernier état avant la bascule (commit `5b6e9c0`). Les deux pages ont les mêmes sections, sauf « Différences avec la
+V4.3 » et la coupe D-D, propres à Victor. Elles redirigent vers `entree/amenagement/` et
+`entree/amenagement/victor.html` (`REDIRECTIONS` dans `site.py`) ; la colonne « Ancre » donne ce que devient l'ancre du
+titre de la section (le sommaire posait sur chaque `h2` un identifiant tiré de son texte).
+
+| Section de l'ancienne page | Ancre | Devient | Retiré, et décision qui le retire |
+|---|---|---|---|
+| Barre : « ← Plans » | | Menu de gauche, icône maison sur mobile | |
+| Barre : « Teinte » et sa palette | | « Personnaliser », option « Teinte de l'entrée » | |
+| Barre : « Explications », qui montrait le texte sous chaque dessin | | | Le bouton : ces textes sont devenus le texte alternatif des dessins (« pas de descriptions d'images à l'écran ») |
+| Barre : « Changements » | | Pastille de version, vers `historique.html` | |
+| Sommaire | | Onglets des vues | Le sommaire : « une navigation identique sur toutes les pages » |
+| Surtitre (« Entrée », version) et titre | | Barre du haut : pièce, document, variante, pastille de version | |
+| Chapô et chiffres clés | | Explication : chapô, rendu iso sud-ouest, chiffres | |
+| Différences avec la V4.3 (Victor) | `differences-avec-la-v4-3` → `explication` | Explication de Victor, avant « Principe » | |
+| Plan : dessin et légende | `plan` → `plan` | Plan : le dessin dans la scène, les calques et la légende dans la fiche, un meuble touché ouvre sa fiche | |
+| Plan : texte sous le dessin | | Texte alternatif du plan | Le texte à l'écran : « pas de descriptions d'images à l'écran » |
+| Vues 3D : les rendus | `vues-3d` → `iso` | Iso (NO, SO, SE ; NE grisé, pas encore rendu) et Caméra (banc, couloir), pour les deux variantes | |
+| Vues 3D : texte sous chaque rendu | | Texte alternatif du rendu ; pour la caméra, « yeux à X cm, objectif 17 mm » dans la fiche | Le texte à l'écran (silhouette de 1,75 m, murs du premier plan retirés) : « pas de descriptions d'images à l'écran » |
+| Vues 3D : note sur la teinte des rendus (rendu neutre et masque, limite de la lumière renvoyée) | | Portée de l'option dans « Personnaliser » ; la technique reste décrite au changement V4.8 (V1.5 chez Victor) | La note : « des panneaux concis » |
+| Coupes A-A à C-C, et D-D chez Victor | `coupe-<lettre>-…` → `coupes?k=<lettre>` | Coupes : un bouton par coupe, « Position » dans la fiche | |
+| Coupes : texte sous chaque dessin | | Texte alternatif de la coupe | Le texte à l'écran : « pas de descriptions d'images à l'écran » |
+| Principe (une carte par meuble) | `principe` → `explication` | Explication, « Principe », chaque carte avec « Montrer sur le plan » ; la même carte dans la fiche du meuble sur le plan | |
+| Achats IKEA de la penderie, et les portes possibles pour ce caisson (principale) | `achats-ikea-penderie` → `explication` | Explication, « Achats IKEA pour la penderie » | |
+| Matériaux | `materiaux` → `explication` | Explication, « Matériaux » | |
+| Points à vérifier | `points-a-verifier` → `explication` | Explication, « Points à vérifier », une liste sans cases | |
+| Note finale : repère, fichiers source et recettes | | Explication : le repère et le fichier des dimensions (`pieces/entree/amenagement/`) | Les chemins de l'ancien générateur (`3d/entree/`), supprimé à la bascule |
+| Changements | `changements` → `historique.html` | `historique.html` : versions figées V3.3, V2 et V1, puis les changements de chaque variante ; `journal.html` | |
+
+Une ancre absente de ce tableau, ou pas d'ancre, ouvre la vue par défaut (Plan).
+
 ## Contraintes
 
 - **Source unique :** les modèles Python restent la seule source des dimensions. `site/` n'est jamais modifié à la

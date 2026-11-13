@@ -97,10 +97,9 @@ v13-apercu *vues:
 v13-figer:
     python3 3d/v13/plan.py --figer
 
-# Salon V4 : régénère salon-v4.html et les pages des meubles (étagères, enfilade) depuis 3d/salon/modele.py
-# Entrée : régénère entree-amenagement.html (plan, coupes, vues 3D) depuis 3d/entree/modele.py
+# Entrée : reconstruit les pages des deux variantes (site/entree/amenagement/) depuis pieces/entree/
 entree:
-    python3 3d/entree/plan.py
+    python3 site.py entree/amenagement
 
 # Entrée : rendus 3D (Blender) des deux variantes → site/entree/amenagement/rendus/<variante>-<caméra>.jpg + masques India,
 # puis la page. Ne rend que les caméras dont l'empreinte a changé (cache/empreintes.json, commun/rendu_cache.py) ; avec des
@@ -137,10 +136,7 @@ entree-apercu *vues:
     images=$(ls cache/apercu/entree-*.png | grep -v -- '-masque.png')
     open $images
 
-# Entrée, version Victor : régénère entree-amenagement-victor.html depuis 3d/entree/victor.py
-entree-victor:
-    python3 3d/entree/plan_victor.py
-
+# Salon V4 : régénère salon-v4.html et les pages des meubles (étagères, enfilade) depuis 3d/salon/modele.py
 salon:
     python3 3d/salon/plan.py
     python3 3d/salon/etageres.py

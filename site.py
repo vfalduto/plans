@@ -4,7 +4,8 @@
   python3 site.py <piece>/<document>                       reconstruit ce document, le menu, l'accueil et le journal
   python3 site.py --figer <piece>/<document>[/<variante>]  fige la version en cours d'une variante
 
-Un document pas encore migré est une Passerelle vers sa page actuelle, recopiée telle quelle dans site/. Toute la
+Un document pas encore migré est une Passerelle vers sa page actuelle, recopiée telle quelle dans site/ ; un document
+migré est le Document de pieces/<piece>/<document>/document.py, et son ancienne page devient une Redirection. Toute la
 logique est dans commun/construction.py (`import site` donne le module standard de Python : ne rien importer d'ici).
 """
 import sys
@@ -12,6 +13,8 @@ from pathlib import Path
 
 from commun.construction import commande
 from commun.modele import Passerelle, Piece, Site
+from commun.redirections import Redirection
+from pieces.entree.amenagement import document as entree_amenagement
 
 RACINE = Path(__file__).resolve().parent
 
@@ -25,7 +28,7 @@ SITE = Site((
         Passerelle("sdb", "meuble-haut", "Meuble haut", "construction", "sdb-meuble-haut.html"),
     )),
     Piece("entree", "Entrée", (
-        Passerelle("entree", "amenagement", "Aménagement", "amenagement", "entree-amenagement.html"),
+        entree_amenagement.DOCUMENT,
     )),
     Piece("salon", "Salon", (
         Passerelle("salon", "amenagement", "Aménagement", "amenagement", "salon-v4.html"),
@@ -37,8 +40,20 @@ SITE = Site((
     )),
 ))
 
-# Anciennes adresses devenues des pages de redirection (commun/redirections.py, tâche 10)
-REDIRECTIONS = ()
+# Anciennes adresses devenues des pages de redirection (commun/redirections.py). Les ancres sont celles que le
+# sommaire des anciennes pages posait sur leurs titres h2 (slug du texte : « Coupe B-B · mur de la salle de bain » →
+# coupe-b-b-mur-de-la-salle-de-bain) ; une ancre absente d'ici mène à la vue par défaut.
+ANCRES_ENTREE = {"plan": "plan", "vues-3d": "iso", "principe": "explication", "achats-ikea-penderie": "explication",
+                 "materiaux": "explication", "points-a-verifier": "explication"}
+COUPES = ((r"^coupe-([a-d])-", "coupes?k={1}"),)
+HISTORIQUE_ENTREE = {"changements": "entree/amenagement/historique.html"}
+
+REDIRECTIONS = (
+    Redirection("entree-amenagement.html", "entree/amenagement/", ANCRES_ENTREE, COUPES, HISTORIQUE_ENTREE),
+    # la page de Victor avait en plus « Différences avec la V4.3 », passée dans son Explication
+    Redirection("entree-amenagement-victor.html", "entree/amenagement/victor.html",
+                {**ANCRES_ENTREE, "differences-avec-la-v4-3": "explication"}, COUPES, HISTORIQUE_ENTREE),
+)
 
 
 def main(argv: list[str] | None = None) -> int:
