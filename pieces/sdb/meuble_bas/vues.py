@@ -4,13 +4,15 @@ Une seule variante (id vide), pas d'option. Les textes qui étaient sous les des
 texte alternatif (alts) : rien n'est écrit sous un dessin.
 """
 import re
+from dataclasses import replace
+from functools import lru_cache
 from html import escape, unescape
 
-from commun.blocs import Achat, euros, note_source, tableau_achats, vue_lecture
+from commun.blocs import Achat, note_source, tableau_achats, vue_lecture
 from commun.blocs_construction import Colonne, DessinMeuble, Etape, etapes, tableau_debit, vue_plans
 from commun.modele import Vue
 from pieces.sdb import iso, piece as P
-from pieces.sdb.achats_communs import deux_meubles, prix
+from pieces.sdb.achats_communs import deux_meubles, note_article, prix
 from pieces.sdb.meuble_bas import modele as B
 from pieces.sdb.meuble_bas.document import VERSION
 from pieces.sdb.meuble_bas.dessins import ARIA, DESSINS, ISO, NOMS, legendes
@@ -92,6 +94,40 @@ def pose_colonne() -> list[str]:
     ]
 
 
+VERIN_GROSSI = 3        # les vérins (1,6 de large, 2 de haut) sont trop petits pour se voir : dessinés trois fois plus gros
+
+
+def _grossir_verins(blocs):
+    """Les vérins agrandis autour de leur axe, vers le bas (le haut reste sous la joue)."""
+    res = []
+    for b in blocs:
+        if b.nom.startswith("verin_"):
+            cx, cy, d = (b.x0 + b.x1) / 2, (b.y0 + b.y1) / 2, (b.x1 - b.x0) * VERIN_GROSSI / 2
+            b = replace(b, x0=cx - d, x1=cx + d, y0=cy - d, y1=cy + d, z0=b.z1 - (b.z1 - b.z0) * VERIN_GROSSI)
+        res.append(b)
+    return res
+
+
+@lru_cache(maxsize=None)
+def _largeur_ref() -> float:
+    """Largeur (unités du dessin) du meuble monté, sans la machine : le schéma de référence, qui remplit la colonne.
+    Les autres sont dessinés à la même échelle : un schéma de pièce seule reste petit au lieu d'être agrandi jusqu'à
+    remplir la page (celui de la machine, plus large, est ramené à la colonne)."""
+    return _largeur(iso.dessin([b for b in _grossir_verins(B.blocs()) if b.role != "machine"], (), reperes=False))
+
+
+def _largeur(svg: str) -> float:
+    return float(re.search(r'viewBox="\S+ \S+ (\S+) ', svg).group(1))
+
+
+def _a_l_echelle(svg: str) -> str:
+    """Largeur du schéma proportionnelle à celle du dessin : même échelle de projection pour tous les schémas."""
+    if not svg:
+        return svg
+    pct = min(100.0, 100 * _largeur(svg) / _largeur_ref())
+    return svg.replace("<svg ", f'<svg style="width:{pct:.1f}%" ', 1)
+
+
 def figure_montage(n: int) -> str:
     """Schéma de l'étape n (1 à 13) : ce qui est déjà monté en gris, les pièces posées à l'étape ou sur lesquelles elle
     travaille en couleur. Chaîne vide quand l'étape n'a rien à montrer (couper, silicone) : le modèle n'a pas la pièce."""
@@ -99,8 +135,8 @@ def figure_montage(n: int) -> str:
     vus = {k for k, v in B.POSE.items() if v <= n} | neuves | set(B.CONTEXTE.get(n, ()))
     if not neuves:
         return ""
-    blocs = [b for b in B.blocs() if b.nom in vus and not (b.nom.startswith("verin_") and f"joue_{b.nom[6]}" not in vus)]
-    return iso.dessin(blocs, neuves, reperes=False, titre=f"Montage, étape {n}")
+    blocs = [b for b in _grossir_verins(B.blocs()) if b.nom in vus and not (b.nom.startswith("verin_") and f"joue_{b.nom[6]}" not in vus)]
+    return _a_l_echelle(iso.dessin(blocs, neuves, reperes=False, titre=f"Montage, étape {n}"))
 
 
 def figure_colonne(n: int) -> str:
@@ -109,11 +145,9 @@ def figure_colonne(n: int) -> str:
     neuves = {k for k, v in B.POSE_COLONNE.items() if v == n} | set(B.ACCENT_COLONNE.get(n, ()))
     if not neuves:
         return ""
-    if n == 2:
-        blocs = [b for b in B.blocs() if b.nom in neuves]
-    else:
-        blocs = B.blocs()
-    return iso.dessin(blocs, neuves, reperes=False, titre=f"Pose de la colonne, étape {n}")
+    tous = _grossir_verins(B.blocs())
+    blocs = [b for b in tous if b.nom in neuves] if n == 2 else tous
+    return _a_l_echelle(iso.dessin(blocs, neuves, reperes=False, titre=f"Pose de la colonne, étape {n}"))
 
 
 def _montage() -> str:
@@ -125,11 +159,6 @@ def _montage() -> str:
 
 
 # ------------------------------------------------------------------ Achats
-def _note(q, pu, stock):
-    """Prix unitaire (quantité autre que 1) et stock lu au magasin, dans la note de l'article."""
-    return ", ".join(([f"{q:g} × {euros(pu)}"] if q != 1 else []) + ([f"stock : {stock}"] if stock is not None else []))
-
-
 def _achats() -> str:
     total = B.total()
     return ("<h2>Meuble bas</h2>"
@@ -139,7 +168,7 @@ def _achats() -> str:
             "sont pas comptés. Le détail est dans la liste d'achats.</p>"
             f"<p>Tout ce qu'il faut pour le meuble bas {VERSION}. Joues, fond, bas, étagère et porte en mélaminé blanc, "
             "levés sur des vérins, avec les 2 bacs.</p>"
-            + tableau_achats([Achat(nom, ref, q, pu, _note(q, pu, st)) for nom, ref, q, pu, st in B.prix()],
+            + tableau_achats([Achat(nom, ref, q, pu, note_article(q, pu, st)) for nom, ref, q, pu, st in B.prix()],
                              "Total du meuble bas", arrondi=False)
             + note_source(f"Les vis 4 × 40 viennent de la liste du meuble haut, qui en a assez. Pour acheter le meuble "
                           f"bas seul, ajouter la boîte de vis ({prix(9.00)}), soit {prix(total + 9.00)}. Chant : "
@@ -148,7 +177,7 @@ def _achats() -> str:
                           "lot de poignées en contient 2, une seule sert. Non comptés : le câble, la goulotte et "
                           "l'électricien, la scie sauteuse, le rail de coupe, le foret à cuvette Ø 35, la scie cloche "
                           "Ø 67 et les clips adhésifs du fil des LED.")
-            + deux_meubles({"bas": "", "haut": "../../sdb-meuble-achats.html#haut-seul"}))
+            + deux_meubles({"bas": "", "haut": "../meuble-haut/#achats"}))
 
 
 def vues(variante: str) -> dict[str, Vue]:

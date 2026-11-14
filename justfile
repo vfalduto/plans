@@ -231,11 +231,14 @@ salon-figer:
 sdb-meuble-bas:
     python3 site.py sdb/meuble-bas
 
-# Meuble linge SDB : régénère sdb-meuble-haut.html (haut.py) et sdb-meuble-achats.html (achats.py) depuis 3d/sdb/modele.py, la page du meuble bas, puis le modèle FreeCAD
+# Salle de bain, meuble haut : reconstruit sa page (site/sdb/meuble-haut/) depuis pieces/sdb/meuble_haut/
+sdb-meuble-haut:
+    python3 site.py sdb/meuble-haut
+
+# Meuble linge SDB : reconstruit les pages des deux meubles (site/sdb/), puis le modèle FreeCAD (3d/sdb/modele.py)
 sdb:
-    python3 3d/sdb/haut.py
-    python3 3d/sdb/achats.py
     python3 site.py sdb/meuble-bas
+    python3 site.py sdb/meuble-haut
     /Applications/FreeCAD.app/Contents/Resources/bin/freecadcmd 3d/sdb/cad.py
 
 # Recherches Leboncoin : serveur local des pages achats/ (boutons ★ / ✕), voir .claude/skills/lbc/SKILL.md

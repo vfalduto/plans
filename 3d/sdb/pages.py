@@ -187,11 +187,11 @@ def barre(courante):
     return f'<div class="vbar"><a class="back" href="index.html">← Plans</a><span class="sp"></span>{btn}</div>'
 
 
-def gabarit(titre, courante, corps, barre_html=None):
-    """Page complète. barre_html : barre du haut propre à la page (par défaut, les onglets des trois pages V4)."""
+def gabarit(titre, courante, corps):
+    """Page complète, avec la barre des onglets des trois pages V4."""
     return f"""{PL.entete(titre, "", CSS)}
 <body class="explications changements">
-{barre_html if barre_html is not None else barre(courante)}
+{barre(courante)}
 <nav class="toc" aria-label="Sommaire"><button type="button" class="tbtn" aria-expanded="true">Sommaire</button><ol></ol></nav>
 <main class="wrap">
 {corps}

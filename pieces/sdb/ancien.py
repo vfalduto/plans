@@ -1,7 +1,8 @@
-"""Les anciens modules de 3d/sdb/, chargés à la demande, tant que le meuble haut n'est pas migré.
+"""L'ancien modèle de 3d/sdb/ et ses modules, chargés à la demande.
 
-modele() : 3d/sdb/modele.py (données du meuble haut, lues par le meuble bas : Z_HAUT, Z_HAUT1, LED, VERSION), chargé une
-fois sous le nom sdb_ancien_modele (il n'importe que math et dataclasses).
+modele() : 3d/sdb/modele.py (V6.4), chargé une fois sous le nom sdb_ancien_modele (il n'importe que math et
+dataclasses). Il décrit le caisson haut et l'ancien meuble bas V6 : le meuble haut (pieces/sdb/meuble_haut/) en lit les
+données, le meuble bas en lit Z_HAUT, Z_HAUT1, LED et VERSION ; cad.py et explorations/ l'importent aussi.
 charger(nom) : 3d/sdb/<nom>.py importé comme le font les anciens générateurs (3d/sdb/ en tête de sys.path), puis retiré
 de sys.modules avec ses dépendances de 3d/sdb/ : leurs noms (modele, plan, haut…) ne restent pas visibles ailleurs.
 """
@@ -52,7 +53,3 @@ def charger(nom: str) -> ModuleType:
                 _cache.setdefault(n, m)
         sys.modules.update(gardes)
     return _cache[nom]
-
-
-def haut() -> ModuleType:
-    return charger("haut")

@@ -24,14 +24,13 @@ def test_document():
 
 def test_site_declare_le_meuble_bas():
     (sdb,) = [p for p in charger_site().SITE.pieces if p.id == "sdb"]
-    assert sdb.documents[0] is document.DOCUMENT and sdb.documents[1].page == "sdb-meuble-haut.html"
+    assert sdb.documents[0] is document.DOCUMENT and sdb.documents[1].id == "meuble-haut"
 
 
 def test_redirection():
     (r,) = [r for r in charger_site().REDIRECTIONS if r.ancienne == "sdb-meuble-bas.html"]
     assert (r.cible, r.ancres, r.motifs, r.pages) == ("sdb/meuble-bas/", ANCRES, (),
                                                       {"changements": "sdb/meuble-bas/historique.html"})
-    assert not [x for x in charger_site().REDIRECTIONS if x.ancienne == "sdb-meuble-achats.html"]
 
 
 def test_journal_garde_seize_changements():
@@ -43,7 +42,7 @@ def test_ancienne_page_et_generateur_retires():
     suivis = subprocess.run(["git", "ls-files"], cwd=RACINE, capture_output=True, text=True).stdout.split()
     for nom in ("sdb-meuble-bas.html", "3d/sdb/bas.py", "3d/sdb/test_bas.py"):
         assert nom not in suivis and not (RACINE / nom).exists(), nom
-    for nom in ("sdb-meuble-achats.html", "3d/sdb/achats.py", "3d/sdb/haut.py", "3d/sdb/modele.py", "3d/sdb/cad.py"):
+    for nom in ("3d/sdb/modele.py", "3d/sdb/cad.py"):
         assert nom in suivis, nom
 
 
@@ -51,4 +50,4 @@ def test_recettes():
     j = (RACINE / "justfile").read_text(encoding="utf-8")
     assert "sdb-meuble-bas:\n    python3 site.py sdb/meuble-bas\n" in j
     sdb = j.split("\nsdb:\n", 1)[1].split("\n\n", 1)[0]
-    assert "bas.py" not in sdb and "python3 3d/sdb/achats.py" in sdb and "python3 site.py sdb/meuble-bas" in sdb
+    assert "bas.py" not in sdb and "python3 site.py sdb/meuble-bas" in sdb

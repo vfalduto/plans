@@ -1,7 +1,7 @@
 from pieces.sdb import achats_communs as AC
 from tests.sdb_anciennes import ancien, corrige, morceaux, page_achats, section, texte
 
-S = AC.deux_meubles({"bas": "", "haut": "../../sdb-meuble-achats.html#haut-seul"})
+S = AC.deux_meubles({"bas": "", "haut": "../meuble-haut/#achats"})
 
 
 def test_donnees_comme_modele_py():
@@ -11,7 +11,7 @@ def test_donnees_comme_modele_py():
 
 def test_deux_meubles():
     assert S.startswith("<h2>Les deux meubles</h2>") and round(AC.total_haut(), 2) == 179.82
-    assert "<td>Meuble bas</td>" in S and "#achats" not in S and '<a href="../../sdb-meuble-achats.html#haut-seul">Meuble haut</a>' in S
+    assert "<td>Meuble bas</td>" in S and "meuble-bas" not in S and '<a href="../meuble-haut/#achats">Meuble haut</a>' in S
     for montant in ("296,82 €", "179,82 €", "476,64 €", "428,33 €"):
         assert montant in S
     assert AC.prix(9) == "9,00 €" and AC.prix(296.82) == "296,82 €"
