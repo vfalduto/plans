@@ -88,7 +88,7 @@ def _demi(montant, pas):
     return Decimal(str(montant)).quantize(Decimal(pas), rounding=ROUND_HALF_UP)
 
 
-def euros(montant: float | Decimal) -> str:
+def euros(montant: float) -> str:
     """Au centime, demi vers le haut ; virgule, pas de séparateur de milliers ; un montant entier sans décimales, sinon
     deux : 80 -> « 80 € », 12.5 -> « 12,50 € », 14.99 -> « 14,99 € »."""
     centimes = _demi(montant, "0.01")
