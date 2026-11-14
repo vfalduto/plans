@@ -8,26 +8,22 @@ reprend le texte de `contenu()` des anciens 3d/entree/plan.py et plan_victor.py,
 from html import escape
 from pathlib import Path
 
-from commun.dessin import f, virg
-from commun.modele import Element, Vue
-from commun.position import mini_plan
+from commun.blocs import (Achat, Carte, Coupe, Lieu, SectionAchats, Zone, a_verifier, achats, chiffres, cotes_meuble,
+                          figure_rendu, materiaux, nombre, note_source, points_iso, principes, rendu, tete,
+                          total_achats, vue_camera, vue_coupes, vue_iso, vue_lecture, vue_plan, zones_svg)
+from commun.dessin import virg
+from commun.modele import Vue
 from pieces.entree import piece
 from pieces.entree.amenagement import dessin_principale, dessin_victor, document, victor
 
 # (module de variante, module de dessin)
 VARIANTES = {"principale": (document, dessin_principale), "victor": (victor, dessin_victor)}
 
-# Calques du plan : (id, nom). Chaque id correspond à la classe `sans-<id>` posée sur la section par le JS ; les
-# éléments SVG qu'il masque portent déjà ces classes (voir l'en-tête de dessin_principale.py).
-CALQUES = (("cotes", "Cotes"), ("passages", "Passages libres"), ("coupes", "Traits de coupe"),
-           ("voisines", "Pièces voisines"), ("annotations", "Annotations"))
+RENDUS_SITE = Path(__file__).resolve().parents[3] / "site" / "entree" / "amenagement" / "rendus"
+CAMERAS_PRISES = ("banc", "couloir")
+LIEU = Lieu(piece.SOL, piece.PORTES, "Position dans l'entrée")
 
 # Trait de coupe sur le plan : axe du trait (h : horizontal, à y = repère ; v : vertical, à x = repère), bornes
-RENDUS_SITE = Path(__file__).resolve().parents[3] / "site" / "entree" / "amenagement" / "rendus"
-COINS = ("no", "ne", "so", "se")   # ordre des segments de l'iso, et des cônes (coins rendus) de sa fiche « Position »
-CAMERAS_PRISES = ("banc", "couloir")
-MARGE_ISO = 26                     # cm entre l'enveloppe des murs et le point de vue d'un coin
-
 TRAITS = {"A": ("h", -6, 270), "B": ("v", -6, 380), "C": ("h", -6, 360), "D": ("v", -6, 380)}
 SAILLIE_PORTE = 14                 # cm : la zone d'une porte déborde de l'ouverture dans le couloir (maquette)
 
@@ -39,22 +35,7 @@ def _e(texte):
 def _trait(D, lettre):
     axe, d0, d1 = TRAITS[lettre]
     coupe = getattr(D, f"COUPE_{lettre}")
-    return (lettre, ((d0, coupe), (d1, coupe)) if axe == "h" else ((coupe, d0), (coupe, d1)))
-
-
-def _nombre(v):
-    return f(v).replace(".", ",")
-
-
-def _cotes(m, plateau=False):
-    """Cotes d'un meuble pour sa fiche : « longueur × profondeur, h hauteur », puis « dessous à z0 » s'il est suspendu.
-    La longueur est le grand côté de l'emprise ; la profondeur, celle du caisson s'il est donné (`caisson`), sinon le
-    petit côté ; la hauteur va du dessous au dessus, plateau compris si la zone le demande."""
-    dx, dy = m["x1"] - m["x0"], m["y1"] - m["y0"]
-    z0 = m.get("z0", 0)
-    h = m["z1"] - z0 + (m["plateau"] if plateau else 0)
-    texte = f"{_nombre(max(dx, dy))} × {_nombre(m.get('caisson', min(dx, dy)))}, h {_nombre(h)}"
-    return texte + (f", dessous à {_nombre(z0)}" if z0 else "")
+    return ((d0, coupe), (d1, coupe)) if axe == "h" else ((coupe, d0), (coupe, d1))
 
 
 def _emprise_porte(p):
@@ -69,147 +50,67 @@ def _zone(M, z):
     bord donné par la zone remplace celui du meuble."""
     if "meuble" in z:
         m = getattr(M, z["meuble"])
-        return tuple(z.get(c, m[c]) for c in ("x0", "y0", "x1", "y1")), _cotes(m, z.get("plateau", False))
+        return tuple(z.get(c, m[c]) for c in ("x0", "y0", "x1", "y1")), cotes_meuble(m, z.get("plateau", False))
     if "porte" in z:
         p = next(p for p in piece.PORTES if p["nom"] == z["porte"])
-        return _emprise_porte(p), f'vantail de {_nombre(p["b"] - p["a"])}'
+        return _emprise_porte(p), f'vantail de {nombre(p["b"] - p["a"])}'
     return (z["x0"], z["y0"], z["x1"], z["y1"]), z["cotes"]
 
 
-def _zones(M, D, legende_principes):
-    """Rectangles touchables du plan, un par meuble de `M.ZONES`."""
-    rects = []
-    for i, z in enumerate(M.ZONES):
-        titre = legende_principes[z["principe"]][0]
-        (x0, y0, x1, y1), _ = _zone(M, z)
-        rects.append(f'<rect class="zone" data-meuble="{i}" x="{f(x0)}" y="{f(y0)}" width="{f(x1 - x0)}"'
-                     f' height="{f(y1 - y0)}" rx="2" tabindex="0" role="button" aria-label="{_e(titre)}"/>')
-    return "".join(rects)
-
-
-def _modeles(M, principes):
-    """Un `<template data-meuble>` par zone : le JS le recopie dans la fiche quand on touche le meuble."""
-    modeles = []
+def _zones(M, D):
+    """Meubles touchables du plan, un par zone de `M.ZONES` ; leur id est leur rang."""
+    principes = D.principes(M)
+    zones = []
     for i, z in enumerate(M.ZONES):
         titre, texte = principes[z["principe"]]
-        _, cotes = _zone(M, z)
-        cotes += " cm" if cotes[0].isdigit() else ""
-        liens = ""
-        if z["coupe"]:
-            liens += f'<a class="btn" href="#coupes?k={z["coupe"]}">Coupe {z["coupe"]}</a>'
-        liens += f'<a class="btn" href="#iso?k={z["iso"]}">Iso</a>'
-        modeles.append(f'<template data-meuble="{i}" data-titre="{_e(titre)}"><p class="cotes">{_e(cotes)}</p>'
-                       f'<p>{texte}</p><div class="actions">{liens}</div></template>')
-    return "".join(modeles)
-
-
-def _fiche_plan(D):
-    boutons = "".join(f'<button type="button" data-calque="{k}" aria-pressed="true">{n}</button>' for k, n in CALQUES)
-    return ('<div class="fiche-meuble"><p>Touchez un meuble pour afficher sa fiche.</p></div>'
-            f'<h3>Calques</h3><div class="calques">{boutons}</div>'
-            f'<h3>Légende</h3>{dessin_principale.legende()}')
+        emprise, cotes = _zone(M, z)
+        zones.append(Zone(id=str(i), titre=titre, emprise=emprise, cotes=cotes, texte=texte,
+                          coupe=z["coupe"] or "", iso=z["iso"]))
+    return zones
 
 
 def _vue_plan(M, D):
-    legendes, principes = D.legendes(M), D.principes(M)
+    zones = _zones(M, D)
     # role="group" (et non "img") : les zones sont des boutons, que les enfants d'une image masqueraient
-    svg = D.plan_svg(M, aria=legendes["plan"], zones=_zones(M, D, principes))
-    element = Element(k="", nom="Plan", titre="Plan", scene=svg, fiche=_modeles(M, principes))
-    return Vue("plan", [element], fiche=_fiche_plan(D), outils=("zoom", "mesure"))
+    svg = D.plan_svg(M, aria=D.legendes(M)["plan"], zones=zones_svg(zones))
+    return vue_plan(svg, zones, dessin_principale.legende())
 
 
 def _vue_coupes(M, D):
     legendes = D.legendes(M)
-    lettres = list(D.SUJETS)
-    elements = []
-    for lettre in lettres:
-        sujet = D.SUJETS[lettre]
-        scene = getattr(D, f"coupe_{lettre.lower()}")(M, aria=legendes[lettre])
-        elements.append(Element(k=lettre, nom=f"{lettre} {sujet}", titre=f"Coupe {lettre}-{lettre} : {sujet}", scene=scene))
-    mini = mini_plan(piece.SOL, piece.PORTES, traits=[_trait(D, k) for k in lettres])
-    return Vue("coupes", elements, fiche=f'<h3>Position</h3><div class="mini">{mini}</div>', outils=("zoom", "mesure"))
-
-
-def _rendu_existe(variante, cle):
-    return (RENDUS_SITE / f"{variante}-{cle}.jpg").exists()
-
-
-def _figure(variante, cle, alt):
-    """Le rendu et, par-dessus, sa copie recolorée par le filtre de l'option `teinte` (masque des surfaces India)."""
-    base = f"rendus/{variante}-{cle}"
-    masque = f"url({base}-masque.png)"
-    return (f'<figure class="cadre rendu"><img src="{base}.jpg" alt="{_e(alt)}" draggable="false">'
-            f'<img class="calque" src="{base}.jpg" alt="" aria-hidden="true" draggable="false"'
-            f' style="filter:url(#filtre-teinte);-webkit-mask-image:{masque};mask-image:{masque}"></figure>')
-
-
-def _alt(M, cle, repli):
-    return dict(M.RENDUS).get(cle, repli)
-
-
-def _coins_iso():
-    """Position du point de vue de chaque coin : à `MARGE_ISO` de l'enveloppe des murs, visant son centre."""
-    x0, x1 = min(b.x0 for b in piece.MURS), max(b.x1 for b in piece.MURS)
-    y0, y1 = min(b.y0 for b in piece.MURS), max(b.y1 for b in piece.MURS)
-    centre = ((x0 + x1) / 2, (y0 + y1) / 2)
-    ou = {"no": (x0 - MARGE_ISO, y0 - MARGE_ISO), "ne": (x1 + MARGE_ISO, y0 - MARGE_ISO),
-          "so": (x0 - MARGE_ISO, y1 + MARGE_ISO), "se": (x1 + MARGE_ISO, y1 + MARGE_ISO)}
-    return {k: (ou[k], centre) for k in COINS}
-
-
-def _fiche_position(cones):
-    return f'<h3>Position</h3><div class="mini">{mini_plan(piece.SOL, piece.PORTES, cones=cones)}</div>'
+    coupes = [Coupe(k=lettre, nom=f"{lettre} {sujet}", titre=f"Coupe {lettre}-{lettre} : {sujet}",
+                    scene=getattr(D, f"coupe_{lettre.lower()}")(M, aria=legendes[lettre]), trait=_trait(D, lettre))
+              for lettre, sujet in D.SUJETS.items()]
+    return vue_coupes(coupes, LIEU)
 
 
 def _vue_iso(variante, M):
-    coins = _coins_iso()
-    elements = []
-    for k in COINS:
-        cle = f"iso_{k}"
-        actif = _rendu_existe(variante, cle)
-        scene = _figure(variante, cle, _alt(M, cle, f"Vue isométrique, coin {k.upper()}")) if actif else ""
-        elements.append(Element(k=k, nom=k.upper(), titre=f"Vue iso {k.upper()}", scene=scene, actif=actif))
-    # un cône par coin rendu ; le JS pose `ici` sur celui de l'élément affiché (g.pdv[data-k])
-    cones = [(e.k, *coins[e.k], False) for e in elements if e.actif]
-    return Vue("iso", elements, fiche=_fiche_position(cones))
+    enveloppe = (min(b.x0 for b in piece.MURS), min(b.y0 for b in piece.MURS),
+                 max(b.x1 for b in piece.MURS), max(b.y1 for b in piece.MURS))
+    return vue_iso(RENDUS_SITE, variante, LIEU, points_iso(enveloppe), alts=dict(M.RENDUS), filtre="teinte")
 
 
 def _vue_camera(variante, M):
     cameras = {c.id: c for c in piece.CAMERAS}
-    elements = []
-    for k in CAMERAS_PRISES:
-        c = cameras[k]
-        actif = _rendu_existe(variante, k)
-        scene = _figure(variante, k, _alt(M, k, c.nom)) if actif else ""
-        fiche = f'<p class="cotes">yeux à {c.yeux:g} cm, objectif {c.focale:g} mm</p>'
-        elements.append(Element(k=k, nom=c.nom, titre=c.nom, scene=scene, fiche=fiche, actif=actif))
-    cones = [(k, cameras[k].loc[:2], cameras[k].cible[:2], False) for k in CAMERAS_PRISES]
-    return Vue("camera", elements, fiche=_fiche_position(cones))
+    return vue_camera(RENDUS_SITE, variante, LIEU, [cameras[k] for k in CAMERAS_PRISES], alts=dict(M.RENDUS),
+                      filtre="teinte")
 
 
 # ------------------------------------------------------------------ Explication
-def _chiffres(stats):
-    return "".join(f"<div><dt>{_e(a)}</dt><dd>{_e(b)}</dd></div>" for a, b in stats)
-
-
-def _principes(M, cartes):
-    """Cartes « Principe » ; celles qui ont un meuble sur le plan lient vers sa zone (`rect.zone[data-meuble]`)."""
+def _cartes(M, D):
+    """Cartes « Principe » ; celles qui ont un meuble sur le plan lient vers sa première zone (son rang)."""
     zones = {}
     for i, z in enumerate(M.ZONES):
-        zones.setdefault(z["principe"], i)
-    def lien(r):
-        return f'<a class="btn" href="#plan?k={zones[r]}">Montrer sur le plan</a>' if r in zones else ""
-    return "".join(f"<li><h3>{_e(t)}</h3><p>{x}</p>{lien(r)}</li>" for r, (t, x) in enumerate(cartes))
+        zones.setdefault(z["principe"], str(i))
+    return [Carte(t, x, zones.get(r, "")) for r, (t, x) in enumerate(D.principes(M))]
+
+
+def _sections(M):
+    return [SectionAchats("", [Achat(n, r, q, p) for n, r, q, p in M.IKEA])]
 
 
 def _achats(M, approx, note):
-    lignes = "".join(f'<tr><td>{_e(n)}</td><td class="num">{r}</td><td class="num d">{q}</td>'
-                     f'<td class="num d">{f"{q * p:g}".replace(".", ",")} €</td></tr>' for n, r, q, p in M.IKEA)
-    total = round(sum(q * p for _, _, q, p in M.IKEA))
-    return ('<div class="defile"><table><thead><tr><th>Article</th><th>Référence</th><th class="d">Qté</th>'
-            f'<th class="d">Prix</th></tr></thead><tbody>{lignes}'
-            f'<tr class="total"><td>Total</td><td></td><td></td><td class="num d">{"≈ " if approx else ""}{total} €</td></tr>'
-            f'</tbody></table></div><p class="remarque">{note}</p>')
+    return achats(_sections(M), titre="Achats IKEA pour la penderie", note=note, approx=approx)
 
 
 def _portes_caisson(M, note):
@@ -218,36 +119,26 @@ def _portes_caisson(M, note):
             f'<th class="d">Prix</th></tr></thead><tbody>{lignes}</tbody></table></div><p class="remarque">{note}</p>')
 
 
-def _materiaux(lignes):
-    corps = "".join(f'<tr><th scope="row">{_e(a)}</th><td>{b}</td></tr>' for a, b in lignes)
-    return f"<table><tbody>{corps}</tbody></table>"
-
-
-def _article(M, cle, chapo, stats, cartes, achats, materiaux, verifier, source, avant=""):
-    liste = "".join(f"<li><span>{x}</span></li>" for x in verifier)
+def _article(M, D, cle, chapo, stats, achats, matieres, verifier, source, avant=""):
     # le premier rendu du coin sud-ouest, quand il existe, ouvre la page ; son texte est l'alt
-    tete = _figure(cle, "iso_so", _alt(M, "iso_so", "Vue isométrique depuis le sud-ouest")) if _rendu_existe(cle, "iso_so") else ""
-    return (f'<div class="tete-doc"><div><p class="chapo">{chapo}</p>'
-            '<p class="actions"><a class="btn plein" href="#plan">Ouvrir le plan</a><a class="btn" href="#iso">Voir en iso</a></p>'
-            f'</div>{tete}</div>'
-            f'<dl class="chiffres">{_chiffres(stats)}</dl>'
-            f'{avant}<h2>Principe</h2><ol class="principes">{_principes(M, cartes)}</ol>'
-            f'<h2>Achats IKEA pour la penderie</h2>{achats}'
-            f'<h2>Matériaux</h2>{materiaux}'
-            f'<h2>Points à vérifier</h2><ul class="liste">{liste}</ul>'
-            f'<p class="remarque">Repère : x vers l\'est depuis le mur ouest du couloir, y vers le sud depuis son mur nord, '
-            f'z depuis le sol fini, en cm. {source}</p>')
+    figure = figure_rendu(rendu(RENDUS_SITE, cle, "iso_so"),
+                          dict(M.RENDUS).get("iso_so", "Vue isométrique depuis le sud-ouest"), filtre="teinte")
+    return (tete(chapo, [("#plan", "Ouvrir le plan"), ("#iso", "Voir en iso")], figure)
+            + chiffres(stats) + avant + principes(_cartes(M, D)) + achats + materiaux(matieres)
+            + a_verifier(verifier, titre="Points à vérifier")
+            + note_source("Repère : x vers l'est depuis le mur ouest du couloir, y vers le sud depuis son mur nord, "
+                          f"z depuis le sol fini, en cm. {source}"))
 
 
 def _explication_principale(M, D):
-    b, c, pe, mi, mh = M.BANC, M.CHAUSSURES, M.PENDERIE, M.MIROIR, M.MEUBLE_HAUT
+    c, pe = M.CHAUSSURES, M.PENDERIE
     lp = pe["x1"] - pe["x0"]
-    total = round(sum(q * p for _, _, q, p in M.IKEA))
     chapo = (f"Le couloir ({virg(M.SURFACE)} m²) dessert cinq portes et le passage du salon : il faut ranger sans gêner. "
              "Un banc sous le tableau électrique, un meuble à chaussures étroit avec miroir dans la branche d'entrée, "
              "relié par un angle arrondi à une penderie face à la salle de bain. Un meuble suspendu au plafond marque "
              "l'entrée ; au-delà, murs, plafond et porte sont peints en India Yellow.")
-    stats = [(f"PAX {lp} × {pe['caisson']}", f"penderie IKEA, ≈ {total} €"), (f"≈ {M.PAIRES} paires", "meuble à chaussures"),
+    total = total_achats(_sections(M), approx=True)   # « ≈ … € », le total du tableau des achats
+    stats = [(f"PAX {lp} × {pe['caisson']}", f"penderie IKEA, {total}"), (f"≈ {M.PAIRES} paires", "meuble à chaussures"),
              (f'{c["x0"]} cm', "passage le plus étroit"), (f"{virg(M.SURFACE)} m²", "surface du couloir")]
     achats = _achats(M, True, "Prix IKEA France relevés sur les fiches produit le 13/11/2026, en blanc ; les portes « avec "
                      "charnières » comprennent leurs 4 charnières KOMPLEMENT à fermeture silencieuse. Les deux tablettes "
@@ -256,14 +147,14 @@ def _explication_principale(M, D):
     achats += _portes_caisson(M, "En 25 de large, IKEA ne fait que FORSAND, ÅHEIM (miroir) et FARDAL. Plum Living fait des "
                               "portes de 37 pour PAX : deux portes égales au lieu de 50 + 25, dans toutes ses teintes ; pas de "
                               "porte coulissante sur un seul caisson de 75.")
-    materiaux = _materiaux([
+    matieres = [
         ("Sol", f'Carrelage {M.CARRELAGE["nom"]}, pose droite, joints fins.'),
         ("Murs", f'Blanc chaud, comme la cuisine et le salon ({M.MUR_COULEUR}) ; l\'entrée, au sud du meuble haut : murs, '
                  f'plafond, porte et flanc ouest de la penderie en {M.INDIA["nom"]} ({M.INDIA["couleur"]}, valeur affichée '
                  "par plum-living.com ; à voir sur échantillon)."),
         ("Meubles", "Proposition des rendus : banc, meuble à chaussures, angle, plateau et meuble haut en chêne miel (comme "
                     "le salon) ; penderie PAX blanche (FORSAND), de la couleur des murs, pour qu'elle se fasse oublier ; "
-                    "son flanc ouest, dans l'entrée, en India. À choisir.")])
+                    "son flanc ouest, dans l'entrée, en India. À choisir.")]
     verifier = [
         "<b>Tableau électrique</b> : encastré entre la cuisine et le WC (indiqué par le client) ; sa position et sa "
         "hauteur sont à relever. Si ses commandes les plus basses sont sous 1 m, le banc gêne l'accès : le raccourcir ou "
@@ -290,30 +181,30 @@ def _explication_principale(M, D):
         f"<b>Hauteur sous plafond</b> : {M.H}, reprise de la salle de bain ; le salon a été relevé à 254,5.",
         f'<b>Passage du salon</b> : {M.PORTES[2]["b"] - M.PORTES[2]["a"]} de large sur ce relevé, 82 sur le relevé du '
         "salon (V4.12) : à remesurer."]
-    return _article(M, "principale", chapo, stats, D.principes(M), achats, materiaux, verifier,
+    return _article(M, D, "principale", chapo, stats, achats, matieres, verifier,
                     "Dimensions : pieces/entree/amenagement/document.py.")
 
 
 def _explication_victor(M, D):
     b, pe, mi, pl, cd = M.CHAUSSURES, M.PENDERIE, M.MIROIR, M.PLANCHE, M.CADRES
     lp, pp = pe["y1"] - pe["y0"], pe["x1"] - pe["x0"] - pe["facade"]
-    total = round(sum(q * p for _, _, q, p in M.IKEA))
     chapo = (f'Variante de l\'<a href="./">aménagement {M.BASE}</a>. Le mur sous le tableau électrique reste '
              "libre. Un meuble à chaussures bas à abattants, deux étagères flottantes au-dessus, prend la place de la "
              "penderie face à la salle de bain ; il file jusqu'à la penderie et s'y termine en arrondi. La penderie, un "
              "PAX d'IKEA de 75 × 35 qui monte presque au plafond, passe dans la branche d'entrée ; une planche à "
              "chaussures court sous les patères. En face, sur le mur ouest peint en India, des cadres et un miroir à côté "
              "de l'interphone.")
-    stats = [(f"PAX {lp} × {pp}", f"penderie IKEA, ≈ {total} €"), (f"≈ {M.PAIRES} paires", "meuble à abattants et planche"),
+    total = total_achats(_sections(M), approx=True)
+    stats = [(f"PAX {lp} × {pp}", f"penderie IKEA, {total}"), (f"≈ {M.PAIRES} paires", "meuble à abattants et planche"),
              (f'{pe["x0"]} cm', "passage le plus étroit"), (f'{b["y0"]} cm', "devant le meuble à chaussures")]
     achats = _achats(M, False, "Prix IKEA France relevés sur les fiches produit le 13/11/2026, en blanc. Charnières "
                      "KOMPLEMENT en plus (nombre et prix à lire sur la fiche des portes), bandeau et fixation murale non comptés.")
-    materiaux = _materiaux([
+    matieres = [
         ("Sol", f'Carrelage {M.CARRELAGE["nom"]}, comme la {M.BASE}.'),
         ("Murs", f'Blanc chaud ({M.MUR_COULEUR}) ; l\'entrée en {M.INDIA["nom"]} ({M.INDIA["couleur"]}).'),
         ("Meubles", "Proposition des rendus : meuble à chaussures, étagères flottantes et planche en chêne miel ; penderie "
                     "PAX (caisson, portes FORSAND, bandeau) peinte en India comme les murs ; cadres noirs fins, "
-                    "passe-partout blanc. À choisir.")])
+                    "passe-partout blanc. À choisir.")]
     verifier = [
         f'<b>Passage</b> : {pe["x0"]} cm entre la penderie et le mur ouest, contre 85 en {M.BASE} ; {pl["x0"]} devant la '
         f'planche. Porte de 50 ouverte, il reste {pe["x0"] - pe["portes"][0]} cm.',
@@ -353,14 +244,13 @@ def _explication_victor(M, D):
     lignes = "".join(f"<tr><td>{_e(a)}</td><td>{_e(x)}</td><td>{_e(y)}</td></tr>" for a, x, y in diff)
     avant = (f'<h2>Différences avec la {M.BASE}</h2><div class="defile"><table><thead><tr><th>Élément</th>'
              f'<th>{M.BASE}</th><th>Version Victor</th></tr></thead><tbody>{lignes}</tbody></table></div>')
-    return _article(M, "victor", chapo, stats, D.principes(M), achats, materiaux, verifier,
+    return _article(M, D, "victor", chapo, stats, achats, matieres, verifier,
                     "Dimensions : pieces/entree/amenagement/victor.py.", avant)
 
 
 def _vue_explication(variante, M, D):
     ecrire = _explication_principale if variante == "principale" else _explication_victor
-    element = Element(k="", nom="Explication", titre="Explication", scene=ecrire(M, D))
-    return Vue("explication", [element])
+    return vue_lecture("explication", ecrire(M, D))
 
 
 def vues(variante: str) -> dict[str, Vue]:

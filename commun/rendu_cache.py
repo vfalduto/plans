@@ -4,9 +4,15 @@ Une vue est refaite quand sa caméra, les données de sa variante (et de la piè
 version de Blender changent. Changer une caméra ne refait que cette caméra ; changer un meuble ne refait que les vues
 de sa variante.
 
-En ligne de commande (utilisé par la recette `entree-rendu`) :
-    python3 -m commun.rendu_cache liste <variante> <échantillons> [caméra ...]
-    python3 -m commun.rendu_cache noter <variante> <échantillons> <caméra> [caméra ...]
+Chaque document déclare ce qui entre dans l'empreinte de ses rendus par une constante `CACHE_RENDU` (voir
+`CacheRendu`) dans `pieces/<piece>/<document>/document.py`.
+
+En ligne de commande (utilisé par les recettes `<piece>-<document>-rendu`) :
+    python3 -m commun.rendu_cache variantes <piece>/<document>
+    python3 -m commun.rendu_cache liste <piece>/<document> <variante> <échantillons> [caméra ...]
+    python3 -m commun.rendu_cache noter <piece>/<document> <variante> <échantillons> <caméra> [caméra ...]
+La variante d'identifiant vide (document sans variante) s'écrit `-`. La version de Blender, qui entre dans l'empreinte,
+est demandée à `BLENDER_REEL` s'il est défini, sinon à `BLENDER` (défaut /opt/homebrew/bin/blender).
 """
 import dataclasses
 import hashlib
@@ -22,15 +28,33 @@ from commun.modele import Camera
 FICHIER = Path("cache/empreintes.json")
 # textes et constantes de page seulement : le rendu ne les lit pas (DOCUMENT, construit à la première lecture, décrit
 # la page)
-EXCLUES = ("CAMERAS", "CHANGEMENTS", "VERSION", "BASE", "ZONES", "RENDUS", "FIGEES_ANCIENNES", "DOCUMENT")
+EXCLUES = ("CAMERAS", "CHANGEMENTS", "VERSION", "BASE", "ZONES", "RENDUS", "FIGEES_ANCIENNES", "DOCUMENT",
+           "CACHE_RENDU")
 BLENDER = os.environ.get("BLENDER", "/opt/homebrew/bin/blender")
 RACINE = Path(__file__).resolve().parent.parent
+USAGE = """usage :
+    python3 -m commun.rendu_cache variantes <piece>/<document>
+    python3 -m commun.rendu_cache liste <piece>/<document> <variante> <échantillons> [caméra ...]
+    python3 -m commun.rendu_cache noter <piece>/<document> <variante> <échantillons> <caméra> [caméra ...]
+(variante `-` : document sans variante)"""
 
-# Entrée, document d'aménagement : variante -> module des données
-PIECE = "entree"
-DOCUMENT = "amenagement"
-MODULES = {"principale": "document", "victor": "victor"}
-CODE = (Path("pieces/entree/amenagement/rendu.py"), Path("3d/rendu.py"))
+
+@dataclasses.dataclass(frozen=True)
+class CacheRendu:
+    """Ce qui entre dans l'empreinte des rendus d'un document.
+
+    variantes : identifiant de variante (dans l'ordre des rendus, `""` pour un document sans variante) -> modules de
+        données, dans l'ordre ; un nom sans point est un module du paquet du document, un nom avec point est pris tel
+        quel. L'ordre et les noms comptent : ils entrent dans l'empreinte.
+    code : fichiers dont le texte entre dans l'empreinte, chemins depuis la racine du dépôt, dans l'ordre.
+    cameras : module qui porte CAMERAS ; vide, celui de la pièce (`pieces.<piece>.piece`)."""
+    variantes: dict
+    code: tuple
+    cameras: str = ""
+
+
+class Erreur(Exception):
+    """Erreur de déclaration ou d'appel, dite sur stderr sans trace Python."""
 
 
 def _json(v):
@@ -56,8 +80,8 @@ def donnees_variante(*modules) -> dict:
         try:
             json.dumps(v, sort_keys=True, default=_json)
         except TypeError as e:
-            raise TypeError(f"empreinte des rendus, {nom} : {e} ; la renommer en _{nom.rsplit('.', 1)[1]} ou "
-                            "l'ajouter à EXCLUES si le rendu ne la lit pas") from None
+            raise TypeError(f"empreinte des rendus, {nom} : {e} ; la renommer en _{nom.rsplit('.', 1)[1]}"
+                            " (un nom en _X reste hors de l'empreinte)") from None
     return donnees
 
 
@@ -86,35 +110,94 @@ def noter(cle: str, emp: str, fichier: Path = FICHIER) -> None:
 
 
 # ------------------------------------------------------------------ ligne de commande
-def _empreintes(variante: str, echantillons: str) -> dict:
-    sys.path.insert(0, str(RACINE))
-    piece = importlib.import_module("pieces.entree.piece")
-    module = importlib.import_module(f"pieces.entree.amenagement.{MODULES[variante]}")
-    donnees = donnees_variante(piece, module)
-    code = "".join((RACINE / f).read_text() for f in CODE)
-    blender = subprocess.run([BLENDER, "--version"], capture_output=True, text=True).stdout.splitlines()[0]
+def _paquet(document: str) -> str:
+    """`sdb/meuble-bas` -> `pieces.sdb.meuble_bas` : un nom de paquet Python ne prend pas de tiret."""
+    return "pieces." + document.replace("/", ".").replace("-", "_")
+
+
+def _importer(nom: str, quoi: str):
+    try:
+        return importlib.import_module(nom)
+    except ModuleNotFoundError as e:
+        # seul le module cherché (ou un de ses paquets) manque : une importation cassée plus loin garde sa trace
+        if e.name and (nom == e.name or nom.startswith(e.name + ".")):
+            raise Erreur(f"{quoi} ({nom})") from None
+        raise
+
+
+def declaration(document: str) -> CacheRendu:
+    paquet = _paquet(document)
+    module = _importer(f"{paquet}.document", f"document introuvable : {document}")
+    if not hasattr(module, "CACHE_RENDU"):
+        raise Erreur(f"CACHE_RENDU absente de {paquet}.document")
+    return module.CACHE_RENDU
+
+
+def _version_blender() -> str:
+    """Première ligne de `--version`, demandée à `BLENDER_REEL` s'il est défini (le Blender que lance
+    blender-seul.sh : la question n'attend pas le verrou d'un rendu), sinon à `BLENDER`. Code non nul ou sortie vide
+    (attente du verrou expirée) : `Erreur`, avec la sortie d'erreur de la commande."""
+    binaire = os.environ.get("BLENDER_REEL") or BLENDER
+    try:
+        r = subprocess.run([binaire, "--version"], capture_output=True, text=True)
+    except OSError as e:
+        raise Erreur(f"version de Blender : {binaire} ne se lance pas ({e})") from None
+    lignes = r.stdout.splitlines()
+    if r.returncode != 0 or not lignes:
+        raise Erreur(f"version de Blender : `{binaire} --version` sort en {r.returncode} sans version"
+                     + (f" ; {r.stderr.strip()}" if r.stderr.strip() else ""))
+    return lignes[0]
+
+
+def empreintes(document: str, variante: str, echantillons: str) -> dict:
+    """Empreinte de chaque caméra du document pour une variante (`""` : sans variante)."""
+    cache = declaration(document)
+    if variante not in cache.variantes:
+        raise Erreur(f"variante non déclarée pour {document} : {variante or '-'}")
+    paquet = _paquet(document)
+    modules = [_importer(m if "." in m else f"{paquet}.{m}", f"module de données introuvable pour {document}")
+               for m in cache.variantes[variante]]
+    absents = [f for f in cache.code if not (RACINE / f).is_file()]
+    if absents:
+        raise Erreur(f"fichier de code absent : {', '.join(absents)}")
+    cameras = _importer(cache.cameras or paquet.rsplit(".", 1)[0] + ".piece",
+                        f"module des caméras introuvable pour {document}").CAMERAS
+    donnees = donnees_variante(*modules)
+    code = "".join((RACINE / f).read_text() for f in cache.code)
+    blender = _version_blender()
     reglages = {"echantillons": int(echantillons)}
-    return {c.id: empreinte(c, donnees, reglages, code, blender) for c in piece.CAMERAS}
+    return {c.id: empreinte(c, donnees, reglages, code, blender) for c in cameras}
 
 
-def _cle(variante: str, camera: str) -> str:
-    return f"{PIECE}/{DOCUMENT}/{variante}/{camera}"
+def _cle(document: str, variante: str, camera: str) -> str:
+    return f"{document}/{variante}/{camera}" if variante else f"{document}/{camera}"
+
+
+def _commande(argv: list[str]) -> None:
+    if argv[:1] == ["variantes"] and len(argv) == 2:
+        print(" ".join(v or "-" for v in declaration(argv[1]).variantes))
+        return
+    if not (argv[:1] == ["liste"] and len(argv) >= 4 or argv[:1] == ["noter"] and len(argv) >= 5):
+        raise Erreur(USAGE)
+    action, document, variante, echantillons, *vues = argv
+    variante = "" if variante == "-" else variante
+    emps = empreintes(document, variante, echantillons)
+    inconnues = [v for v in vues if v not in emps]
+    if inconnues:
+        raise Erreur(f"caméra inconnue : {', '.join(inconnues)}")
+    if action == "liste":   # caméras demandées, sinon celles dont l'empreinte a changé
+        print(" ".join(vues or [c for c, e in emps.items() if a_rendre(_cle(document, variante, c), e, FICHIER)]))
+    else:
+        for c in vues:
+            noter(_cle(document, variante, c), emps[c], FICHIER)
 
 
 def main(argv: list[str]) -> int:
-    action, variante, echantillons, *vues = argv
-    emps = _empreintes(variante, echantillons)
-    inconnues = [v for v in vues if v not in emps]
-    if inconnues:
-        print(f"caméra inconnue : {', '.join(inconnues)}", file=sys.stderr)
+    try:
+        _commande(argv)
+    except Erreur as e:
+        print(e, file=sys.stderr)
         return 1
-    if action == "liste":   # caméras demandées, sinon celles dont l'empreinte a changé
-        print(" ".join(vues or [c for c, e in emps.items() if a_rendre(_cle(variante, c), e)]))
-    elif action == "noter":
-        for c in vues:
-            noter(_cle(variante, c), emps[c])
-    else:
-        return 2
     return 0
 
 

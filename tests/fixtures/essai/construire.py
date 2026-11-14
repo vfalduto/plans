@@ -1,7 +1,9 @@
 """Construit le site d'essai dans cache/essai-site/ pour les tests du navigateur (tests/navigateur/).
 
-Il contient les trois variantes du document d'essai (document.py), écrites par commun/gabarit.py aux adresses du
-site, avec commun/site.css, commun/site.js et l'icône. tests/navigateur/lancer.sh le lance puis le sert.
+Il contient deux documents à trois variantes, chacun dans sa pièce : l'aménagement d'essai (document.py, pièce
+« Essai ») puis l'étagère d'essai (meuble.py, document de construction, pièce « Atelier »). commun/gabarit.py écrit
+leurs pages aux adresses du site, avec un menu qui réunit les deux pièces ; s'y ajoutent les redirections d'essai,
+commun/site.css, commun/site.js et l'icône. tests/navigateur/lancer.sh le lance puis le sert.
 
     python3 tests/fixtures/essai/construire.py
 """
@@ -15,7 +17,7 @@ if str(RACINE) not in sys.path:
     sys.path.insert(0, str(RACINE))
 
 from commun.gabarit import adresse, page_document  # noqa: E402
-from commun.modele import verifier  # noqa: E402
+from commun.modele import Site, verifier  # noqa: E402
 from commun.redirections import Redirection, page_redirection  # noqa: E402
 
 SORTIE = RACINE / "cache" / "essai-site"
@@ -30,25 +32,27 @@ REDIRECTIONS = (
 )
 
 
-def _essai():
-    spec = importlib.util.spec_from_file_location("essai_document", Path(__file__).with_name("document.py"))
+def _charger(nom, fichier):
+    spec = importlib.util.spec_from_file_location(nom, Path(__file__).with_name(fichier))
     module = importlib.util.module_from_spec(spec)
     spec.loader.exec_module(module)
     return module
 
 
 def construire(sortie: Path = SORTIE) -> Path:
-    essai = _essai()
-    doc = essai.DOCUMENT
+    essai = _charger("essai_document", "document.py")
+    meuble = _charger("essai_meuble", "meuble.py")
+    site = Site(essai.SITE.pieces + meuble.SITE.pieces)
     if sortie.exists():
         shutil.rmtree(sortie)
-    for v in doc.variantes:
-        vues = doc.generer(v.id)
-        verifier(doc, vues)
-        chemin = adresse(doc, v.id)
-        fichier = sortie / (chemin + "index.html" if chemin.endswith("/") else chemin)
-        fichier.parent.mkdir(parents=True, exist_ok=True)
-        fichier.write_text(page_document(essai.SITE, doc, v, vues), encoding="utf-8")
+    for doc in (essai.DOCUMENT, meuble.DOCUMENT):
+        for v in doc.variantes:
+            vues = doc.generer(v.id)
+            verifier(doc, vues)
+            chemin = adresse(doc, v.id)
+            fichier = sortie / (chemin + "index.html" if chemin.endswith("/") else chemin)
+            fichier.parent.mkdir(parents=True, exist_ok=True)
+            fichier.write_text(page_document(site, doc, v, vues), encoding="utf-8")
     for r in REDIRECTIONS:
         fichier = sortie / r.ancienne
         fichier.parent.mkdir(parents=True, exist_ok=True)
