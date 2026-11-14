@@ -8,7 +8,9 @@ from html.parser import HTMLParser
 
 import pytest
 
+from commun import modele
 from commun.blocs import euros, total_achats
+from commun.journal import depuis_page
 from pieces.salon.etageres import calculs, dessins, document, vues
 from tests.outils import RACINE, balises
 
@@ -470,3 +472,66 @@ def test_rien_ne_se_perd_chapo_et_remarque():
         assert ("Repère : origine au coin nord-ouest du salon, y vers le sud, z depuis le sol, cotes en cm. Dimensions : "
                 "pieces/salon/etageres/document.py (DISPOSITIONS). Le reste du salon : plan du salon.") in s
         assert 'href="../../archive/salon-bibliotheque-fixation.html"' in _explication(c)
+
+
+# ------------------------------------------------------------------ tâche 5 : document et contrôles de la page
+D = document._document()
+TOUT = {c: D.generer(c) for c in calculs.CLES}
+
+
+def test_document():
+    assert (D.piece, D.id, D.nom, D.type, D.options) == ("salon", "etageres", "Étagères", "construction", ())
+    assert [(v.id, v.nom, v.version, len(v.changements), v.figees) for v in D.variantes] == [
+        ("actuelle", "Actuelle", "V1.8", 9, ()), ("rangs", "Rangs", "V1.8", 0, ()),
+        ("decalee", "Décalée", "V1.8", 0, ()), ("escalier", "Escalier", "V1.8", 0, ())]
+    assert [(c.version, c.date, c.texte) for c in D.variantes[0].changements] == [
+        (c.version, c.date, c.texte) for c in depuis_page(ANCIENNE)]
+    for c, vs in TOUT.items():
+        modele.verifier(D, vs)
+        assert list(vs) == list(modele.VUES["construction"]) and all(v.elements for v in vs.values()), c
+    assert not hasattr(document, "CACHE_RENDU")
+
+
+@pytest.mark.parametrize("cle", calculs.CLES)
+def test_chaque_classe_de_chaque_variante_a_sa_regle(cle):
+    """Le CSS filtré comme à la construction, sur les dessins des quatre variantes réunies ; chaque classe de chaque
+    scène de la variante `cle` y a une règle, ou en a une dans commun/site.css (classes du site)."""
+    from commun.construction import _dessins
+    from commun.css_dessins import css_dessins
+    css = css_dessins(D.css, [s for vs in TOUT.values() for s in _dessins(vs)], ".d-salon")
+    site_css = (RACINE / "commun/site.css").read_text(encoding="utf-8")
+    for v in TOUT[cle].values():
+        for e in v.elements:
+            for c in _classes(e.scene) - {"zone"}:
+                assert re.search(rf"\.{re.escape(c)}(?![\w-])", css) or re.search(rf"\.{re.escape(c)}(?![\w-])", site_css), (cle, v.id, c)
+
+
+def test_aucun_interdit():
+    for c, vs in TOUT.items():
+        tout = "".join(v.fiche + e.scene + e.fiche for v in vs.values() for e in v.elements)
+        for interdit in ("·", 'type="checkbox"', "Copier la liste", "À venir", "Lecture du plan", "Lecture de la coupe",
+                         'class="mono"', 'class="cap"', 'class="dv"', "localStorage", "<figcaption class"):
+            assert interdit not in tout, (c, interdit)
+        visible = re.sub(r'(aria-label|alt)="[^"]*"', "", tout)
+        for texte in dessins.legendes(calculs.etat(c)).values():
+            assert escape(texte, quote=True) not in visible and texte not in visible
+
+
+def test_liens():
+    permis = {"./#explication", "rangs.html#explication", "decalee.html#explication", "escalier.html#explication",
+              "../../salon-v4.html", "../../archive/salon-bibliotheque-fixation.html", "historique.html"}
+    for c, vs in TOUT.items():
+        for v in vs.values():
+            for e in v.elements:
+                for a in balises(e.scene + e.fiche + v.fiche, "a"):
+                    h = a["href"]
+                    assert h.startswith(("#", "https://")) or h in permis, (c, h)
+
+
+def test_ids_uniques_et_classes_du_site():
+    for c, vs in TOUT.items():
+        tout = "".join(v.fiche + e.scene + e.fiche for v in vs.values() for e in v.elements)
+        ids = re.findall(r'\bid="([^"]+)"', tout)
+        assert len(ids) == len(set(ids))
+        dessinees = {k for svg in re.findall(r"<svg.*?</svg>", tout, re.S) for k in _classes(svg)}
+        assert not dessinees & {"app", "rail", "barre", "contenu", "vue", "scene", "fiche", "element", "outils"}
