@@ -164,14 +164,15 @@ def anciens():
 
 
 def donnees_modele(modele):
-    """{nom: valeur} de commun.rendu_cache.donnees_variante, préfixe de module retiré. COLONNES_CONTENU (clés en
-    tuples) est écartée : donnees_variante la refuse, et le nouveau module la nommera _COLONNES_CONTENU."""
+    """{nom: valeur} de commun.rendu_cache.donnees_variante, préfixe de module retiré (`modele` ou
+    `pieces.cuisine.modele`). COLONNES_CONTENU (clés en tuples), que donnees_variante refuse, est écartée : l'ancien
+    3d/v13/modele.py la portait, pieces/cuisine/modele.py la nomme _COLONNES_CONTENU (hors de l'empreinte)."""
     if str(RACINE) not in sys.path:
         sys.path.insert(0, str(RACINE))
     from commun import rendu_cache
     copie = types.ModuleType(modele.__name__)
     copie.__dict__.update({k: v for k, v in vars(modele).items() if k != "COLONNES_CONTENU"})
-    donnees = {k.split(".", 1)[1]: v for k, v in rendu_cache.donnees_variante(copie).items()}
+    donnees = {k.rsplit(".", 1)[1]: v for k, v in rendu_cache.donnees_variante(copie).items()}
     return json.dumps(donnees, sort_keys=True, default=rendu_cache._json, ensure_ascii=False, indent=1)
 
 
