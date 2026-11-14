@@ -45,8 +45,7 @@ IMAGES_D_ESSAI = {"essai-ancienne-3d/V1.1/plan.svg", "essai-ancienne-3d/V1.1/cou
 IMAGES = (".jpg", ".jpeg", ".png", ".svg", ".webp")
 
 # pages de la racine qui ne sont pas des documents (annexes, pages destinées aux archives) : permises si présentes
-HORS_DOCUMENTS = {"index.html", "cuisine-plan.html", "cuisine-couleurs.html", "cuisine-v13-imprimable.html",
-                  "cuisine-v13-maquette.html", "sdb-meuble-achats.html"}
+HORS_DOCUMENTS = {"index.html", "cuisine-plan.html", "cuisine-couleurs.html", "sdb-meuble-achats.html"}
 
 
 def _instantane(racine, sauf=("site", "cache")):

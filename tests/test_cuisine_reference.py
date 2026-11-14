@@ -41,6 +41,6 @@ def test_modele_et_rendu_de_reference():
     modele = ancien("modele")
     assert json.loads((FIXTURES / "modele.json").read_text(encoding="utf-8")) == json.loads(extraire.donnees_modele(modele))
     rendu = json.loads((FIXTURES / "rendu.json").read_text(encoding="utf-8"))
+    # rendu.json : relevé dans 3d/v13/rendu.py avant son déplacement (tâche 4) ; test_cuisine_piece y confronte les
+    # caméras de pieces/cuisine/piece.py
     assert sorted(rendu) == ["COUPES_ISO", "COUPES_ISO_NO"]
-    if (extraire.ANCIEN / "rendu.py").exists():
-        assert rendu == extraire.coupes_rendu()

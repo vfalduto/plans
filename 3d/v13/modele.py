@@ -1,5 +1,5 @@
-# Relais : le modèle de la cuisine est dans pieces/cuisine/modele.py. `import modele` (plan.py, porte.py,
-# imprimable.py, cad.py, rendu.py) reçoit ce module-là, le même objet, noms en _ compris.
+# Relais : le modèle de la cuisine est dans pieces/cuisine/modele.py. `import modele` (porte.py, seul lecteur restant)
+# reçoit ce module-là, le même objet, noms en _ compris.
 import importlib
 import os
 import sys

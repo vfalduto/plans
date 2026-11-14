@@ -70,6 +70,3 @@ SHA_MODELE_JS = "30b39a7ae5adbbe47d2218bfb963bffbf5223772c280805c43c04f6c5922038
 
 def test_modele_js_repris():
     assert hashlib.sha256(MODELE_JS.read_bytes()).hexdigest() == SHA_MODELE_JS
-    ancien = RACINE / "cuisine-v13-maquette" / "modele.js"
-    if ancien.exists():
-        assert hashlib.sha256(ancien.read_bytes()).hexdigest() == SHA_MODELE_JS

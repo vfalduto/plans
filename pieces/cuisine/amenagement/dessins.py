@@ -453,7 +453,8 @@ def zones_taille(t):
 def regle(svg, umin, umax):
     """Ajoute à droite d'une coupe la règle des zones de hauteur, une par taille, marquée de sa valeur de l'option Taille.
     Masquée, aucune règle ne se montre, mais la coupe garde sa largeur avec la règle (viewBox selon la valeur : hors du
-    modèle des options) ; data-vb0, data-vb1 : les deux largeurs de l'ancienne page."""
+    modèle des options) ; data-vb0, data-vb1 : les deux largeurs de l'ancienne page, que son script lisait ; plus
+    aucun ne les lit, ils restent parce que les dessins de référence les ont."""
     xb = umax + 18                                   # bande de 7, noms des zones dedans (verticaux)
     o = []
     for t in TAILLES:

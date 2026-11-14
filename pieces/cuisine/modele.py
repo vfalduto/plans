@@ -877,7 +877,7 @@ CIRCUITS = [
     ("ballon", "Ballon d'eau chaude", "existant, inchangé", "ballon du cellier (heures creuses)"),
 ]
 
-# ------------------------------------------------------------------ rendus 3D (3d/v13/rendu.py, Blender Cycles → cuisine-v13-3d/)
+# ------------------------------------------------------------------ rendus 3D (amenagement/rendu.py, Blender Cycles)
 # groupes de rendus (titre, [(vue, libellé du bouton)]) : libellé vide = vues distinctes, sans bouton de variante
 RENDUS_GROUPES = [
     ("Isométrique depuis le sud-ouest", [("iso", "Jour"), ("iso_nuit", "Nuit")]),
@@ -903,7 +903,8 @@ RENDUS = [
 AVANT = dict(version="V11.34", lin_bas=300, lin_hauts=240, lin_col=120, modules=(5, 4, 2), tiroirs=10, anglaise=0,
              plan=[(0, 68), (122, 187), (243, 305)], cellier_m2=1.46, tablettes_cm=6 * 101,
              volume_cuisine=2055, volume_cellier=739)
-# version de chaque image de cuisine-v13-3d/ (rendus sur demande : `just v13-rendu`, ou une vue : `-- 256 iso`)
+# version de chaque rendu de l'ancienne page, reprise dans les textes alternatifs
+# (rendus : `just cuisine-amenagement-rendu`)
 RENDUS_VERSION = {v: "V11.50" for v in ("iso", "entree", "fenetre", "banquette", "cellier", "dos_cellier", "iso_nuit", "iso_no")}
 RENDUS_VERSION["iso_no_hermione"] = "V11.50"
 # V13.2 : toutes les vues refaites (sauf l'essai Hermione, rendu à part)
