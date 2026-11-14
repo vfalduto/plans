@@ -12,11 +12,12 @@ import sys
 from pathlib import Path
 
 from commun.construction import commande
-from commun.modele import Passerelle, Piece, Site
+from commun.modele import Piece, Site
 from commun.redirections import Redirection
 from pieces.chambre.amenagement import document as chambre_amenagement
 from pieces.cuisine.amenagement import document as cuisine_amenagement
 from pieces.entree.amenagement import document as entree_amenagement
+from pieces.salon.amenagement import document as salon_amenagement
 from pieces.salon.enfilade import document as salon_enfilade
 from pieces.salon.etageres import document as salon_etageres
 from pieces.sdb.meuble_bas import document as sdb_meuble_bas
@@ -36,7 +37,7 @@ SITE = Site((
         entree_amenagement.DOCUMENT,
     )),
     Piece("salon", "Salon", (
-        Passerelle("salon", "amenagement", "Aménagement", "amenagement", "salon-v4.html"),
+        salon_amenagement.DOCUMENT,
         salon_etageres.DOCUMENT,
         salon_enfilade.DOCUMENT,
     )),
@@ -82,6 +83,12 @@ MOTIFS_SDB_HAUT = ((r"^etape-\d+$", "montage"), (r"^op-\d+-\d+$", "montage"))
 ANCRES_SDB_ACHATS = {"": "achats", "haut-seul": "achats", "deux-meubles": "achats"}
 PAGES_SDB_ACHATS = {"bas": "sdb/meuble-bas/#achats", "changements": "sdb/meuble-bas/historique.html"}
 
+# anciennes ancres de salon-v4.html : les slugs de ses titres h2 (3d/ancres.js), plus l'id de « Meubles à fabriquer »
+# (posé en dur) ; les quatre coupes passent par COUPES, « Changements » par l'historique
+ANCRES_SALON = {"plan": "plan", "rendu-3d": "iso", "materiaux": "explication", "pistes-deco": "explication",
+                "rangements": "explication", "tables-qui-se-replient": "explication", "meubles": "explication",
+                "points-a-verifier": "explication"}
+
 # ancres de cuisine-v13.html (3d/ancres.js) : la page courante ; ses blocs figés V11.49 et V12.7 (ids relevés une
 # fois dans tests/fixtures/cuisine/ancres.json, plus l'id du bloc) mènent à leur archive
 ANCRES_CUISINE = {"plan": "plan", "br": "plan", "hauteur-du-plan-de-travail-etude": "explication",
@@ -107,6 +114,8 @@ REDIRECTIONS = (
     # la page de Victor avait en plus « Différences avec la V4.3 », passée dans son Explication
     Redirection("entree-amenagement-victor.html", "entree/amenagement/victor.html",
                 {**ANCRES_ENTREE, "differences-avec-la-v4-3": "explication"}, COUPES, HISTORIQUE_ENTREE),
+    Redirection("salon-v4.html", "salon/amenagement/", ANCRES_SALON, COUPES,
+                {"changements": "salon/amenagement/historique.html"}),
     Redirection("salon-enfilade.html", "salon/enfilade/", ANCRES_ENFILADE, (),
                 {"changements": "salon/enfilade/historique.html"}),
     Redirection("salon-etageres.html", "salon/etageres/", ANCRES_ETAGERES, (),
