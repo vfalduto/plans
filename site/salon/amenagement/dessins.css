@@ -1,0 +1,55 @@
+.d-salon .room{fill:var(--line);fill-opacity:.25}
+.d-salon .roomt{fill:var(--muted);font-size:7.5px;font-weight:600;text-anchor:middle}
+.d-salon .floorbg{fill:#D9D2C6;fill-opacity:.35}
+.d-salon .carreau{fill:none;stroke:#B5AC9C;stroke-width:.4;stroke-opacity:.7}
+.d-salon .w{fill:var(--ink)}
+.d-salon .bgwall{fill:var(--line);fill-opacity:.35}
+.d-salon .wallv{fill:#D5DADD;stroke:var(--muted);stroke-width:.5}
+.d-salon .cadrep{fill:var(--panel);stroke:var(--ink);stroke-width:.6}
+.d-salon .win{fill:var(--glass);stroke:var(--ink);stroke-width:.7}
+.d-salon .glass{stroke:var(--water);stroke-width:1.4}
+.d-salon .vitre{fill:var(--glass);fill-opacity:.5;stroke:var(--water);stroke-width:.8}
+.d-salon .vitrec{fill:var(--glass);stroke:var(--water);stroke-width:.8}
+.d-salon .cab{fill:var(--cab);stroke:var(--ink);stroke-width:.7}
+.d-salon .fac{fill:var(--tall);stroke:var(--ink);stroke-width:.6}
+.d-salon .sep{stroke:var(--ink);stroke-width:.7}
+.d-salon .dark{fill:var(--ink)}
+.d-salon .shelf{fill:var(--wood);fill-opacity:.3;stroke:var(--wood);stroke-width:.6}
+.d-salon .shelfc{fill:var(--wood);stroke:var(--ink);stroke-width:.6}
+.d-salon .mont{fill:#26262A;stroke:var(--ink);stroke-width:.4}
+.d-salon .upper{fill:none;stroke:var(--ink);stroke-width:.8;stroke-dasharray:3 2}
+.d-salon .sofa{fill:#C9BFAE;stroke:var(--ink);stroke-width:.8}
+.d-salon .sofac{fill:#C9BFAE;stroke:var(--ink);stroke-width:.6;filter:brightness(.93)}
+.d-salon .tbl{fill:var(--wood);fill-opacity:.5;stroke:var(--ink);stroke-width:.9}
+.d-salon .stool{fill:var(--wood);fill-opacity:.28;stroke:var(--ink);stroke-width:.7}
+.d-salon .stoold{fill:var(--wood);fill-opacity:.6;stroke:var(--ink);stroke-width:.5}
+.d-salon .chil{fill:#C49A6C;fill-opacity:.35;stroke:var(--ink);stroke-width:.7;stroke-dasharray:5 1.5}
+.d-salon .tapisd{fill:#B4553A;fill-opacity:.12;stroke:#B4553A;stroke-opacity:.5;stroke-width:.8;stroke-dasharray:1 2}
+.d-salon .plante{fill:#6E9B5A;fill-opacity:.7;stroke:#3F6B31;stroke-width:.6;stroke-dasharray:3 2}
+.d-salon .pot{fill:#C2703D;stroke:var(--ink);stroke-width:.5}
+.d-salon .cadrem{fill:#E9E2D2;stroke:var(--ink);stroke-width:.8}
+.d-salon .rideau{fill:#E8DFCC;fill-opacity:.8;stroke:#A89A80;stroke-width:.6;stroke-dasharray:2 1.5}
+.d-salon .livre{fill:#7C8A5E;fill-opacity:.55;stroke:var(--ink);stroke-width:.3}
+.d-salon .dyv{fill:#D9772B;fill-opacity:.55;stroke:var(--ink);stroke-width:.7}
+.d-salon .proj{fill:#FFFFFF;fill-opacity:.6;stroke:var(--water);stroke-width:.8;stroke-dasharray:5 2}
+.d-salon .projr{fill:var(--ink);fill-opacity:.15;stroke:var(--ink);stroke-width:.7;stroke-dasharray:3 2}
+.d-salon .pp{fill:#4B2E3B;fill-opacity:.75;stroke:#7E9A86;stroke-width:.6;stroke-dasharray:2 2}
+.d-salon .poutre{fill:none;stroke:var(--muted);stroke-width:.8;stroke-dasharray:8 3 2 3}
+.d-salon .clim{fill:#F4F4F2;stroke:var(--ink);stroke-width:.7;stroke-dasharray:3 2}
+.d-salon .vinyl{fill:#2B2B2E;fill-opacity:.75;stroke:var(--ink);stroke-width:.4}
+.d-salon .lampe{fill:#F2C94C;fill-opacity:.35;stroke:#B8860B;stroke-width:.7;stroke-dasharray:3 2}
+.d-salon .seuil{stroke:var(--muted);stroke-width:.7;stroke-dasharray:3 2}
+.d-salon .pass{stroke:var(--tri);stroke-width:.8;stroke-dasharray:3 2}
+.d-salon .passm{fill:var(--tri)}
+.d-salon .passt{fill:var(--tri);font-size:7px;font-weight:600;text-anchor:middle}
+.d-salon .dim{stroke:var(--muted);stroke-width:.6;fill:none}
+.d-salon .dimt{fill:var(--muted);font-size:8px}
+.d-salon .lbls{font-size:6.5px}
+.d-salon .lblx{font-size:5px}
+.d-salon .lblb{font-size:9px;font-weight:700}
+.d-salon .lblc{font-size:3.6px;font-style:italic}
+.d-salon .muted{fill:var(--muted)}
+.d-salon .sec{stroke:var(--tri);stroke-opacity:.3;stroke-width:.9;stroke-dasharray:10 3 2 3;fill:none}
+.d-salon .sect{fill:var(--tri);fill-opacity:.55;font-weight:800;font-size:11px}
+.d-salon .floorl{stroke:var(--ink);stroke-width:2}
+.d-salon .ceil{stroke:var(--muted);stroke-width:1;stroke-dasharray:6 4}
