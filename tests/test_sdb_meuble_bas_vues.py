@@ -46,3 +46,37 @@ def test_achats():
 def test_sans_point_median_ni_chasse_fixe():
     for cle in ("decoupe", "montage", "achats"):
         assert "·" not in _s(cle) and "mono" not in _s(cle), cle
+
+
+# ------------------------------------------------------------------ schémas du montage
+def test_chaque_piece_a_une_etape():
+    noms = {b.nom for b in B.blocs()}
+    poses = {**B.POSE, **B.POSE_COLONNE}
+    assert noms == set(poses)
+    assert all(1 <= B.POSE[k] <= len(vues.etapes_montage()) for k in B.POSE)
+    assert all(1 <= v <= len(vues.pose_colonne()) for v in B.POSE_COLONNE.values())
+    for table in (B.ACCENT, B.CONTEXTE):
+        assert all(1 <= n <= len(vues.etapes_montage()) and set(p) <= noms for n, p in table.items())
+    assert all(1 <= n <= len(vues.pose_colonne()) and set(p) <= noms for n, p in B.ACCENT_COLONNE.items())
+
+
+def test_figures_du_montage():
+    avec = [i for i in range(1, 14) if vues.figure_montage(i)]
+    assert avec == [1, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13] and not vues.figure_montage(2)
+    assert [i for i in range(1, 6) if vues.figure_colonne(i)] == [2, 3, 4]
+    for i in avec:
+        assert vues.figure_montage(i).startswith("<svg")
+    s = _s("montage")
+    assert s.count('<figure class="etape-figure"><svg') == 12 + 3
+    # à l'étape 4 seuls les vérins sont en couleur ; à l'étape 13 la machine et le tapis
+    assert vues.figure_montage(4).count("inew") == 6 * 3 and "imel" in vues.figure_montage(4) and "ihub" not in vues.figure_montage(12)
+    assert "ihub" in vues.figure_montage(13)
+
+
+def test_texte_des_etapes_inchange():
+    s = _s("montage")
+    sans_figure = re.sub(r'<figure class="etape-figure">.*?</figure>', "", s)
+    attendu = "".join(f"<li><div><p>{t}</p></div></li>" for t in vues.etapes_montage())
+    assert attendu in sans_figure
+    attendu = "".join(f"<li><div><p>{t}</p></div></li>" for t in vues.pose_colonne())
+    assert attendu in sans_figure

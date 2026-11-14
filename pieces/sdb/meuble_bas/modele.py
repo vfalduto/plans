@@ -331,5 +331,22 @@ def blocs():
     return o
 
 
+# ------------------------------------------------------------------ pièces et étapes de montage
+# Étape (numéro de 1 à 13 dans etapes_montage(), vues.py) où chaque pièce de blocs() est posée. Les joues nord et du milieu
+# entrent avec le U (7), la joue sud ensuite (8) ; les vérins se posent avant (4), sur les joues encore à plat.
+POSE = {"joue_n": 7, "joue_c": 7, "joue_s": 8, "fond": 7, "bas": 7, "etagere": 7, "plateau": 9, "porte": 12,
+        "poignee": 12, "bac_1": 12, "bac_2": 12, "lave_linge": 13, "tapis": 13,
+        **{f"verin_{k}{i}": 4 for k, _, _ in JOUES for i in range(len(VERINS_X))}}
+# Étape de la pose de la colonne (pose_colonne(), 1 à 5) où la colonne est glissée dans l'angle.
+POSE_COLONNE = {"colonne": 3}
+# Pièces mises en évidence à une étape où rien n'est posé, ou en avance sur leur pose : l'étape travaille dessus.
+ACCENT = {1: ("plateau",), 3: ("porte", "poignee"), 5: ("joue_n", "joue_c", "joue_s"), 6: ("joue_n", "etagere"),
+          10: ("plateau",), 11: ("verin_s0", "verin_s1")}
+# Pièces dessinées en gris à une étape, sans y être posées ni mises en évidence : celles qu'on travaille.
+CONTEXTE = {4: ("joue_n", "joue_c", "joue_s"), 6: ("joue_c", "joue_s")}
+# Étape de pose de la colonne : pièces mises en évidence quand la colonne ne vient pas d'être posée.
+ACCENT_COLONNE = {2: ("colonne",), 4: ("colonne",)}
+
+
 def cm(v):
     return f"{round(v + 1e-9, 1):g}".replace(".", ",")
