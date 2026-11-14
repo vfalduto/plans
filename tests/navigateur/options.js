@@ -162,6 +162,24 @@ async page => {
       return {bas: r.bottom, gauche: r.left, droite: r.right, h: innerHeight, l: innerWidth, defil: document.documentElement.scrollWidth};
     });
     verifier(Math.abs(m.bas - m.h) <= 1 && m.gauche >= 0 && m.droite <= m.l && m.defil <= m.l, `mobile : ${JSON.stringify(m)}`);
+    // feuille défilée pas à pas jusqu'en bas : l'en-tête collant (titre, fermer) reste au-dessus de la ligne .info
+    // collante du nuancier ; le bouton de fermeture est l'élément au point de son centre à chaque pas
+    const enTeteDessus = p => p.evaluate(async () => {
+      const f = document.querySelector("#panneau-options"), b = f.querySelector(".fermer"), max = f.scrollHeight - f.clientHeight;
+      const recouvert = [];
+      for (let y = 0; ; y = Math.min(y + 8, max)) {
+        f.scrollTop = y;
+        await new Promise(r => requestAnimationFrame(() => requestAnimationFrame(r)));
+        const r = b.getBoundingClientRect(), ici = document.elementFromPoint(r.left + r.width / 2, r.top + r.height / 2);
+        if (!ici || !b.contains(ici)) recouvert.push(`${y}:${ici ? ici.className.baseVal ?? ici.className : "rien"}`);
+        if (y >= max) break;
+      }
+      const fin = f.scrollTop;
+      f.scrollTop = 0;
+      return {max, fin, recouvert};
+    });
+    let et = await enTeteDessus(page);
+    verifier(et.recouvert.length === 0, `mobile, feuille défilée : l'en-tête est recouvert ${JSON.stringify(et)}`);
 
     // ------------------------------------------------------------------ options « choix » : table et bois
     // vus(p, [sélecteurs]) : pour chacun, true (montré), false (caché) ou null (absent : l'essai échoue, jamais à vide).
@@ -443,6 +461,9 @@ async page => {
     await ouvrir(page, DOC + "#plan");
     await ouvrirPanneau(page);
     await cliquerValeur(page, "table", "ouverte");
+    et = await enTeteDessus(page);
+    verifier(et.max > 0 && et.fin === et.max && et.recouvert.length === 0,
+             `choix, mobile, feuille défilée jusqu'en bas : l'en-tête est recouvert ${JSON.stringify(et)}`);
     const mc = await page.evaluate(() => {
       const f = document.querySelector("#panneau-options"), r = f.getBoundingClientRect();
       return {sections: [...f.querySelectorAll("section[data-o]")].map(x => x.dataset.o),

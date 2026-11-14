@@ -484,3 +484,6 @@ a:hover>.pl-piece,a:focus-visible>.pl-piece{fill:color-mix(in srgb,var(--repere)
 .element:not(.b) > .note-rendu{top:58px}
 .compare > .element:not(.b) > .note-rendu{max-width:calc(var(--pos,50%) - 24px)}
 .compare > .element.b > .note-rendu{max-width:calc(100% - var(--pos,50%) - 24px)}
+/* l'en-tête collant de la feuille (titre, fermer) passe au-dessus de la ligne .info collante d'un nuancier, venue plus
+   loin dans le document au même z-index, quand la feuille défile */
+.feuille .tete-feuille{z-index:2}
