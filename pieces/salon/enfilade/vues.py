@@ -12,7 +12,7 @@ from commun.blocs_construction import (Calepin, Colonne, DessinMeuble, Etape, ca
                                        vue_plans)
 from commun.modele import Vue
 from pieces.salon.enfilade import chiffrage
-from pieces.salon.enfilade.chiffrage import debit, degagements, format_de, lettre, poids_caisson, prix, volume_utile
+from pieces.salon.enfilade.chiffrage import debit, degagements, format_de, lettre, poids_caisson, volume_utile
 from pieces.salon.enfilade.dessins import (ECHELLES, decoupe_svg, dessus_svg, eclate_svg, en_cm, face_svg, iso,
                                            profil_svg)
 from pieces.salon.enfilade.document import (COULISSE, DESSUS, DOS, ETAGERES_CAISSONS, FAC, FORMATS, GROUPES, H_BOITE,
@@ -179,22 +179,30 @@ def _note_achat(li):
     return f"{escape(li['note'])}<br>{li['statut']}, {calcul}{source}"
 
 
+def _poste(ch, choisit, nom):
+    """La ligne d'achat dont le poste est choisi par `choisit` ; aucune : erreur qui nomme le poste cherché."""
+    for li in ch["lignes"]:
+        if choisit(li["poste"]):
+            return li
+    raise ValueError(f"salon/enfilade, achats : poste inconnu : « {nom} »")
+
+
 def _achats(ch):
     lignes = sorted(ch["lignes"], key=lambda li: (ORDRE_MAG.index(li["mag"]), not li["panneau"]))
     sections = [SectionAchats(MAGASINS[m]["nom"], [Achat(li["poste"], li["ref"], li["q"], li["pu"],
                                                          note=_note_achat(li)) for li in lignes if li["mag"] == m])
                 for m in ORDRE_MAG if any(li["mag"] == m for li in lignes)]
-    c18 = next(li for li in ch["lignes"] if li["poste"] == FORMATS["C18"]["nom"])
-    huile = next(li for li in ch["lignes"] if li["poste"].startswith("Huile"))
+    c18 = _poste(ch, lambda p: p == FORMATS["C18"]["nom"], FORMATS["C18"]["nom"])
+    huile = _poste(ch, lambda p: p.startswith("Huile"), "Huile…")
     chapo = (f'<p class="chapo">{_lien("weldom")} d\'abord, puis {_lien("lm")} pour ce que Weldom n\'a pas (fibres '
              f"dures découpées, pieds, coulisses). Prix TTC recherchés en ligne le {RELEVE}, sans visite en magasin : "
              "relevé = prix lu en ligne ou déjà connu, estimé = ordre de grandeur à relever en rayon.</p>")
-    total = (f'<p><b>Total (composition {ch["v"]["cle"]}) : {prix(ch["total"])}</b>, dont {prix(ch["releve"])} de prix '
-             f'relevés ({round(100 * ch["releve"] / ch["total"])} %) et {prix(ch["estime"])} d\'estimations. Les '
-             f'{c18["q"]} tablettes de chêne en font {prix(c18["total"])} ; l\'huile, {prix(huile["total"])} '
+    total = (f'<p><b>Total (composition {ch["v"]["cle"]}) : {euros(ch["total"])}</b>, dont {euros(ch["releve"])} '
+             f'de prix relevés ({round(100 * ch["releve"] / ch["total"])} %) et {euros(ch["estime"])} d\'estimations. '
+             f'Les {c18["q"]} tablettes de chêne en font {euros(c18["total"])} ; l\'huile, {euros(huile["total"])} '
              f'(rendement estimé de {HUILE["rendement"]} m² par litre et par couche).</p>')
     outillage = ("<p>Outillage, seulement si l'atelier ne l'a pas (hors total) :</p><ul>"
-                 + "".join(f"<li>{escape(n)} : {prix(p)} (estimé)</li>" for n, p in OUTILLAGE) + "</ul>")
+                 + "".join(f"<li>{escape(n)} : {euros(p)} (estimé)</li>" for n, p in OUTILLAGE) + "</ul>")
     note = note_source(
         "Weldom ne vend ni plaques entières ni 12 mm : tout le débit Weldom se fait dans des tablettes. Les prix "
         "Weldom des tablettes et des charnières sont ceux déjà relevés, à reconfirmer au magasin (stock non lu : il "

@@ -3,6 +3,7 @@ from html import escape
 
 import pytest
 
+from commun.blocs import euros
 from commun.modele import Document, Variante, verifier
 from pieces.salon.enfilade import chiffrage, vues
 from tests.salon_enfilade_ancienne import corrige, morceaux, page, section, texte
@@ -79,8 +80,22 @@ def test_achats():
     assert "904,70 €" in s and "123,25 €" in s and "1027,95 €" in s
     assert "29/10/2026" in s and "relevé" in s and "estimé" in s
     assert s.count("<tr>") == 15 + 3 + 2      # lignes, plus les deux en-têtes ; « Sous-total » est un <tr class="total">
+    assert "1 027,95" not in s and "109,00 €" not in s      # un seul format de montant dans la vue (socle)
     for m in morceaux(section(page(), "achats")):
-        assert corrige(m).replace("Total : ", "Total (composition C) : ") in texte(s), m
+        assert _au_format_du_socle(corrige(m)).replace("Total : ", "Total (composition C) : ") in texte(s), m
+
+
+def _au_format_du_socle(t):
+    """Montants de l'ancienne page (`chiffrage.prix`, « 1 027,95 € ») au format du socle (`euros`, « 1027,95 € »)."""
+    def montant(m):
+        return euros(float(m.group(0)[:-2].replace(" ", "").replace(",", ".")))
+    return re.sub(r"\d{1,3}(?: \d{3})*,\d{2} €", montant, t)
+
+
+def test_poste_inconnu_erreur_claire():
+    ch = chiffrage.retenu(chiffrage.chiffrages())
+    with pytest.raises(ValueError, match="poste inconnu"):
+        vues._poste(ch, lambda p: False, "Huile…")
 
 
 def test_liens_externes_gardes():
