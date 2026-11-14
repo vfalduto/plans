@@ -32,16 +32,17 @@ class DessinMeuble:
 
 
 def _scene(d):
-    """`mesure` faux : `data-mesure="non"` sur le `<svg>` de tête (blancs de tête retirés) ; un SVG qui n'est pas en
-    tête (enveloppé, après un commentaire ou un prologue) ne peut pas le porter : erreur. Une scène sans SVG passe."""
+    """`mesure` faux : `data-mesure="non"` sur le `<svg>` de tête (blancs de tête retirés). Un commentaire ou un
+    prologue (`<!--`, `<?`, `<!`) avant le `<svg>` : erreur, ce SVG resterait enfant direct, donc mesuré. Une scène
+    enveloppée dans un élément, ou sans SVG, passe telle quelle : site.js ne mesure que `:scope > svg`."""
     if d.mesure:
         return d.scene
     scene = d.scene.lstrip()
     if scene.startswith("<svg"):
         return '<svg data-mesure="non"' + scene[len("<svg"):]
-    if "<svg" in scene:
-        raise ValueError(f"dessin « {d.k} » : mesure=False, mais la scène ne commence pas par <svg (enveloppe, "
-                         "commentaire ou prologue avant) : Mesurer y resterait ; mettre le <svg> en tête")
+    if scene.startswith(("<!", "<?")) and "<svg" in scene:
+        raise ValueError(f"dessin « {d.k} » : mesure=False, mais un commentaire ou un prologue précède le <svg> :"
+                         " Mesurer y resterait ; mettre le <svg> en tête")
     return d.scene
 
 

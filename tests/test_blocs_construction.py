@@ -67,9 +67,14 @@ def test_vue_plans_sans_mesure_svg_pas_en_tete():
     saut = DessinMeuble("iso", "Vue iso", '\n  <svg viewBox="0 0 1 1"></svg>', mesure=False)
     scene = vue_plans([saut], "A").elements[0].scene
     assert balises(scene, "svg")[0]["data-mesure"] == "non"
-    for scene in ('<div><svg viewBox="0 0 1 1"></svg></div>', '<!-- iso --><svg></svg>', '<?xml version="1.0"?><svg/>'):
+    # commentaire, prologue ou doctype avant le <svg> : il resterait enfant direct de l'élément, donc mesuré
+    for scene in ('<!-- iso --><svg></svg>', '<?xml version="1.0"?><svg/>', '\n<!doctype svg><svg></svg>'):
         with pytest.raises(ValueError, match="« iso »"):
             vue_plans([DessinMeuble("iso", "Vue iso", scene, mesure=False)], "A")
+    # enveloppée dans un élément : site.js ne mesure que `:scope > svg`, la scène n'a jamais été mesurable
+    for scene in ('<div><svg viewBox="0 0 1 1"></svg></div>',
+                  '<figure><img src="a.jpg" alt=""><svg class="icone"></svg></figure>'):
+        assert vue_plans([DessinMeuble("iso", "Vue iso", scene, mesure=False)], "A").elements[0].scene == scene
     image = DessinMeuble("photo", "Photo", '\n<figure class="cadre"><img src="a.jpg" alt=""></figure>', mesure=False)
     assert "data-mesure" not in vue_plans([image], "A").elements[0].scene
 
