@@ -1,0 +1,50 @@
+.d-chambre .legend{display:flex;flex-wrap:wrap;gap:6px 14px;font-size:13.5px;margin:6px 0}
+.d-chambre .legend span{display:inline-flex;align-items:center;gap:6px}
+.d-chambre .legend svg{width:26px;height:14px;flex:none}
+.d-chambre .tkm{stroke:var(--muted)}
+.d-chambre .arm{fill:var(--tri)}
+.d-chambre .room{fill:var(--line);fill-opacity:.18}
+.d-chambre .roomt{fill:var(--muted);font-size:9px;font-weight:600}
+.d-chambre .w{fill:var(--ink)}
+.d-chambre .appf{fill:var(--panel);stroke:var(--ink);stroke-width:.8}
+.d-chambre .filet{fill:none;stroke:var(--ink);stroke-width:.8}
+.d-chambre .tringle{stroke:var(--ink);stroke-width:1.1}
+.d-chambre .closet{fill:var(--tech);stroke:var(--ink);stroke-width:.7}
+.d-chambre .win{fill:var(--glass);stroke:var(--ink);stroke-width:.7}
+.d-chambre .wleaf{stroke:var(--ink);stroke-width:2.2}
+.d-chambre .slide{stroke:var(--tri);stroke-width:1;fill:none}
+.d-chambre .doorzone{fill:var(--tri);fill-opacity:.06;stroke:none}
+.d-chambre .doorarc{fill:none;stroke:var(--ink);stroke-width:.8}
+.d-chambre .doorleaf{stroke:var(--ink);stroke-width:3}
+.d-chambre .bed{fill:var(--water);fill-opacity:.10;stroke:var(--ink);stroke-width:.9}
+.d-chambre .mat{fill:var(--panel);stroke:var(--ink);stroke-width:.6}
+.d-chambre .pil{fill:var(--panel);stroke:var(--ink);stroke-width:.6}
+.d-chambre .duvet{fill:var(--water);fill-opacity:.16;stroke:var(--water);stroke-width:.6}
+.d-chambre .head{fill:var(--wood);fill-opacity:.45;stroke:var(--ink);stroke-width:.9}
+.d-chambre .cab{fill:var(--cab);stroke:var(--ink);stroke-width:.7}
+.d-chambre .cabcut{fill:var(--tall);stroke:var(--ink);stroke-width:1.4}
+.d-chambre .inner{fill:none;stroke:var(--muted);stroke-width:.6;stroke-dasharray:3 2}
+.d-chambre .ghost{fill:none;stroke:var(--muted);stroke-width:1;stroke-dasharray:4 3}
+.d-chambre .upper{fill:none;stroke:var(--muted);stroke-width:.8;stroke-dasharray:3 2}
+.d-chambre .lamp{fill:#E8B44A;fill-opacity:.55;stroke:var(--ink);stroke-width:.6}
+.d-chambre .peg{fill:#7B5EA7}
+.d-chambre .valett{fill:#7B5EA7;font-weight:700}
+.d-chambre .pass{fill:none;stroke:var(--flow);stroke-width:.9}
+.d-chambre .passm{fill:var(--flow)}
+.d-chambre .passt{fill:var(--flow);font-size:7px;font-weight:600}
+.d-chambre .dim{stroke:var(--muted);stroke-width:.6;fill:none}
+.d-chambre .dimt{fill:var(--muted);font-size:8px}
+.d-chambre .lbl{font-size:7.5px}
+.d-chambre .lbls{font-size:6.5px}
+.d-chambre .lblx{font-size:5px}
+.d-chambre .lblb{font-size:9px;font-weight:700}
+.d-chambre .muted{fill:var(--muted)}
+.d-chambre .floorl{stroke:var(--ink);stroke-width:2}
+.d-chambre .el-ceil{stroke:var(--muted);stroke-width:.8;stroke-dasharray:6 4}
+.d-chambre .bgwall{fill:var(--line);fill-opacity:.35;stroke:none}
+.d-chambre .wcut{fill:var(--ink)}
+.d-chambre .dark{fill:var(--ink)}
+.d-chambre .tech{fill:var(--tech);stroke:var(--ink);stroke-width:.7;stroke-dasharray:3 2}
+.d-chambre .plug{fill:var(--tri)}
+.d-chambre .cloth{fill:#7B5EA7;fill-opacity:.18;stroke:#7B5EA7;stroke-width:.6}
+.d-chambre .sec{stroke:var(--tri);stroke-opacity:.35;stroke-width:.9;stroke-dasharray:10 3 2 3;fill:none}

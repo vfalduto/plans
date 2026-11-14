@@ -1,0 +1,3676 @@
+{
+ "ACCES_CELLIER": 74.24957912338628,
+ "ACCORDEON": null,
+ "ARRONDI_NORD": 0,
+ "ASPI": {
+  "x0": 356,
+  "x1": 420,
+  "y0": 8,
+  "y1": 39
+ },
+ "AVANT": {
+  "anglaise": 0,
+  "cellier_m2": 1.46,
+  "lin_bas": 300,
+  "lin_col": 120,
+  "lin_hauts": 240,
+  "modules": [
+   5,
+   4,
+   2
+  ],
+  "plan": [
+   [
+    0,
+    68
+   ],
+   [
+    122,
+    187
+   ],
+   [
+    243,
+    305
+   ]
+  ],
+  "tablettes_cm": 606,
+  "tiroirs": 10,
+  "version": "V11.34",
+  "volume_cellier": 739,
+  "volume_cuisine": 2055
+ },
+ "BAIE_Y0": 48,
+ "BAIE_Y1": 115,
+ "BALAIS": [
+  [
+   398,
+   "bas"
+  ],
+  [
+   412,
+   "haut"
+  ]
+ ],
+ "BALLON": {
+  "cx": 459,
+  "cy": 72,
+  "nom": "ballon_ecs",
+  "r": 25,
+  "role": "ballon",
+  "z0": 90,
+  "z1": 210
+ },
+ "BANQ": {
+  "dossier": 5,
+  "x0": 0,
+  "x1": 50,
+  "y0": 180,
+  "y1": 250
+ },
+ "BAS_DE_MUR": {
+  "ep": 2,
+  "h": 85,
+  "x0": 0,
+  "x1": 140
+ },
+ "B_COULISSANT": 1,
+ "B_ETROIT": 6,
+ "B_EVIER": 5,
+ "B_LV": null,
+ "B_PLAQUE": 2,
+ "B_TIROIRS": 3,
+ "B_TIROIRS_2": 4,
+ "C3_L": 0,
+ "CAFE": {
+  "h": 36,
+  "x0": 278,
+  "x1": 302,
+  "y0": 3,
+  "y1": 39
+ },
+ "CAISSON_H": 88,
+ "CAPACITE": {
+  "p9a": {
+   "autres": "étagères ouvertes P30 2 × 109, étagère haute P25 de 140, porte d'entrée 3 × 62",
+   "cellier": [
+    38,
+    6,
+    38,
+    30
+   ],
+   "lin_bas": 292,
+   "lin_col": 180,
+   "lin_hauts": 140,
+   "modules": [
+    5,
+    3,
+    3
+   ],
+   "plan": [
+    [
+     0,
+     52
+    ],
+    [
+     106,
+     161
+    ],
+    [
+     247,
+     249
+    ]
+   ],
+   "prof_plan": 62,
+   "tiroirs": 10
+  },
+  "v11": {
+   "autres": "banquette : 1 tiroir ; étagère P25 au-dessus de la table",
+   "cellier": [
+    107,
+    6,
+    103,
+    40
+   ],
+   "cellier_sud": null,
+   "lin_bas": 300,
+   "lin_col": 120,
+   "lin_hauts": 280,
+   "menage": null,
+   "modules": [
+    6,
+    5,
+    2
+   ],
+   "plan": [
+    [
+     0,
+     33
+    ],
+    [
+     87,
+     168
+    ],
+    [
+     268,
+     320
+    ]
+   ],
+   "prof_plan": 62,
+   "tiroirs": 11
+  }
+ },
+ "CELLIER_SOL": [
+  [
+   327,
+   0
+  ],
+  [
+   434,
+   0
+  ],
+  [
+   434,
+   44
+  ],
+  [
+   484,
+   44
+  ],
+  [
+   484,
+   100
+  ],
+  [
+   382,
+   100
+  ],
+  [
+   382,
+   115
+  ],
+  [
+   325.5,
+   115
+  ],
+  [
+   325.5,
+   48
+  ],
+  [
+   327,
+   48
+  ]
+ ],
+ "CELLIER_VANTAUX": [],
+ "CHAISE": {
+  "l": 42,
+  "p": 42
+ },
+ "CHUTE": [
+  459,
+  94
+ ],
+ "CIRCUITS": [
+  [
+   "eclairage",
+   "Éclairage",
+   "10 A, 1,5 mm²",
+   "L1, L2, L3, L4"
+  ],
+  [
+   "plan",
+   "Prises de la cuisine (circuit dédié)",
+   "20 A, 2,5 mm², 6 socles au plus",
+   "P1, P2, P3 au-dessus du plan (5 socles), P8 (6 socles)"
+  ],
+  [
+   "autres",
+   "Autres prises",
+   "20 A, 2,5 mm²",
+   "P4, P10, P11, P12, P13 (6 socles)"
+  ],
+  [
+   "plaque",
+   "Plaque à induction",
+   "32 A, 6 mm²",
+   "P6"
+  ],
+  [
+   "four",
+   "Four",
+   "20 A, 2,5 mm², circuit spécialisé",
+   "P5"
+  ],
+  [
+   "lv",
+   "Lave-vaisselle",
+   "20 A, 2,5 mm², circuit spécialisé",
+   "P7"
+  ],
+  [
+   "frigo",
+   "Réfrigérateur",
+   "20 A, 2,5 mm², circuit dédié (conseillé)",
+   "P9"
+  ],
+  [
+   "ballon",
+   "Ballon d'eau chaude",
+   "existant, inchangé",
+   "ballon du cellier (heures creuses)"
+  ]
+ ],
+ "CLOISONS_DEPOSEES": [
+  {
+   "arrondi": 0,
+   "coins": "so",
+   "contenu": "",
+   "etiq": "",
+   "nom": "chambre_cellier",
+   "poignee": "",
+   "role": "depose",
+   "x0": 325,
+   "x1": 335,
+   "y0": 0,
+   "y1": 252,
+   "z0": 0,
+   "z1": 250
+  },
+  {
+   "arrondi": 0,
+   "coins": "so",
+   "contenu": "",
+   "etiq": "",
+   "nom": "cellier_placard",
+   "poignee": "",
+   "role": "depose",
+   "x0": 335,
+   "x1": 382,
+   "y0": 100,
+   "y1": 110,
+   "z0": 0,
+   "z1": 250
+  }
+ ],
+ "CLOISON_Y1": 48,
+ "COFFRE_RESEAUX": null,
+ "COL_DOS": 382,
+ "COL_X": 322,
+ "COL_Y0": 175,
+ "COL_Y1": 240,
+ "COL_Z1": 228,
+ "CONTENU": [
+  [
+   "B1, coulissant de 20 à gauche de la plaque",
+   "huiles, vinaigres, épices, sel (paniers en hauteur)"
+  ],
+  [
+   "B2, sous la plaque",
+   "four encastré ; tiroir de 20 : plaques et grilles du four"
+  ],
+  [
+   "B3, à droite de la plaque",
+   "3 tiroirs : ustensiles de cuisson et couteaux (20), poêles et couvercles (20), casseroles et faitouts (40)"
+  ],
+  [
+   "B4, à gauche de l'évier",
+   "3 tiroirs : couverts (20), boîtes de conservation, planches, film (20), plats à four, moules, saladiers (40 : le lourd en bas, à portée du four)"
+  ],
+  [
+   "B5, sous l'évier",
+   "1 tiroir découpé autour du siphon : tri en 3 bacs (ordures, emballages, verre) ; bac avant : liquide vaisselle, éponges, brosse, produit évier"
+  ],
+  [
+   "B6, P40, contre la porte du cellier",
+   "placard, une étagère (les tuyaux passent dans le fond) : café et thé en réserve, filtres, détartrant ; machine à café posée dessus"
+  ],
+  [
+   "Étagères à gauche de H1",
+   "bocaux du quotidien, livres de cuisine, déco, plantes"
+  ],
+  [
+   "H1, au-dessus de la plaque",
+   "porte basse : hotte intégrée (groupe filtrant), filtres de rechange ; porte haute : rare (thermos)"
+  ],
+  [
+   "H2, au-dessus de B3",
+   "porte basse : épices en gradins, condiments, sauces ; porte haute : recharges d'épices"
+  ],
+  [
+   "H3",
+   "porte basse : petit-déjeuner (thé, sucre, confitures, céréales entamées) ; porte haute : réserves d'épicerie légères"
+  ],
+  [
+   "H4, au-dessus de l'évier",
+   "porte basse : assiettes, bols ; porte haute : plats de service"
+  ],
+  [
+   "H5, au-dessus de B6",
+   "porte basse : verres, tasses ; porte haute : verres à pied, carafe"
+  ],
+  [
+   "C1, à côté de la porte du cellier",
+   "tiroir bas : pastilles et sel du LV, torchons, sacs poubelle ; lave-vaisselle en hauteur ; micro-ondes ; porte haute : essuie-tout, sacs congélation, films (tablette h 178), stock au-dessus"
+  ],
+  [
+   "C2",
+   "porte au-dessus du frigo : vaisselle de fête, plateaux (rare et léger : plus de plats lourds en hauteur)"
+  ],
+  [
+   "Banquette",
+   "tiroir unique, ouvert côté nord : nappes, sets de table, jeux, bougies"
+  ],
+  [
+   "Cellier nord, sol sous la 1re tablette",
+   "pommes de terre, oignons (à l'ouest), aspirateur couché (à l'est) (les tuyaux passent derrière, contre le mur)"
+  ],
+  [
+   "Cellier nord, tablette h 60",
+   "packs d'eau, bouteilles, lait"
+  ],
+  [
+   "Cellier nord, tablette h 96",
+   "conserves, bocaux, sauces"
+  ],
+  [
+   "Cellier nord, tablette h 132",
+   "réserves : pâtes, riz, farine, sucre"
+  ],
+  [
+   "Cellier nord, tablette h 168",
+   "biscuits, apéritif"
+  ],
+  [
+   "Cellier nord, tablette h 204",
+   "papier, petit électroménager rare (raclette, gaufrier)"
+  ],
+  [
+   "Cellier, mur du WC (à la place du rayonnage sud)",
+   "2 balais (un tête en bas, un tête en haut)"
+  ],
+  [
+   "Cellier, étagère P15 au-dessus des balais, h 170",
+   "produits ménagers : multi-usage, sols, vitres, anticalcaire, javel ; gants (à part de la nourriture)"
+  ],
+  [
+   "Cellier, même étagère, h 195",
+   "recharges, chiffons microfibre, sacs d'aspirateur"
+  ],
+  [
+   "Cellier, angle sud-est au sol",
+   "seau, serpillière ou balai à franges, essoreur"
+  ],
+  [
+   "Salle de bains",
+   "produits WC et salle de bains (restent dans la salle de bains)"
+  ],
+  [
+   "Cellier nord, sous la 1re tablette, à l'est",
+   "aspirateur traîneau avec sac (type Rowenta Silence Force), couché, tube et brosse au sol devant lui"
+  ]
+ ],
+ "COUDES": {
+  "Victor": 113,
+  "Vincent": 104
+ },
+ "CREDENCE_RETOURS": {
+  "est": 42,
+  "ouest": 58
+ },
+ "DECALAGE_PORTE": 40,
+ "DEPART_HAUTS": 30,
+ "DORMANT": 0,
+ "ECART_OUEST": 10,
+ "EGOUTTOIR_L": 40,
+ "ENTREE": {
+  "ferme": [
+   225,
+   308
+  ],
+  "h": 204,
+  "ouvert": [
+   142,
+   225
+  ],
+  "poche": [
+   140,
+   225
+  ],
+  "vantail": 83,
+  "x0": 228,
+  "x1": 306,
+  "y": 247
+ },
+ "ENTRETIEN": {
+  "contenus": [
+   "produits ménagers, gants",
+   "recharges, chiffons, sacs d'aspirateur"
+  ],
+  "x0": 382,
+  "x1": 434,
+  "y0": 85,
+  "y1": 100,
+  "zs": [
+   170,
+   195
+  ]
+ },
+ "ENVELOPPE": [
+  {
+   "arrondi": 0,
+   "coins": "so",
+   "contenu": "",
+   "etiq": "",
+   "nom": "nord",
+   "poignee": "",
+   "role": "mur",
+   "x0": -20,
+   "x1": 434,
+   "y0": -20,
+   "y1": 0,
+   "z0": 0,
+   "z1": 250
+  },
+  {
+   "arrondi": 0,
+   "coins": "so",
+   "contenu": "",
+   "etiq": "",
+   "nom": "nord_alcove",
+   "poignee": "",
+   "role": "mur",
+   "x0": 434,
+   "x1": 494,
+   "y0": -20,
+   "y1": 44,
+   "z0": 0,
+   "z1": 250
+  },
+  {
+   "arrondi": 0,
+   "coins": "so",
+   "contenu": "",
+   "etiq": "",
+   "nom": "est_wc",
+   "poignee": "",
+   "role": "mur",
+   "x0": 484,
+   "x1": 494,
+   "y0": 44,
+   "y1": 262,
+   "z0": 0,
+   "z1": 250
+  },
+  {
+   "arrondi": 0,
+   "coins": "so",
+   "contenu": "",
+   "etiq": "",
+   "nom": "alcove_wc",
+   "poignee": "",
+   "role": "mur",
+   "x0": 382,
+   "x1": 484,
+   "y0": 100,
+   "y1": 110,
+   "z0": 0,
+   "z1": 250
+  },
+  {
+   "arrondi": 0,
+   "coins": "so",
+   "contenu": "",
+   "etiq": "",
+   "nom": "ouest_wc",
+   "poignee": "",
+   "role": "mur",
+   "x0": 382,
+   "x1": 392,
+   "y0": 110,
+   "y1": 262,
+   "z0": 0,
+   "z1": 250
+  },
+  {
+   "arrondi": 0,
+   "coins": "so",
+   "contenu": "",
+   "etiq": "",
+   "nom": "ouest_nord",
+   "poignee": "",
+   "role": "mur",
+   "x0": -20,
+   "x1": 0,
+   "y0": -20,
+   "y1": 58,
+   "z0": 0,
+   "z1": 250
+  },
+  {
+   "arrondi": 0,
+   "coins": "so",
+   "contenu": "",
+   "etiq": "",
+   "nom": "ouest_sud",
+   "poignee": "",
+   "role": "mur",
+   "x0": -20,
+   "x1": 0,
+   "y0": 200,
+   "y1": 262,
+   "z0": 0,
+   "z1": 250
+  },
+  {
+   "arrondi": 0,
+   "coins": "so",
+   "contenu": "",
+   "etiq": "",
+   "nom": "allege",
+   "poignee": "",
+   "role": "allege",
+   "x0": -20,
+   "x1": 0,
+   "y0": 58,
+   "y1": 200,
+   "z0": 0,
+   "z1": 106
+  },
+  {
+   "arrondi": 0,
+   "coins": "so",
+   "contenu": "",
+   "etiq": "",
+   "nom": "linteau_fenetre",
+   "poignee": "",
+   "role": "linteau",
+   "x0": -20,
+   "x1": 0,
+   "y0": 58,
+   "y1": 200,
+   "z0": 215,
+   "z1": 250
+  },
+  {
+   "arrondi": 0,
+   "coins": "so",
+   "contenu": "",
+   "etiq": "",
+   "nom": "sud_ouest",
+   "poignee": "",
+   "role": "mur",
+   "x0": 0,
+   "x1": 228,
+   "y0": 252,
+   "y1": 262,
+   "z0": 0,
+   "z1": 250
+  },
+  {
+   "arrondi": 0,
+   "coins": "so",
+   "contenu": "",
+   "etiq": "",
+   "nom": "sud_est",
+   "poignee": "",
+   "role": "mur",
+   "x0": 306,
+   "x1": 382,
+   "y0": 252,
+   "y1": 262,
+   "z0": 0,
+   "z1": 250
+  },
+  {
+   "arrondi": 0,
+   "coins": "so",
+   "contenu": "",
+   "etiq": "",
+   "nom": "linteau_entree",
+   "poignee": "",
+   "role": "linteau",
+   "x0": 228,
+   "x1": 306,
+   "y0": 252,
+   "y1": 262,
+   "z0": 204,
+   "z1": 250
+  },
+  {
+   "arrondi": 0,
+   "coins": "so",
+   "contenu": "",
+   "etiq": "",
+   "nom": "decroche_se",
+   "poignee": "",
+   "role": "mur",
+   "x0": 341,
+   "x1": 382,
+   "y0": 240,
+   "y1": 252,
+   "z0": 0,
+   "z1": 250
+  },
+  {
+   "arrondi": 0,
+   "coins": "so",
+   "contenu": "",
+   "etiq": "",
+   "nom": "galandage_caisson",
+   "poignee": "",
+   "role": "cloison",
+   "x0": 140,
+   "x1": 225,
+   "y0": 242,
+   "y1": 252,
+   "z0": 0,
+   "z1": 250
+  },
+  {
+   "arrondi": 0,
+   "coins": "so",
+   "contenu": "",
+   "etiq": "",
+   "nom": "galandage_montant",
+   "poignee": "",
+   "role": "cloison",
+   "x0": 308,
+   "x1": 312,
+   "y0": 242,
+   "y1": 252,
+   "z0": 0,
+   "z1": 250
+  },
+  {
+   "arrondi": 0,
+   "coins": "so",
+   "contenu": "",
+   "etiq": "",
+   "nom": "linteau_galandage",
+   "poignee": "",
+   "role": "linteau",
+   "x0": 225,
+   "x1": 308,
+   "y0": 242,
+   "y1": 252,
+   "z0": 204,
+   "z1": 250
+  },
+  {
+   "arrondi": 0,
+   "coins": "so",
+   "contenu": "",
+   "etiq": "",
+   "nom": "entree_vantail",
+   "poignee": "",
+   "role": "porte",
+   "x0": 225,
+   "x1": 308,
+   "y0": 245,
+   "y1": 249,
+   "z0": 0,
+   "z1": 204
+  },
+  {
+   "arrondi": 0,
+   "coins": "so",
+   "contenu": "",
+   "etiq": "",
+   "nom": "tableau_noir",
+   "poignee": "",
+   "role": "ardoise",
+   "x0": 142,
+   "x1": 223,
+   "y0": 241.5,
+   "y1": 242,
+   "z0": 120,
+   "z1": 200
+  },
+  {
+   "arrondi": 0,
+   "coins": "so",
+   "contenu": "",
+   "etiq": "",
+   "nom": "zone_aimantee",
+   "poignee": "",
+   "role": "aimant",
+   "x0": 142,
+   "x1": 223,
+   "y0": 241.5,
+   "y1": 242,
+   "z0": 70,
+   "z1": 118
+  },
+  {
+   "arrondi": 0,
+   "coins": "so",
+   "contenu": "",
+   "etiq": "",
+   "nom": "cloison_cellier",
+   "poignee": "",
+   "role": "cloison",
+   "x0": 320,
+   "x1": 327,
+   "y0": 0,
+   "y1": 48,
+   "z0": 0,
+   "z1": 250
+  },
+  {
+   "arrondi": 0,
+   "coins": "so",
+   "contenu": "",
+   "etiq": "",
+   "nom": "linteau_cellier",
+   "poignee": "",
+   "role": "linteau",
+   "x0": 320,
+   "x1": 327,
+   "y0": 48,
+   "y1": 115,
+   "z0": 204,
+   "z1": 250
+  },
+  {
+   "arrondi": 0,
+   "coins": "so",
+   "contenu": "",
+   "etiq": "",
+   "nom": "cellier_pliante",
+   "poignee": "",
+   "role": "porte",
+   "x0": 320.0,
+   "x1": 321.9,
+   "y0": 48,
+   "y1": 115,
+   "z0": 1.1,
+   "z1": 198.7
+  }
+ ],
+ "EP": 2,
+ "EP_VANTAIL": 1.9,
+ "ETAGERES_MUR": {
+  "contenus": [
+   "bocaux du quotidien",
+   "livres de cuisine",
+   "déco, plantes"
+  ],
+  "p": 25,
+  "x0": 0,
+  "x1": 28,
+  "zs": [
+   155,
+   195,
+   232.5
+  ]
+ },
+ "ETAGERE_BANQ": {
+  "x0": 0,
+  "x1": 140,
+  "y0": 227,
+  "y1": 252,
+  "z0": 160,
+  "z1": 162.5
+ },
+ "EVAC_LONGUEUR": 363,
+ "EVIER_L": 100,
+ "FACADE": 2,
+ "FACADES_FIXES": {
+  "2": [
+   [
+    "four",
+    60,
+    ""
+   ],
+   [
+    "tiroir",
+    20,
+    "plaques, grilles"
+   ]
+  ]
+ },
+ "FENETRE": {
+  "allege": 106,
+  "linteau": 215,
+  "y0": 58,
+  "y1": 200
+ },
+ "FILEUR_C2": 5,
+ "FILEUR_EST": 10,
+ "FILEUR_HAUT": 15,
+ "FIN_HAUTS": 310,
+ "FRIGO_ANGLES": {
+  "entree_fermee": [
+   99.6,
+   "entree_vantail"
+  ],
+  "entree_ouverte": [
+   116.6,
+   "galandage_montant"
+  ]
+ },
+ "FRIGO_Z1": 186,
+ "GLISSE": 0,
+ "H": 250,
+ "HAUTS_CONTENU": [
+  [
+   "hotte, filtres",
+   "rare : thermos"
+  ],
+  [
+   "épices, condiments",
+   "recharges épices"
+  ],
+  [
+   "petit-déj, thé, sucre",
+   "réserves épicerie"
+  ],
+  [
+   "assiettes, bols",
+   "plats de service"
+  ],
+  [
+   "verres, tasses",
+   "verres à pied"
+  ]
+ ],
+ "HAUT_JOINT": 195,
+ "HAUT_Z0": 155,
+ "HAUT_Z1": 235,
+ "HOTTE": {
+  "arrondi": 0,
+  "coins": "so",
+  "contenu": "",
+  "etiq": "",
+  "nom": "hotte_integree",
+  "poignee": "",
+  "role": "hotte",
+  "x0": 32,
+  "x1": 88,
+  "y0": 1,
+  "y1": 32,
+  "z0": 154.4,
+  "z1": 167
+ },
+ "HSE_APPUI": [
+  10,
+  25
+ ],
+ "HSE_LEGER": [
+  5,
+  10
+ ],
+ "INTERRUPTEURS": [
+  [
+   "S1",
+   "Entrée",
+   317,
+   242,
+   110,
+   "sur le fileur à droite de la baie (x 312 → 322, face nord), côté poignée de la porte : plaque verticale 3 postes (le fileur fait 10 de large) ; le câble descend du plafond dans la poche fermée par le fileur",
+   [
+    [
+     "haut",
+     "L1",
+     "simple allumage"
+    ],
+    [
+     "milieu",
+     "L2",
+     "va-et-vient avec S2"
+    ],
+    [
+     "bas",
+     "L3",
+     "poussoir du variateur, avec S3"
+    ]
+   ]
+  ],
+  [
+   "S2",
+   "Bout du plan",
+   320,
+   21,
+   110,
+   "retour de cloison au nord de la porte du cellier (face ouest, x 320), au-dessus du plan de B6, à 19 du plan : plaque verticale 2 postes (V13.4 : il ne reste que 6 de mur entre le plan et la baie)",
+   [
+    [
+     "haut",
+     "L2",
+     "va-et-vient avec S1"
+    ],
+    [
+     "bas",
+     "L4",
+     "simple allumage, à voyant : on voit la lumière restée allumée porte fermée"
+    ]
+   ]
+  ],
+  [
+   "S3",
+   "Banquette",
+   54,
+   252,
+   105,
+   "mur sud, juste à l'est du dossier de la banquette, au-dessus de la table : à portée de main assis ; sur la même plaque que P11 (V13.17 : le mur ouest est pris par le dossier)",
+   [
+    [
+     "",
+     "L3",
+     "poussoir du variateur, avec S1"
+    ]
+   ]
+  ]
+ ],
+ "JEU_B6_PORTE": 6,
+ "JOUE_C2": 115,
+ "LARGEURS_BAS": [
+  20,
+  60,
+  60,
+  60,
+  60,
+  40
+ ],
+ "LARGEURS_HAUTS": [
+  60,
+  60,
+  60,
+  60,
+  40
+ ],
+ "LARGEUR_PLACE": 70,
+ "LUMIERES": [
+  [
+   "L1",
+   "Plafonnier",
+   215,
+   145,
+   "au plafond (boîtier DCL), centré sur la zone de travail (entre la rangée nord, les colonnes et l'entrée) : éclairage général"
+  ],
+  [
+   "L2",
+   "LED sous les hauts",
+   170.0,
+   27,
+   "rubans déjà prévus sous H1 → H5 ; alimentation (driver 24 V) dans le haut de H4, au-dessus des assiettes"
+  ],
+  [
+   "L3",
+   "Suspension",
+   95,
+   205,
+   "point de plafond déjà prévu (boîtier DCL), centré sur la table"
+  ],
+  [
+   "L4",
+   "Cellier",
+   400,
+   60,
+   "hublot ou réglette LED au plafond du cellier, sans détecteur : commandé par S2, à côté de la porte"
+  ]
+ ],
+ "LV_Z0": 56,
+ "L_NORD": 103,
+ "L_SUD": 0,
+ "MATERIAUX": [
+  [
+   "Sol, ancienne chambre",
+   "Parquet chêne huilé en bâtons rompus",
+   "Lames 8 × 32, rangs horizontaux, pointes vers le nord.",
+   "images/cuisine-sol-reference.png"
+  ],
+  [
+   "Sol, ancien cellier et ancien placard",
+   "Ciment (béton ciré gris)",
+   "À partir du nu de l'ancienne cloison (x 325).",
+   [
+    "#B9B6AF"
+   ]
+  ],
+  [
+   "Murs",
+   "Blanc légèrement chaud, à peine beige",
+   "Piste : Farrow & Ball Wimborne White (n° 239, LRV ≈ 90), blanc à sous-ton crème discret ; à peine plus chaud : Pointing (n° 2003). Teinte à l'écran approximative : à valider sur échantillon, au mur, à la lumière de la pièce.",
+   [
+    "#EFE9DC"
+   ]
+  ],
+  [
+   "Plinthes (socles des meubles bas et des colonnes, pied du mur de la fenêtre et du doublage de l'entrée)",
+   "Couleur des murs",
+   "Même blanc que les murs.",
+   [
+    "#EFE9DC"
+   ]
+  ],
+  [
+   "Fileurs",
+   "Canopée aux deux bouts de la rangée basse, chêne miel au bout des hauts, couleur des murs au sud de C2",
+   "Fileurs de 10 entre B1 et le mur ouest et entre B6 et le retour de cloison du cellier (plan de travail de mur à mur) ; fileur de 10 en chêne entre H5 et le même retour ; fileur de 10 entre C2 et le montant du galandage (mur sud), qui ferme la poche de l'angle ; fileur chêne de 5 entre C2 et le mur sud (la porte du frigo s'ouvre à 90° sans toucher le fileur de l'entrée).",
+   [
+    "#3C524C",
+    "#A8743F",
+    "#EFE9DC"
+   ]
+  ],
+  [
+   "Colonnes C1, C2 et meubles hauts H1 → H5",
+   "Chêne miel, Plum Living",
+   "Façades, joues et fileurs.",
+   [
+    "#A8743F"
+   ]
+  ],
+  [
+   "Meubles bas B1 → B6",
+   "Laque Canopée, Plum Living",
+   "Vert profond (nuancier Plum Living), posé sur caissons type IKEA METOD.",
+   [
+    "#3C524C"
+   ]
+  ],
+  [
+   "Crédence",
+   "Zellige greige",
+   "Carreaux 10 × 10 émaillés à la main, h 92 → 155, sur toute la rangée, en retour sur le mur ouest (jusqu'à la fenêtre) et sur le retour de cloison du cellier, à l'est de la machine à café.",
+   [
+    "#C6BCAC",
+    "#B9AE9D",
+    "#A99D8B"
+   ]
+  ],
+  [
+   "Plan de travail",
+   "Effet béton blanc-gris",
+   "Matière à définir (compact, céramique, quartz…) ; elle décide du type d'évier possible (sous plan ou à encastrer).",
+   [
+    "#D6D4CE",
+    "#BDBBB5"
+   ]
+  ],
+  [
+   "Évier et robinetterie",
+   "Inox brossé",
+   "Bac et mitigeur.",
+   [
+    "#C9C9C7"
+   ]
+  ],
+  [
+   "Poignées des façades bois (C1, C2, H1 → H5)",
+   "Profilé toute longueur en chêne miel",
+   "Même matière que la façade : sur toute la largeur des tiroirs, sur toute la hauteur des portes.",
+   [
+    "#A8743F",
+    "#8A5A2B"
+   ]
+  ],
+  [
+   "Poignées des meubles bas Canopée (B1 → B6)",
+   "Barres en inox brossé",
+   "Comme l'évier et la robinetterie.",
+   [
+    "#3C524C",
+    "#C9C9C7"
+   ]
+  ],
+  [
+   "Table",
+   "Stratifié rose poudré à chant noir",
+   "Plateau type Véra (Les Gambettes) carré 70 × 70 aux angles arrondis (R 12), sur un pied central laqué blanc à embase ronde, contre le mur sud.",
+   [
+    "#D9BDBB",
+    "#18181A"
+   ]
+  ],
+  [
+   "Pan de mur du coin repas (mur sud)",
+   "Papier peint Hermione (4murs)",
+   "Intissé cerise noire et vert-de-gris, au-dessus du bas de mur (h 85) jusqu'au plafond, du mur ouest au doublage de l'entrée ; motif ≈ 64 répété en miroir. Remplace la peinture vert profond (V13.19).",
+   [
+    "#4B2E3B",
+    "#8FA89B"
+   ]
+  ],
+  [
+   "Bas de mur du coin repas (mur sud)",
+   "Chêne miel, comme les façades bois",
+   "Panneau de 2 sur 85 de haut, du mur ouest au doublage de l'entrée (x 0 → 140), là où était l'ancienne banquette : la banquette s'y appuie, la table s'arrête à 10 devant.",
+   [
+    "#A8743F"
+   ]
+  ],
+  [
+   "Banquette",
+   "Coffre couleur des murs, coussins velours ocre moutarde",
+   "Coffre, dossier et façade du tiroir dans le blanc des murs ; coussins d'assise et de dossier en velours côtelé ocre moutarde (retenu face au terracotta et au vieux rose).",
+   [
+    "#EFE9DC",
+    "#C08A2E"
+   ]
+  ]
+ ],
+ "MEUBLES": [
+  {
+   "arrondi": 0,
+   "coins": "so",
+   "contenu": "",
+   "etiq": "",
+   "nom": "socle_b1",
+   "poignee": "",
+   "role": "socle",
+   "x0": 10,
+   "x1": 30,
+   "y0": 0,
+   "y1": 55,
+   "z0": 0,
+   "z1": 8
+  },
+  {
+   "arrondi": 0,
+   "coins": "so",
+   "contenu": "",
+   "etiq": "B1",
+   "nom": "caisson_b1",
+   "poignee": "",
+   "role": "caisson",
+   "x0": 10,
+   "x1": 30,
+   "y0": 0,
+   "y1": 58,
+   "z0": 8,
+   "z1": 88
+  },
+  {
+   "arrondi": 0,
+   "coins": "so",
+   "contenu": "",
+   "etiq": "",
+   "nom": "socle_b2",
+   "poignee": "",
+   "role": "socle",
+   "x0": 30,
+   "x1": 90,
+   "y0": 0,
+   "y1": 55,
+   "z0": 0,
+   "z1": 8
+  },
+  {
+   "arrondi": 0,
+   "coins": "so",
+   "contenu": "",
+   "etiq": "B2 four",
+   "nom": "caisson_b2",
+   "poignee": "",
+   "role": "caisson",
+   "x0": 30,
+   "x1": 90,
+   "y0": 0,
+   "y1": 58,
+   "z0": 8,
+   "z1": 88
+  },
+  {
+   "arrondi": 0,
+   "coins": "so",
+   "contenu": "",
+   "etiq": "",
+   "nom": "socle_b3",
+   "poignee": "",
+   "role": "socle",
+   "x0": 90,
+   "x1": 150,
+   "y0": 0,
+   "y1": 55,
+   "z0": 0,
+   "z1": 8
+  },
+  {
+   "arrondi": 0,
+   "coins": "so",
+   "contenu": "",
+   "etiq": "B3",
+   "nom": "caisson_b3",
+   "poignee": "",
+   "role": "caisson",
+   "x0": 90,
+   "x1": 150,
+   "y0": 0,
+   "y1": 58,
+   "z0": 8,
+   "z1": 88
+  },
+  {
+   "arrondi": 0,
+   "coins": "so",
+   "contenu": "",
+   "etiq": "",
+   "nom": "socle_b4",
+   "poignee": "",
+   "role": "socle",
+   "x0": 150,
+   "x1": 210,
+   "y0": 0,
+   "y1": 55,
+   "z0": 0,
+   "z1": 8
+  },
+  {
+   "arrondi": 0,
+   "coins": "so",
+   "contenu": "",
+   "etiq": "B4",
+   "nom": "caisson_b4",
+   "poignee": "",
+   "role": "caisson",
+   "x0": 150,
+   "x1": 210,
+   "y0": 0,
+   "y1": 58,
+   "z0": 8,
+   "z1": 88
+  },
+  {
+   "arrondi": 0,
+   "coins": "so",
+   "contenu": "",
+   "etiq": "",
+   "nom": "socle_b5",
+   "poignee": "",
+   "role": "socle",
+   "x0": 210,
+   "x1": 270,
+   "y0": 0,
+   "y1": 55,
+   "z0": 0,
+   "z1": 8
+  },
+  {
+   "arrondi": 0,
+   "coins": "so",
+   "contenu": "",
+   "etiq": "B5 poubelles",
+   "nom": "caisson_b5",
+   "poignee": "",
+   "role": "caisson",
+   "x0": 210,
+   "x1": 270,
+   "y0": 0,
+   "y1": 58,
+   "z0": 8,
+   "z1": 88
+  },
+  {
+   "arrondi": 0,
+   "coins": "so",
+   "contenu": "",
+   "etiq": "",
+   "nom": "socle_b6",
+   "poignee": "",
+   "role": "socle",
+   "x0": 270,
+   "x1": 310,
+   "y0": 0,
+   "y1": 35,
+   "z0": 0,
+   "z1": 8
+  },
+  {
+   "arrondi": 0,
+   "coins": "so",
+   "contenu": "",
+   "etiq": "B6 placard",
+   "nom": "caisson_b6",
+   "poignee": "",
+   "role": "caisson",
+   "x0": 270,
+   "x1": 310,
+   "y0": 0,
+   "y1": 38,
+   "z0": 8,
+   "z1": 88
+  },
+  {
+   "arrondi": 0,
+   "coins": "so",
+   "contenu": "huiles, épices",
+   "etiq": "",
+   "nom": "facade_b1_1",
+   "poignee": "tiroir",
+   "role": "facade",
+   "x0": 10,
+   "x1": 30,
+   "y0": 58,
+   "y1": 60,
+   "z0": 8,
+   "z1": 88
+  },
+  {
+   "arrondi": 0,
+   "coins": "so",
+   "contenu": "",
+   "etiq": "",
+   "nom": "facade_b2_1",
+   "poignee": "",
+   "role": "four",
+   "x0": 30,
+   "x1": 90,
+   "y0": 58,
+   "y1": 60,
+   "z0": 28,
+   "z1": 88
+  },
+  {
+   "arrondi": 0,
+   "coins": "so",
+   "contenu": "plaques, grilles",
+   "etiq": "",
+   "nom": "facade_b2_2",
+   "poignee": "tiroir",
+   "role": "facade",
+   "x0": 30,
+   "x1": 90,
+   "y0": 58,
+   "y1": 60,
+   "z0": 8,
+   "z1": 28
+  },
+  {
+   "arrondi": 0,
+   "coins": "so",
+   "contenu": "ustensiles, couteaux",
+   "etiq": "",
+   "nom": "facade_b3_1",
+   "poignee": "tiroir",
+   "role": "facade",
+   "x0": 90,
+   "x1": 150,
+   "y0": 58,
+   "y1": 60,
+   "z0": 68,
+   "z1": 88
+  },
+  {
+   "arrondi": 0,
+   "coins": "so",
+   "contenu": "poêles, couvercles",
+   "etiq": "",
+   "nom": "facade_b3_2",
+   "poignee": "tiroir",
+   "role": "facade",
+   "x0": 90,
+   "x1": 150,
+   "y0": 58,
+   "y1": 60,
+   "z0": 48,
+   "z1": 68
+  },
+  {
+   "arrondi": 0,
+   "coins": "so",
+   "contenu": "casseroles",
+   "etiq": "",
+   "nom": "facade_b3_3",
+   "poignee": "tiroir",
+   "role": "facade",
+   "x0": 90,
+   "x1": 150,
+   "y0": 58,
+   "y1": 60,
+   "z0": 8,
+   "z1": 48
+  },
+  {
+   "arrondi": 0,
+   "coins": "so",
+   "contenu": "couverts",
+   "etiq": "",
+   "nom": "facade_b4_1",
+   "poignee": "tiroir",
+   "role": "facade",
+   "x0": 150,
+   "x1": 210,
+   "y0": 58,
+   "y1": 60,
+   "z0": 68,
+   "z1": 88
+  },
+  {
+   "arrondi": 0,
+   "coins": "so",
+   "contenu": "boîtes, planches",
+   "etiq": "",
+   "nom": "facade_b4_2",
+   "poignee": "tiroir",
+   "role": "facade",
+   "x0": 150,
+   "x1": 210,
+   "y0": 58,
+   "y1": 60,
+   "z0": 48,
+   "z1": 68
+  },
+  {
+   "arrondi": 0,
+   "coins": "so",
+   "contenu": "plats, moules, saladiers",
+   "etiq": "",
+   "nom": "facade_b4_3",
+   "poignee": "tiroir",
+   "role": "facade",
+   "x0": 150,
+   "x1": 210,
+   "y0": 58,
+   "y1": 60,
+   "z0": 8,
+   "z1": 48
+  },
+  {
+   "arrondi": 0,
+   "coins": "so",
+   "contenu": "tri : 3 bacs",
+   "etiq": "",
+   "nom": "facade_b5_1",
+   "poignee": "tiroir",
+   "role": "facade",
+   "x0": 210,
+   "x1": 270,
+   "y0": 58,
+   "y1": 60,
+   "z0": 8,
+   "z1": 88
+  },
+  {
+   "arrondi": 0,
+   "coins": "so",
+   "contenu": "café, thé, filtres",
+   "etiq": "",
+   "nom": "facade_b6_1",
+   "poignee": "porte",
+   "role": "facade",
+   "x0": 270,
+   "x1": 310,
+   "y0": 38,
+   "y1": 40,
+   "z0": 8,
+   "z1": 88
+  },
+  {
+   "arrondi": 0,
+   "coins": "so",
+   "contenu": "",
+   "etiq": "",
+   "nom": "plan_nord",
+   "poignee": "",
+   "role": "plan",
+   "x0": 0,
+   "x1": 270,
+   "y0": 0,
+   "y1": 62,
+   "z0": 88,
+   "z1": 92
+  },
+  {
+   "arrondi": 0,
+   "coins": "so",
+   "contenu": "",
+   "etiq": "",
+   "nom": "plan_b6",
+   "poignee": "",
+   "role": "plan",
+   "x0": 270,
+   "x1": 320,
+   "y0": 0,
+   "y1": 42,
+   "z0": 88,
+   "z1": 92
+  },
+  {
+   "arrondi": 0,
+   "coins": "so",
+   "contenu": "",
+   "etiq": "",
+   "nom": "socle_fileur_est",
+   "poignee": "",
+   "role": "socle",
+   "x0": 310,
+   "x1": 320,
+   "y0": 0,
+   "y1": 35,
+   "z0": 0,
+   "z1": 8
+  },
+  {
+   "arrondi": 0,
+   "coins": "so",
+   "contenu": "",
+   "etiq": "",
+   "nom": "fileur_est",
+   "poignee": "",
+   "role": "joue",
+   "x0": 310,
+   "x1": 320,
+   "y0": 38,
+   "y1": 40,
+   "z0": 8,
+   "z1": 88
+  },
+  {
+   "arrondi": 0,
+   "coins": "so",
+   "contenu": "",
+   "etiq": "",
+   "nom": "socle_fileur_ouest",
+   "poignee": "",
+   "role": "socle",
+   "x0": 0,
+   "x1": 10,
+   "y0": 0,
+   "y1": 55,
+   "z0": 0,
+   "z1": 8
+  },
+  {
+   "arrondi": 0,
+   "coins": "so",
+   "contenu": "",
+   "etiq": "",
+   "nom": "fileur_ouest",
+   "poignee": "",
+   "role": "joue",
+   "x0": 0,
+   "x1": 10,
+   "y0": 58,
+   "y1": 60,
+   "z0": 8,
+   "z1": 88
+  },
+  {
+   "arrondi": 0,
+   "coins": "so",
+   "contenu": "",
+   "etiq": "",
+   "nom": "induction",
+   "poignee": "",
+   "role": "plaque",
+   "x0": 33,
+   "x1": 87,
+   "y0": 6,
+   "y1": 56,
+   "z0": 92,
+   "z1": 92.6
+  },
+  {
+   "arrondi": 0,
+   "coins": "so",
+   "contenu": "",
+   "etiq": "",
+   "nom": "evier_plage",
+   "poignee": "",
+   "role": "evier",
+   "x0": 168,
+   "x1": 268,
+   "y0": 6,
+   "y1": 56,
+   "z0": 92,
+   "z1": 92.4
+  },
+  {
+   "arrondi": 0,
+   "coins": "so",
+   "contenu": "",
+   "etiq": "",
+   "nom": "egouttoir",
+   "poignee": "",
+   "role": "egouttoir",
+   "x0": 172,
+   "x1": 212,
+   "y0": 10,
+   "y1": 52,
+   "z0": 92.4,
+   "z1": 92.7
+  },
+  {
+   "arrondi": 0,
+   "coins": "so",
+   "contenu": "",
+   "etiq": "",
+   "nom": "evier_bac",
+   "poignee": "",
+   "role": "cuve",
+   "x0": 220.0,
+   "x1": 260.0,
+   "y0": 12,
+   "y1": 52,
+   "z0": 72,
+   "z1": 92
+  },
+  {
+   "cx": 240.0,
+   "cy": 8,
+   "nom": "mitigeur",
+   "r": 1.6,
+   "role": "mitigeur",
+   "z0": 92.4,
+   "z1": 123
+  },
+  {
+   "arrondi": 0,
+   "coins": "so",
+   "contenu": "",
+   "etiq": "",
+   "nom": "machine_cafe",
+   "poignee": "",
+   "role": "cafetiere",
+   "x0": 278,
+   "x1": 302,
+   "y0": 3,
+   "y1": 39,
+   "z0": 92,
+   "z1": 128
+  },
+  {
+   "arrondi": 0,
+   "coins": "so",
+   "contenu": "bocaux du quotidien",
+   "etiq": "",
+   "nom": "etagere_mur_1",
+   "poignee": "",
+   "role": "etagere_haute",
+   "x0": 0,
+   "x1": 28,
+   "y0": 0,
+   "y1": 25,
+   "z0": 155,
+   "z1": 157.5
+  },
+  {
+   "arrondi": 0,
+   "coins": "so",
+   "contenu": "livres de cuisine",
+   "etiq": "",
+   "nom": "etagere_mur_2",
+   "poignee": "",
+   "role": "etagere_haute",
+   "x0": 0,
+   "x1": 28,
+   "y0": 0,
+   "y1": 25,
+   "z0": 195,
+   "z1": 197.5
+  },
+  {
+   "arrondi": 0,
+   "coins": "so",
+   "contenu": "déco, plantes",
+   "etiq": "",
+   "nom": "etagere_mur_3",
+   "poignee": "",
+   "role": "etagere_haute",
+   "x0": 0,
+   "x1": 28,
+   "y0": 0,
+   "y1": 25,
+   "z0": 232.5,
+   "z1": 235.0
+  },
+  {
+   "arrondi": 0,
+   "coins": "so",
+   "contenu": "",
+   "etiq": "H1",
+   "nom": "caisson_h1",
+   "poignee": "",
+   "role": "caisson_haut",
+   "x0": 30,
+   "x1": 90,
+   "y0": 0,
+   "y1": 33,
+   "z0": 155,
+   "z1": 235
+  },
+  {
+   "arrondi": 0,
+   "coins": "so",
+   "contenu": "hotte, filtres",
+   "etiq": "",
+   "nom": "facade_h1_bas",
+   "poignee": "porte",
+   "role": "facade_haut",
+   "x0": 30,
+   "x1": 90,
+   "y0": 33,
+   "y1": 35,
+   "z0": 155,
+   "z1": 195
+  },
+  {
+   "arrondi": 0,
+   "coins": "so",
+   "contenu": "rare : thermos",
+   "etiq": "",
+   "nom": "facade_h1_haut",
+   "poignee": "porte",
+   "role": "facade_haut",
+   "x0": 30,
+   "x1": 90,
+   "y0": 33,
+   "y1": 35,
+   "z0": 195,
+   "z1": 235
+  },
+  {
+   "arrondi": 0,
+   "coins": "so",
+   "contenu": "",
+   "etiq": "",
+   "nom": "led_h1",
+   "poignee": "",
+   "role": "led",
+   "x0": 32,
+   "x1": 88,
+   "y0": 26,
+   "y1": 28,
+   "z0": 154.2,
+   "z1": 155
+  },
+  {
+   "arrondi": 0,
+   "coins": "so",
+   "contenu": "",
+   "etiq": "H2",
+   "nom": "caisson_h2",
+   "poignee": "",
+   "role": "caisson_haut",
+   "x0": 90,
+   "x1": 150,
+   "y0": 0,
+   "y1": 33,
+   "z0": 155,
+   "z1": 235
+  },
+  {
+   "arrondi": 0,
+   "coins": "so",
+   "contenu": "épices, condiments",
+   "etiq": "",
+   "nom": "facade_h2_bas",
+   "poignee": "porte",
+   "role": "facade_haut",
+   "x0": 90,
+   "x1": 150,
+   "y0": 33,
+   "y1": 35,
+   "z0": 155,
+   "z1": 195
+  },
+  {
+   "arrondi": 0,
+   "coins": "so",
+   "contenu": "recharges épices",
+   "etiq": "",
+   "nom": "facade_h2_haut",
+   "poignee": "porte",
+   "role": "facade_haut",
+   "x0": 90,
+   "x1": 150,
+   "y0": 33,
+   "y1": 35,
+   "z0": 195,
+   "z1": 235
+  },
+  {
+   "arrondi": 0,
+   "coins": "so",
+   "contenu": "",
+   "etiq": "",
+   "nom": "led_h2",
+   "poignee": "",
+   "role": "led",
+   "x0": 92,
+   "x1": 148,
+   "y0": 26,
+   "y1": 28,
+   "z0": 154.2,
+   "z1": 155
+  },
+  {
+   "arrondi": 0,
+   "coins": "so",
+   "contenu": "",
+   "etiq": "H3",
+   "nom": "caisson_h3",
+   "poignee": "",
+   "role": "caisson_haut",
+   "x0": 150,
+   "x1": 210,
+   "y0": 0,
+   "y1": 33,
+   "z0": 155,
+   "z1": 235
+  },
+  {
+   "arrondi": 0,
+   "coins": "so",
+   "contenu": "petit-déj, thé, sucre",
+   "etiq": "",
+   "nom": "facade_h3_bas",
+   "poignee": "porte",
+   "role": "facade_haut",
+   "x0": 150,
+   "x1": 210,
+   "y0": 33,
+   "y1": 35,
+   "z0": 155,
+   "z1": 195
+  },
+  {
+   "arrondi": 0,
+   "coins": "so",
+   "contenu": "réserves épicerie",
+   "etiq": "",
+   "nom": "facade_h3_haut",
+   "poignee": "porte",
+   "role": "facade_haut",
+   "x0": 150,
+   "x1": 210,
+   "y0": 33,
+   "y1": 35,
+   "z0": 195,
+   "z1": 235
+  },
+  {
+   "arrondi": 0,
+   "coins": "so",
+   "contenu": "",
+   "etiq": "",
+   "nom": "led_h3",
+   "poignee": "",
+   "role": "led",
+   "x0": 152,
+   "x1": 208,
+   "y0": 26,
+   "y1": 28,
+   "z0": 154.2,
+   "z1": 155
+  },
+  {
+   "arrondi": 0,
+   "coins": "so",
+   "contenu": "",
+   "etiq": "H4",
+   "nom": "caisson_h4",
+   "poignee": "",
+   "role": "caisson_haut",
+   "x0": 210,
+   "x1": 270,
+   "y0": 0,
+   "y1": 33,
+   "z0": 155,
+   "z1": 235
+  },
+  {
+   "arrondi": 0,
+   "coins": "so",
+   "contenu": "assiettes, bols",
+   "etiq": "",
+   "nom": "facade_h4_bas",
+   "poignee": "porte",
+   "role": "facade_haut",
+   "x0": 210,
+   "x1": 270,
+   "y0": 33,
+   "y1": 35,
+   "z0": 155,
+   "z1": 195
+  },
+  {
+   "arrondi": 0,
+   "coins": "so",
+   "contenu": "plats de service",
+   "etiq": "",
+   "nom": "facade_h4_haut",
+   "poignee": "porte",
+   "role": "facade_haut",
+   "x0": 210,
+   "x1": 270,
+   "y0": 33,
+   "y1": 35,
+   "z0": 195,
+   "z1": 235
+  },
+  {
+   "arrondi": 0,
+   "coins": "so",
+   "contenu": "",
+   "etiq": "",
+   "nom": "led_h4",
+   "poignee": "",
+   "role": "led",
+   "x0": 212,
+   "x1": 268,
+   "y0": 26,
+   "y1": 28,
+   "z0": 154.2,
+   "z1": 155
+  },
+  {
+   "arrondi": 0,
+   "coins": "so",
+   "contenu": "",
+   "etiq": "H5",
+   "nom": "caisson_h5",
+   "poignee": "",
+   "role": "caisson_haut",
+   "x0": 270,
+   "x1": 310,
+   "y0": 0,
+   "y1": 33,
+   "z0": 155,
+   "z1": 235
+  },
+  {
+   "arrondi": 0,
+   "coins": "so",
+   "contenu": "verres, tasses",
+   "etiq": "",
+   "nom": "facade_h5_bas",
+   "poignee": "porte",
+   "role": "facade_haut",
+   "x0": 270,
+   "x1": 310,
+   "y0": 33,
+   "y1": 35,
+   "z0": 155,
+   "z1": 195
+  },
+  {
+   "arrondi": 0,
+   "coins": "so",
+   "contenu": "verres à pied",
+   "etiq": "",
+   "nom": "facade_h5_haut",
+   "poignee": "porte",
+   "role": "facade_haut",
+   "x0": 270,
+   "x1": 310,
+   "y0": 33,
+   "y1": 35,
+   "z0": 195,
+   "z1": 235
+  },
+  {
+   "arrondi": 0,
+   "coins": "so",
+   "contenu": "",
+   "etiq": "",
+   "nom": "led_h5",
+   "poignee": "",
+   "role": "led",
+   "x0": 272,
+   "x1": 308,
+   "y0": 26,
+   "y1": 28,
+   "z0": 154.2,
+   "z1": 155
+  },
+  {
+   "arrondi": 0,
+   "coins": "so",
+   "contenu": "",
+   "etiq": "",
+   "nom": "hotte_integree",
+   "poignee": "",
+   "role": "hotte",
+   "x0": 32,
+   "x1": 88,
+   "y0": 1,
+   "y1": 32,
+   "z0": 154.4,
+   "z1": 167
+  },
+  {
+   "arrondi": 0,
+   "coins": "so",
+   "contenu": "",
+   "etiq": "",
+   "nom": "joue_h_ouest",
+   "poignee": "",
+   "role": "joue",
+   "x0": 28,
+   "x1": 30,
+   "y0": 0,
+   "y1": 35,
+   "z0": 155,
+   "z1": 235
+  },
+  {
+   "arrondi": 0,
+   "coins": "so",
+   "contenu": "",
+   "etiq": "",
+   "nom": "fileur_h_est",
+   "poignee": "",
+   "role": "joue",
+   "x0": 310,
+   "x1": 320,
+   "y0": 33,
+   "y1": 35,
+   "z0": 155,
+   "z1": 235
+  },
+  {
+   "arrondi": 0,
+   "coins": "so",
+   "contenu": "",
+   "etiq": "",
+   "nom": "fileur_hauts",
+   "poignee": "",
+   "role": "fileur",
+   "x0": 28,
+   "x1": 320,
+   "y0": 33,
+   "y1": 35,
+   "z0": 235,
+   "z1": 250
+  },
+  {
+   "arrondi": 0,
+   "coins": "so",
+   "contenu": "",
+   "etiq": "",
+   "nom": "socle_c1",
+   "poignee": "",
+   "role": "socle",
+   "x0": 327,
+   "x1": 382,
+   "y0": 115,
+   "y1": 175,
+   "z0": 0,
+   "z1": 8
+  },
+  {
+   "arrondi": 0,
+   "coins": "so",
+   "contenu": "",
+   "etiq": "C1 LV + MO",
+   "nom": "caisson_c1",
+   "poignee": "",
+   "role": "colonne",
+   "x0": 324,
+   "x1": 382,
+   "y0": 115,
+   "y1": 175,
+   "z0": 8,
+   "z1": 228
+  },
+  {
+   "arrondi": 0,
+   "coins": "so",
+   "contenu": "LV, torchons, sacs",
+   "etiq": "",
+   "nom": "tiroir_1_c1",
+   "poignee": "tiroir",
+   "role": "facade_col",
+   "x0": 322,
+   "x1": 324,
+   "y0": 115,
+   "y1": 175,
+   "z0": 8,
+   "z1": 56
+  },
+  {
+   "arrondi": 0,
+   "coins": "so",
+   "contenu": "lave-vaisselle intégré",
+   "etiq": "",
+   "nom": "lv_c1",
+   "poignee": "tiroir",
+   "role": "facade_col",
+   "x0": 322,
+   "x1": 324,
+   "y0": 115,
+   "y1": 175,
+   "z0": 56,
+   "z1": 138
+  },
+  {
+   "arrondi": 0,
+   "coins": "so",
+   "contenu": "",
+   "etiq": "",
+   "nom": "micro_onde_c1",
+   "poignee": "",
+   "role": "micro_onde",
+   "x0": 322,
+   "x1": 324,
+   "y0": 115,
+   "y1": 175,
+   "z0": 138,
+   "z1": 176
+  },
+  {
+   "arrondi": 0,
+   "coins": "so",
+   "contenu": "essuie-tout, films",
+   "etiq": "",
+   "nom": "porte_haute_c1",
+   "poignee": "porte",
+   "role": "facade_col",
+   "x0": 322,
+   "x1": 324,
+   "y0": 115,
+   "y1": 175,
+   "z0": 176,
+   "z1": 228
+  },
+  {
+   "arrondi": 0,
+   "coins": "so",
+   "contenu": "",
+   "etiq": "",
+   "nom": "socle_c2",
+   "poignee": "",
+   "role": "socle",
+   "x0": 327,
+   "x1": 382,
+   "y0": 175,
+   "y1": 235,
+   "z0": 0,
+   "z1": 8
+  },
+  {
+   "arrondi": 0,
+   "coins": "so",
+   "contenu": "",
+   "etiq": "C2 frigo",
+   "nom": "caisson_c2",
+   "poignee": "",
+   "role": "colonne",
+   "x0": 324,
+   "x1": 382,
+   "y0": 175,
+   "y1": 235,
+   "z0": 8,
+   "z1": 228
+  },
+  {
+   "arrondi": 0,
+   "coins": "so",
+   "contenu": "",
+   "etiq": "",
+   "nom": "frigo_c2",
+   "poignee": "porte",
+   "role": "facade_col",
+   "x0": 322,
+   "x1": 324,
+   "y0": 175,
+   "y1": 235,
+   "z0": 8,
+   "z1": 186
+  },
+  {
+   "arrondi": 0,
+   "coins": "so",
+   "contenu": "vaisselle de fête",
+   "etiq": "",
+   "nom": "porte_haute_c2",
+   "poignee": "porte",
+   "role": "facade_col",
+   "x0": 322,
+   "x1": 324,
+   "y0": 175,
+   "y1": 235,
+   "z0": 186,
+   "z1": 228
+  },
+  {
+   "arrondi": 0,
+   "coins": "so",
+   "contenu": "",
+   "etiq": "",
+   "nom": "socle_fileur_c2",
+   "poignee": "",
+   "role": "socle",
+   "x0": 327,
+   "x1": 382,
+   "y0": 235,
+   "y1": 240,
+   "z0": 0,
+   "z1": 8
+  },
+  {
+   "arrondi": 0,
+   "coins": "so",
+   "contenu": "",
+   "etiq": "",
+   "nom": "fileur_c2",
+   "poignee": "",
+   "role": "joue",
+   "x0": 322,
+   "x1": 324,
+   "y0": 235,
+   "y1": 242,
+   "z0": 8,
+   "z1": 228
+  },
+  {
+   "arrondi": 0,
+   "coins": "so",
+   "contenu": "",
+   "etiq": "",
+   "nom": "fileur_c1",
+   "poignee": "",
+   "role": "joue",
+   "x0": 312,
+   "x1": 324,
+   "y0": 242,
+   "y1": 244,
+   "z0": 0,
+   "z1": 250
+  },
+  {
+   "arrondi": 0,
+   "coins": "so",
+   "contenu": "",
+   "etiq": "",
+   "nom": "fileur_colonnes",
+   "poignee": "",
+   "role": "fileur",
+   "x0": 322,
+   "x1": 324,
+   "y0": 115,
+   "y1": 242,
+   "z0": 228,
+   "z1": 250
+  },
+  {
+   "arrondi": 0,
+   "coins": "so",
+   "contenu": "",
+   "etiq": "banquette",
+   "nom": "banquette_assise",
+   "poignee": "",
+   "role": "banquette",
+   "x0": 5,
+   "x1": 50,
+   "y0": 180,
+   "y1": 250,
+   "z0": 0,
+   "z1": 45
+  },
+  {
+   "arrondi": 0,
+   "coins": "so",
+   "contenu": "",
+   "etiq": "",
+   "nom": "banquette_dossier",
+   "poignee": "",
+   "role": "banquette",
+   "x0": 0,
+   "x1": 5,
+   "y0": 180,
+   "y1": 250,
+   "z0": 0,
+   "z1": 85
+  },
+  {
+   "arrondi": 0,
+   "coins": "so",
+   "contenu": "nappes, sets, jeux, bougies",
+   "etiq": "",
+   "nom": "tiroir_banquette_1",
+   "poignee": "tiroir",
+   "role": "facade",
+   "x0": 3,
+   "x1": 47,
+   "y0": 178,
+   "y1": 180,
+   "z0": 6,
+   "z1": 40
+  },
+  {
+   "arrondi": 0,
+   "coins": "so",
+   "contenu": "",
+   "etiq": "",
+   "nom": "etagere_banquette",
+   "poignee": "",
+   "role": "etagere_haute",
+   "x0": 0,
+   "x1": 140,
+   "y0": 227,
+   "y1": 252,
+   "z0": 160,
+   "z1": 162.5
+  },
+  {
+   "arrondi": 0,
+   "coins": "so",
+   "contenu": "",
+   "etiq": "",
+   "nom": "enceinte_audio",
+   "poignee": "",
+   "role": "enceinte",
+   "x0": 112,
+   "x1": 134,
+   "y0": 232,
+   "y1": 250,
+   "z0": 162.5,
+   "z1": 192.5
+  },
+  {
+   "cx": 22,
+   "cy": 240,
+   "nom": "pot_plante",
+   "r": 8,
+   "role": "pot",
+   "z0": 162.5,
+   "z1": 176.5
+  },
+  {
+   "cx": 22,
+   "cy": 240,
+   "nom": "plante",
+   "r": 14,
+   "role": "plante",
+   "z0": 176.5,
+   "z1": 202.5
+  },
+  {
+   "arrondi": 12,
+   "coins": "tous",
+   "contenu": "",
+   "etiq": "",
+   "nom": "plateau_vera",
+   "poignee": "",
+   "role": "table",
+   "x0": 60,
+   "x1": 130,
+   "y0": 170,
+   "y1": 240,
+   "z0": 74.8,
+   "z1": 75
+  },
+  {
+   "arrondi": 12,
+   "coins": "tous",
+   "contenu": "",
+   "etiq": "",
+   "nom": "chant_vera",
+   "poignee": "",
+   "role": "chant",
+   "x0": 60,
+   "x1": 130,
+   "y0": 170,
+   "y1": 240,
+   "z0": 73,
+   "z1": 74.8
+  },
+  {
+   "cx": 95,
+   "cy": 205,
+   "nom": "pied_table",
+   "r": 4,
+   "role": "pied",
+   "z0": 2,
+   "z1": 73
+  },
+  {
+   "cx": 95,
+   "cy": 205,
+   "nom": "embase_table",
+   "r": 22,
+   "role": "pied",
+   "z0": 0,
+   "z1": 2
+  },
+  {
+   "cx": 95,
+   "cy": 205,
+   "nom": "suspension",
+   "r": 17.5,
+   "role": "lampe",
+   "z0": 140,
+   "z1": 160
+  },
+  {
+   "cx": 95,
+   "cy": 205,
+   "nom": "fil_suspension",
+   "r": 0.4,
+   "role": "fil",
+   "z0": 160,
+   "z1": 247
+  },
+  {
+   "cx": 95,
+   "cy": 205,
+   "nom": "rosace_suspension",
+   "r": 5,
+   "role": "fil",
+   "z0": 247,
+   "z1": 250
+  },
+  {
+   "arrondi": 0,
+   "coins": "so",
+   "contenu": "",
+   "etiq": "",
+   "nom": "pan_banquette",
+   "poignee": "",
+   "role": "peinture",
+   "x0": 0,
+   "x1": 140,
+   "y0": 251.7,
+   "y1": 252,
+   "z0": 85,
+   "z1": 250
+  },
+  {
+   "arrondi": 0,
+   "coins": "so",
+   "contenu": "",
+   "etiq": "",
+   "nom": "bas_de_mur",
+   "poignee": "",
+   "role": "joue",
+   "x0": 0,
+   "x1": 140,
+   "y0": 250,
+   "y1": 252,
+   "z0": 0,
+   "z1": 85
+  },
+  {
+   "arrondi": 0,
+   "coins": "so",
+   "contenu": "",
+   "etiq": "",
+   "nom": "plinthe_fenetre",
+   "poignee": "",
+   "role": "socle",
+   "x0": 0,
+   "x1": 1.5,
+   "y0": 60,
+   "y1": 180,
+   "z0": 0,
+   "z1": 8
+  },
+  {
+   "arrondi": 0,
+   "coins": "so",
+   "contenu": "",
+   "etiq": "",
+   "nom": "plinthe_doublage",
+   "poignee": "",
+   "role": "socle",
+   "x0": 140,
+   "x1": 225,
+   "y0": 240.5,
+   "y1": 242,
+   "z0": 0,
+   "z1": 8
+  },
+  {
+   "arrondi": 0,
+   "coins": "so",
+   "contenu": "",
+   "etiq": "",
+   "nom": "pied_chaise_1_1",
+   "poignee": "",
+   "role": "chaise",
+   "x0": 122,
+   "x1": 124,
+   "y0": 184,
+   "y1": 186,
+   "z0": 0,
+   "z1": 42
+  },
+  {
+   "arrondi": 0,
+   "coins": "so",
+   "contenu": "",
+   "etiq": "",
+   "nom": "pied_chaise_1_2",
+   "poignee": "",
+   "role": "chaise",
+   "x0": 162,
+   "x1": 164,
+   "y0": 184,
+   "y1": 186,
+   "z0": 0,
+   "z1": 42
+  },
+  {
+   "arrondi": 0,
+   "coins": "so",
+   "contenu": "",
+   "etiq": "",
+   "nom": "pied_chaise_1_3",
+   "poignee": "",
+   "role": "chaise",
+   "x0": 122,
+   "x1": 124,
+   "y0": 224,
+   "y1": 226,
+   "z0": 0,
+   "z1": 42
+  },
+  {
+   "arrondi": 0,
+   "coins": "so",
+   "contenu": "",
+   "etiq": "",
+   "nom": "pied_chaise_1_4",
+   "poignee": "",
+   "role": "chaise",
+   "x0": 162,
+   "x1": 164,
+   "y0": 224,
+   "y1": 226,
+   "z0": 0,
+   "z1": 42
+  },
+  {
+   "arrondi": 0,
+   "coins": "so",
+   "contenu": "",
+   "etiq": "",
+   "nom": "assise_chaise_1",
+   "poignee": "",
+   "role": "chaise",
+   "x0": 122,
+   "x1": 164,
+   "y0": 184,
+   "y1": 226,
+   "z0": 42,
+   "z1": 45
+  },
+  {
+   "arrondi": 0,
+   "coins": "so",
+   "contenu": "",
+   "etiq": "",
+   "nom": "dossier_chaise_1",
+   "poignee": "",
+   "role": "chaise",
+   "x0": 161,
+   "x1": 164,
+   "y0": 184,
+   "y1": 226,
+   "z0": 45,
+   "z1": 85
+  },
+  {
+   "arrondi": 0,
+   "coins": "so",
+   "contenu": "",
+   "etiq": "",
+   "nom": "crochet_balai_1",
+   "poignee": "",
+   "role": "ratelier",
+   "x0": 397,
+   "x1": 399,
+   "y0": 89,
+   "y1": 92,
+   "z0": 148,
+   "z1": 151
+  },
+  {
+   "cx": 398,
+   "cy": 89.5,
+   "nom": "manche_balai_1",
+   "r": 1.2,
+   "role": "manche",
+   "z0": 22,
+   "z1": 150
+  },
+  {
+   "arrondi": 0,
+   "coins": "so",
+   "contenu": "",
+   "etiq": "",
+   "nom": "tete_balai_1",
+   "poignee": "",
+   "role": "balai",
+   "x0": 386,
+   "x1": 410,
+   "y0": 86,
+   "y1": 92,
+   "z0": 8,
+   "z1": 22
+  },
+  {
+   "arrondi": 0,
+   "coins": "so",
+   "contenu": "",
+   "etiq": "",
+   "nom": "crochet_balai_2",
+   "poignee": "",
+   "role": "ratelier",
+   "x0": 411,
+   "x1": 413,
+   "y0": 89,
+   "y1": 92,
+   "z0": 120,
+   "z1": 123
+  },
+  {
+   "cx": 412,
+   "cy": 89.5,
+   "nom": "manche_balai_2",
+   "r": 1.2,
+   "role": "manche",
+   "z0": 18,
+   "z1": 146
+  },
+  {
+   "arrondi": 0,
+   "coins": "so",
+   "contenu": "",
+   "etiq": "",
+   "nom": "tete_balai_2",
+   "poignee": "",
+   "role": "balai",
+   "x0": 400,
+   "x1": 424,
+   "y0": 86,
+   "y1": 92,
+   "z0": 146,
+   "z1": 160
+  },
+  {
+   "arrondi": 0,
+   "coins": "so",
+   "contenu": "produits ménagers, gants",
+   "etiq": "",
+   "nom": "etag_entretien_1",
+   "poignee": "",
+   "role": "etagere",
+   "x0": 382,
+   "x1": 434,
+   "y0": 85,
+   "y1": 100,
+   "z0": 170,
+   "z1": 172
+  },
+  {
+   "arrondi": 0,
+   "coins": "so",
+   "contenu": "recharges, chiffons, sacs d'aspirateur",
+   "etiq": "",
+   "nom": "etag_entretien_2",
+   "poignee": "",
+   "role": "etagere",
+   "x0": 382,
+   "x1": 434,
+   "y0": 85,
+   "y1": 100,
+   "z0": 195,
+   "z1": 197
+  },
+  {
+   "cx": 367,
+   "cy": 100,
+   "nom": "seau",
+   "r": 14,
+   "role": "seau",
+   "z0": 0,
+   "z1": 30
+  },
+  {
+   "arrondi": 0,
+   "coins": "so",
+   "contenu": "",
+   "etiq": "",
+   "nom": "montant_nord_1",
+   "poignee": "",
+   "role": "montant",
+   "x0": 327,
+   "x1": 329,
+   "y0": 0,
+   "y1": 40,
+   "z0": 0,
+   "z1": 243
+  },
+  {
+   "arrondi": 0,
+   "coins": "so",
+   "contenu": "",
+   "etiq": "",
+   "nom": "montant_nord_2",
+   "poignee": "",
+   "role": "montant",
+   "x0": 432,
+   "x1": 434,
+   "y0": 0,
+   "y1": 40,
+   "z0": 0,
+   "z1": 243
+  },
+  {
+   "arrondi": 0,
+   "coins": "so",
+   "contenu": "packs d'eau, bouteilles, lait",
+   "etiq": "",
+   "nom": "etag_nord_1",
+   "poignee": "",
+   "role": "etagere",
+   "x0": 329,
+   "x1": 432,
+   "y0": 0,
+   "y1": 40,
+   "z0": 60,
+   "z1": 62
+  },
+  {
+   "arrondi": 0,
+   "coins": "so",
+   "contenu": "conserves, bocaux, sauces",
+   "etiq": "",
+   "nom": "etag_nord_2",
+   "poignee": "",
+   "role": "etagere",
+   "x0": 329,
+   "x1": 432,
+   "y0": 0,
+   "y1": 40,
+   "z0": 96,
+   "z1": 98
+  },
+  {
+   "arrondi": 0,
+   "coins": "so",
+   "contenu": "réserves : pâtes, riz, farine, sucre",
+   "etiq": "",
+   "nom": "etag_nord_3",
+   "poignee": "",
+   "role": "etagere",
+   "x0": 329,
+   "x1": 432,
+   "y0": 0,
+   "y1": 40,
+   "z0": 132,
+   "z1": 134
+  },
+  {
+   "arrondi": 0,
+   "coins": "so",
+   "contenu": "biscuits, apéritif",
+   "etiq": "",
+   "nom": "etag_nord_4",
+   "poignee": "",
+   "role": "etagere",
+   "x0": 329,
+   "x1": 432,
+   "y0": 0,
+   "y1": 40,
+   "z0": 168,
+   "z1": 170
+  },
+  {
+   "arrondi": 0,
+   "coins": "so",
+   "contenu": "papier, petit électroménager rare (raclette, gaufrier)",
+   "etiq": "",
+   "nom": "etag_nord_5",
+   "poignee": "",
+   "role": "etagere",
+   "x0": 329,
+   "x1": 432,
+   "y0": 0,
+   "y1": 40,
+   "z0": 204,
+   "z1": 206
+  },
+  {
+   "arrondi": 0,
+   "coins": "so",
+   "contenu": "",
+   "etiq": "",
+   "nom": "etag_nord_6",
+   "poignee": "",
+   "role": "etagere",
+   "x0": 329,
+   "x1": 432,
+   "y0": 0,
+   "y1": 40,
+   "z0": 238,
+   "z1": 240
+  },
+  {
+   "arrondi": 0,
+   "coins": "so",
+   "contenu": "",
+   "etiq": "",
+   "nom": "coffre_technique",
+   "poignee": "",
+   "role": "tech",
+   "x0": 418,
+   "x1": 434,
+   "y0": 40,
+   "y1": 62,
+   "z0": 0,
+   "z1": 30
+  },
+  {
+   "arrondi": 0,
+   "coins": "so",
+   "contenu": "",
+   "etiq": "",
+   "nom": "aspirateur_bloc",
+   "poignee": "",
+   "role": "aspirateur",
+   "x0": 372.3,
+   "x1": 420,
+   "y0": 8,
+   "y1": 35.3,
+   "z0": 0,
+   "z1": 26.1
+  },
+  {
+   "arrondi": 0,
+   "coins": "so",
+   "contenu": "",
+   "etiq": "",
+   "nom": "aspirateur_tube",
+   "poignee": "",
+   "role": "aspirateur",
+   "x0": 358,
+   "x1": 418,
+   "y0": 35.5,
+   "y1": 39,
+   "z0": 0,
+   "z1": 3.5
+  },
+  {
+   "arrondi": 0,
+   "coins": "so",
+   "contenu": "",
+   "etiq": "",
+   "nom": "aspirateur_brosse",
+   "poignee": "",
+   "role": "aspirateur",
+   "x0": 356,
+   "x1": 363,
+   "y0": 13,
+   "y1": 39,
+   "z0": 0,
+   "z1": 6
+  }
+ ],
+ "MONTANT": 0,
+ "MO_Z0": 138,
+ "MO_Z1": 176,
+ "NOURRICE": [
+  470,
+  52
+ ],
+ "N_BAS": 6,
+ "N_HAUTS": 5,
+ "ORGA": {
+  "bas": {
+   "1": [
+    [
+     "tiroir",
+     80,
+     "huiles, épices"
+    ]
+   ],
+   "3": [
+    [
+     "tiroir",
+     20,
+     "ustensiles, couteaux"
+    ],
+    [
+     "tiroir",
+     20,
+     "poêles, couvercles"
+    ],
+    [
+     "tiroir",
+     40,
+     "casseroles"
+    ]
+   ],
+   "4": [
+    [
+     "tiroir",
+     20,
+     "couverts"
+    ],
+    [
+     "tiroir",
+     20,
+     "boîtes, planches"
+    ],
+    [
+     "tiroir",
+     40,
+     "plats, moules, saladiers"
+    ]
+   ],
+   "5": [
+    [
+     "tiroir",
+     80,
+     "tri : 3 bacs"
+    ]
+   ],
+   "6": [
+    [
+     "porte",
+     80,
+     "café, thé, filtres"
+    ]
+   ]
+  },
+  "hauts": "porte",
+  "titre": "Tout en tiroirs"
+ },
+ "OUVERTURES": [
+  [
+   "abattant",
+   "LV",
+   [
+    264,
+    322,
+    115,
+    175
+   ]
+  ],
+  [
+   "abattant",
+   "four",
+   [
+    30,
+    90,
+    60,
+    112
+   ]
+  ],
+  [
+   "battant",
+   "frigo",
+   [
+    [
+     322,
+     235
+    ],
+    [
+     322,
+     175
+    ],
+    [
+     262,
+     235
+    ]
+   ]
+  ],
+  [
+   "tiroir",
+   "banquette",
+   [
+    3,
+    47,
+    143,
+    178
+   ]
+  ]
+ ],
+ "PAPIER_PEINT": {
+  "couleur": "#4B2E3B",
+  "image": "3d/textures/papier-hermione.png",
+  "motif": 64,
+  "nom": "Hermione (4murs), intissé cerise noire et vert-de-gris"
+ },
+ "PASSAGE_BALAIS": 46,
+ "PASSAGE_CELLIER": 61,
+ "PASSAGE_ENTREE": 75,
+ "PLACES_BANQUETTE": 1,
+ "PLAN_SEGMENTS": [
+  [
+   0,
+   33
+  ],
+  [
+   87,
+   168
+  ],
+  [
+   268,
+   320
+  ]
+ ],
+ "PLAQUE_SOUS_COUDE": 20,
+ "PLAT": false,
+ "PLIANTE": {
+  "ep": 1.9,
+  "l": 33.2,
+  "mi": 60,
+  "rail": 320.95,
+  "y0": 48,
+  "y1": 115,
+  "z0": 1.1,
+  "z1": 198.7
+ },
+ "PLINTHE": {
+  "ep": 1.5,
+  "h": 8
+ },
+ "PORTE_TITRE": "porte pliante sur ferrure Mantion Tango, 2 vantaux repliés au nord",
+ "PRISES": [
+  [
+   "P1",
+   12,
+   0,
+   110,
+   1,
+   "plan",
+   "petit électroménager",
+   "crédence, à gauche de la plaque"
+  ],
+  [
+   "P2",
+   100,
+   0,
+   110,
+   2,
+   "plan",
+   "bouilloire, grille-pain, robot",
+   "crédence, au-dessus de B3"
+  ],
+  [
+   "P3",
+   150,
+   0,
+   110,
+   2,
+   "plan",
+   "cafetière, mixeur",
+   "crédence, à gauche de l'égouttoir"
+  ],
+  [
+   "P4",
+   55,
+   0,
+   225,
+   1,
+   "autres",
+   "hotte",
+   "dans H1, au-dessus du groupe filtrant"
+  ],
+  [
+   "P5",
+   15,
+   0,
+   30,
+   1,
+   "four",
+   "four (sous la plaque)",
+   "dans B1, au fond, sous les paniers"
+  ],
+  [
+   "P6",
+   15,
+   0,
+   60,
+   1,
+   "plaque",
+   "induction (sortie de câble 32 A)",
+   "dans B1, au fond"
+  ],
+  [
+   "P7",
+   382,
+   145,
+   40,
+   1,
+   "lv",
+   "lave-vaisselle",
+   "dans C1, derrière le tiroir bas"
+  ],
+  [
+   "P8",
+   382,
+   145,
+   205,
+   1,
+   "plan",
+   "micro-ondes",
+   "dans C1, derrière la porte haute"
+  ],
+  [
+   "P9",
+   382,
+   205,
+   210,
+   1,
+   "frigo",
+   "réfrigérateur",
+   "dans C2, derrière la porte haute"
+  ],
+  [
+   "P10",
+   123,
+   252,
+   175,
+   1,
+   "autres",
+   "enceinte audio",
+   "mur sud, derrière l'enceinte posée sur l'étagère"
+  ],
+  [
+   "P11",
+   66,
+   252,
+   105,
+   2,
+   "autres",
+   "téléphone, ordinateur (dont 1 USB)",
+   "mur sud, au-dessus de la table, à côté de la banquette, avec S3"
+  ],
+  [
+   "P12",
+   400,
+   0,
+   75,
+   1,
+   "autres",
+   "aspirateur, raclette, gaufrier",
+   "cellier, mur nord, dans le rayonnage au-dessus de l'aspirateur, entre les tablettes h 60 et h 96"
+  ],
+  [
+   "P13",
+   290,
+   0,
+   135,
+   1,
+   "autres",
+   "machine à café",
+   "crédence, au-dessus de B6 (au-dessus de la machine)"
+  ]
+ ],
+ "PT_CANDIDATS": [
+  [
+   92,
+   8,
+   "actuel : pieds METOD 8, plinthe IKEA 8"
+  ],
+  [
+   94,
+   10,
+   "pieds METOD réglés vers le haut de leur course (≈ 10,5 au plus, à vérifier), plinthe recoupée à 10"
+  ],
+  [
+   96,
+   12,
+   "pieds de 12 d'une autre marque (type SoTech), plinthe sur mesure de 12"
+  ],
+  [
+   98,
+   14,
+   "pieds de 14 d'une autre marque, plinthe sur mesure de 14"
+  ],
+  [
+   101,
+   17,
+   "pieds de 17, plinthe sur mesure de 17"
+  ]
+ ],
+ "PT_RECO": 96,
+ "PT_SOUS_COUDE": [
+  10,
+  15
+ ],
+ "PT_Z1": 92,
+ "P_BAS": {
+  "6": 38
+ },
+ "P_CAISSON": 58,
+ "P_ETROIT": 38,
+ "P_HAUT": 33,
+ "P_PLAN_ETROIT": 42,
+ "RAYON_NORD": {
+  "contenus": [
+   "packs d'eau, bouteilles, lait",
+   "conserves, bocaux, sauces",
+   "réserves : pâtes, riz, farine, sucre",
+   "biscuits, apéritif",
+   "papier, petit électroménager rare (raclette, gaufrier)",
+   ""
+  ],
+  "sol": "pommes de terre, oignons (à l'ouest), aspirateur couché (à l'est)",
+  "x0": 327,
+  "x1": 434,
+  "y0": 0,
+  "y1": 40,
+  "zs": [
+   60,
+   96,
+   132,
+   168,
+   204,
+   238
+  ]
+ },
+ "RAYON_SUD": null,
+ "RAYON_Z1": 243,
+ "RENDUS_GROUPES": [
+  [
+   "Isométrique depuis le sud-ouest",
+   [
+    [
+     "iso",
+     "Jour"
+    ],
+    [
+     "iso_nuit",
+     "Nuit"
+    ]
+   ]
+  ],
+  [
+   "Isométrique depuis le nord-ouest",
+   [
+    [
+     "iso_no",
+     ""
+    ]
+   ]
+  ],
+  [
+   "Dans la cuisine",
+   [
+    [
+     "entree",
+     ""
+    ],
+    [
+     "fenetre",
+     ""
+    ],
+    [
+     "banquette",
+     ""
+    ],
+    [
+     "dos_cellier",
+     ""
+    ]
+   ]
+  ],
+  [
+   "Cellier",
+   [
+    [
+     "cellier",
+     ""
+    ]
+   ]
+  ]
+ ],
+ "RENDUS_VERSION": {
+  "banquette": "V13.26",
+  "cellier": "V13.26",
+  "dos_cellier": "V13.26",
+  "entree": "V13.26",
+  "fenetre": "V13.26",
+  "iso": "V13.26",
+  "iso_no": "V13.27",
+  "iso_nuit": "V13.26"
+ },
+ "REPERES": {
+  "implantation": [
+   250,
+   300,
+   6,
+   7
+  ],
+  "lin": [
+   400,
+   600
+  ],
+  "modules": [
+   8,
+   11
+  ],
+  "plan": [
+   150,
+   250
+  ],
+  "volume": [
+   2,
+   2.5
+  ]
+ },
+ "RESEAUX": [
+  [
+   "alim",
+   "alim_niche",
+   [
+    [
+     470,
+     52
+    ],
+    [
+     470,
+     47
+    ],
+    [
+     431,
+     47
+    ]
+   ],
+   20,
+   0.8
+  ],
+  [
+   "alim",
+   "alim_evier",
+   [
+    [
+     431,
+     47
+    ],
+    [
+     431,
+     3
+    ],
+    [
+     240.0,
+     3
+    ],
+    [
+     240.0,
+     8
+    ]
+   ],
+   50,
+   0.8
+  ],
+  [
+   "alim",
+   "alim_lv",
+   [
+    [
+     470,
+     52
+    ],
+    [
+     481,
+     52
+    ],
+    [
+     481,
+     99
+    ],
+    [
+     378,
+     99
+    ],
+    [
+     378,
+     125
+    ]
+   ],
+   20,
+   0.8
+  ],
+  [
+   "evac",
+   "evac_evier",
+   [
+    [
+     240.0,
+     32
+    ],
+    [
+     240.0,
+     4
+    ],
+    [
+     422,
+     4
+    ],
+    [
+     422,
+     38
+    ]
+   ],
+   43,
+   2
+  ],
+  [
+   "evac",
+   "evac_niche",
+   [
+    [
+     422,
+     38
+    ],
+    [
+     422,
+     56
+    ],
+    [
+     472,
+     56
+    ],
+    [
+     472,
+     88
+    ],
+    [
+     459,
+     88
+    ],
+    [
+     459,
+     94
+    ]
+   ],
+   25,
+   2
+  ],
+  [
+   "evac",
+   "evac_lv",
+   [
+    [
+     378,
+     125
+    ],
+    [
+     378,
+     95
+    ],
+    [
+     454,
+     95
+    ]
+   ],
+   25,
+   2
+  ]
+ ],
+ "SEAU": {
+  "cx": 367,
+  "cy": 100,
+  "nom": "seau",
+  "r": 14,
+  "role": "seau",
+  "z0": 0,
+  "z1": 30
+ },
+ "SIPHON": [
+  240.0,
+  32
+ ],
+ "SOCLE": 8,
+ "SOCLE_COL": 8,
+ "SOL_CIMENT": [
+  [
+   325,
+   0
+  ],
+  [
+   434,
+   0
+  ],
+  [
+   434,
+   44
+  ],
+  [
+   484,
+   44
+  ],
+  [
+   484,
+   100
+  ],
+  [
+   382,
+   100
+  ],
+  [
+   382,
+   240
+  ],
+  [
+   341,
+   240
+  ],
+  [
+   341,
+   252
+  ],
+  [
+   325,
+   252
+  ]
+ ],
+ "SOL_PARQUET": [
+  [
+   0,
+   0
+  ],
+  [
+   325,
+   0
+  ],
+  [
+   325,
+   252
+  ],
+  [
+   0,
+   252
+  ]
+ ],
+ "SUSPENSION": {
+  "d": 35,
+  "z0": 140,
+  "z1": 160
+ },
+ "TABLE": {
+  "cote": 70,
+  "cx": 95,
+  "cy": 205,
+  "x0": 60,
+  "x1": 130,
+  "y0": 170,
+  "y1": 240
+ },
+ "TANGO": {
+  "achat": "https://www.bricozor.com/vantail-40-kg-portes-pliantes-meubles-interieur-serie-tango-kit-complet-mantion.html",
+  "j": 0.4,
+  "jeu_bas": 1.1,
+  "jeu_haut": 2.0,
+  "joint": 0.12,
+  "nom": "Mantion Tango",
+  "notice": "https://cdn.chausson.fr/catalog-document/67dbd044-7a74-4311-8f35-f17acf5a8f4f/notice-20commerciale-20-20ensemble-20coulissant-20pour-20porte-20de-20placard-20tango-20-20mantion.pdf",
+  "prix": "≈ 110 € TTC (Bricozor, kit 2 panneaux)",
+  "rail": [
+   3.3,
+   2.7
+  ],
+  "ref": "TANGO40-120"
+ },
+ "TIROIRS_ANGLAISE": [],
+ "TIROIRS_BANQ": [
+  [
+   3,
+   47
+  ]
+ ],
+ "TRIANGLE": [
+  [
+   "frigo",
+   [
+    322,
+    205.0
+   ]
+  ],
+  [
+   "évier",
+   [
+    240.0,
+    32.0
+   ]
+  ],
+  [
+   "plaque",
+   [
+    60.0,
+    31.0
+   ]
+  ]
+ ],
+ "VANTAUX_L": [
+  67
+ ],
+ "VOLUMES": {
+  "p9a": {
+   "cellier": 221.16,
+   "cuisine": 2230.77
+  },
+  "v11": {
+   "cellier": 753.96,
+   "cuisine": 1983.9199999999998
+  }
+ },
+ "WC": [
+  [
+   392,
+   110
+  ],
+  [
+   484,
+   110
+  ],
+  [
+   484,
+   252
+  ],
+  [
+   392,
+   252
+  ]
+ ],
+ "X_CLOISON": 320,
+ "X_LV_RES": 378,
+ "X_MUR_EST": 382,
+ "X_MUR_EST_C": 382,
+ "X_PORTE": 320.95,
+ "Y_BALAIS": 92,
+ "Y_BAS_DE_MUR": 250,
+ "Y_MONTANT": 242,
+ "Y_MUR_SUD": 252,
+ "ZONE_TECH": 30
+}

@@ -6,9 +6,16 @@
 # Cotes en cm : x vers l'est depuis le mur ouest du couloir, y vers le sud depuis son mur nord, z depuis le sol fini.
 
 from commun.modele import Changement, Document, Option, Valeur, Variante
+from commun.rendu_cache import CacheRendu
 from pieces.entree.piece import Bloc, EP, ENVELOPPE, H, H_PORTE, MURS, PORTES, SOL, SURFACE  # noqa: F401
 
 VERSION = "V4.8"
+
+# Empreinte des rendus (just entree-rendu) : la pièce puis le module de la variante, le code de rendu de l'entrée puis
+# celui de 3d/. Noms et ordre entrent dans l'empreinte : les changer refait tous les rendus.
+CACHE_RENDU = CacheRendu(variantes={"principale": ("pieces.entree.piece", "document"),
+                                    "victor": ("pieces.entree.piece", "victor")},
+                         code=("pieces/entree/amenagement/rendu.py", "3d/rendu.py"))
 
 # silhouette de chaque caméra
 HUMAINS = {"iso_so": "couloir", "iso_no": "couloir", "iso_se": "entree"}

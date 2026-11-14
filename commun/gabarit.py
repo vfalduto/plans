@@ -10,9 +10,10 @@ devient `.scene`.
 import dataclasses
 import json
 import posixpath
+from collections.abc import Sequence
 from html import escape
 
-from commun.modele import LECTURE, NOMS_VUES, VUES, Document, Passerelle, Site, Variante, Vue
+from commun.modele import LECTURE, NOMS_VUES, VUES, Document, Option, Passerelle, Site, Variante, Vue
 
 POLICES = ("https://fonts.googleapis.com/css2?family=Fira+Sans:wght@400;500;600;700"
            "&family=Fira+Sans+Condensed:wght@500;600;700&display=swap")
@@ -268,11 +269,47 @@ TETE_JS = ('(function(vues){var h=document.documentElement,v=location.hash.slice
            'if(vues.length)h.setAttribute("data-vue",vues.indexOf(v)>=0?v:vues[0])})')
 
 
-def _tete(titre: str, depuis: str, vues: list[str], dessins: bool = False) -> str:
+# Pages à option « choix » seulement : un second script en ligne pose html[data-options], l'état mémorisé de chaque
+# option (localStorage, clé plans:<pièce>/<document>:<id>) ou sa valeur d'origine, avant toute feuille ; le <style>
+# de tête cache tout élément data-si dont un jeton n'est pas dans cet état.
+TETE_OPTIONS = ('(function(o,p){var h=document.documentElement,t=[];for(var i in o){var v=o[i][0];'
+                'try{var m=JSON.parse(localStorage.getItem("plans:"+p+":"+i));if(o[i].indexOf(m)>0)v=m}catch(e){}'
+                't.push(i+":"+v)}h.setAttribute("data-options",t.join(" "))})')
+
+
+def _options_choix(options: list[dict]) -> list[dict]:
+    return [o for o in options if o["type"] == "choix"]
+
+
+def _etat_choix(options: list[dict]) -> str:
+    """L'état d'origine : un jeton <id>:<défaut> par option « choix », séparés par une espace."""
+    return " ".join(f'{o["id"]}:{o["defaut"]}' for o in _options_choix(options))
+
+
+def _regles_choix(options: list[dict]) -> str:
+    """Une règle par valeur de chaque option « choix » : cacher ce qui porte un jeton absent de l'état."""
+    return "\n".join(f'html:not([data-options~="{o["id"]}:{v["code"]}"]) [data-si~="{o["id"]}:{v["code"]}"]'
+                     '{display:none!important}' for o in _options_choix(options) for v in o["valeurs"])
+
+
+def _script_choix(options: list[dict], cle: str) -> str:
+    choix = _options_choix(options)
+    if not choix:
+        return ""
+    codes = {o["id"]: [o["defaut"], *(v["code"] for v in o["valeurs"])] for o in choix}
+    return f"{TETE_OPTIONS}({_json(codes)},{_json(cle)})"
+
+
+def _tete(titre: str, depuis: str, vues: list[str], dessins: bool = False, options=(), cle: str = "") -> str:
+    options = list(options)
+    etat = _etat_choix(options)
     return (
-        '<!doctype html>\n<html lang="fr" class="sans-js">\n<head>\n<meta charset="utf-8">\n'
+        '<!doctype html>\n<html lang="fr" class="sans-js"'
+        + (f' data-options="{_e(etat)}"' if etat else '')
+        + '>\n<head>\n<meta charset="utf-8">\n'
         f'<script>{TETE_JS}({_json(vues)})</script>\n'
-        '<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">\n'
+        + (f'<script>{_script_choix(options, cle)}</script>\n' if etat else '')
+        + '<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">\n'
         f'<title>{_e(titre)}</title>\n'
         f'<link rel="icon" href="{relatif("favicon.svg", depuis)}" type="image/svg+xml">\n'
         f'<link rel="apple-touch-icon" href="{relatif("apple-touch-icon.png", depuis)}">\n'
@@ -281,7 +318,8 @@ def _tete(titre: str, depuis: str, vues: list[str], dessins: bool = False) -> st
         f'<link href="{POLICES}" rel="stylesheet">\n'
         + ('<link rel="stylesheet" href="dessins.css">\n' if dessins else '')
         + f'<link rel="stylesheet" href="{relatif("commun/site.css", depuis)}">\n'
-        f'<script src="{relatif("commun/site.js", depuis)}" defer></script>\n'
+        + (f'<style>{_regles_choix(options)}</style>\n' if etat else '')
+        + f'<script src="{relatif("commun/site.js", depuis)}" defer></script>\n'
         '</head>\n'
     )
 
@@ -314,15 +352,27 @@ def _panneau(options: list[dict]) -> str:
             '<div class="feuille" id="panneau-options" role="dialog" aria-modal="true" aria-label="Personnaliser" hidden></div>\n')
 
 
-def _page(titre, depuis, corps_attrs, classes, rail, barre, contenu, variantes, options, noms, dessins="") -> str:
+def _page(titre, depuis, corps_attrs, classes, rail, barre, contenu, variantes, options, noms, dessins="",
+          cle="") -> str:
     return (
-        f'{_tete(titre, depuis, list(noms), bool(dessins))}<body{corps_attrs}>\n{_filtres(options)}'
+        f'{_tete(titre, depuis, list(noms), bool(dessins), options, cle)}<body{corps_attrs}>\n{_filtres(options)}'
         f'<div class="{classes}" id="app">\n{rail}\n{barre}\n<main class="contenu{dessins and " d-" + dessins}" id="contenu">{contenu}</main>\n</div>\n{_panneau(options)}'
         f'<script type="application/json" id="variantes">{_json(variantes)}</script>\n'
         f'<script type="application/json" id="options">{_json(options)}</script>\n'
         f'<script type="application/json" id="noms-vues">{_json(noms)}</script>\n'
         '</body>\n</html>\n'
     )
+
+
+def _options_json(options: Sequence[Option]) -> list[dict]:
+    """Les options pour #options ; la clé `rendue` n'est écrite que là où elle vaut False, pour qu'une page sans
+    valeur non rendue reste celle d'avant."""
+    donnees = [dataclasses.asdict(o) for o in options]
+    for o in donnees:
+        for v in o["valeurs"]:
+            if v["rendue"]:
+                del v["rendue"]
+    return donnees
 
 
 def page_document(site: Site, doc: Document, variante: Variante, vues: dict[str, Vue]) -> str:
@@ -340,9 +390,10 @@ def page_document(site: Site, doc: Document, variante: Variante, vues: dict[str,
         _barre_document(piece, doc, variante, vues, depuis),
         "".join(_section(k, vues[k]) for k in VUES[doc.type]),
         [[v.id, v.nom, relatif(adresse(doc, v.id), depuis)] for v in doc.variantes],
-        [dataclasses.asdict(o) for o in doc.options],
+        _options_json(doc.options),
         {k: NOMS_VUES[k] for k in VUES[doc.type]},
         doc.piece if doc.css else "",
+        f"{doc.piece}/{doc.id}",
     )
 
 

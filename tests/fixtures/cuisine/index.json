@@ -1,0 +1,37 @@
+{
+ "dessins/plan.svg": {
+  "source": "plan.plan_svg",
+  "aria_label": "Plan vu de dessus, pièce vide, 6 meubles bas et 5 meubles hauts de 60 au mur nord",
+  "caracteres": 384
+ },
+ "dessins/coupe-a.svg": {
+  "source": "plan.coupe_a",
+  "aria_label": "Coupe à y 90, regard vers le nord",
+  "caracteres": 862
+ },
+ "dessins/hauteur-pt.svg": {
+  "source": "plan.hauteur_pt_svg",
+  "aria_label": "Hauteur du plan de travail selon le coude",
+  "caracteres": 129
+ },
+ "dessins/coupe-b.svg": {
+  "source": "plan.coupe_b",
+  "aria_label": "Coupe à y 150, regard vers le sud",
+  "caracteres": 133
+ },
+ "dessins/coupe-c.svg": {
+  "source": "plan.coupe_c",
+  "aria_label": "Coupe à x 315, regard vers l'est",
+  "caracteres": 320
+ },
+ "dessins/plan-elec.svg": {
+  "source": "plan.plan_elec_svg",
+  "aria_label": "Plan électrique : points lumineux, prises et interrupteurs",
+  "caracteres": 270
+ },
+ "dessins/elevation-elec.svg": {
+  "source": "plan.coupe_elec_nord",
+  "aria_label": "Coupe à y 90, regard vers le nord",
+  "caracteres": 625
+ }
+}

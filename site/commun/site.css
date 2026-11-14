@@ -313,6 +313,8 @@ a.b-case[aria-current="page"] > .ico{color:inherit}
 .sans-js .lecture{overflow:visible}
 .sans-js .planche .scene{position:static;overflow:visible;container-type:normal;touch-action:auto;user-select:auto;-webkit-user-select:auto}
 .sans-js .scene > .element{position:static;display:block}
+.sans-js .rendu{position:relative;inset:auto}
+.sans-js .cadre{width:min(100%,900px)}
 .sans-js .element > svg{position:static;height:auto;max-height:80vh}
 .sans-js .fiche{position:static;max-height:none;overflow:visible}
 /* plusieurs éléments (coupes) : chaque fiche porte son titre, celui de l'en-tête ne nommerait que le premier */
@@ -420,3 +422,72 @@ a:hover>.pl-piece,a:focus-visible>.pl-piece{fill:color-mix(in srgb,var(--repere)
   .tapis-plan{padding:10px}
   .lecture > table{display:block;overflow-x:auto}
 }
+
+/* ------------------------------------------------------------------ Construction : Plans, Découpe, Montage, Achats, rendus
+   Repris de la maquette : liste de débit (en cartes sur mobile), calepinage, étapes numérotées, rendus deux par ligne. */
+.cartes td.d,.cartes th.d{padding-right:18px}
+.debit{overflow-x:auto}
+.etapes{list-style:none;margin:0;padding:0;counter-reset:e var(--debut,0)}
+.etapes li{display:grid;grid-template-columns:34px minmax(0,1fr);gap:0 12px;padding:14px 0;border-bottom:1px solid var(--line);counter-increment:e;max-width:none}
+.etapes li::before{content:counter(e);font:600 16px/1 var(--ui);width:30px;height:30px;border-radius:4px;background:var(--actif);color:var(--sur-actif);display:grid;place-items:center}
+.etapes h3{margin:3px 0 4px;font:600 18px var(--ui)}
+.etapes p{margin:0;font-size:15.5px}
+.etapes .etape-figure{margin:10px 0 0}
+.etapes .etape-figure svg{display:block;width:100%;max-width:520px;height:auto}
+.duo{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px;max-width:1120px}
+.duo figure{margin:0}
+.duo img{display:block;width:100%;height:auto;border-radius:3px}
+.reunir{margin:0 0 8px}
+.reunir summary{cursor:pointer;font-weight:600}
+.calepin{margin:18px 0 0}
+.calepin figcaption{font:600 16px var(--ui);margin:0 0 6px}
+.calepin svg{display:block;width:100%;height:auto}
+.lecture td > small{display:block;color:var(--muted);font-size:14px;margin-top:2px}
+.lecture .total-achats{display:flex;justify-content:space-between;gap:12px;max-width:820px;margin:18px 0 0;padding:10px 0 0;border-top:2px solid var(--ink);font:700 18px var(--ui);font-variant-numeric:tabular-nums}
+@media (max-width:919px){
+  .duo{grid-template-columns:minmax(0,1fr)}
+  .cartes thead{display:none}
+  .cartes tr{display:grid;grid-template-columns:auto minmax(0,1fr) auto;gap:2px 10px;align-items:center;padding:10px 0;border-bottom:1px solid var(--line)}
+  .cartes td,.cartes td.d{border:0;padding:1px 0}
+  .cartes td[data-l]::before{content:attr(data-l) " ";color:var(--muted);font-size:13px}
+  .cartes td.large{grid-column:1 / -1}
+  .cartes td.d{grid-row:1;grid-column:3}
+}
+
+/* ------------------------------------------------------------------ Achats en cartes, sous 512 px
+   Le tableau d'achats (quatre colonnes : article, référence, quantité, prix ; repéré par ses deux en-têtes de droite
+   alignés à droite, ce qu'aucun autre tableau défilant n'a) ne tient plus sous 480 px : chaque ligne devient une carte,
+   comme la liste d'achats de la maquette. Article et prix en première rangée ; dessous la référence, et la quantité
+   précédée de « × » sous le prix ; « Sous-total » et « Total » gardent libellé et montant face à face. */
+@media (max-width:511px){
+  .lecture .defile:has(> table > thead th.d:nth-child(3) + th.d:nth-child(4):last-child) table{min-width:0;display:block}
+  .lecture .defile:has(> table > thead th.d:nth-child(3) + th.d:nth-child(4):last-child) thead{display:none}
+  .lecture .defile:has(> table > thead th.d:nth-child(3) + th.d:nth-child(4):last-child) tbody{display:block}
+  .lecture .defile:has(> table > thead th.d:nth-child(3) + th.d:nth-child(4):last-child) tr{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:3px 14px;align-items:baseline;padding:10px 0;border-bottom:1px solid var(--line)}
+  .lecture .defile:has(> table > thead th.d:nth-child(3) + th.d:nth-child(4):last-child) td{border:0;padding:0}
+  .lecture .defile:has(> table > thead th.d:nth-child(3) + th.d:nth-child(4):last-child) td:nth-child(1){grid-area:1 / 1}
+  .lecture .defile:has(> table > thead th.d:nth-child(3) + th.d:nth-child(4):last-child) td:nth-child(4){grid-area:1 / 2;font-weight:600}
+  .lecture .defile:has(> table > thead th.d:nth-child(3) + th.d:nth-child(4):last-child) td:nth-child(2){grid-area:2 / 1;color:var(--muted);font-size:14px}
+  .lecture .defile:has(> table > thead th.d:nth-child(3) + th.d:nth-child(4):last-child) td:nth-child(3){grid-area:2 / 2;color:var(--muted);font-size:14px}
+  .lecture .defile:has(> table > thead th.d:nth-child(3) + th.d:nth-child(4):last-child) td:nth-child(3)::before{content:"× "}
+  .lecture .defile:has(> table > thead th.d:nth-child(3) + th.d:nth-child(4):last-child) tr.total{border-top:2px solid var(--ink);border-bottom:0;background:var(--hair);padding:9px 0}
+  .lecture .defile:has(> table > thead th.d:nth-child(3) + th.d:nth-child(4):last-child) tr.total td{border:0;background:none;font-weight:700}
+  .lecture .defile:has(> table > thead th.d:nth-child(3) + th.d:nth-child(4):last-child) tr.total td:nth-child(2),
+  .lecture .defile:has(> table > thead th.d:nth-child(3) + th.d:nth-child(4):last-child) tr.total td:nth-child(3){display:none}
+}
+
+/* options « choix » : remarque du panneau, note d'une image absente (base à gauche, clone à droite) */
+.feuille .sans-rendu{margin:10px 0 0}
+.element > .note-rendu{position:absolute;left:12px;top:12px;z-index:1;margin:0;padding:4px 8px;border:1px solid var(--line);border-radius:4px;background:var(--panel);color:var(--muted);font:500 14px var(--ui);pointer-events:none}
+.element.b > .note-rendu{left:auto;right:12px}
+.sans-js .element > .note-rendu{position:static;display:inline-block;margin:0 0 8px}
+/* la note de la base passe sous les outils de zoom, posés en haut à gauche ; en comparaison, chaque note tient dans sa
+   part du rideau (--pos), sans recouvrir l'autre */
+.element:not(.b) > .note-rendu{top:58px}
+.compare > .element:not(.b) > .note-rendu{max-width:calc(var(--pos,50%) - 24px)}
+.compare > .element.b > .note-rendu{max-width:calc(100% - var(--pos,50%) - 24px)}
+/* l'en-tête collant de la feuille (titre, fermer) passe au-dessus de la ligne .info collante d'un nuancier, venue plus
+   loin dans le document au même z-index, quand la feuille défile */
+.feuille .tete-feuille{z-index:2}
+/* en comparaison, la note du côté étroit du rideau reste sur une ligne, tronquée à la largeur de son côté */
+.compare > .element > .note-rendu{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
