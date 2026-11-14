@@ -1,7 +1,8 @@
 /* @site reel : la cuisine/aménagement sur le vrai site/, construit par python3 site.py (tests/navigateur/lancer.sh).
    - Vues : chaque vue et chaque repère à 1440, 1100 et 390 px : sans erreur de console ni réponse en erreur, images
      chargées, rien ne déborde ; « Position » marque l'élément affiché ; Iso : NE et SE grisés.
-   - Plan : toucher B3 ouvre sa fiche (« Coupe A », « Iso »), la touche Entrée aussi ; #plan?k=b3 l'ouvre ;
+   - Plan : toucher B3 ouvre sa fiche (« Coupe A », « Iso »), la touche Entrée aussi ; #plan?k=b3 l'ouvre ; à 1440,
+     chaque meuble touché au centre de sa partie visible ouvre sa propre fiche ;
      #plan?k=elec montre le plan électrique sans fiche de meuble. Pas de « Comparer » (une seule variante).
    - Personnaliser : Taille, Porte d'entrée, Porte du cellier, transparence de la coupe C ; chaque valeur change le
      dessin, « Valeurs d'origine » revient, le choix tient au rechargement ; sans localStorage, les défauts.
@@ -122,7 +123,7 @@ async page => {
       await ouvrir(page, DOC + "#plan");
       let f = await fiche();
       verifier(f.corps.includes("Touchez un meuble pour afficher sa fiche."), `${t} : invite ${JSON.stringify(f)}`);
-      // le bas du meuble : le haut de B3 est sous la zone du meuble haut H2, posée par-dessus
+      // le bas du meuble : côté mur, B3 est sous la bande murale du meuble haut H2, posée par-dessus
       const boite = await page.locator(B3).boundingBox();
       await page.click(B3, {position: {x: boite.width / 2, y: boite.height * 0.85}});
       f = await fiche();
@@ -142,6 +143,32 @@ async page => {
                                    return e && e.checkVisibility(); }, null, `${t} : #plan?k=elec ne montre pas le plan électrique`);
       f = await fiche();
       verifier(f.elec && f.ici === 0 && !f.liens.includes("Coupe A"), `${t}, #plan?k=elec : ${JSON.stringify(f)}`);
+    }
+    // chaque meuble, touché au centre de sa partie visible : le point de la zone, non couvert par une zone posée
+    // par-dessus, le plus proche du centre de ces points ; il ouvre la fiche de ce meuble et d'aucun autre
+    await page.setViewportSize({width: 1440, height: 900});
+    await ouvrir(page, DOC + "#plan");
+    const cibles = await page.evaluate(() => {
+      const s = document.querySelector('section[data-vue="plan"]');
+      return [...s.querySelectorAll("rect.zone[data-meuble]")].filter(z => z.checkVisibility()).map(z => {
+        const b = z.getBoundingClientRect(), pas = Math.max(0.5, Math.min(b.width, b.height) / 16), pts = [];
+        for (let x = b.left + pas / 2; x < b.right; x += pas)
+          for (let y = b.top + pas / 2; y < b.bottom; y += pas)
+            if (document.elementFromPoint(x, y) === z) pts.push([x, y]);
+        if (!pts.length) return {id: z.dataset.meuble, n: 0};
+        const cx = pts.reduce((a, p) => a + p[0], 0) / pts.length, cy = pts.reduce((a, p) => a + p[1], 0) / pts.length;
+        const [x, y] = pts.reduce((m, p) => Math.hypot(p[0] - cx, p[1] - cy) < Math.hypot(m[0] - cx, m[1] - cy) ? p : m);
+        return {id: z.dataset.meuble, n: pts.length, x, y};
+      });
+    });
+    verifier(cibles.length === 26, `plan : ${cibles.length} zones visibles, 26 attendues (MEUBLES_PLAN)`);
+    for (const c of cibles) {
+      if (!c.n) { echecs.push(`plan, ${c.id} : aucun point visible`); continue; }
+      await page.mouse.click(c.x, c.y);
+      const r = await page.evaluate(() => ({hash: location.hash,
+        ici: [...document.querySelectorAll('section[data-vue="plan"] rect.zone.ici')].map(z => z.dataset.meuble)}));
+      verifier(r.hash === `#plan?k=${c.id}` && egal(r.ici, [c.id]),
+               `plan, toucher ${c.id} en son centre visible : ${JSON.stringify(r)}`);
     }
     const barre = await page.evaluate(() => ({
       comparer: [...document.querySelectorAll("#c-comp")].filter(b => b.checkVisibility()).length,

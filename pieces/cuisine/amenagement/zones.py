@@ -50,6 +50,11 @@ MEUBLES_PLAN = tuple(
         ("tableau-noir", "Tableau noir et zone aimantée", r"tableau_noir|zone_aimantee", "B", "no"),
     ])
 
+# Meubles accrochés au mur au-dessus d'un autre (meubles hauts, étagères) : leur zone n'est que la moitié de leur
+# emprise côté mur (mur nord ou sud), pour que le meuble du dessous, recouvert par elle, reste touchable ; la fiche
+# garde les cotes du meuble entier
+_MURAUX = {**{i: "n" for i, _ in _HAUTS}, "etageres": "n", "etagere-banquette": "s"}
+
 # Lignes de CONTENU des meubles sans étiquette, par début de libellé ; celles des caissons commencent par leur code
 # (« B3, … », « C2 »)
 _CONTENU_DE = {
@@ -71,6 +76,17 @@ def emprise(motif: str) -> dict:
     return {c: (min if c.endswith("0") else max)(getattr(b, c) for b in blocs) for c in _COORDS}
 
 
+def rectangle(id_: str, e: Mapping) -> tuple[float, float, float, float]:
+    """Le rectangle touchable d'un meuble (x0, y0, x1, y1) : son emprise, ou sa bande murale (_MURAUX)."""
+    x0, y0, x1, y1 = e["x0"], e["y0"], e["x1"], e["y1"]
+    mur = _MURAUX.get(id_)
+    if mur == "n":
+        y1 = (y0 + y1) / 2
+    elif mur == "s":
+        y0 = (y0 + y1) / 2
+    return x0, y0, x1, y1
+
+
 def _lignes_contenu(id_, titre):
     if id_ in dict(_BAS + _HAUTS + _COLONNES):  # caisson : son code d'étiquette
         code = titre.partition(",")[0]
@@ -79,11 +95,12 @@ def _lignes_contenu(id_, titre):
 
 
 def zones(textes: Mapping[str, str]) -> list[Zone]:
-    """Une zone par meuble de MEUBLES_PLAN ; `textes` : HTML de la page par id, avant les lignes de CONTENU."""
+    """Une zone par meuble de MEUBLES_PLAN, écrites dans cet ordre (une zone recouvre celles d'avant) ; `textes` :
+    HTML de la page par id, avant les lignes de CONTENU."""
     sortie = []
     for id_, titre, motif, coupe, iso in MEUBLES_PLAN:
         e = emprise(motif)
         morceaux = [textes.get(id_, "")] + [f"{escape(m)} : {escape(c)}" for m, c in _lignes_contenu(id_, titre)]
-        sortie.append(Zone(id_, titre, (e["x0"], e["y0"], e["x1"], e["y1"]), cotes_meuble(e),
+        sortie.append(Zone(id_, titre, rectangle(id_, e), cotes_meuble(e),
                            "<br>".join(t for t in morceaux if t), coupe, iso))
     return sortie

@@ -42,8 +42,22 @@ def test_zone_confrontee_a_son_meuble(id_):
              for c in ("x0", "x1", "y0", "y1", "z0", "z1")}
     assert Z.emprise(motif) == union
     z = next(z for z in Z.zones({}) if z.id == id_)
-    assert z.emprise == (union["x0"], union["y0"], union["x1"], union["y1"])
+    x0, y0, x1, y1 = union["x0"], union["y0"], union["x1"], union["y1"]
+    # un meuble accroché au-dessus d'un autre : la moitié côté mur (nord ou sud) ; les autres : l'emprise entière
+    attendu = {"n": (x0, y0, x1, (y0 + y1) / 2), "s": (x0, (y0 + y1) / 2, x1, y1)}.get(MURAUX.get(id_), (x0, y0, x1, y1))
+    assert z.emprise == attendu
     assert z.cotes == cotes_meuble(union)
+
+
+MURAUX = {**{f"h{i}": "n" for i in range(1, 6)}, "etageres": "n", "etagere-banquette": "s"}
+
+
+def test_muraux_au_mur():
+    """La bande murale est bien côté mur : y 0 (nu du mur nord), y 252 (nu du mur sud, face de la porte d'entrée)."""
+    sud = next(p["face"] for p in P.PORTES if p["mur"] == "s")
+    for id_, mur in MURAUX.items():
+        e = Z.emprise(next(m[2] for m in Z.MEUBLES_PLAN if m[0] == id_))
+        assert (e["y0"] == 0) if mur == "n" else (e["y1"] == sud), id_
 
 
 def test_zones_reprennent_meubles_plan():
@@ -136,3 +150,70 @@ def test_coupe_et_iso_peuvent_echouer():
     assert not any(_dans_la_coupe(b, "A") for b in blocs)
     retires = re.compile(next(c for c in P.CAMERAS if c.id == "iso_so").reglages["coupes"])
     assert all(retires.match(f"{b.role}__{b.nom}") for b in blocs)
+
+
+# ------------------------------------------------------------------ chaque zone garde une surface touchable propre
+# Les zones sont écrites dans l'ordre de la liste : une zone écrite après une autre la recouvre. On échantillonne le
+# plan tous les PAS cm (centres de cases) et l'on garde, pour chaque zone, les cases de son rectangle qu'aucune zone
+# écrite après elle ne couvre.
+# Seuils : au moins la moitié de l'emprise du meuble (son dessin est d'abord le sien), et un carré libre de COTE cm, ou
+# de la plus petite dimension du meuble s'il est plus mince (tableau noir, porte du cellier : leurs zones minces sont
+# un autre sujet). 10 cm : ce qui reste de l'étagère de l'entretien à l'est des balais, le plus petit des meubles
+# épais ; le plan (viewBox de 590 cm) est à environ 1,9 px/cm à 1440 px, soit une vingtaine de pixels, une cible de
+# souris ou de stylet ; à 390 px (0,6 px/cm), il faut zoomer, comme pour lire les cotes.
+PAS, PART, COTE = 0.5, 0.5, 10
+
+
+def _cases(r):
+    x0, y0, x1, y1 = r
+    i0, i1 = round(x0 / PAS + 0.5 - 1e-9), round(x1 / PAS - 0.5 + 1e-9)
+    j0, j1 = round(y0 / PAS + 0.5 - 1e-9), round(y1 / PAS - 0.5 + 1e-9)
+    return {(i, j) for i in range(int(i0) - 1, int(i1) + 2) for j in range(int(j0) - 1, int(j1) + 2)
+            if x0 <= (i + 0.5) * PAS <= x1 and y0 <= (j + 0.5) * PAS <= y1}
+
+
+def _plus_grand_carre(cases):
+    """Côté, en cases, du plus grand carré de cases libres."""
+    meilleur, cote = 0, {}
+    for i, j in sorted(cases):
+        c = 1 + min(cote.get((i - 1, j), 0), cote.get((i, j - 1), 0), cote.get((i - 1, j - 1), 0))
+        cote[(i, j)] = c
+        meilleur = max(meilleur, c)
+    return meilleur
+
+
+def surfaces_libres(zs):
+    """Par id : (part libre de l'emprise du meuble, côté du plus grand carré libre en cm)."""
+    emprises = {m[0]: Z.emprise(m[2]) for m in Z.MEUBLES_PLAN}
+    sortie = {}
+    for k, z in enumerate(zs):
+        libres = _cases(z.emprise)
+        for autre in zs[k + 1:]:
+            libres -= _cases(autre.emprise)
+        e = emprises[z.id]
+        sortie[z.id] = (len(libres) / max(1, len(_cases((e["x0"], e["y0"], e["x1"], e["y1"])))),
+                        _plus_grand_carre(libres) * PAS)
+    return sortie
+
+
+def test_chaque_zone_garde_une_surface_touchable():
+    zs = Z.zones({})
+    assert not any(z.si for z in zs)   # une zone par état d'une option : à prendre en compte ici
+    emprises = {m[0]: Z.emprise(m[2]) for m in Z.MEUBLES_PLAN}
+    trop_peu = {}
+    for id_, (part, carre) in surfaces_libres(zs).items():
+        e = emprises[id_]
+        cote = min(COTE, e["x1"] - e["x0"], e["y1"] - e["y0"])
+        if part < PART or carre < cote - PAS:
+            trop_peu[id_] = (round(part, 2), carre)
+    assert trop_peu == {}
+
+
+def test_recouvrement_vu():
+    """Le critère voit un recouvrement : B6 sous la zone pleine de H5 n'aurait que 5 cm (constat de la relecture)."""
+    zs = [z for z in Z.zones({}) if z.id in ("b6", "h5")]
+    b6, h5 = zs
+    plein = Z.emprise(next(m[2] for m in Z.MEUBLES_PLAN if m[0] == "h5"))
+    h5 = type(h5)(**{**h5.__dict__, "emprise": (plein["x0"], plein["y0"], plein["x1"], plein["y1"])})
+    part, carre = surfaces_libres([b6, h5])["b6"]
+    assert part < PART and carre == 5
