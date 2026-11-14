@@ -2,7 +2,7 @@
 
 Plans est une vue de scène (`vue_plans`) ; Découpe, Montage, Achats et Explication se font par
 `vue_lecture(id, <blocs concaténés>)`. Un bloc de section (`tableau_debit`, `calepinage`, `etapes`, `rendus_meuble`)
-écrit son `<h2>` depuis `titre`. Titres, noms, cotes et cellules de débit sont échappés ; les textes longs (`corps`
+écrit son `<h2>` depuis `titre`, et ne rend rien (`""`) quand sa séquence est vide : `vue_lecture` grise alors l'onglet. Titres, noms, cotes et cellules de débit sont échappés ; les textes longs (`corps`
 d'une étape, `outils`, légende, SVG) sont insérés tels quels, à la charge de l'appelant.
 """
 from dataclasses import dataclass
@@ -90,7 +90,8 @@ def _cellule(colonne, v):
 
 def tableau_debit(colonnes: Sequence[Colonne], lignes: Sequence[Sequence[str | float]],
                   titre: str = "Liste de débit", sous_titre: str = "") -> str:
-    """Liste de débit à colonnes déclarées ; en cartes sur mobile (les `data-l` y nomment les cellules)."""
+    """Liste de débit à colonnes déclarées ; en cartes sur mobile (les `data-l` y nomment les cellules) ; aucune
+    ligne : rien (les colonnes sont vérifiées quand même)."""
     for c in colonnes:
         if c.sorte not in SORTES:
             raise ValueError(f"colonne « {c.titre} » : sorte « {c.sorte} » inconnue")
@@ -100,6 +101,8 @@ def tableau_debit(colonnes: Sequence[Colonne], lignes: Sequence[Sequence[str | f
         if len(titres) > 1:
             raise ValueError(f"une seule colonne « {sorte} » ({', '.join(f'« {t} »' for t in titres)}) : déclarer"
                              f" {', '.join(f'« {t} »' for t in titres[1:])} en « {au_lieu} »")
+    if not lignes:
+        return ""
     corps = []
     for ligne in lignes:
         if len(ligne) != len(colonnes):
@@ -137,7 +140,10 @@ class Etape:
 
 
 def etapes(liste: Sequence[Etape], titre: str = "Montage", outils: str = "", debut: int = 1) -> str:
-    """Étapes numérotées à partir de `debut` (la suite d'un autre meuble) ; `outils` HTML, dans un dépliant."""
+    """Étapes numérotées à partir de `debut` (la suite d'un autre meuble) ; `outils` HTML, dans un dépliant ; aucune
+    étape : rien."""
+    if not liste:
+        return ""
     reunir = f'<details class="reunir"><summary>Outils à réunir</summary>{outils}</details>' if outils else ""
     style = f' style="--debut:{debut - 1}"' if debut != 1 else ""
     items = []

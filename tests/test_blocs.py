@@ -1,7 +1,7 @@
 from pathlib import Path
 
-from commun.blocs import (CALQUES, INVITE, Achat, Carte, Coupe, Lieu, SectionAchats, Zone, a_verifier, achats,
-                          cotes_meuble, euros, figure_rendu, points_iso, principes, rendu, tableau_achats, tete,
+from commun.blocs import (CALQUES, INVITE, Achat, Carte, Coupe, Lieu, SectionAchats, Zone, a_verifier, achats, chiffres,
+                          cotes_meuble, euros, figure_rendu, materiaux, points_iso, principes, rendu, tableau_achats, tete,
                           total_achats, vue_camera, vue_coupes, vue_iso, vue_lecture, vue_plan, zones_svg)
 from commun.modele import Camera
 from tests.outils import RACINE, balises
@@ -250,6 +250,14 @@ def test_a_verifier_sans_case():
                     "<li><span>Plafond.</span></li></ul>")
     assert "<input" not in html
     assert a_verifier(["x"], titre="Points à vérifier").startswith("<h2>Points à vérifier</h2>")
+
+
+def test_sequence_vide_rien():
+    """Un bloc de section (et `chiffres`) sans rien à montrer ne rend rien, pas un titre seul."""
+    assert principes([]) == "" and materiaux([]) == "" and a_verifier([]) == "" and chiffres([]) == ""
+    assert achats([]) == "" and achats([], note="Prix relevés.") == ""
+    assert achats([SectionAchats("Magasin A", []), SectionAchats("Magasin B", [])]) == ""
+    assert vue_lecture("achats", achats([])).elements == []
 
 
 def test_vue_lecture():

@@ -127,8 +127,6 @@ def _etapes(v):
 
 
 def _montage(liste, v):
-    if not liste:
-        return ""
     outils = "<p>Laser, perceuse, foret à béton, visseuse, ponceuse.</p>" if v == "actuelle" else ""
     return etapes(liste, outils=outils)
 

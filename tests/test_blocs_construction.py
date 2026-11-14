@@ -96,7 +96,7 @@ def test_tableau_debit():
     assert '<td class="num d" data-l="×">2,5</td>' in html
     assert html.endswith("</tbody></table></div>")
     assert "Chêne & pin" not in html
-    assert tableau_debit(COLONNES, [], titre="Débit").startswith("<h2>Débit</h2><div")
+    assert tableau_debit(COLONNES, [], titre="Débit") == ""
     with pytest.raises(ValueError):
         tableau_debit(COLONNES, [LIGNE[:5]])
     with pytest.raises(ValueError):
@@ -156,6 +156,14 @@ def test_etapes():
     assert balises(avec, "details", classe="reunir")
     assert '<details class="reunir"><summary>Outils à réunir</summary><p>Visseuse.</p></details>' in avec
     assert '<ol class="etapes" style="--debut:7">' in avec
+
+
+def test_sequence_vide_rien(tmp_path):
+    """Un bloc de section sans rien à montrer ne rend rien, pas un titre seul : `vue_lecture` grise alors l'onglet."""
+    assert etapes([]) == "" and etapes([], titre="Suite", outils="<p>Visseuse.</p>", debut=8) == ""
+    assert tableau_debit(COLONNES, []) == "" and calepinage([]) == ""
+    assert rendus_meuble(tmp_path, "", []) == ""
+    assert vue_lecture("montage", etapes([])).elements == []
 
 
 def test_rendus_meuble(tmp_path):

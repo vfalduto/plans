@@ -1,6 +1,7 @@
 """Blocs de lecture d'un document : Explication et achats. Réexportés par `commun.blocs`, sous les mêmes noms.
 
-Un bloc de section (`principes`, `materiaux`, `achats`, `a_verifier`) écrit son `<h2>` depuis `titre` ; un bloc de
+Un bloc de section (`principes`, `materiaux`, `achats`, `a_verifier`) écrit son `<h2>` depuis `titre`, et ne rend
+rien (`""`) quand sa séquence est vide (de même `chiffres`) : `vue_lecture` grise alors l'onglet ; un bloc de
 morceau (`tete`, `chiffres`, `tableau_achats`, `note_source`) n'en écrit pas. Titres, libellés, articles et
 références sont échappés ; les textes longs (`chapo`, `texte` d'une carte, `note`, points à vérifier, deuxième colonne
 des matériaux) sont insérés tels quels, à la charge de l'appelant.
@@ -31,7 +32,9 @@ def tete(chapo: str, liens: Sequence[tuple[str, str]] = (), figure: str = "") ->
 
 
 def chiffres(stats: Sequence[tuple[str, str]]) -> str:
-    """Chiffres clés, paires (valeur, légende)."""
+    """Chiffres clés, paires (valeur, légende), mis en page pour quatre ; aucune : rien."""
+    if not stats:
+        return ""
     corps = "".join(f"<div><dt>{_e(v)}</dt><dd>{_e(n)}</dd></div>" for v, n in stats)
     return f'<dl class="chiffres">{corps}</dl>'
 
@@ -45,6 +48,8 @@ class Carte:
 
 
 def principes(cartes: Sequence[Carte], titre: str = "Principe") -> str:
+    if not cartes:
+        return ""
     def lien(c):
         return f'<a class="btn" href="#plan?k={_e(c.meuble)}">Montrer sur le plan</a>' if c.meuble else ""
     corps = "".join(f"<li><h3>{_e(c.titre)}</h3><p>{c.texte}</p>{lien(c)}</li>" for c in cartes)
@@ -52,7 +57,9 @@ def principes(cartes: Sequence[Carte], titre: str = "Principe") -> str:
 
 
 def materiaux(lignes: Sequence[tuple[str, str]], titre: str = "Matériaux") -> str:
-    """Lignes (poste, texte HTML)."""
+    """Lignes (poste, texte HTML) ; aucune : rien."""
+    if not lignes:
+        return ""
     corps = "".join(f'<tr><th scope="row">{_e(a)}</th><td>{b}</td></tr>' for a, b in lignes)
     return f"<h2>{_e(titre)}</h2><table><tbody>{corps}</tbody></table>"
 
@@ -119,7 +126,9 @@ def tableau_achats(achats: Sequence[Achat], libelle_total: str = "Total", approx
 def achats(sections: Sequence[SectionAchats], titre: str = "Achats", note: str = "", approx: bool = False,
            arrondi: bool = True) -> str:
     """Un tableau par section, « Total » s'il n'y en a qu'une, sinon « Sous-total » et le total général, arrondi depuis
-    la somme exacte ; `note` HTML en remarque."""
+    la somme exacte ; `note` HTML en remarque. Aucune ligne d'achat : rien."""
+    if not any(s.achats for s in sections):
+        return ""
     libelle = "Total" if len(sections) == 1 else "Sous-total"
     morceaux = [f"<h2>{_e(titre)}</h2>"]
     for s in sections:
@@ -136,7 +145,9 @@ def achats(sections: Sequence[SectionAchats], titre: str = "Achats", note: str =
 
 # ------------------------------------------------------------------ Fin de page
 def a_verifier(points: Sequence[str], titre: str = "À vérifier sur place") -> str:
-    """Points HTML, en liste simple (pas de case à cocher)."""
+    """Points HTML, en liste simple (pas de case à cocher) ; aucun : rien."""
+    if not points:
+        return ""
     corps = "".join(f"<li><span>{p}</span></li>" for p in points)
     return f'<h2>{_e(titre)}</h2><ul class="liste">{corps}</ul>'
 
