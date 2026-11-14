@@ -8,11 +8,11 @@ from dataclasses import replace
 from functools import lru_cache
 from html import escape, unescape
 
-from commun.blocs import Achat, euros, note_source, tableau_achats, vue_lecture
+from commun.blocs import Achat, note_source, tableau_achats, vue_lecture
 from commun.blocs_construction import Colonne, DessinMeuble, Etape, etapes, tableau_debit, vue_plans
 from commun.modele import Vue
 from pieces.sdb import iso, piece as P
-from pieces.sdb.achats_communs import deux_meubles, prix
+from pieces.sdb.achats_communs import deux_meubles, note_article, prix
 from pieces.sdb.meuble_bas import modele as B
 from pieces.sdb.meuble_bas.document import VERSION
 from pieces.sdb.meuble_bas.dessins import ARIA, DESSINS, ISO, NOMS, legendes
@@ -159,11 +159,6 @@ def _montage() -> str:
 
 
 # ------------------------------------------------------------------ Achats
-def _note(q, pu, stock):
-    """Prix unitaire (quantité autre que 1) et stock lu au magasin, dans la note de l'article."""
-    return ", ".join(([f"{q:g} × {euros(pu)}"] if q != 1 else []) + ([f"stock : {stock}"] if stock is not None else []))
-
-
 def _achats() -> str:
     total = B.total()
     return ("<h2>Meuble bas</h2>"
@@ -173,7 +168,7 @@ def _achats() -> str:
             "sont pas comptés. Le détail est dans la liste d'achats.</p>"
             f"<p>Tout ce qu'il faut pour le meuble bas {VERSION}. Joues, fond, bas, étagère et porte en mélaminé blanc, "
             "levés sur des vérins, avec les 2 bacs.</p>"
-            + tableau_achats([Achat(nom, ref, q, pu, _note(q, pu, st)) for nom, ref, q, pu, st in B.prix()],
+            + tableau_achats([Achat(nom, ref, q, pu, note_article(q, pu, st)) for nom, ref, q, pu, st in B.prix()],
                              "Total du meuble bas", arrondi=False)
             + note_source(f"Les vis 4 × 40 viennent de la liste du meuble haut, qui en a assez. Pour acheter le meuble "
                           f"bas seul, ajouter la boîte de vis ({prix(9.00)}), soit {prix(total + 9.00)}. Chant : "
@@ -182,7 +177,7 @@ def _achats() -> str:
                           "lot de poignées en contient 2, une seule sert. Non comptés : le câble, la goulotte et "
                           "l'électricien, la scie sauteuse, le rail de coupe, le foret à cuvette Ø 35, la scie cloche "
                           "Ø 67 et les clips adhésifs du fil des LED.")
-            + deux_meubles({"bas": "", "haut": "../../sdb-meuble-achats.html#haut-seul"}))
+            + deux_meubles({"bas": "", "haut": "../meuble-haut/#achats"}))
 
 
 def vues(variante: str) -> dict[str, Vue]:

@@ -1,15 +1,15 @@
 """Achats communs aux deux meubles de la salle de bain : le magasin, les dates de relevé, le budget, et la section
 « Les deux meubles » de la vue Achats (total de chaque meuble et des deux).
 
-MAGASIN, RELEVE_V6 et BUDGET sont copiés de 3d/sdb/modele.py (un test les garde égaux tant qu'il existe). Le meuble
-haut n'est pas encore migré : son total vient de 3d/sdb/haut.py (pieces.sdb.ancien.haut()).
+MAGASIN, RELEVE_V6 et BUDGET sont copiés de 3d/sdb/modele.py (un test les garde égaux tant qu'il existe). Le total du
+meuble haut vient de pieces/sdb/meuble_haut/modele.py.
 """
 from html import escape
 from typing import Mapping
 
 from commun.blocs import euros, note_source
-from pieces.sdb import ancien
 from pieces.sdb.meuble_bas import modele as B
+from pieces.sdb.meuble_haut import modele as H
 
 MAGASIN = dict(nom="Weldom Marseille Saint-Barnabé", adresse="90 rue François Scaramelli, 13012 Marseille",
                tel="04 91 49 27 27", url="https://www.weldom.fr/m/weldom-marseille-saint-barnabe", releve="13/10/2026")
@@ -25,14 +25,18 @@ def prix(v: float) -> str:
 
 
 def total_haut() -> float:
-    H = ancien.haut()
-    return H.total_lignes(H.lignes())
+    return H.total()
+
+
+def note_article(q: float, pu: float, stock) -> str:
+    """Note d'une ligne d'achat : prix unitaire (quantité autre que 1) et stock lu au magasin."""
+    return ", ".join(([f"{q:g} × {euros(pu)}"] if q != 1 else []) + ([f"stock : {stock}"] if stock is not None else []))
 
 
 def deux_meubles(liens: Mapping[str, str]) -> str:
     """Section « Les deux meubles » ; `liens` : adresses (relatives à la page) des achats de chaque meuble, clés
     « bas » et « haut ». Adresse vide : le meuble de la page qui appelle, écrit sans lien (pas de lien vers soi)."""
-    bas, haut = B.total(), total_haut()
+    bas, haut = B.total(), H.total()
 
     def ligne(nom, cle, v):
         lien = f'<a href="{escape(liens[cle], quote=True)}">{nom}</a>' if liens[cle] else nom
