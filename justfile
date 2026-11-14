@@ -198,6 +198,44 @@ cuisine-amenagement-video echantillons="64": _cuisine-amenagement-glb
 salon-enfilade:
     python3 site.py salon/enfilade
 
+# Salon, aménagement : reconstruit sa page (site/salon/amenagement/) depuis pieces/salon/
+salon-amenagement:
+    python3 site.py salon/amenagement
+
+# Salon, aménagement : rendus 3D (Blender) → site/salon/amenagement/rendus/<caméra>.jpg, et <caméra>-noyer.jpg pour
+# l'option Bois (un Blender par valeur rendue du bois, la scène réglée par SALON_ESSENCE), puis la page. Ne rend que les
+# caméras dont l'empreinte a changé (cache/empreintes.json, commun/rendu_cache.py) ; avec des noms de caméras
+# (just salon-amenagement-rendu 64 iso_se), rend celles-là. Si seule l'image du noyer manque, nommer la caméra.
+salon-amenagement-rendu echantillons="64" *vues:
+    #!/usr/bin/env bash
+    set -euo pipefail
+    dest=site/salon/amenagement/rendus
+    sortie="${SALON_SORTIE:-3d/sortie}"   # le dossier où rendu.py écrit
+    mkdir -p "$dest"
+    cams=$(python3 -m commun.rendu_cache liste salon/amenagement - {{echantillons}} {{vues}})   # sans variante : -
+    if [ -z "$cams" ]; then echo "salon/amenagement : rien à rendre"; exit 0; fi
+    echo "salon/amenagement : $cams"
+    essences=$(python3 -c "from pieces.salon.amenagement import options; print(*(v.code for v in options.BOIS.valeurs if v.rendue))")
+    for c in $cams; do for e in $essences; do rm -f "$sortie/salon-$c.png" "$sortie/salon-$c-$e.png"; done; done   # aucun reste d'un ancien rendu à copier
+    for e in $essences; do
+      suffixe="-$e"; [ "$e" = chene ] && suffixe=""   # le chêne est la valeur d'origine : nom sans suffixe
+      SALON_ESSENCE="$e" "${BLENDER:-/opt/homebrew/bin/blender}" -b --python-exit-code 1 --python pieces/salon/amenagement/rendu.py -- {{echantillons}} $cams
+      for c in $cams; do
+        sips -s format jpeg -s formatOptions 85 "$sortie/salon-$c$suffixe.png" --out "$dest/$c$suffixe.jpg" >/dev/null
+      done
+    done
+    python3 -m commun.rendu_cache noter salon/amenagement - {{echantillons}} $cams
+    python3 site.py salon/amenagement
+
+# Salon, aménagement : aperçu rapide (16 échantillons, 800 × 600, chêne) → cache/apercu/salon-<caméra>.png, sans cache ni
+# copie dans site/ (SALON_ESSENCE=noyer pour le noyer)
+salon-amenagement-apercu *vues:
+    #!/usr/bin/env bash
+    set -euo pipefail
+    mkdir -p cache/apercu
+    SALON_APERCU=1 SALON_SORTIE="$PWD/cache/apercu" "${BLENDER:-/opt/homebrew/bin/blender}" -b --python-exit-code 1 --python pieces/salon/amenagement/rendu.py -- 16 {{vues}}
+    ls cache/apercu/salon-*.png
+
 # Salon, étagères : reconstruit ses quatre pages (site/salon/etageres/) depuis pieces/salon/etageres/
 salon-etageres:
     python3 site.py salon/etageres
