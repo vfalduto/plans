@@ -14,6 +14,7 @@ from pieces.sdb.achats_communs import deux_meubles, prix
 from pieces.sdb.meuble_bas import modele as B
 from pieces.sdb.meuble_bas.document import VERSION
 from pieces.sdb.meuble_bas.dessins import ARIA, DESSINS, ISO, NOMS, legendes
+from pieces.sdb.meuble_bas.explication import vue_explication
 
 
 def _brut(html: str) -> str:
@@ -129,4 +130,4 @@ def vues(variante: str) -> dict[str, Vue]:
     if variante != "":
         raise ValueError(f"meuble bas : variante « {variante} » inconnue (une seule, d'id vide)")
     return {"plans": _plans(), "decoupe": vue_lecture("decoupe", _decoupe()),
-            "montage": vue_lecture("montage", _montage()), "achats": vue_lecture("achats", _achats()), "explication": vue_lecture("explication", "")}
+            "montage": vue_lecture("montage", _montage()), "achats": vue_lecture("achats", _achats()), "explication": vue_explication()}

@@ -2,6 +2,8 @@
 #
 # Les changements sont repris de l'ancienne page sdb-meuble-bas.html (V8.5), du plus récent au plus ancien.
 
+from pieces.sdb.archives import FIGEES_COMMUNES
+
 VERSION = "V8.5"
 CHANGEMENTS = [
     ("V8.5", "05/11/2026", "Panneau perforé et ses deux montants retirés, à la demande du client. Le meuble bas revient à 296,82 €."),
@@ -21,3 +23,11 @@ CHANGEMENTS = [
     ("V7.1", "04/11/2026", "Bastaings 63 × 175 en trois portiques. Structure abandonnée : trop épaisse."),
     ("V7.0", "04/11/2026", "Conception reprise de zéro : alcôve, mesures et machine en place. L'ancien meuble bas (V6.2) reste dans les archives."),
 ]
+
+# versions figées du meuble bas (archive/), puis celles des deux meubles ; libellé : texte du lien de l'historique
+FIGEES = (
+    ("V6.2", "archive/sdb-meuble-v4-bas.html"),
+    ("Variantes V1.0", "archive/sdb-meuble-variantes.html"),
+    ("Niveaux de finition V1.0", "archive/sdb-meuble-niveaux.html"),
+    ("Revue V1.0", "archive/sdb-meuble-bas-revue.html"),
+) + FIGEES_COMMUNES
