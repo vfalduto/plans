@@ -160,7 +160,7 @@ def test_corps_et_donnees():
     corps = balises(page, "body")[0]
     assert (corps["data-type"], corps["data-piece"], corps["data-document"], corps["data-variante"]) == (
         "amenagement", "essai", "amenagement", "b")
-    assert [o["id"] for o in _json(page, "options")] == ["teinte"]
+    assert [o["id"] for o in _json(page, "options")] == ["teinte", "table", "bois"]
     assert _json(page, "options")[0]["css"] == "--teinte"
     assert list(_json(page, "noms-vues")) == ["plan", "coupes", "iso", "camera", "explication"]
     assert balises(page, "button", id="c-options")

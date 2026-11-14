@@ -473,3 +473,14 @@ a:hover>.pl-piece,a:focus-visible>.pl-piece{fill:color-mix(in srgb,var(--repere)
   .lecture .defile:has(> table > thead th.d:nth-child(3) + th.d:nth-child(4):last-child) tr.total td:nth-child(2),
   .lecture .defile:has(> table > thead th.d:nth-child(3) + th.d:nth-child(4):last-child) tr.total td:nth-child(3){display:none}
 }
+
+/* options « choix » : remarque du panneau, note d'une image absente (base à gauche, clone à droite) */
+.feuille .sans-rendu{margin:10px 0 0}
+.element > .note-rendu{position:absolute;left:12px;top:12px;z-index:1;margin:0;padding:4px 8px;border:1px solid var(--line);border-radius:4px;background:var(--panel);color:var(--muted);font:500 14px var(--ui);pointer-events:none}
+.element.b > .note-rendu{left:auto;right:12px}
+.sans-js .element > .note-rendu{position:static;display:inline-block;margin:0 0 8px}
+/* la note de la base passe sous les outils de zoom, posés en haut à gauche ; en comparaison, chaque note tient dans sa
+   part du rideau (--pos), sans recouvrir l'autre */
+.element:not(.b) > .note-rendu{top:58px}
+.compare > .element:not(.b) > .note-rendu{max-width:calc(var(--pos,50%) - 24px)}
+.compare > .element.b > .note-rendu{max-width:calc(100% - var(--pos,50%) - 24px)}

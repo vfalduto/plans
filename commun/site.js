@@ -307,7 +307,8 @@ const elementActif = section => $(".scene > .element:not([hidden]):not(.b)", sec
 const FLECHES = {ArrowLeft: [1, 0], ArrowRight: [-1, 0], ArrowUp: [0, 1], ArrowDown: [0, -1]}, PAS_CLAVIER = 0.1;
 
 /* Zones de meuble du plan : rect.zone[data-meuble=n] et son <template data-meuble=n data-titre> dans la fiche.
-   L'état est dans l'adresse (#plan?k=n) : toucher une zone change l'adresse, montrer() fait le reste. */
+   L'état est dans l'adresse (#plan?k=n) : toucher une zone change l'adresse, montrer() fait le reste. Un meuble peut
+   avoir plusieurs zones et modèles, un par valeur d'une option « choix » (data-si) : seuls ceux de l'état comptent. */
 const meubleDefaut = new WeakMap();   // section -> contenu d'origine de .fiche-meuble
 function toucherMeuble(section, cible) {
   if (!$("rect.zone[data-meuble]", section) || courant.vue !== section.dataset.vue) return;
@@ -319,8 +320,8 @@ function montrerMeuble(section, n) {
   const zones = $$("rect.zone[data-meuble]", section), corps = $(".fiche-meuble", section);
   if (!zones.length || !corps) return;
   if (!meubleDefaut.has(section)) meubleDefaut.set(section, corps.innerHTML);
-  const zone = zones.find(z => z.dataset.meuble === n);
-  const modele = zone && $$("template[data-meuble]", section).find(t => t.dataset.meuble === n);
+  const zone = zones.find(z => z.dataset.meuble === n && selon(z));
+  const modele = zone && $$("template[data-meuble]", section).find(t => t.dataset.meuble === n && selon(t));
   for (const z of zones) z.classList.toggle("ici", z === zone);
   const fiche = $(".fiche", section), nom = $(".fiche-nom", section);
   if (!modele) {
@@ -566,15 +567,29 @@ function brancherComparaison() {
    mémorisé sous « <pièce>/<document>:<id> », donc partagé entre les variantes ; il est aussi gardé dans `choix`, pour
    que la page le suive sans stockage. appliquer() pose la variable CSS sur <html> (les dessins la suivent) et, pour
    une option à filtre, règle les pentes de #filtre-<id> : les rendus recolorés (img.calque, sous masque, portant
-   filter:url(#filtre-<id>)) suivent, clone de la comparaison compris, puisque le filtre est global à la page. */
+   filter:url(#filtre-<id>)) suivent, clone de la comparaison compris, puisque le filtre est global à la page.
+   Une option « choix » pose son jeton <id>:<code> dans html[data-options] : le <style> de tête (gabarit.py) cache tout
+   élément data-si dont un jeton n'est pas dans cet état, clone de la comparaison compris. */
 const options = donnees("options", []);
 const echapper = t => String(t).replace(/[&<>"]/g, c => ({"&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;"}[c]));
 const cleOption = o => `${document.body.dataset.piece}/${document.body.dataset.document}:${o.id}`;
 const valeurDe = (o, code) => o.valeurs.find(v => v.code === code);
 const choix = {};   // option.id -> code choisi
+/* État des options « choix » : les jetons de html[data-options] ; selon(el) : el n'a pas de data-si, ou tous ses
+   jetons sont dans l'état. */
+const etatChoix = () => (racine.dataset.options || "").split(" ").filter(Boolean);
+const selon = el => !el.dataset.si || el.dataset.si.split(/\s+/).filter(Boolean).every(t => etatChoix().includes(t));
+/* Remplace le jeton « <id>:… » de l'option dans html[data-options], à sa place ; l'ajoute s'il manque. */
+function poserChoix(option, code) {
+  const prefixe = option.id + ":", jetons = etatChoix(), i = jetons.findIndex(t => t.startsWith(prefixe));
+  if (i < 0) jetons.push(prefixe + code);
+  else jetons[i] = prefixe + code;
+  racine.dataset.options = jetons.join(" ");
+}
 for (const o of options) { const m = memo.lit(cleOption(o), o.defaut); choix[o.id] = valeurDe(o, m) ? m : o.defaut; }
 
-/* Applique la valeur `code` de l'option : variable CSS, filtre, puis mémoire (sauf `memoriser` faux, au chargement). */
+/* Applique la valeur `code` de l'option : variable CSS, filtre, jeton d'une option « choix », puis mémoire (sauf
+   `memoriser` faux, au chargement). */
 function appliquer(option, code, memoriser = true) {
   const v = valeurDe(option, code) || valeurDe(option, option.defaut);
   if (!v) return;
@@ -586,6 +601,7 @@ function appliquer(option, code, memoriser = true) {
       if (f) f.setAttribute("slope", (parseInt(v.couleur.substr(1 + 2 * i, 2), 16) / 255 / option.ref).toFixed(4));
     });
   }
+  if (option.type === "choix") poserChoix(option, v.code);
   if (memoriser) memo.pose(cleOption(option), v.code);
 }
 const nbChangees = () => options.filter(o => choix[o.id] !== o.defaut).length;
@@ -593,11 +609,17 @@ const nbChangees = () => options.filter(o => choix[o.id] !== o.defaut).length;
 function blocOption(o) {
   const bouton = v => `<button type="button" data-v="${echapper(v.code)}" style="--c:${echapper(v.couleur)}" aria-pressed="false">` +
     (o.type === "nuancier" ? "<i></i>" : `<i style="background:${echapper(v.couleur)}"></i>`) + `${echapper(v.nom)}</button>`;
+  // option « choix » : pas de variable --c, une pastille de couleur seulement si la valeur en a une
+  const boutonChoix = v => `<button type="button" data-v="${echapper(v.code)}" aria-pressed="false">` +
+    (v.couleur ? `<i style="background:${echapper(v.couleur)}"></i>` : "") + `${echapper(v.nom)}</button>`;
   const grille = o.type === "nuancier" ? "nuances" : "choix-opt";
   const commande = [...new Set(o.valeurs.map(v => v.groupe))].map(g => (g ? `<h4>${echapper(g)}</h4>` : "") +
-    `<div class="${grille}">${o.valeurs.filter(v => v.groupe === g).map(bouton).join("")}</div>`).join("");
+    `<div class="${grille}">${o.valeurs.filter(v => v.groupe === g).map(o.type === "choix" ? boutonChoix : bouton).join("")}</div>`).join("");
+  // sous les boutons : la valeur choisie (nuancier) ou, pour un choix, la remarque d'une valeur que les rendus ne montrent pas
+  const sous = o.type === "choix" ? '<p class="remarque sans-rendu" hidden>Pas encore rendu : les rendus ne montrent pas ce choix.</p>'
+                                  : '<p class="info"></p>';
   return `<section data-o="${echapper(o.id)}"><h3>${echapper(o.nom)}` +
-    (o.surfaces.length ? ` <span>(${echapper(o.surfaces.join(", "))})</span>` : "") + `</h3>${commande}<p class="info"></p>` +
+    (o.surfaces.length ? ` <span>(${echapper(o.surfaces.join(", "))})</span>` : "") + `</h3>${commande}${sous}` +
     (o.portee ? `<p class="remarque">${echapper(o.portee)}</p>` : "") + "</section>";
 }
 function brancherOptions() {
@@ -610,6 +632,7 @@ function brancherOptions() {
     for (const o of options) {
       const v = valeurDe(o, choix[o.id]), bloc = $(`section[data-o="${o.id}"]`, panneau);
       for (const b of $$("[data-v]", bloc)) b.setAttribute("aria-pressed", String(b.dataset.v === v.code));
+      if (o.type === "choix") { $(".sans-rendu", bloc).hidden = v.rendue !== false; continue; }
       $(".info", bloc).innerHTML = `<b>${echapper(v.nom)}</b> <span class="num">${echapper(v.couleur)}</span>` +
         (v.note ? `, ${echapper(v.note)}` : "") +
         (v.lien ? ` <a href="${echapper(v.lien)}" target="_blank" rel="noopener">Voir la fiche</a>` : "");
@@ -623,12 +646,16 @@ function brancherOptions() {
     }
   };
   for (const b of $$("[data-v]", panneau)) b.addEventListener("click", () => {
-    appliquer(options.find(o => o.id === b.closest("section").dataset.o), b.dataset.v);
+    const o = options.find(x => x.id === b.closest("section").dataset.o);
+    appliquer(o, b.dataset.v);
     afficher();
+    // la fiche d'un meuble ouverte suit son emprise dans le nouvel état ; un nuancier ne la touche pas
+    if (courant && o.type === "choix") montrer(courant);
   });
   $("#b-origine", panneau).addEventListener("click", () => {
     for (const o of options) appliquer(o, o.defaut);
     afficher();
+    if (courant && options.some(o => o.type === "choix")) montrer(courant);
   });
   const montrerPanneau = ouvert => {
     panneau.hidden = voile.hidden = !ouvert;
