@@ -20,6 +20,7 @@ from pieces.entree.amenagement import document as entree_amenagement
 from pieces.salon.enfilade import document as salon_enfilade
 from pieces.salon.etageres import document as salon_etageres
 from pieces.sdb.meuble_bas import document as sdb_meuble_bas
+from pieces.sdb.meuble_haut import document as sdb_meuble_haut
 
 RACINE = Path(__file__).resolve().parent
 
@@ -29,7 +30,7 @@ SITE = Site((
     )),
     Piece("sdb", "Salle de bain", (
         sdb_meuble_bas.DOCUMENT,
-        Passerelle("sdb", "meuble-haut", "Meuble haut", "construction", "sdb-meuble-haut.html"),
+        sdb_meuble_haut.DOCUMENT,
     )),
     Piece("entree", "Entrée", (
         entree_amenagement.DOCUMENT,
@@ -72,6 +73,14 @@ ANCRES_SDB_BAS = {"iso": "plans?k=iso", "structure": "explication", "placard": "
                   "f-colonne": "plans?k=colonne", "f-colonne-dessus": "plans?k=colonne-dessus", "plan": "plans?k=plan",
                   "f-plan": "plans?k=plan", "elevation": "plans?k=elevation", "f-face": "plans?k=elevation",
                   "coupe": "plans?k=coupe", "f-coupe": "plans?k=coupe", "mesures": "explication"}
+# anciennes ancres de sdb-meuble-haut.html : ses h2 (posés en dur), et ceux des étapes (id de leur section, par ancres.js)
+ANCRES_SDB_HAUT = {"iso": "plans?k=iso", "montage": "montage", "comment-percer": "montage", "fixer-haut": "montage",
+                   "fiches": "decoupe", "decoupe": "decoupe", "achats": "achats", "materiaux": "explication"}
+MOTIFS_SDB_HAUT = ((r"^etape-\d+$", "montage"), (r"^op-\d+-\d+$", "montage"))
+# sdb-meuble-achats.html (la liste d'achats des deux meubles) : la liste du haut seul et le total des deux sont dans
+# les achats du meuble haut ; sans ancre, la page s'ouvre sur ces achats (la clé vide est le fragment absent)
+ANCRES_SDB_ACHATS = {"": "achats", "haut-seul": "achats", "deux-meubles": "achats"}
+PAGES_SDB_ACHATS = {"bas": "sdb/meuble-bas/", "changements": "sdb/meuble-bas/historique.html"}
 
 # ancres de cuisine-v13.html (3d/ancres.js) : la page courante ; ses blocs figés V11.49 et V12.7 (ids relevés une
 # fois dans tests/fixtures/cuisine/ancres.json, plus l'id du bloc) mènent à leur archive
@@ -106,6 +115,9 @@ REDIRECTIONS = (
                 {"changements": "chambre/amenagement/historique.html"}),
     Redirection("sdb-meuble-bas.html", "sdb/meuble-bas/", ANCRES_SDB_BAS, (),
                 {"changements": "sdb/meuble-bas/historique.html"}),
+    Redirection("sdb-meuble-haut.html", "sdb/meuble-haut/", ANCRES_SDB_HAUT, MOTIFS_SDB_HAUT,
+                {"changements": "sdb/meuble-haut/historique.html"}),
+    Redirection("sdb-meuble-achats.html", "sdb/meuble-haut/", ANCRES_SDB_ACHATS, (), PAGES_SDB_ACHATS),
     Redirection("cuisine-v13.html", "cuisine/amenagement/", ANCRES_CUISINE, MOTIFS_CUISINE, PAGES_CUISINE),
     Redirection("cuisine-v13-imprimable.html", "cuisine/amenagement/imprimable.html"),
     Redirection("cuisine-v13-maquette.html", "cuisine/amenagement/maquette-3d.html"),

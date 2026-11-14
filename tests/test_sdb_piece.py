@@ -31,7 +31,6 @@ def test_porte_de_l_accueil():
 def test_chargeur():
     M = ancien.modele()
     assert ancien.modele() is M and M.VERSION == "V6.4" and M.Z_HAUT == 158
-    H = ancien.haut()
-    assert round(H.total_lignes(H.lignes()), 2) == 179.82
     import sys
-    assert "modele" not in sys.modules and "haut" not in sys.modules and "plan" not in sys.modules
+    plan = ancien.charger("plan")           # chargé sans rester sous son nom court
+    assert plan.debit() and "modele" not in sys.modules and "plan" not in sys.modules
