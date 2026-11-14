@@ -78,6 +78,16 @@ def test_meuble_escalier_quantite_apres_les_dimensions():
     assert entetes.index("Nb") == entetes.index("Dimensions (cm)") + 1
 
 
+def test_meuble_sous_totaux_au_centime():
+    """Deux sections avec des centimes : `arrondi=False`, sous-totaux et total s'additionnent (mode d'emploi)."""
+    achats = _scene(MEUBLE.vues("actuelle")["achats"])
+    sous = re.findall(r'<tr class="total"><td>Sous-total</td><td></td><td></td><td class="num d">([^<]+)</td>', achats)
+    assert sous == ["102,40 €", "25,35 €"]
+    assert '<span class="num">127,75 €</span>' in achats
+    assert "<dt>127,75 €</dt><dd>Total</dd>" in _scene(MEUBLE.vues("actuelle")["explication"])
+    assert "<dt>78 €</dt><dd>Total</dd>" in _scene(MEUBLE.vues("rangs")["explication"])
+
+
 def test_meuble_total_de_l_explication():
     vues = MEUBLE.vues("actuelle")
     total = re.search(r'<p class="total-achats"><span>Total</span><span class="num">([^<]+)</span>',

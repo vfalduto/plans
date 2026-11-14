@@ -49,6 +49,10 @@ ACHATS = {
 }
 
 
+# deux sections avec des centimes : au centime, pour que sous-totaux et total s'additionnent à l'œil
+ARRONDI = {"actuelle": False}
+
+
 def _y(i, n, hauteur):
     """Hauteur de la tablette `i` sur `n`, réparties dans `hauteur`."""
     return round(hauteur * (i + 1) / (n + 1), 1)
@@ -145,14 +149,14 @@ def vues(variante: str) -> dict[str, Vue]:
         (formule, "Tablettes"),
         (str(len(_reperes(variante))), "Repères"),
         (str(len(liste)), "Étapes"),
-        (total_achats(ACHATS[variante]), "Total"),
+        (total_achats(ACHATS[variante], arrondi=ARRONDI.get(variante, True)), "Total"),
     ))
     return {
         "plans": vue_plans(dessins, titre=f"Étagère {nom}", formule=formule,
                            liens=[k for k in ("decoupe", "montage") if contenus[k]]),
         "decoupe": vue_lecture("decoupe", contenus["decoupe"]),
         "montage": vue_lecture("montage", contenus["montage"]),
-        "achats": vue_lecture("achats", achats(ACHATS[variante])),
+        "achats": vue_lecture("achats", achats(ACHATS[variante], arrondi=ARRONDI.get(variante, True))),
         "explication": vue_lecture("explication", explication),
     }
 
