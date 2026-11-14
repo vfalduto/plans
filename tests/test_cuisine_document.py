@@ -12,7 +12,7 @@ from commun.construction import _dessins, construire
 from commun.css_dessins import css_dessins
 from commun.journal import entrees
 from commun.modele import Piece, Site
-from pieces.cuisine import piece
+from pieces.cuisine import modele as M, piece
 from pieces.cuisine.amenagement import dessins, document, legende, vues
 from pieces.cuisine.amenagement import zones as Z
 from tests.cuisine_anciens import FIXTURES
@@ -121,9 +121,11 @@ def test_changements():
     assert len(v.changements) == 90 and v.changements[0].version == "V13.30"
     reference = re.findall(r'<tr><td class="mono">([^<]+)</td>', TABLEAUX["changements"])
     assert [c.version for c in v.changements] == reference
-    for c in v.changements:
-        assert "·" not in c.texte and "#hauteur-du-plan-de-travail-etude" not in c.texte
-    assert "./#explication" in v.changements[0].texte
+    # un changement est de l'histoire : texte d'origine, seul le point médian devient une virgule
+    for c, (_, _, origine) in zip(v.changements, M.CHANGEMENTS, strict=True):
+        assert c.texte == origine.replace(" · ", ", "), c.version
+        assert "·" not in c.texte
+    assert v.changements[0].texte.endswith("Lien dans le sommaire : #hauteur-du-plan-de-travail-etude.")
 
 
 def test_figees():
@@ -216,7 +218,7 @@ def test_tableau_de_contenu(construit):
     texte_historique = _texte(historique)
     for ligne in re.findall(r"<tr>(.*?)</tr>", TABLEAUX["changements"].split("<tbody>")[1], re.S):
         version, _, texte = re.findall(r"<td[^>]*>(.*?)</td>", ligne, re.S)
-        attendu = _norm(texte).replace("#hauteur-du-plan-de-travail-etude", "./#explication")
+        attendu = _norm(texte)
         assert attendu in texte_historique, version
 
 

@@ -21,8 +21,9 @@ FIGEES = (("V11.49", "archive/cuisine-v11.49.html"), ("V12.7", "archive/cuisine-
 
 
 def _texte_changement(texte: str) -> str:
-    """Point médian remplacé par une virgule ; l'ancienne ancre de l'étude du plan de travail devient la vue Explication."""
-    return texte.replace(" · ", ", ").replace("#hauteur-du-plan-de-travail-etude", "./#explication")
+    """Point médian remplacé par une virgule, rien d'autre : un changement est de l'histoire (V13.30 cite encore
+    l'ancre de l'ancienne page)."""
+    return texte.replace(" · ", ", ")
 
 
 def construire_document():
