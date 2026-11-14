@@ -28,7 +28,8 @@ def _titre(etiq, generique):
 
 _BAS, _HAUTS, _COLONNES = _caissons("caisson"), _caissons("caisson_haut"), _caissons("colonne")
 
-# (id, titre, motif, coupe, iso), dans l'ordre de l'inventaire (INV §8)
+# (id, titre, motif, coupe, iso), dans l'ordre de l'inventaire (INV §8) ; porte d'entrée et tableau noir, au mur sud :
+# coupe B et iso NO (l'inventaire disait A et SO, où ils ne sont pas)
 MEUBLES_PLAN = tuple(
     [(i, _titre(e, "meuble bas"), rf"(socle|caisson|facade)_{i}(_\w+)?", "A", "so") for i, e in _BAS]
     + [(i, _titre(e, "meuble haut"), rf"(caisson|facade)_{i}(_\w+)?", "A", "so") for i, e in _HAUTS]
@@ -45,8 +46,8 @@ MEUBLES_PLAN = tuple(
         ("seau", "Seau", r"seau", "C", "no"),
         ("aspirateur", "Aspirateur", r"aspirateur_\w+", "C", "no"),
         ("porte-cellier", "Porte du cellier", r"cellier_pliante", "C", "no"),
-        ("porte-entree", "Porte d'entrée", r"entree_vantail", "B", "so"),
-        ("tableau-noir", "Tableau noir et zone aimantée", r"tableau_noir|zone_aimantee", "A", "so"),
+        ("porte-entree", "Porte d'entrée", r"entree_vantail", "B", "no"),
+        ("tableau-noir", "Tableau noir et zone aimantée", r"tableau_noir|zone_aimantee", "B", "no"),
     ])
 
 # Lignes de CONTENU des meubles sans étiquette, par début de libellé ; celles des caissons commencent par leur code

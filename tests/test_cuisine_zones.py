@@ -8,8 +8,8 @@ from pathlib import Path
 import pytest
 
 from commun.blocs import cotes_meuble
-from pieces.cuisine import modele as M
-from pieces.cuisine.amenagement import zones as Z
+from pieces.cuisine import modele as M, piece as P
+from pieces.cuisine.amenagement import dessins as D, zones as Z
 
 IDS = [m[0] for m in Z.MEUBLES_PLAN]
 # lignes de CONTENU sans meuble sur le plan : elles vont à l'Explication (tâche 8)
@@ -104,3 +104,35 @@ def test_cotes_sans_nombre_en_dur():
         for code in codes:
             reste = reste.replace(code, "")
         assert not re.search(r"\d", reste), titre
+
+
+# ------------------------------------------------------------------ « Coupe » et « Iso » de la fiche montrent le meuble
+# coupe : plan et regard, comme dessins.coupe_a/b/c ; un bloc y est s'il est au-delà du plan dans le sens du regard
+# (le critère `vu` de dessins.coupe_svg)
+COUPES = {"A": (D.COUPE_A, "nord"), "B": (D.COUPE_B, "sud"), "C": (D.COUPE_C, "est")}
+ISOS = {"so": "iso_so", "no": "iso_no"}   # k de la vue Iso → caméra
+
+
+def _dans_la_coupe(b, lettre):
+    cut, regard = COUPES[lettre]
+    axe, sens, _ = D.REGARDS[regard]
+    _, _, d0, d1 = D.uv(b, axe)
+    return d1 > cut if sens > 0 else d0 < cut
+
+
+@pytest.mark.parametrize("id_, motif, coupe, iso", [(m[0], m[2], m[3], m[4]) for m in Z.MEUBLES_PLAN])
+def test_coupe_et_iso_montrent_le_meuble(id_, motif, coupe, iso):
+    blocs = _blocs(motif)
+    assert any(_dans_la_coupe(b, coupe) for b in blocs), f"{id_} : absent de la coupe {coupe}"
+    camera = next(c for c in P.CAMERAS if c.id == ISOS[iso])
+    retires = re.compile(camera.reglages["coupes"])
+    # nom de l'objet dans le glb : <rôle>__<nom> (cad.py)
+    assert any(not retires.match(f"{b.role}__{b.nom}") for b in blocs), f"{id_} : retiré du rendu {camera.id}"
+
+
+def test_coupe_et_iso_peuvent_echouer():
+    """Le critère voit l'erreur de l'inventaire : le tableau noir (mur sud) n'est ni dans la coupe A ni dans l'iso SO."""
+    blocs = _blocs(r"tableau_noir|zone_aimantee")
+    assert not any(_dans_la_coupe(b, "A") for b in blocs)
+    retires = re.compile(next(c for c in P.CAMERAS if c.id == "iso_so").reglages["coupes"])
+    assert all(retires.match(f"{b.role}__{b.nom}") for b in blocs)
