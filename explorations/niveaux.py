@@ -5,7 +5,7 @@
 #   niv_1.py … niv_4.py   contrat : ID, TITRE, RESUME, section() → HTML du chapitre (sans le h2), FICHE (voir niv_commun.py)
 #   niv_comparatif.py     notes et recommandation, par un agent indépendant ; contrat : ID, TITRE, section()
 #
-# `just sdb-niveaux` écrit sdb-meuble-niveaux.html. Un module absent ou en erreur laisse un encart à sa place et un
+# `python3 explorations/niveaux.py [--strict]` écrit cache/explorations/sdb-meuble-niveaux.html. Un module absent ou en erreur laisse un encart à sa place et un
 # avertissement sur la sortie d'erreur ; --strict fait échouer la génération.
 
 import importlib
@@ -15,12 +15,14 @@ import traceback
 from html import escape
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+sys.path.insert(1, os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "3d", "sdb"))
 import modele as M  # noqa: E402
 import plan as PL  # noqa: E402
 import pages as PG  # noqa: E402
 import niv_commun as NC  # noqa: E402
 
 VERSION = "V1.0"
+SORTIE = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "cache", "explorations")
 FICHIER = "sdb-meuble-niveaux.html"
 CLE = "sdb-niveaux"
 MODULES = ("niv_1", "niv_2", "niv_3", "niv_4")
@@ -111,7 +113,8 @@ def page(strict=False):
 
 
 def ecrire(strict=False):
-    chemin = os.path.join(PL.ROOT, FICHIER)
+    os.makedirs(SORTIE, exist_ok=True)
+    chemin = os.path.join(SORTIE, FICHIER)
     html = page(strict)
     with open(chemin, "w", encoding="utf-8") as fh:
         fh.write(html)

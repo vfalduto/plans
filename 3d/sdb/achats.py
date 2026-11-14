@@ -1,5 +1,5 @@
-# Liste d'achats du meuble linge : sdb-meuble-achats.html, à la racine. Elle suit les meubles courants : bas.prix() pour le
-# meuble bas, haut.lignes() pour le meuble haut. La liste de l'ancien meuble en L reste dans pages.py, pour les archives.
+# Liste d'achats du meuble linge : sdb-meuble-achats.html, à la racine. Elle suit les meubles courants : le modèle du
+# meuble bas (pieces/sdb/meuble_bas/modele.py, prix()), haut.lignes() pour le meuble haut. La liste de l'ancien meuble en L reste dans pages.py, pour les archives.
 #
 #   python3 3d/sdb/achats.py   (just sdb)
 
@@ -8,14 +8,17 @@ import sys
 from html import escape
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+sys.path.insert(1, os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "..")))   # pieces/
 import modele as M  # noqa: E402
 import plan as PL  # noqa: E402
 import pages as PG  # noqa: E402
 import haut as H  # noqa: E402
-import bas as B  # noqa: E402
+from pieces.sdb.meuble_bas import modele as B  # noqa: E402
+from pieces.sdb.meuble_bas.document import VERSION as VERSION_BAS  # noqa: E402
 
 PAGE = "sdb-meuble-achats.html"
-VERSION = B.VERSION
+PAGE_BAS = "sdb-meuble-bas.html"
+VERSION = VERSION_BAS
 BARRE = ('<div class="vbar"><a class="back" href="index.html">← Plans</a><span class="sp"></span>'
          '<a class="btn" href="sdb-meuble-bas.html">Meuble bas →</a>'
          '<a class="btn" href="sdb-meuble-haut.html">Meuble haut →</a></div>')
@@ -51,7 +54,7 @@ def deux_meubles():
 
 def bas_courant():
     _, tab = PL.liste(B.prix(), "Total du meuble bas")
-    return (f'<h2 id="bas">Meuble bas</h2><p>Tout ce qu\'il faut pour <a href="{B.PAGE}">le meuble bas {B.VERSION}</a>. '
+    return (f'<h2 id="bas">Meuble bas</h2><p>Tout ce qu\'il faut pour <a href="{PAGE_BAS}">le meuble bas {VERSION_BAS}</a>. '
             f'Joues, fond, bas, étagère et porte en mélaminé blanc, levés sur des vérins, avec les 2 bacs.</p>{tab}'
             f'<p class="note">Les vis 4 × 40 viennent de la liste du meuble haut, qui en a assez. Pour acheter le meuble bas seul, ajouter la boîte de vis (9,00 €), soit {PL.euros(B.total() + 9.00)}. '
             f'Chant : {B.cm(B.chant_vu() / 100)} m à plaquer, 10 % de chutes compris. Vérins comptés à l\'unité comme l\'indique la fiche ; un avis client parle d\'un paquet de 5, à vérifier en magasin. Le lot de poignées en contient 2, une seule sert. Non comptés : le câble, la goulotte et l\'électricien, la scie sauteuse, le rail de coupe, le foret à cuvette Ø 35, la scie cloche Ø 67 et les clips adhésifs du fil des LED.</p>')

@@ -1,8 +1,10 @@
-# Tests de la V4 du document (modèle V6.0) : uv run -q --no-project --with pytest pytest -q 3d/sdb/test_v4.py
+# Tests de la V4 du document (modèle V6.0) : uv run -q --no-project --with pytest pytest -q explorations/test_v4.py
 import os
 import sys
 
 sys.path.insert(0, os.path.dirname(__file__))
+sys.path.insert(1, os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "3d", "sdb"))
+sys.path.insert(2, os.path.join(os.path.dirname(os.path.abspath(__file__)), ".."))   # pieces/
 import modele as M  # noqa: E402
 
 
@@ -84,7 +86,7 @@ def test_chapitre_paniers():
     ens = pages.page_ensemble()
     assert '<h2 id="paniers">Variante : deux paniers à roulettes</h2>' in ens
     assert ens.index('id="budget"') < ens.index('id="paniers"') < ens.index('id="changements"')
-    racine = os.path.join(os.path.dirname(__file__), "..", "..")
+    racine = os.path.join(os.path.dirname(__file__), "..")
     # V6.3 : la photo est rangée avec les pages archivées (archive/sdb-meuble-photos/)
     assert f'src="{M.CORNO["photo"]}"' in ens and os.path.exists(os.path.join(racine, "archive", M.CORNO["photo"]))
     eco = sum(q * px for _, _, q, px in pages.en_moins_paniers())
@@ -93,7 +95,7 @@ def test_chapitre_paniers():
 
 
 def test_plus_de_v3():
-    racine = os.path.join(os.path.dirname(__file__), "..", "..")
+    racine = os.path.join(os.path.dirname(__file__), "..")
     assert not os.path.exists(os.path.join(racine, "sdb-meuble-v3.html"))
     assert not hasattr(M, "PANIERS")
 
@@ -221,7 +223,7 @@ from collections import Counter  # noqa: E402
 import haut as H  # noqa: E402
 import calepinage as CAL  # noqa: E402
 
-RACINE = os.path.join(os.path.dirname(__file__), "..", "..")
+RACINE = os.path.join(os.path.dirname(__file__), "..")
 
 
 def _hors_notice_bas(h):
@@ -327,16 +329,16 @@ def test_page_achats_sections():
     h = A.page()
     for sec in ('id="deux-meubles"', 'id="haut-seul"', 'id="changements"'):
         assert sec in h, sec
-    import bas
+    from pieces.sdb.meuble_bas import document
     assert 'id="bas"' in h
-    assert "<h1>Liste d'achats</h1>" in h and f"achats · {bas.VERSION}" in h
+    assert "<h1>Liste d'achats</h1>" in h and f"achats · {document.VERSION}" in h
     assert 'href="sdb-meuble-haut.html"' in h and 'href="sdb-meuble-bas.html"' in h and 'href="index.html"' in h
     assert M.MAGASIN["tel"] in h
 
 
 def test_page_achats_suit_le_meuble_bas_courant():
     import achats as A
-    import bas
+    from pieces.sdb.meuble_bas import modele as bas
     h = A.page()
     for nom, ref, _, _, _ in bas.prix():
         assert ref in h, nom
@@ -364,6 +366,8 @@ def test_page_achats_liens_existent():
     h = A.page()
     for v in re.findall(r'\b(?:href|src)="([^"]*)"', h):
         if not v or v.startswith(("http", "data:", "#")):
+            continue
+        if v == "sdb-meuble-bas.html":      # redirigée vers sdb/meuble-bas/ depuis sa migration (site.py)
             continue
         assert os.path.exists(os.path.join(RACINE, v.split("#")[0])), v
     for ancre in re.findall(r'href="#([^"]+)"', h):

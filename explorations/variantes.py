@@ -10,7 +10,7 @@
 # Contrat d'un module de variante : ID (ancre), TITRE, RESUME (une phrase), section() → HTML du chapitre (sans le h2),
 # FICHE (dict lu par le comparatif). Le comparatif : TITRE, section().
 #
-# `just sdb-variantes` écrit sdb-meuble-variantes.html. Un module absent ou en erreur laisse un encart à sa place et un
+# `python3 explorations/variantes.py [--strict]` écrit cache/explorations/sdb-meuble-variantes.html. Un module absent ou en erreur laisse un encart à sa place et un
 # avertissement sur la sortie d'erreur (les agents travaillent en parallèle) ; --strict fait échouer la génération.
 
 import importlib
@@ -20,11 +20,13 @@ import traceback
 from html import escape
 
 sys.path.insert(0, os.path.dirname(__file__))
+sys.path.insert(1, os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "3d", "sdb"))
 import modele as M  # noqa: E402
 import plan as PL  # noqa: E402
 import pages as PG  # noqa: E402
 
 VERSION = "V1.0"
+SORTIE = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "cache", "explorations")
 FICHIER = "sdb-meuble-variantes.html"
 CLE = "sdb-variantes"
 MODULES = ("var_pivot", "var_tiroirs", "var_arceaux")
@@ -115,7 +117,8 @@ def page(strict=False):
 
 
 def ecrire(strict=False):
-    chemin = os.path.join(PL.ROOT, FICHIER)
+    os.makedirs(SORTIE, exist_ok=True)
+    chemin = os.path.join(SORTIE, FICHIER)
     html = page(strict)
     with open(chemin, "w", encoding="utf-8") as fh:
         fh.write(html)
