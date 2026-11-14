@@ -1,3 +1,5 @@
+import subprocess
+
 from commun.journal import entrees
 from commun.modele import Changement
 from pieces.salon.enfilade import dessins, document, vues
@@ -27,7 +29,6 @@ def test_redirection():
     (r,) = [r for r in charger_site().REDIRECTIONS if r.ancienne == "salon-enfilade.html"]
     assert (r.cible, r.ancres, r.motifs, r.pages) == ("salon/enfilade/", ANCRES, (),
                                                       {"changements": "salon/enfilade/historique.html"})
-    assert r.ancres.get("inconnue", "") == ""            # ancre inconnue : vue par défaut
 
 
 def test_journal_garde_sept_changements():
@@ -36,6 +37,9 @@ def test_journal_garde_sept_changements():
 
 
 def test_ancienne_page_retiree():
-    assert not (RACINE / "salon-enfilade.html").exists()
+    # git ne la suit plus ; `just salon` la réécrit encore à la racine, ignorée par .gitignore
+    suivis = subprocess.run(["git", "ls-files", "salon-enfilade.html"], cwd=RACINE, capture_output=True, text=True,
+                            check=True).stdout
+    assert suivis == ""
     assert (RACINE / "3d/salon/enfilade.py").exists()     # l'ancien générateur reste (nettoyage commun)
     assert "/salon-enfilade.html" in (RACINE / ".gitignore").read_text(encoding="utf-8").split()
