@@ -153,11 +153,37 @@ def test_commun_n_importe_pas_pieces():
 # ------------------------------------------------------------------ Explication et achats
 def test_euros():
     assert euros(80) == "80 €"
-    assert euros(12.5) == "12,5 €"
+    assert euros(12.5) == "12,50 €"
+    assert euros(64.9) == "64,90 €"
     assert euros(38.97) == "38,97 €"
-    assert euros(0.1 + 0.2) == "0,3 €"
+    assert euros(14.99) == "14,99 €"
+    assert euros(0.1 + 0.2) == "0,30 €"
     assert euros(100) == "100 €"
+    assert euros(79.999) == "80 €"
     assert euros(12345.67) == "12345,67 €"
+
+
+def test_somme_exacte():
+    """Les montants s'additionnent sur leur écriture décimale : 3 × 12,45 + 0,15 = 37,50, arrondi à 38 (en flottants,
+    37,49999999999999 tombait à 37)."""
+    lignes = [Achat("Tasseau", "T", 3, 12.45), Achat("Vis", "V", 1, 0.15)]
+    assert total_achats([SectionAchats("", lignes)]) == "38 €"
+    assert _cellules(tableau_achats(lignes), "total") == [["Total", "", "", "38 €"]]
+    assert total_achats([SectionAchats("A", lignes[:1]), SectionAchats("B", lignes[1:])], arrondi=False) == "37,50 €"
+
+
+def test_rien_de_chiffre():
+    """Une section sans ligne chiffrée : « non chiffré » au lieu d'un sous-total de 0 € ; de même pour le total."""
+    porte = SectionAchats("Porte", [Achat("Porte", "P1", 1, None)])
+    vis = SectionAchats("Vis", [Achat("Vis", "V1", 2, 1.5)])
+    assert _cellules(tableau_achats(porte.achats, approx=True), "total") == [["Total", "", "", "non chiffré"]]
+    deux = achats([porte, vis])
+    assert _cellules(deux, "total") == [["Sous-total", "", "", "non chiffré"], ["Sous-total", "", "", "3 €"]]
+    assert '<span class="num">3 €</span>' in deux
+    rien = achats([porte, SectionAchats("Poignée", [Achat("Poignée", "P2", 1, None)])], approx=True)
+    assert '<p class="total-achats"><span>Total</span><span class="num">non chiffré</span></p>' in rien
+    assert total_achats([porte], approx=True) == "non chiffré"
+    assert "0 €" not in deux + rien
 
 
 def _cellules(html, classe):
@@ -191,14 +217,14 @@ def test_achats_sections():
     assert _cellules(seule, "total") == [["Total", "", "", "≈ 80 €"]]
     assert "total-achats" not in seule and "remarque" not in seule
     exact = achats([ikea, weldom], arrondi=False)
-    assert '<span class="num">84,8 €</span>' in exact and '<td class="num d">4,4 €</td></tr></tbody>' in exact
+    assert '<span class="num">84,80 €</span>' in exact and '<td class="num d">4,40 €</td></tr></tbody>' in exact
 
 
 def test_total_achats_est_celui_d_achats():
     ikea = SectionAchats("IKEA", [Achat("Caisson", "1", 1, 80.4), Achat("Porte", "3", 1, None)])
     weldom = SectionAchats("Weldom", [Achat("Vis", "2", 4, 1.1)])
     assert total_achats([ikea, weldom]) == "85 €"
-    assert total_achats([ikea, weldom], approx=True, arrondi=False) == "≈ 84,8 €"
+    assert total_achats([ikea, weldom], approx=True, arrondi=False) == "≈ 84,80 €"
     for sections in ([ikea], [ikea, weldom]):
         for approx in (False, True):
             for arrondi in (False, True):

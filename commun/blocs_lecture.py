@@ -88,23 +88,30 @@ def _demi(montant, pas):
     return Decimal(str(montant)).quantize(Decimal(pas), rounding=ROUND_HALF_UP)
 
 
-def euros(montant: float) -> str:
-    """Au centime, demi vers le haut ; virgule, zéros finaux retirés, pas de séparateur de milliers : 80 -> « 80 € »,
-    12.5 -> « 12,5 € »."""
-    return f"{_demi(montant, '0.01')}".rstrip("0").rstrip(".").replace(".", ",") + " €"
+def euros(montant: float | Decimal) -> str:
+    """Au centime, demi vers le haut ; virgule, pas de séparateur de milliers ; un montant entier sans décimales, sinon
+    deux : 80 -> « 80 € », 12.5 -> « 12,50 € », 14.99 -> « 14,99 € »."""
+    centimes = _demi(montant, "0.01")
+    texte = f"{centimes:.0f}" if centimes == centimes.to_integral_value() else f"{centimes:.2f}"
+    return texte.replace(".", ",") + " €"
 
 
-def _somme(achats):
-    return sum(a.quantite * a.unitaire for a in achats if a.unitaire is not None)
+def _montant(a):
+    """Quantité × prix d'une ligne chiffrée, sur leur écriture décimale (3 × 12,45 = 37,35 exactement)."""
+    return Decimal(str(a.quantite)) * Decimal(str(a.unitaire))
 
 
-def _arrondi(total, arrondi):
-    return _demi(total, "1" if arrondi else "0.01")
+def _chiffrees(achats):
+    return [a for a in achats if a.unitaire is not None]
 
 
 def total_achats(sections: Sequence[SectionAchats], approx: bool = False, arrondi: bool = True) -> str:
-    """Texte du total général d'`achats` : somme exacte des lignes chiffrées, section par section, puis arrondie."""
-    total = _arrondi(sum(_somme(s.achats) for s in sections), arrondi)
+    """Texte du total général d'`achats` : somme exacte (décimale) des lignes chiffrées, puis arrondie à l'euro (au
+    centime si `arrondi` est faux) ; aucune ligne chiffrée : « non chiffré »."""
+    chiffrees = [a for s in sections for a in _chiffrees(s.achats)]
+    if not chiffrees:
+        return "non chiffré"
+    total = _demi(sum((_montant(a) for a in chiffrees), Decimal(0)), "1" if arrondi else "0.01")
     return f'{"≈ " if approx else ""}{euros(total)}'
 
 
@@ -113,7 +120,7 @@ def tableau_achats(achats: Sequence[Achat], libelle_total: str = "Total", approx
     lignes = []
     for a in achats:
         note = f"<small>{a.note}</small>" if a.note else ""
-        prix = "non chiffré" if a.unitaire is None else euros(a.quantite * a.unitaire)
+        prix = "non chiffré" if a.unitaire is None else euros(_montant(a))
         lignes.append(f'<tr><td>{_e(a.article)}{note}</td><td class="num">{_e(a.reference)}</td>'
                       f'<td class="num d">{f"{a.quantite:g}".replace(".", ",")}</td><td class="num d">{prix}</td></tr>')
     total = total_achats([SectionAchats("", achats)], approx, arrondi)

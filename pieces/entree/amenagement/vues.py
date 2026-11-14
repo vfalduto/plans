@@ -9,8 +9,8 @@ from html import escape
 from pathlib import Path
 
 from commun.blocs import (Achat, Carte, Coupe, Lieu, SectionAchats, Zone, a_verifier, achats, chiffres, cotes_meuble,
-                          figure_rendu, materiaux, nombre, note_source, points_iso, principes, rendu, tete, vue_camera,
-                          vue_coupes, vue_iso, vue_lecture, vue_plan, zones_svg)
+                          figure_rendu, materiaux, nombre, note_source, points_iso, principes, rendu, tete,
+                          total_achats, vue_camera, vue_coupes, vue_iso, vue_lecture, vue_plan, zones_svg)
 from commun.dessin import virg
 from commun.modele import Vue
 from pieces.entree import piece
@@ -105,9 +105,12 @@ def _cartes(M, D):
     return [Carte(t, x, zones.get(r, "")) for r, (t, x) in enumerate(D.principes(M))]
 
 
+def _sections(M):
+    return [SectionAchats("", [Achat(n, r, q, p) for n, r, q, p in M.IKEA])]
+
+
 def _achats(M, approx, note):
-    return achats([SectionAchats("", [Achat(n, r, q, p) for n, r, q, p in M.IKEA])],
-                  titre="Achats IKEA pour la penderie", note=note, approx=approx)
+    return achats(_sections(M), titre="Achats IKEA pour la penderie", note=note, approx=approx)
 
 
 def _portes_caisson(M, note):
@@ -130,12 +133,12 @@ def _article(M, D, cle, chapo, stats, achats, matieres, verifier, source, avant=
 def _explication_principale(M, D):
     c, pe = M.CHAUSSURES, M.PENDERIE
     lp = pe["x1"] - pe["x0"]
-    total = round(sum(q * p for _, _, q, p in M.IKEA))
     chapo = (f"Le couloir ({virg(M.SURFACE)} m²) dessert cinq portes et le passage du salon : il faut ranger sans gêner. "
              "Un banc sous le tableau électrique, un meuble à chaussures étroit avec miroir dans la branche d'entrée, "
              "relié par un angle arrondi à une penderie face à la salle de bain. Un meuble suspendu au plafond marque "
              "l'entrée ; au-delà, murs, plafond et porte sont peints en India Yellow.")
-    stats = [(f"PAX {lp} × {pe['caisson']}", f"penderie IKEA, ≈ {total} €"), (f"≈ {M.PAIRES} paires", "meuble à chaussures"),
+    total = total_achats(_sections(M), approx=True)   # « ≈ … € », le total du tableau des achats
+    stats = [(f"PAX {lp} × {pe['caisson']}", f"penderie IKEA, {total}"), (f"≈ {M.PAIRES} paires", "meuble à chaussures"),
              (f'{c["x0"]} cm', "passage le plus étroit"), (f"{virg(M.SURFACE)} m²", "surface du couloir")]
     achats = _achats(M, True, "Prix IKEA France relevés sur les fiches produit le 13/11/2026, en blanc ; les portes « avec "
                      "charnières » comprennent leurs 4 charnières KOMPLEMENT à fermeture silencieuse. Les deux tablettes "
@@ -185,14 +188,14 @@ def _explication_principale(M, D):
 def _explication_victor(M, D):
     b, pe, mi, pl, cd = M.CHAUSSURES, M.PENDERIE, M.MIROIR, M.PLANCHE, M.CADRES
     lp, pp = pe["y1"] - pe["y0"], pe["x1"] - pe["x0"] - pe["facade"]
-    total = round(sum(q * p for _, _, q, p in M.IKEA))
     chapo = (f'Variante de l\'<a href="./">aménagement {M.BASE}</a>. Le mur sous le tableau électrique reste '
              "libre. Un meuble à chaussures bas à abattants, deux étagères flottantes au-dessus, prend la place de la "
              "penderie face à la salle de bain ; il file jusqu'à la penderie et s'y termine en arrondi. La penderie, un "
              "PAX d'IKEA de 75 × 35 qui monte presque au plafond, passe dans la branche d'entrée ; une planche à "
              "chaussures court sous les patères. En face, sur le mur ouest peint en India, des cadres et un miroir à côté "
              "de l'interphone.")
-    stats = [(f"PAX {lp} × {pp}", f"penderie IKEA, ≈ {total} €"), (f"≈ {M.PAIRES} paires", "meuble à abattants et planche"),
+    total = total_achats(_sections(M), approx=True)
+    stats = [(f"PAX {lp} × {pp}", f"penderie IKEA, {total}"), (f"≈ {M.PAIRES} paires", "meuble à abattants et planche"),
              (f'{pe["x0"]} cm', "passage le plus étroit"), (f'{b["y0"]} cm', "devant le meuble à chaussures")]
     achats = _achats(M, False, "Prix IKEA France relevés sur les fiches produit le 13/11/2026, en blanc. Charnières "
                      "KOMPLEMENT en plus (nombre et prix à lire sur la fiche des portes), bandeau et fixation murale non comptés.")
