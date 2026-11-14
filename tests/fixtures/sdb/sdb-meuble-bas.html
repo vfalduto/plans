@@ -1,0 +1,601 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Meuble bas · nouvelle conception</title>
+<link rel="icon" href="favicon.svg" type="image/svg+xml">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wght@400;500;700;800&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+<style>
+:root{
+  --paper:#F7F8F6; --ink:#1D2A33; --muted:#5E6B73; --line:#C9D0D4; --wood:#B07A45;
+  --water:#2F7FB5; --tri:#C8412C; --panel:#FFFFFF; --cab:#ECE6DA; --tall:#D8CFBD; --bac:#E3C9A0;
+  --socle:#C8B79B; --glass:#CFE4F2; --tile:#E9EEF0; --dg:#D29A68; --bas:#EDBE8C; --haut:#9EC9E6; color-scheme:light;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --paper:#141A1F; --ink:#E4EAED; --muted:#9AA7AE; --line:#34414A; --wood:#C9925A;
+    --water:#5AA8DE; --tri:#E8664F; --panel:#1B2329; --cab:#2A3338; --tall:#394449; --bac:#5B4B33;
+    --socle:#4C4436; --glass:#1F3A4E; --tile:#1D262C; --dg:#8C5E3A; --bas:#7A5534; --haut:#2F5677; color-scheme:dark;
+  }
+}
+:root[data-theme="dark"]{
+  --paper:#141A1F; --ink:#E4EAED; --muted:#9AA7AE; --line:#34414A; --wood:#C9925A;
+  --water:#5AA8DE; --tri:#E8664F; --panel:#1B2329; --cab:#2A3338; --tall:#394449; --bac:#5B4B33;
+  --socle:#4C4436; --glass:#1F3A4E; --tile:#1D262C; --dg:#8C5E3A; --bas:#7A5534; --haut:#2F5677; color-scheme:dark;
+}
+*{box-sizing:border-box}
+html,body{margin:0}
+body{background:var(--paper);color:var(--ink);font-family:Archivo,system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;line-height:1.55;font-size:16px}
+.wrap{max-width:1120px;margin:0 auto;padding:28px 16px 64px}
+.kicker{font-family:"JetBrains Mono",ui-monospace,Menlo,monospace;font-size:12px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted)}
+h1{font-size:clamp(28px,5vw,44px);line-height:1.08;margin:6px 0 12px;font-weight:800;letter-spacing:-.01em}
+h2{font-size:22px;margin:44px 0 10px;font-weight:700;scroll-margin-top:60px}
+h3{font-size:15px;margin:18px 0 6px}
+.pitch{font-size:18px;max-width:780px}
+.fig{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:12px;margin:14px 0}
+.scroll{overflow-x:auto}.scroll svg{display:block;width:100%;height:auto;max-height:78vh}
+.grid2{display:grid;grid-template-columns:repeat(auto-fit,minmax(320px,1fr));gap:14px}
+.grid2 .fig{margin:0}
+.cap{font-size:13px;color:var(--muted);margin:8px 4px 2px}
+.note{font-size:13px;color:var(--muted)}
+table{border-collapse:collapse;width:100%;font-size:14px}
+th,td{text-align:left;padding:7px 8px;border-bottom:1px solid var(--line);vertical-align:top}
+td.num,th.num{text-align:right;font-family:"JetBrains Mono",ui-monospace,monospace;white-space:nowrap}
+.mono{font-family:"JetBrains Mono",ui-monospace,monospace;white-space:nowrap}
+td.u{font-size:13px;color:var(--muted)}
+tr.mat td{background:var(--paper);font-weight:700;padding-top:12px}
+.debit{min-width:680px}
+.debit tfoot td{border-top:2px solid var(--ink)}
+.tabs{display:grid;gap:10px}
+.tab svg{display:block;width:100%;height:auto}
+.tabt{font-size:13px;color:var(--muted);margin-bottom:3px}.tabt b{color:var(--ink)}
+.tb{fill:var(--tile);stroke:var(--ink);stroke-width:3}
+.pc{stroke:var(--ink);stroke-width:2;fill:var(--cab)}.pc.mB{fill:var(--bac)}.pc.mC{fill:var(--tall)}.pc.mK{fill:var(--tall)}.pc.mS{fill:var(--socle)}.pc.mD{fill:var(--wood)}.pc.mG{fill:var(--dg)}
+.pc.bas{fill:var(--bas)}.pc.haut{fill:var(--haut)}
+.sw.bas{background:var(--bas)}.sw.haut{background:var(--haut)}
+tr.bas td:first-child{box-shadow:inset 5px 0 var(--bas)}tr.haut td:first-child{box-shadow:inset 5px 0 var(--haut)}
+.leg{font-size:13px;color:var(--muted);margin:6px 2px}.leg .sw{margin-left:12px}
+.pt{font:700 64px "JetBrains Mono",ui-monospace,monospace;fill:var(--ink);text-anchor:middle}
+.pt.ps{font-size:40px}
+.pd{font:400 40px "JetBrains Mono",ui-monospace,monospace;fill:var(--muted);text-anchor:middle}
+.sw{display:inline-block;width:12px;height:12px;border-radius:3px;margin-right:8px;vertical-align:-1px;border:1px solid var(--ink)}
+.mA{background:var(--cab)}.mB{background:var(--bac)}.mC{background:var(--tall)}.mK{background:var(--tall)}.mD{background:var(--wood)}.mS{background:var(--socle)}.mG{background:var(--dg)}.mE{background:#B9C2C8}
+ul.pistes{padding-left:20px;max-width:860px}ul.pistes li{margin:6px 0}
+.cta{display:inline-block;margin:6px 0;padding:10px 16px;border-radius:8px;background:var(--ink);color:var(--paper);text-decoration:none;font-weight:700}
+svg text{font-family:Archivo,system-ui,sans-serif;fill:var(--ink)}
+.sdbf{fill:var(--tile)}
+.w{fill:var(--ink)}
+.fixe{fill:var(--tri);fill-opacity:.07;stroke:var(--tri);stroke-width:.6;stroke-dasharray:3 2}
+.rt{fill:var(--tri)}
+.doorzone{fill:var(--tri);fill-opacity:.05}.doorarc{fill:none;stroke:var(--muted);stroke-width:.5;stroke-dasharray:2 2}
+.leaf{fill:var(--muted)}
+.leafg{fill:none;stroke:var(--tri);stroke-width:.7;stroke-dasharray:3 2}
+.conf{fill:var(--tri);fill-opacity:.55}
+.cab{fill:var(--cab);stroke:var(--ink);stroke-width:.35}
+.cabc{fill:var(--tall);stroke:var(--ink);stroke-width:.45}
+.fond{fill:var(--tall);fill-opacity:.6;stroke:var(--ink);stroke-width:.3}.fondc{fill:var(--muted);stroke:var(--ink);stroke-width:.3}
+.plinthe{fill:var(--tall);stroke:var(--ink);stroke-width:.3}
+.fac{fill:var(--cab);stroke:var(--ink);stroke-width:.55}.facc{fill:var(--tall);stroke:var(--ink);stroke-width:.55}
+.bac{fill:var(--bac);fill-opacity:.55;stroke:var(--ink);stroke-width:.35}.bacc{fill:var(--bac);stroke:var(--ink);stroke-width:.45}
+.socle{fill:var(--socle);stroke:var(--ink);stroke-width:.4}.soclec{fill:var(--socle);stroke:var(--ink);stroke-width:.5;filter:brightness(.85)}
+.tas{fill:var(--wood);fill-opacity:.6;stroke:var(--ink);stroke-width:.3}.tasc{fill:var(--wood);stroke:var(--ink);stroke-width:.4}
+.dg{fill:var(--dg);fill-opacity:.75;stroke:var(--ink);stroke-width:.35}.dgc{fill:var(--dg);stroke:var(--ink);stroke-width:.45;filter:brightness(.85)}
+.pat{fill:var(--glass);stroke:var(--water);stroke-width:.4}.patp{fill:none;stroke:var(--water);stroke-width:.3;stroke-dasharray:1.5 1}
+.patc{fill:none;stroke:var(--ink);stroke-width:.25;stroke-dasharray:.8 .8}.toile{fill:none;stroke:var(--muted);stroke-width:.4}
+.alu{fill:#B9C2C8;stroke:var(--ink);stroke-width:.3}
+.top{fill:var(--wood);fill-opacity:.55;stroke:var(--ink);stroke-width:.5}.topc{fill:var(--wood);stroke:var(--ink);stroke-width:.5}
+.planl{fill:none;stroke:var(--wood);stroke-width:.7;stroke-dasharray:1.5 1.5}
+.trap{fill:url(#hach) var(--wood);fill:var(--wood);fill-opacity:.25;stroke:var(--ink);stroke-width:.5;stroke-dasharray:1.5 1}
+.shelf{fill:var(--wood);fill-opacity:.35;stroke:var(--ink);stroke-width:.3}.shelfc{fill:var(--wood);stroke:var(--ink);stroke-width:.4}
+.porte{fill:var(--cab);stroke:var(--ink);stroke-width:.55}.portec{fill:var(--tall);stroke:var(--ink);stroke-width:.5}
+.appf{fill:var(--panel);stroke:var(--ink);stroke-width:.7}.appc{fill:var(--panel);stroke:var(--ink);stroke-width:.9}
+.app{fill:none;stroke:var(--ink);stroke-width:.6}
+.led{fill:#F2C94C;stroke:#B8860B;stroke-width:.3}
+.plug{fill:var(--panel);stroke:var(--ink);stroke-width:.4}
+.valve{fill:var(--water);stroke:var(--ink);stroke-width:.3}
+.handle{fill:var(--ink)}
+.hook{fill:none;stroke:var(--ink);stroke-width:.8}
+.upper{fill:none;stroke:var(--ink);stroke-width:.9;stroke-dasharray:4 2}
+.swing{fill:none;stroke:var(--muted);stroke-width:.6;stroke-dasharray:2 1.5}
+.sac{fill:var(--glass);fill-opacity:.55;stroke:var(--water);stroke-width:.35;stroke-dasharray:1.2 .8}.sacc{fill:var(--glass);stroke:var(--water);stroke-width:.4}
+.sacopen{fill:none;stroke:var(--water);stroke-width:.45;stroke-dasharray:2 1.2}
+.swingp{fill:var(--bac);fill-opacity:.12;stroke:var(--tri);stroke-width:.5;stroke-dasharray:2 1.2}
+.axe{fill:var(--tri)}
+.lead{fill:none;stroke:var(--muted);stroke-width:.4}
+.dim{stroke:var(--muted);stroke-width:.4;fill:none}
+.dimt{fill:var(--muted);font-family:"JetBrains Mono",ui-monospace,monospace !important;font-size:4.6px}
+.lbl{font-size:6.5px}.lbls{font-size:4.6px;font-weight:600}.lblx{font-size:3.5px}.lblb{font-size:8px;font-weight:700}
+.muted{fill:var(--muted)}
+.sec{stroke:var(--tri);stroke-opacity:.45;stroke-width:.6;stroke-dasharray:6 2 1.5 2;fill:none}
+.secm{fill:var(--tri)}
+.sect{fill:var(--tri);font-weight:800;font-size:7px}
+.floorl{stroke:var(--ink);stroke-width:1.4}
+.ceil{stroke:var(--muted);stroke-width:.6;stroke-dasharray:4 3}
+body.rb .vl,body:not(.rb) .vr{display:none}
+.panier{fill:var(--glass);fill-opacity:.7;stroke:var(--water);stroke-width:.45}.panierc{fill:var(--glass);stroke:var(--water);stroke-width:.6}
+.hinge{fill:var(--muted)}
+body:not(.explications) .cap{display:none}
+body:not(.changements) section[id^="changements"]{display:none}
+.vbar{position:sticky;top:0;z-index:5;display:flex;flex-wrap:wrap;align-items:center;gap:6px;padding:8px 16px;background:var(--paper);border-bottom:1px solid var(--line);font-family:"JetBrains Mono",ui-monospace,monospace;font-size:12px}
+.vbar .back{color:var(--ink);text-decoration:none;font-weight:600;margin-right:14px}
+.vbar .back:hover{text-decoration:underline}
+.vbar span{color:var(--muted);text-transform:uppercase;letter-spacing:.08em;margin:0 4px 0 10px}
+.vbar button,.vbar a.btn{font:inherit;color:var(--ink);background:var(--panel);border:1px solid var(--line);border-radius:6px;padding:4px 10px;cursor:pointer;text-decoration:none}
+.vbar button[aria-pressed="true"]{background:var(--ink);color:var(--paper);border-color:var(--ink)}
+.vbar .sp{margin-left:auto}
+.toc{display:none}
+@media (min-width:1100px){
+.toc{display:block;position:fixed;left:0;top:42px;z-index:4;font-size:13px}
+.toc .tbtn{font:600 12px "JetBrains Mono",ui-monospace,monospace;color:var(--ink);background:var(--panel);border:1px solid var(--line);border-radius:0 6px 6px 0;border-left:none;padding:6px 10px;cursor:pointer}
+.toc ol{display:none;list-style:none;margin:0;padding:6px 0 24px}
+body.toc-on .toc{bottom:0;width:232px;overflow-y:auto;background:var(--paper);border-right:1px solid var(--line);padding:10px 0 0}
+body.toc-on .toc .tbtn{border:none;background:none;padding:2px 16px 8px;color:var(--muted);text-transform:uppercase;letter-spacing:.08em}
+body.toc-on .toc ol{display:block}
+.toc a{display:block;padding:5px 16px;color:var(--muted);text-decoration:none;border-left:3px solid transparent;line-height:1.35}
+.toc a:hover{color:var(--ink);background:var(--panel)}
+.toc a.on{color:var(--ink);border-left-color:var(--ink);font-weight:600}
+body.toc-on .wrap{margin-left:max(248px,calc((100vw - 1120px) / 2))}
+}
+@media (max-width:480px){ body{font-size:15px} }
+
+.feuille{display:grid;grid-template-columns:minmax(0,1fr);gap:14px}
+.fcote{margin:0;background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:12px}
+.ftitre{font:700 15px Archivo,system-ui,sans-serif;margin:0 0 6px}
+svg.cotes{display:block;width:100%;height:auto;max-height:80vh;min-width:560px}
+.op svg.cotes{max-height:56vh;min-width:420px}
+.omur{fill:var(--tile)}.omurc{fill:var(--muted);fill-opacity:.55}
+.osol{stroke:var(--ink);stroke-width:.6}
+.obois{fill:var(--dg);fill-opacity:.45;stroke:var(--ink);stroke-width:.22}
+.obois.cut{fill:var(--dg);fill-opacity:1;stroke-width:.3}
+.ofac,.omel{fill:var(--cab);stroke:var(--ink);stroke-width:.22}.ofac.cut,.omel.cut{fill:var(--tall);stroke-width:.32}
+.oplan{fill:var(--wood);fill-opacity:.5;stroke:var(--ink);stroke-width:.22}.oplan.cut{fill-opacity:1;stroke-width:.3}
+.omach{fill:var(--panel);stroke:var(--ink);stroke-width:.3}.omach.cut{fill:var(--tile);stroke-width:.4}
+.ohub{fill:none;stroke:var(--ink);stroke-width:.3}
+.omet,.obar{fill:#B9C2C8;stroke:var(--ink);stroke-width:.2}
+.osac{fill:var(--glass);fill-opacity:.25;stroke:var(--water);stroke-width:.25;stroke-dasharray:1 .6}
+.otuy{fill:var(--water);fill-opacity:.55;stroke:var(--ink);stroke-width:.2}
+.ovanne{fill:var(--water);stroke:var(--ink);stroke-width:.25}
+.oprise{fill:var(--panel);stroke:var(--ink);stroke-width:.3}
+.oswing{fill:none;stroke:var(--tri);stroke-width:.35;stroke-dasharray:1.4 .8}
+.oaxe{fill:var(--tri)}
+.ocache{fill:none;stroke:var(--muted);stroke-width:.25;stroke-dasharray:1.2 .8}
+.oplanl{fill:none;stroke:var(--wood);stroke-width:.4;stroke-dasharray:1.6 .9}
+.ocoin{fill:var(--tri)}
+.ochar{fill:#B9C2C8;stroke:var(--ink);stroke-width:.2}
+.otrou{fill:var(--paper);stroke:var(--ink);stroke-width:.25}
+.odiag{stroke:var(--tri);stroke-width:.25;stroke-dasharray:1.2 .8}
+svg.cotes .dim{stroke:var(--ink);stroke-width:.16}
+svg.cotes .tick{stroke:var(--ink);stroke-width:.25}
+svg.cotes .ext{stroke:var(--muted);stroke-width:.12}
+svg.cotes .ct{font:600 2.5px "JetBrains Mono",ui-monospace,monospace;fill:var(--ink)}
+svg.cotes .nt{font:600 2.4px "JetBrains Mono",ui-monospace,monospace;fill:var(--ink)}
+svg.cotes .lt{font-size:2.5px;fill:var(--ink)}svg.cotes .lt.muted{fill:var(--muted)}
+svg.cotes .lead{stroke:var(--ink);stroke-width:.14}svg.cotes .pt{fill:var(--ink)}
+.niv{fill:var(--ink)}
+
+.isol{fill:var(--line);fill-opacity:.25}
+.imur{fill:var(--line);fill-opacity:.35;stroke:var(--muted);stroke-width:.25}
+.imur2{fill:var(--line);fill-opacity:.18;stroke:var(--muted);stroke-width:.25}
+.icarr{fill:var(--water);fill-opacity:.12;stroke:none}
+.icarrl{fill:none;stroke:var(--water);stroke-width:.5;stroke-dasharray:2 1.2}
+.icarrt{font-size:7px;font-weight:600;fill:var(--water)}
+.itu{fill:var(--water);fill-opacity:.75;stroke:var(--ink);stroke-width:.3}
+.ipc{fill:hsl(40 15% calc(var(--t) * 100% - 4%));stroke:var(--ink);stroke-width:.32;stroke-linejoin:round}
+.inew{fill:hsl(32 80% calc(var(--t) * 72% + 8%));stroke:var(--ink);stroke-width:.4;stroke-linejoin:round}
+.isac{fill:hsl(205 60% calc(var(--t) * 40% + 55%));fill-opacity:.8;stroke:var(--water);stroke-width:.35;stroke-dasharray:1.2 .8}
+.ifen{fill:var(--ink);fill-opacity:.62;stroke:var(--ink);stroke-width:.3}
+.idec{fill:#fbfaf5;stroke:var(--ink);stroke-width:.3}
+.imel{fill:hsl(45 14% calc(var(--t) * 28% + 70%));stroke:var(--ink);stroke-width:.32;stroke-linejoin:round}
+.ibois{fill:hsl(32 45% calc(var(--t) * 50% + 25%));stroke:var(--ink);stroke-width:.32;stroke-linejoin:round}
+.iapp{fill:hsl(200 10% calc(var(--t) * 100% - 2%));stroke:var(--ink);stroke-width:.35}
+.ihub{fill:none;stroke:var(--ink);stroke-width:.35}
+.ical{fill:var(--tri);fill-opacity:.35;stroke:var(--tri);stroke-width:.3}
+.ilead{stroke:var(--ink);stroke-width:.3}
+.ibul{fill:var(--panel);stroke:var(--ink);stroke-width:.45}
+.ibt{font:700 4.4px "JetBrains Mono",ui-monospace,monospace;fill:var(--ink)}
+.ilbl{font-size:7px;fill:var(--ink)}
+.ival{fill:var(--water);stroke:var(--ink);stroke-width:.3}
+.iplug{fill:var(--panel);stroke:var(--ink);stroke-width:.4}
+.etape{display:grid;grid-template-columns:76px 1fr;gap:12px;border-top:2px solid var(--ink);padding:18px 0 26px;margin-top:10px}
+.etape>.num{font:800 56px/1 Archivo,system-ui,sans-serif;letter-spacing:-.03em}
+.etape h2{margin:4px 0 8px;font-size:20px}
+.ecorps{min-width:0}
+.edessin{position:relative;background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:10px;margin:10px 0}
+.edessin svg{display:block;width:100%;height:auto;max-height:62vh}
+.edessin .mini{border-top:1px dashed var(--line);margin-top:8px;padding-top:8px}
+.edessin .mini svg{max-height:34vh}
+.fois{position:absolute;right:16px;top:12px;font:800 30px Archivo,system-ui,sans-serif}
+.consigne{max-width:760px;margin:6px 0 0}
+.pcs,.hws{display:flex;flex-wrap:wrap;gap:6px;margin:4px 0}
+.pc{font:12px "JetBrains Mono",ui-monospace,monospace;border:1px solid var(--line);border-radius:999px;padding:2px 10px;background:var(--panel)}
+.pc.muted{color:var(--muted)}
+.hw{display:flex;align-items:center;gap:6px;font-size:13px;border:1px solid var(--line);border-radius:8px;padding:3px 10px 3px 4px;background:var(--panel)}
+.hw b{font-family:"JetBrains Mono",ui-monospace,monospace}
+.hw span{color:var(--muted)}
+.ico{width:26px;height:26px;fill:none;stroke:var(--ink);stroke-width:1.3;stroke-linecap:round;stroke-linejoin:round}
+.cartes{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:10px}
+.carte{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:8px;display:flex;flex-direction:column}
+.cdes{height:96px;display:flex;align-items:center;justify-content:center}
+.cdes svg{max-width:100%;max-height:96px;width:auto;height:96px}
+.cpied{display:flex;justify-content:space-between;align-items:baseline;margin-top:6px}
+.crep{font:800 18px "JetBrains Mono",ui-monospace,monospace}
+.cq{font:700 15px "JetBrains Mono",ui-monospace,monospace}
+.cnom{font-size:12.5px;line-height:1.3}
+.cdim{font-size:11.5px;color:var(--muted)}
+.outils{display:flex;flex-wrap:wrap;gap:8px;padding:0;list-style:none}
+.outils li{border:1px solid var(--line);border-radius:8px;padding:4px 10px;background:var(--panel);font-size:14px}
+.deux{display:grid;grid-template-columns:repeat(auto-fit,minmax(320px,1fr));gap:14px}
+.deux .fig svg{display:block;width:100%;height:auto;max-height:70vh}
+.itr{fill:var(--ink);stroke:var(--panel)}
+.ihole{fill:var(--paper);stroke:var(--ink);stroke-width:.3}
+.charns{display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:10px;margin-bottom:10px}
+.charn{margin:0}.charn svg{display:block;width:100%;height:auto;max-height:40vh}
+.pose .charn svg{max-height:78vh}.pose .charn .lblx{font-size:4.2px}.pose .charn .dimt{font-size:4px}.pose .charn .dim{stroke-width:.3}
+.charn figcaption{font-size:12.5px;color:var(--muted)}
+.chcup{fill:var(--paper);stroke:var(--ink);stroke-width:.15}.chmet{fill:#B9C2C8;stroke:var(--ink);stroke-width:.12}
+.charm{fill:none;stroke:#7D8A92;stroke-width:.55;stroke-linejoin:round}.chvis{stroke:var(--ink);stroke-width:.3}
+.chr{font:700 1.1px JetBrains Mono,monospace;fill:var(--ink)}.chl{font-size:.95px;fill:var(--ink)}
+.charn .dimt{font-size:1px}.charn .dim{stroke-width:.08}.charn .fac{stroke-width:.15}.charn .swingp{stroke-width:.12}
+.charn .dg,.charn .cab{stroke-width:.12}
+h3.se{font-size:19px;margin:30px 0 6px;padding-left:10px;border-left:6px solid var(--bas)}h3.se.haut{border-left-color:var(--haut)}
+.fiches{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:10px}
+.fiche{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:8px 10px}
+.ftete{display:flex;flex-wrap:wrap;gap:8px;align-items:baseline;font-size:14px}.ftete .cq{margin-left:auto}
+.fface{margin:6px 0}.fnom{font-size:12px;color:var(--muted)}
+svg.face{display:block;width:100%;height:auto}
+.fpc{fill:var(--bas);stroke:var(--ink);stroke-width:.12}.fpc.haut{fill:var(--haut)}
+.fent{fill:var(--panel);stroke:var(--ink);stroke-width:.1;stroke-dasharray:.4 .3}
+.fta{fill:var(--ink)}.ftb{fill:var(--panel);stroke:var(--ink);stroke-width:.12}
+.fdim{stroke:var(--muted);stroke-width:.06}.ftx{fill:var(--ink);font-family:"JetBrains Mono",ui-monospace,monospace;text-anchor:middle}
+.ftx.muted{fill:var(--muted)}
+.fliens{margin:4px 0 0;padding-left:18px;font-size:12.5px;color:var(--muted)}
+.lg{display:inline-block;width:10px;height:10px;border-radius:50%;vertical-align:-1px;border:1px solid var(--ink)}
+.lg.fta{background:var(--ink)}.lg.ftb{background:var(--panel)}.lg.fent{border-radius:2px;border-style:dashed}
+h2.partie{font-size:28px;margin:48px 0 4px;padding:10px 14px;border-radius:10px;background:var(--bas)}
+h2.partie.haut{background:var(--haut)}
+.itr2{fill:var(--panel);stroke:var(--ink)}
+details.perc{margin:10px 0 0}details.perc summary{cursor:pointer;font-weight:700;font-size:14px}
+.percage svg{display:block;width:100%;max-width:640px;height:auto}
+.pvide{fill:var(--panel);stroke:var(--ink);stroke-width:.3}
+.pvis{fill:#B9C2C8;stroke:var(--ink);stroke-width:.35}
+.pfil{stroke:var(--ink);stroke-width:.3}
+.ptx{font-size:5px;fill:var(--ink)}.ptx.muted{fill:var(--muted)}
+.but{margin:0 0 8px;max-width:820px}.but b,.ctrl b,.att b{font:700 11px "JetBrains Mono",ui-monospace,monospace;text-transform:uppercase;letter-spacing:.06em;margin-right:6px}
+.besoin{margin:0 0 10px}
+.egrille{display:grid;grid-template-columns:minmax(0,1fr);gap:14px}
+@media (min-width:980px){.egrille.seule{grid-template-columns:minmax(0,1fr);max-width:820px}.egrille:not(.seule){grid-template-columns:minmax(0,1.35fr) minmax(0,1fr)}.eiso{position:sticky;top:56px;align-self:start}}
+.eiso .edessin{margin:0}.eiso .edessin svg{max-height:52vh}.eiso .note{margin:4px 2px 0}
+ol.ops{list-style:none;margin:0;padding:0;counter-reset:none}
+li.op{display:grid;grid-template-columns:44px minmax(0,1fr);gap:8px;padding:10px 0;border-top:1px solid var(--line)}
+li.op:first-child{border-top:none;padding-top:2px}
+.opn{font:800 15px "JetBrains Mono",ui-monospace,monospace;color:var(--muted);padding-top:2px}
+.opc p{margin:0 0 6px}
+.opfig{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:8px;margin:6px 0 8px;overflow-x:auto}
+.opfig svg{display:block;width:100%;height:auto;max-height:56vh}.opfig .charn{max-width:none}
+.ctrl{border-left:4px solid var(--water);background:var(--panel);padding:5px 10px;border-radius:0 8px 8px 0}
+.ctrl b{color:var(--water)}
+.att{border-left:4px solid var(--tri);background:var(--panel);padding:5px 10px;border-radius:0 8px 8px 0}
+.att b{color:var(--tri)}
+a.voir{font-size:13px;white-space:nowrap}
+ol.ordre{padding-left:0;list-style:none;display:grid;gap:4px;max-width:860px}
+ol.ordre li{padding:6px 10px;border:1px solid var(--line);border-radius:8px;background:var(--panel)}
+ol.ordre a{color:var(--ink);text-decoration:none}ol.ordre a:hover{text-decoration:underline}ol.ordre span{color:var(--muted);font-size:14px}
+@media (max-width:560px){ .etape{grid-template-columns:1fr} .etape>.num{font-size:40px} li.op{grid-template-columns:36px minmax(0,1fr)} }
+
+.vbar .btn[aria-current="page"]{background:var(--ink);color:var(--paper);border-color:var(--ink)}
+.cartes2{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:12px;margin:14px 0}
+.carte2{display:block;background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:14px 16px;color:var(--ink);text-decoration:none}
+.carte2:hover{border-color:var(--ink)}
+.carte2 b{display:block;font-size:18px}.carte2 span{font-size:14px;color:var(--muted)}
+.carte2.bas{box-shadow:inset 6px 0 var(--bas)}.carte2.haut{box-shadow:inset 6px 0 var(--haut)}
+.budget td.num{font-size:15px}.budget tr.tot td{border-top:2px solid var(--ink);font-weight:700}
+tr.retenu td{background:var(--paper)}tr.retenu td:first-child{box-shadow:inset 5px 0 var(--water)}
+.badge{display:inline-block;font:700 11px "JetBrains Mono",ui-monospace,monospace;text-transform:uppercase;letter-spacing:.06em;border:1px solid var(--water);color:var(--water);border-radius:999px;padding:1px 8px;margin-left:6px}
+.choix{font-size:13px;color:var(--muted)}
+.cmp{min-width:860px}
+.ens svg{max-height:86vh}
+@media (max-width:480px){.vbar{gap:4px;padding:8px 10px;flex-wrap:nowrap}.vbar .back{margin-right:2px;white-space:nowrap}.vbar a.btn{padding:4px 7px;white-space:nowrap}}
+
+.feuille{display:grid;grid-template-columns:minmax(0,1fr);gap:14px}
+.fcote{margin:0;background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:12px}
+.ftitre{font:700 15px Archivo,system-ui,sans-serif;margin:0 0 6px}
+svg.cotes{display:block;width:100%;height:auto;max-height:80vh;min-width:560px}
+.op svg.cotes{max-height:56vh;min-width:420px}
+.omur{fill:var(--tile)}.omurc{fill:var(--muted);fill-opacity:.55}
+.osol{stroke:var(--ink);stroke-width:.6}
+.obois{fill:var(--dg);fill-opacity:.45;stroke:var(--ink);stroke-width:.22}
+.obois.cut{fill:var(--dg);fill-opacity:1;stroke-width:.3}
+.ofac,.omel{fill:var(--cab);stroke:var(--ink);stroke-width:.22}.ofac.cut,.omel.cut{fill:var(--tall);stroke-width:.32}
+.oplan{fill:var(--wood);fill-opacity:.5;stroke:var(--ink);stroke-width:.22}.oplan.cut{fill-opacity:1;stroke-width:.3}
+.omach{fill:var(--panel);stroke:var(--ink);stroke-width:.3}.omach.cut{fill:var(--tile);stroke-width:.4}
+.ohub{fill:none;stroke:var(--ink);stroke-width:.3}
+.omet,.obar{fill:#B9C2C8;stroke:var(--ink);stroke-width:.2}
+.osac{fill:var(--glass);fill-opacity:.25;stroke:var(--water);stroke-width:.25;stroke-dasharray:1 .6}
+.otuy{fill:var(--water);fill-opacity:.55;stroke:var(--ink);stroke-width:.2}
+.ovanne{fill:var(--water);stroke:var(--ink);stroke-width:.25}
+.oprise{fill:var(--panel);stroke:var(--ink);stroke-width:.3}
+.oswing{fill:none;stroke:var(--tri);stroke-width:.35;stroke-dasharray:1.4 .8}
+.oaxe{fill:var(--tri)}
+.ocache{fill:none;stroke:var(--muted);stroke-width:.25;stroke-dasharray:1.2 .8}
+.oplanl{fill:none;stroke:var(--wood);stroke-width:.4;stroke-dasharray:1.6 .9}
+.ocoin{fill:var(--tri)}
+.ochar{fill:#B9C2C8;stroke:var(--ink);stroke-width:.2}
+.otrou{fill:var(--paper);stroke:var(--ink);stroke-width:.25}
+.odiag{stroke:var(--tri);stroke-width:.25;stroke-dasharray:1.2 .8}
+svg.cotes .dim{stroke:var(--ink);stroke-width:.16}
+svg.cotes .tick{stroke:var(--ink);stroke-width:.25}
+svg.cotes .ext{stroke:var(--muted);stroke-width:.12}
+svg.cotes .ct{font:600 2.5px "JetBrains Mono",ui-monospace,monospace;fill:var(--ink)}
+svg.cotes .nt{font:600 2.4px "JetBrains Mono",ui-monospace,monospace;fill:var(--ink)}
+svg.cotes .lt{font-size:2.5px;fill:var(--ink)}svg.cotes .lt.muted{fill:var(--muted)}
+svg.cotes .lead{stroke:var(--ink);stroke-width:.14}svg.cotes .pt{fill:var(--ink)}
+.niv{fill:var(--ink)}
+
+.olibre{fill:var(--water);fill-opacity:.12;stroke:var(--water);stroke-width:.25;stroke-dasharray:1.4 .8}
+.omasse{fill:var(--tile);stroke:var(--ink);stroke-width:.25}
+.oequip{fill:var(--panel);stroke:var(--muted);stroke-width:.25}
+.ovant{stroke:var(--tri);stroke-width:.6}
+.ocarr{stroke:var(--water);stroke-width:.25;stroke-dasharray:1.4 .8}
+.omel{fill:#fbfaf5;stroke:var(--ink);stroke-width:.25}.omel.cut{fill:#dedbd0;stroke-width:.35}
+.otrou{fill:var(--ink);fill-opacity:.62;stroke:var(--ink);stroke-width:.25}
+.opoi{fill:var(--muted);stroke:var(--ink);stroke-width:.2}
+.ofil{fill:none;stroke:var(--tri);stroke-width:.35;stroke-dasharray:1.2 .8}
+.otq{stroke:var(--tri);stroke-width:.3;stroke-dasharray:1.6 .9}
+ol.pose li{margin:6px 0}
+</style>
+</head>
+<body class="explications changements">
+<div class="vbar"><a class="back" href="index.html">← Plans</a><span class="sp"></span></div>
+<nav class="toc" aria-label="Sommaire"><button type="button" class="tbtn" aria-expanded="true">Sommaire</button><ol></ol></nav>
+<main class="wrap">
+<div class="kicker">Salle de bain · alcôve 115 × 62 à 68 · meuble bas · V8.5</div>
+<h1>Meuble bas</h1>
+<p class="pitch">Trois joues et un fond en mélaminé blanc de 1,8, levés sur des vérins, portent directement un plateau en chêne de 60 de profondeur sur toute la longueur, sans aucune fixation au mur. À côté de la machine, un placard à deux étages reçoit deux bacs à linge, derrière une porte découpée en U pour jeter le linge sans l'ouvrir. Une colonne de prises en diagonale monte dans l'angle jusqu'au meuble haut. <a href="archive/sdb-meuble-v4-bas.html">L'ancien meuble bas</a> reste dans les archives.</p>
+
+<h2 id="iso">Le meuble</h2>
+<div class="fig ens"><svg viewBox="70.2 -381.0 246.1 382.0" role="img" aria-label="Meuble bas dans l&#x27;alcôve, porte fermée"><polygon class="isol" points="122.11,-70.50 202.65,-117.00 302.24,-59.50 221.70,-13.00"/><polygon class="imur" points="202.65,-117.00 302.24,-59.50 302.24,-309.50 202.65,-367.00"/><polygon class="imur2" points="143.76,-83.00 202.65,-117.00 202.65,-367.00 143.76,-333.00"/><polygon class="icarr" points="202.65,-117.00 302.24,-59.50 302.24,-263.50 202.65,-321.00"/><polygon class="icarr" points="143.76,-83.00 202.65,-117.00 202.65,-321.00 143.76,-287.00"/><polyline class="icarrl" points="143.76,-287.00 202.65,-321.00 302.24,-263.50"/><polygon class="ipc" style="--t:1.00" points="196.85,-115.25 198.23,-116.05 199.62,-115.25 198.23,-114.45"/><polygon class="ipc" style="--t:0.85" points="196.85,-113.25 198.23,-112.45 198.23,-114.45 196.85,-115.25"/><polygon class="ipc" style="--t:0.67" points="198.23,-112.45 199.62,-113.25 199.62,-115.25 198.23,-114.45"/><polygon class="ipc" style="--t:1.00" points="157.27,-92.40 158.66,-93.20 160.04,-92.40 158.66,-91.60"/><polygon class="ipc" style="--t:0.85" points="157.27,-90.40 158.66,-89.60 158.66,-91.60 157.27,-92.40"/><polygon class="ipc" style="--t:0.67" points="158.66,-89.60 160.04,-90.40 160.04,-92.40 158.66,-91.60"/><polygon class="imel" style="--t:1.00" points="152.68,-174.85 202.65,-203.70 204.21,-202.80 154.24,-173.95"/><polygon class="imel" style="--t:0.85" points="152.68,-89.85 154.24,-88.95 154.24,-173.95 152.68,-174.85"/><polygon class="imel" style="--t:0.67" points="154.24,-88.95 204.21,-117.80 204.21,-202.80 154.24,-173.95"/><polygon class="imel" style="--t:1.00" points="202.65,-201.90 204.21,-202.80 245.34,-179.05 243.79,-178.15"/><polygon class="imel" style="--t:0.85" points="202.65,-116.90 243.79,-93.15 243.79,-178.15 202.65,-201.90"/><polygon class="imel" style="--t:0.67" points="243.79,-93.15 245.34,-94.05 245.34,-179.05 243.79,-178.15"/><polygon class="imel" style="--t:1.00" points="155.11,-91.25 202.65,-118.70 243.79,-94.95 196.24,-67.50"/><polygon class="imel" style="--t:0.85" points="155.11,-89.45 196.24,-65.70 196.24,-67.50 155.11,-91.25"/><polygon class="imel" style="--t:0.67" points="196.24,-65.70 243.79,-93.15 243.79,-94.95 196.24,-67.50"/><polygon class="isac" style="--t:1.00" points="158.35,-114.37 205.12,-141.38 239.76,-121.37 192.99,-94.37"/><polygon class="isac" style="--t:0.85" points="158.35,-89.37 192.99,-69.37 192.99,-94.37 158.35,-114.37"/><polygon class="isac" style="--t:0.67" points="192.99,-69.37 239.76,-96.37 239.76,-121.37 192.99,-94.37"/><polygon class="ipc" style="--t:1.00" points="199.97,-67.75 201.35,-68.55 202.74,-67.75 201.35,-66.95"/><polygon class="ipc" style="--t:0.85" points="199.97,-65.75 201.35,-64.95 201.35,-66.95 199.97,-67.75"/><polygon class="ipc" style="--t:0.67" points="201.35,-64.95 202.74,-65.75 202.74,-67.75 201.35,-66.95"/><polygon class="ipc" style="--t:1.00" points="239.54,-90.60 240.93,-91.40 242.31,-90.60 240.93,-89.80"/><polygon class="ipc" style="--t:0.85" points="239.54,-88.60 240.93,-87.80 240.93,-89.80 239.54,-90.60"/><polygon class="ipc" style="--t:0.67" points="240.93,-87.80 242.31,-88.60 242.31,-90.60 240.93,-89.80"/><polygon class="imel" style="--t:1.00" points="155.11,-133.75 202.65,-161.20 243.79,-137.45 196.24,-110.00"/><polygon class="imel" style="--t:0.85" points="155.11,-131.95 196.24,-108.20 196.24,-110.00 155.11,-133.75"/><polygon class="imel" style="--t:0.67" points="196.24,-108.20 243.79,-135.65 243.79,-137.45 196.24,-110.00"/><polygon class="ihole" points="200.92,-160.20 202.65,-161.20 204.38,-160.20 202.65,-159.20"/><polygon class="isac" style="--t:1.00" points="158.35,-156.88 205.12,-183.88 239.76,-163.87 192.99,-136.87"/><polygon class="isac" style="--t:0.85" points="158.35,-131.88 192.99,-111.87 192.99,-136.87 158.35,-156.88"/><polygon class="isac" style="--t:0.67" points="192.99,-111.87 239.76,-138.87 239.76,-163.87 192.99,-136.87"/><polygon class="imel" style="--t:1.00" points="195.38,-150.20 245.34,-179.05 246.90,-178.15 196.93,-149.30"/><polygon class="imel" style="--t:0.85" points="195.38,-65.20 196.93,-64.30 196.93,-149.30 195.38,-150.20"/><polygon class="imel" style="--t:0.67" points="196.93,-64.30 246.90,-93.15 246.90,-178.15 196.93,-149.30"/><polygon class="ipc" style="--t:1.00" points="197.15,-62.67 243.92,-89.67 295.88,-59.67 249.11,-32.67"/><polygon class="ipc" style="--t:0.85" points="197.15,-61.67 249.11,-31.67 249.11,-32.67 197.15,-62.67"/><polygon class="ipc" style="--t:0.67" points="249.11,-31.67 295.88,-58.67 295.88,-59.67 249.11,-32.67"/><polygon class="imel" style="--t:1.00" points="151.12,-173.55 152.68,-174.45 196.59,-149.10 195.03,-148.20"/><polygon class="imel" style="--t:0.85" points="151.12,-88.75 195.03,-63.40 195.03,-148.20 151.12,-173.55"/><polygon class="imel" style="--t:0.67" points="195.03,-63.40 196.59,-64.30 196.59,-149.10 195.03,-148.20"/><polygon class="ifen" points="156.32,-122.07 156.38,-121.26 156.58,-120.39 156.90,-119.52 157.33,-118.66 157.86,-117.86 158.46,-117.14 159.11,-116.54 159.78,-116.07 186.37,-100.72 187.04,-100.41 187.69,-100.26 188.29,-100.29 188.82,-100.48 189.25,-100.84 189.57,-101.35 189.77,-101.98 189.83,-102.72 189.83,-107.20 189.81,-107.51 189.73,-107.83 189.61,-108.16 189.45,-108.48 189.26,-108.78 189.03,-109.05 188.79,-109.27 188.53,-109.45 157.62,-127.30 157.36,-127.42 157.12,-127.47 156.89,-127.46 156.70,-127.39 156.54,-127.26 156.42,-127.07 156.34,-126.83 156.32,-126.55"/><polygon class="ifen" points="156.32,-164.57 156.38,-163.76 156.58,-162.89 156.90,-162.02 157.33,-161.16 157.86,-160.36 158.46,-159.64 159.11,-159.04 159.78,-158.57 186.37,-143.22 187.04,-142.91 187.69,-142.76 188.29,-142.79 188.82,-142.98 189.25,-143.34 189.57,-143.85 189.77,-144.48 189.83,-145.22 189.83,-151.20 156.32,-170.55"/><polygon class="iapp" style="--t:1.00" points="197.80,-147.80 243.70,-174.30 295.23,-144.55 249.33,-118.05"/><polygon class="iapp" style="--t:0.85" points="197.80,-62.80 249.33,-33.05 249.33,-118.05 197.80,-147.80"/><polygon class="iapp" style="--t:0.67" points="249.33,-33.05 295.23,-59.55 295.23,-144.55 249.33,-118.05"/><polygon class="ihub" points="238.20,-89.38 237.70,-94.06 236.23,-99.01 233.89,-103.89 230.84,-108.35 227.29,-112.10 223.48,-114.88 219.67,-116.50 216.12,-116.85 213.07,-115.91 210.73,-113.74 209.26,-110.49 208.76,-106.38 209.26,-101.69 210.73,-96.74 213.07,-91.86 216.12,-87.40 219.67,-83.65 223.48,-80.88 227.29,-79.25 230.84,-78.90 233.89,-79.84 236.23,-82.01 237.70,-85.26"/><polygon class="ihub" points="234.30,-91.62 233.93,-95.07 232.85,-98.71 231.13,-102.29 228.89,-105.58 226.28,-108.33 223.48,-110.38 220.68,-111.57 218.07,-111.83 215.82,-111.13 214.10,-109.54 213.02,-107.15 212.65,-104.12 213.02,-100.68 214.10,-97.04 215.82,-93.46 218.07,-90.17 220.68,-87.42 223.48,-85.38 226.28,-84.18 228.89,-83.92 231.13,-84.62 232.85,-86.21 233.93,-88.60"/><polygon class="ipc" style="--t:1.00" points="294.36,-58.95 295.75,-59.75 297.13,-58.95 295.75,-58.15"/><polygon class="ipc" style="--t:0.85" points="294.36,-56.95 295.75,-56.15 295.75,-58.15 294.36,-58.95"/><polygon class="ipc" style="--t:0.67" points="295.75,-56.15 297.13,-56.95 297.13,-58.95 295.75,-58.15"/><polygon class="ipc" style="--t:1.00" points="254.78,-36.10 256.17,-36.90 257.56,-36.10 256.17,-35.30"/><polygon class="ipc" style="--t:0.85" points="254.78,-34.10 256.17,-33.30 256.17,-35.30 254.78,-36.10"/><polygon class="ipc" style="--t:0.67" points="256.17,-33.30 257.56,-34.10 257.56,-36.10 256.17,-35.30"/><polygon class="imel" style="--t:1.00" points="250.19,-118.55 300.16,-147.40 301.72,-146.50 251.75,-117.65"/><polygon class="imel" style="--t:0.85" points="250.19,-33.55 251.75,-32.65 251.75,-117.65 250.19,-118.55"/><polygon class="imel" style="--t:0.67" points="251.75,-32.65 301.72,-61.50 301.72,-146.50 251.75,-117.65"/><polygon class="ibois" style="--t:1.00" points="150.95,-175.65 202.91,-205.65 301.98,-148.45 250.02,-118.45"/><polygon class="ibois" style="--t:0.85" points="150.95,-173.85 250.02,-116.65 250.02,-118.45 150.95,-175.65"/><polygon class="ibois" style="--t:0.67" points="250.02,-116.65 301.98,-146.65 301.98,-148.45 250.02,-118.45"/><polygon class="ihole" points="260.67,-168.30 264.14,-170.30 269.33,-167.30 265.87,-165.30"/><polygon class="imel" style="--t:1.00" points="191.63,-268.14 213.67,-268.14 211.47,-269.41 193.83,-269.41"/><polygon class="imel" style="--t:0.85" points="191.63,-199.14 213.67,-199.14 213.67,-268.14 191.63,-268.14"/><polygon class="idec" points="197.75,-206.34 207.55,-206.34 207.55,-214.34 197.75,-214.34"/><polygon class="idec" points="197.75,-216.34 207.55,-216.34 207.55,-224.34 197.75,-224.34"/><polygon class="idec" points="197.75,-226.34 207.55,-226.34 207.55,-234.34 197.75,-234.34"/><polygon class="idec" points="197.75,-252.34 207.55,-252.34 207.55,-260.34 197.75,-260.34"/><polygon class="ipc" style="--t:1.00" points="189.31,-125.70 191.91,-127.20 192.95,-126.60 190.35,-125.10"/><polygon class="ipc" style="--t:0.85" points="189.31,-113.70 190.35,-113.10 190.35,-125.10 189.31,-125.70"/><polygon class="ipc" style="--t:0.67" points="190.35,-113.10 192.95,-114.60 192.95,-126.60 190.35,-125.10"/><line class="icarrl" x1="139.8" y1="-287.0" x2="143.8" y2="-287.0"/><text class="icarrt" x="138.8" y="-284.6" text-anchor="end">carrelage 204</text></svg></div>
+<div class="fig ens"><svg viewBox="70.2 -381.0 246.1 382.0" role="img" aria-label="Meuble bas sans la porte"><polygon class="isol" points="122.11,-70.50 202.65,-117.00 302.24,-59.50 221.70,-13.00"/><polygon class="imur" points="202.65,-117.00 302.24,-59.50 302.24,-309.50 202.65,-367.00"/><polygon class="imur2" points="143.76,-83.00 202.65,-117.00 202.65,-367.00 143.76,-333.00"/><polygon class="icarr" points="202.65,-117.00 302.24,-59.50 302.24,-263.50 202.65,-321.00"/><polygon class="icarr" points="143.76,-83.00 202.65,-117.00 202.65,-321.00 143.76,-287.00"/><polyline class="icarrl" points="143.76,-287.00 202.65,-321.00 302.24,-263.50"/><polygon class="ipc" style="--t:1.00" points="196.85,-115.25 198.23,-116.05 199.62,-115.25 198.23,-114.45"/><polygon class="ipc" style="--t:0.85" points="196.85,-113.25 198.23,-112.45 198.23,-114.45 196.85,-115.25"/><polygon class="ipc" style="--t:0.67" points="198.23,-112.45 199.62,-113.25 199.62,-115.25 198.23,-114.45"/><polygon class="ipc" style="--t:1.00" points="157.27,-92.40 158.66,-93.20 160.04,-92.40 158.66,-91.60"/><polygon class="ipc" style="--t:0.85" points="157.27,-90.40 158.66,-89.60 158.66,-91.60 157.27,-92.40"/><polygon class="ipc" style="--t:0.67" points="158.66,-89.60 160.04,-90.40 160.04,-92.40 158.66,-91.60"/><polygon class="imel" style="--t:1.00" points="152.68,-174.85 202.65,-203.70 204.21,-202.80 154.24,-173.95"/><polygon class="imel" style="--t:0.85" points="152.68,-89.85 154.24,-88.95 154.24,-173.95 152.68,-174.85"/><polygon class="imel" style="--t:0.67" points="154.24,-88.95 204.21,-117.80 204.21,-202.80 154.24,-173.95"/><polygon class="imel" style="--t:1.00" points="202.65,-201.90 204.21,-202.80 245.34,-179.05 243.79,-178.15"/><polygon class="imel" style="--t:0.85" points="202.65,-116.90 243.79,-93.15 243.79,-178.15 202.65,-201.90"/><polygon class="imel" style="--t:0.67" points="243.79,-93.15 245.34,-94.05 245.34,-179.05 243.79,-178.15"/><polygon class="imel" style="--t:1.00" points="155.11,-91.25 202.65,-118.70 243.79,-94.95 196.24,-67.50"/><polygon class="imel" style="--t:0.85" points="155.11,-89.45 196.24,-65.70 196.24,-67.50 155.11,-91.25"/><polygon class="imel" style="--t:0.67" points="196.24,-65.70 243.79,-93.15 243.79,-94.95 196.24,-67.50"/><polygon class="isac" style="--t:1.00" points="158.35,-114.37 205.12,-141.38 239.76,-121.37 192.99,-94.37"/><polygon class="isac" style="--t:0.85" points="158.35,-89.37 192.99,-69.37 192.99,-94.37 158.35,-114.37"/><polygon class="isac" style="--t:0.67" points="192.99,-69.37 239.76,-96.37 239.76,-121.37 192.99,-94.37"/><polygon class="ipc" style="--t:1.00" points="199.97,-67.75 201.35,-68.55 202.74,-67.75 201.35,-66.95"/><polygon class="ipc" style="--t:0.85" points="199.97,-65.75 201.35,-64.95 201.35,-66.95 199.97,-67.75"/><polygon class="ipc" style="--t:0.67" points="201.35,-64.95 202.74,-65.75 202.74,-67.75 201.35,-66.95"/><polygon class="ipc" style="--t:1.00" points="239.54,-90.60 240.93,-91.40 242.31,-90.60 240.93,-89.80"/><polygon class="ipc" style="--t:0.85" points="239.54,-88.60 240.93,-87.80 240.93,-89.80 239.54,-90.60"/><polygon class="ipc" style="--t:0.67" points="240.93,-87.80 242.31,-88.60 242.31,-90.60 240.93,-89.80"/><polygon class="imel" style="--t:1.00" points="155.11,-133.75 202.65,-161.20 243.79,-137.45 196.24,-110.00"/><polygon class="imel" style="--t:0.85" points="155.11,-131.95 196.24,-108.20 196.24,-110.00 155.11,-133.75"/><polygon class="imel" style="--t:0.67" points="196.24,-108.20 243.79,-135.65 243.79,-137.45 196.24,-110.00"/><polygon class="ihole" points="200.92,-160.20 202.65,-161.20 204.38,-160.20 202.65,-159.20"/><polygon class="isac" style="--t:1.00" points="158.35,-156.88 205.12,-183.88 239.76,-163.87 192.99,-136.87"/><polygon class="isac" style="--t:0.85" points="158.35,-131.88 192.99,-111.87 192.99,-136.87 158.35,-156.88"/><polygon class="isac" style="--t:0.67" points="192.99,-111.87 239.76,-138.87 239.76,-163.87 192.99,-136.87"/><polygon class="imel" style="--t:1.00" points="195.38,-150.20 245.34,-179.05 246.90,-178.15 196.93,-149.30"/><polygon class="imel" style="--t:0.85" points="195.38,-65.20 196.93,-64.30 196.93,-149.30 195.38,-150.20"/><polygon class="imel" style="--t:0.67" points="196.93,-64.30 246.90,-93.15 246.90,-178.15 196.93,-149.30"/><polygon class="ipc" style="--t:1.00" points="197.15,-62.67 243.92,-89.67 295.88,-59.67 249.11,-32.67"/><polygon class="ipc" style="--t:0.85" points="197.15,-61.67 249.11,-31.67 249.11,-32.67 197.15,-62.67"/><polygon class="ipc" style="--t:0.67" points="249.11,-31.67 295.88,-58.67 295.88,-59.67 249.11,-32.67"/><polygon class="iapp" style="--t:1.00" points="197.80,-147.80 243.70,-174.30 295.23,-144.55 249.33,-118.05"/><polygon class="iapp" style="--t:0.85" points="197.80,-62.80 249.33,-33.05 249.33,-118.05 197.80,-147.80"/><polygon class="iapp" style="--t:0.67" points="249.33,-33.05 295.23,-59.55 295.23,-144.55 249.33,-118.05"/><polygon class="ihub" points="238.20,-89.38 237.70,-94.06 236.23,-99.01 233.89,-103.89 230.84,-108.35 227.29,-112.10 223.48,-114.88 219.67,-116.50 216.12,-116.85 213.07,-115.91 210.73,-113.74 209.26,-110.49 208.76,-106.38 209.26,-101.69 210.73,-96.74 213.07,-91.86 216.12,-87.40 219.67,-83.65 223.48,-80.88 227.29,-79.25 230.84,-78.90 233.89,-79.84 236.23,-82.01 237.70,-85.26"/><polygon class="ihub" points="234.30,-91.62 233.93,-95.07 232.85,-98.71 231.13,-102.29 228.89,-105.58 226.28,-108.33 223.48,-110.38 220.68,-111.57 218.07,-111.83 215.82,-111.13 214.10,-109.54 213.02,-107.15 212.65,-104.12 213.02,-100.68 214.10,-97.04 215.82,-93.46 218.07,-90.17 220.68,-87.42 223.48,-85.38 226.28,-84.18 228.89,-83.92 231.13,-84.62 232.85,-86.21 233.93,-88.60"/><polygon class="ipc" style="--t:1.00" points="294.36,-58.95 295.75,-59.75 297.13,-58.95 295.75,-58.15"/><polygon class="ipc" style="--t:0.85" points="294.36,-56.95 295.75,-56.15 295.75,-58.15 294.36,-58.95"/><polygon class="ipc" style="--t:0.67" points="295.75,-56.15 297.13,-56.95 297.13,-58.95 295.75,-58.15"/><polygon class="ipc" style="--t:1.00" points="254.78,-36.10 256.17,-36.90 257.56,-36.10 256.17,-35.30"/><polygon class="ipc" style="--t:0.85" points="254.78,-34.10 256.17,-33.30 256.17,-35.30 254.78,-36.10"/><polygon class="ipc" style="--t:0.67" points="256.17,-33.30 257.56,-34.10 257.56,-36.10 256.17,-35.30"/><polygon class="imel" style="--t:1.00" points="250.19,-118.55 300.16,-147.40 301.72,-146.50 251.75,-117.65"/><polygon class="imel" style="--t:0.85" points="250.19,-33.55 251.75,-32.65 251.75,-117.65 250.19,-118.55"/><polygon class="imel" style="--t:0.67" points="251.75,-32.65 301.72,-61.50 301.72,-146.50 251.75,-117.65"/><polygon class="ibois" style="--t:1.00" points="150.95,-175.65 202.91,-205.65 301.98,-148.45 250.02,-118.45"/><polygon class="ibois" style="--t:0.85" points="150.95,-173.85 250.02,-116.65 250.02,-118.45 150.95,-175.65"/><polygon class="ibois" style="--t:0.67" points="250.02,-116.65 301.98,-146.65 301.98,-148.45 250.02,-118.45"/><polygon class="ihole" points="260.67,-168.30 264.14,-170.30 269.33,-167.30 265.87,-165.30"/><polygon class="imel" style="--t:1.00" points="191.63,-268.14 213.67,-268.14 211.47,-269.41 193.83,-269.41"/><polygon class="imel" style="--t:0.85" points="191.63,-199.14 213.67,-199.14 213.67,-268.14 191.63,-268.14"/><polygon class="idec" points="197.75,-206.34 207.55,-206.34 207.55,-214.34 197.75,-214.34"/><polygon class="idec" points="197.75,-216.34 207.55,-216.34 207.55,-224.34 197.75,-224.34"/><polygon class="idec" points="197.75,-226.34 207.55,-226.34 207.55,-234.34 197.75,-234.34"/><polygon class="idec" points="197.75,-252.34 207.55,-252.34 207.55,-260.34 197.75,-260.34"/><line class="icarrl" x1="139.8" y1="-287.0" x2="143.8" y2="-287.0"/><text class="icarrt" x="138.8" y="-284.6" text-anchor="end">carrelage 204</text></svg><p class="cap">Sans la porte : le bas, l'étagère, les deux bacs et le fond.</p></div>
+<div class="fig ens"><svg viewBox="102.5 -254.6 213.5 314.5" role="img" aria-label="Vue éclatée"><polygon class="ipc" style="--t:1.00" points="196.85,-115.25 198.23,-116.05 199.62,-115.25 198.23,-114.45"/><polygon class="ipc" style="--t:0.85" points="196.85,-113.25 198.23,-112.45 198.23,-114.45 196.85,-115.25"/><polygon class="ipc" style="--t:0.67" points="198.23,-112.45 199.62,-113.25 199.62,-115.25 198.23,-114.45"/><polygon class="ipc" style="--t:1.00" points="157.27,-92.40 158.66,-93.20 160.04,-92.40 158.66,-91.60"/><polygon class="ipc" style="--t:0.85" points="157.27,-90.40 158.66,-89.60 158.66,-91.60 157.27,-92.40"/><polygon class="ipc" style="--t:0.67" points="158.66,-89.60 160.04,-90.40 160.04,-92.40 158.66,-91.60"/><polygon class="ipc" style="--t:1.00" points="294.36,-58.95 295.75,-59.75 297.13,-58.95 295.75,-58.15"/><polygon class="ipc" style="--t:0.85" points="294.36,-56.95 295.75,-56.15 295.75,-58.15 294.36,-58.95"/><polygon class="ipc" style="--t:0.67" points="295.75,-56.15 297.13,-56.95 297.13,-58.95 295.75,-58.15"/><polygon class="ipc" style="--t:1.00" points="254.78,-36.10 256.17,-36.90 257.56,-36.10 256.17,-35.30"/><polygon class="ipc" style="--t:0.85" points="254.78,-34.10 256.17,-33.30 256.17,-35.30 254.78,-36.10"/><polygon class="ipc" style="--t:0.67" points="256.17,-33.30 257.56,-34.10 257.56,-36.10 256.17,-35.30"/><polygon class="ipc" style="--t:1.00" points="192.82,14.83 239.59,-12.17 291.55,17.82 244.78,44.82"/><polygon class="ipc" style="--t:0.85" points="192.82,15.83 244.78,45.82 244.78,44.82 192.82,14.83"/><polygon class="ipc" style="--t:0.67" points="244.78,45.82 291.55,18.82 291.55,17.82 244.78,44.82"/><polygon class="imel" style="--t:1.00" points="152.68,-174.85 202.65,-203.70 204.21,-202.80 154.24,-173.95"/><polygon class="imel" style="--t:0.85" points="152.68,-89.85 154.24,-88.95 154.24,-173.95 152.68,-174.85"/><polygon class="imel" style="--t:0.67" points="154.24,-88.95 204.21,-117.80 204.21,-202.80 154.24,-173.95"/><polygon class="imel" style="--t:1.00" points="250.19,-118.55 300.16,-147.40 301.72,-146.50 251.75,-117.65"/><polygon class="imel" style="--t:0.85" points="250.19,-33.55 251.75,-32.65 251.75,-117.65 250.19,-118.55"/><polygon class="imel" style="--t:0.67" points="251.75,-32.65 301.72,-61.50 301.72,-146.50 251.75,-117.65"/><polygon class="imel" style="--t:1.00" points="202.65,-201.90 204.21,-202.80 245.34,-179.05 243.79,-178.15"/><polygon class="imel" style="--t:0.85" points="202.65,-116.90 243.79,-93.15 243.79,-178.15 202.65,-201.90"/><polygon class="imel" style="--t:0.67" points="243.79,-93.15 245.34,-94.05 245.34,-179.05 243.79,-178.15"/><polygon class="imel" style="--t:1.00" points="155.11,-91.25 202.65,-118.70 243.79,-94.95 196.24,-67.50"/><polygon class="imel" style="--t:0.85" points="155.11,-89.45 196.24,-65.70 196.24,-67.50 155.11,-91.25"/><polygon class="imel" style="--t:0.67" points="196.24,-65.70 243.79,-93.15 243.79,-94.95 196.24,-67.50"/><polygon class="isac" style="--t:1.00" points="158.35,-114.37 205.12,-141.38 239.76,-121.37 192.99,-94.37"/><polygon class="isac" style="--t:0.85" points="158.35,-89.37 192.99,-69.37 192.99,-94.37 158.35,-114.37"/><polygon class="isac" style="--t:0.67" points="192.99,-69.37 239.76,-96.37 239.76,-121.37 192.99,-94.37"/><polygon class="ipc" style="--t:1.00" points="199.97,-67.75 201.35,-68.55 202.74,-67.75 201.35,-66.95"/><polygon class="ipc" style="--t:0.85" points="199.97,-65.75 201.35,-64.95 201.35,-66.95 199.97,-67.75"/><polygon class="ipc" style="--t:0.67" points="201.35,-64.95 202.74,-65.75 202.74,-67.75 201.35,-66.95"/><polygon class="ipc" style="--t:1.00" points="239.54,-90.60 240.93,-91.40 242.31,-90.60 240.93,-89.80"/><polygon class="ipc" style="--t:0.85" points="239.54,-88.60 240.93,-87.80 240.93,-89.80 239.54,-90.60"/><polygon class="ipc" style="--t:0.67" points="240.93,-87.80 242.31,-88.60 242.31,-90.60 240.93,-89.80"/><polygon class="imel" style="--t:1.00" points="155.11,-133.75 202.65,-161.20 243.79,-137.45 196.24,-110.00"/><polygon class="imel" style="--t:0.85" points="155.11,-131.95 196.24,-108.20 196.24,-110.00 155.11,-133.75"/><polygon class="imel" style="--t:0.67" points="196.24,-108.20 243.79,-135.65 243.79,-137.45 196.24,-110.00"/><polygon class="ihole" points="200.92,-160.20 202.65,-161.20 204.38,-160.20 202.65,-159.20"/><polygon class="isac" style="--t:1.00" points="158.35,-156.88 205.12,-183.88 239.76,-163.87 192.99,-136.87"/><polygon class="isac" style="--t:0.85" points="158.35,-131.88 192.99,-111.87 192.99,-136.87 158.35,-156.88"/><polygon class="isac" style="--t:0.67" points="192.99,-111.87 239.76,-138.87 239.76,-163.87 192.99,-136.87"/><polygon class="imel" style="--t:1.00" points="195.38,-150.20 245.34,-179.05 246.90,-178.15 196.93,-149.30"/><polygon class="imel" style="--t:0.85" points="195.38,-65.20 196.93,-64.30 196.93,-149.30 195.38,-150.20"/><polygon class="imel" style="--t:0.67" points="196.93,-64.30 246.90,-93.15 246.90,-178.15 196.93,-149.30"/><polygon class="ibois" style="--t:1.00" points="150.95,-210.65 202.91,-240.65 301.98,-183.45 250.02,-153.45"/><polygon class="ibois" style="--t:0.85" points="150.95,-208.85 250.02,-151.65 250.02,-153.45 150.95,-210.65"/><polygon class="ibois" style="--t:0.67" points="250.02,-151.65 301.98,-181.65 301.98,-183.45 250.02,-153.45"/><polygon class="ihole" points="260.67,-203.30 264.14,-205.30 269.33,-202.30 265.87,-200.30"/><polygon class="iapp" style="--t:1.00" points="193.47,-70.30 239.37,-96.80 290.90,-67.05 245.00,-40.55"/><polygon class="iapp" style="--t:0.85" points="193.47,14.70 245.00,44.45 245.00,-40.55 193.47,-70.30"/><polygon class="iapp" style="--t:0.67" points="245.00,44.45 290.90,17.95 290.90,-67.05 245.00,-40.55"/><polygon class="ihub" points="233.87,-11.88 233.37,-16.56 231.90,-21.51 229.56,-26.39 226.51,-30.85 222.96,-34.60 219.15,-37.38 215.34,-39.00 211.79,-39.35 208.74,-38.41 206.40,-36.24 204.93,-32.99 204.43,-28.88 204.93,-24.19 206.40,-19.24 208.74,-14.36 211.79,-9.90 215.34,-6.15 219.15,-3.38 222.96,-1.75 226.51,-1.40 229.56,-2.34 231.90,-4.51 233.37,-7.76"/><polygon class="ihub" points="229.97,-14.13 229.60,-17.57 228.52,-21.21 226.80,-24.79 224.56,-28.08 221.95,-30.83 219.15,-32.88 216.35,-34.07 213.74,-34.33 211.49,-33.63 209.77,-32.04 208.69,-29.65 208.32,-26.63 208.69,-23.18 209.77,-19.54 211.49,-15.96 213.74,-12.67 216.35,-9.92 219.15,-7.88 221.95,-6.68 224.56,-6.42 226.80,-7.12 228.52,-8.71 229.60,-11.10"/><polygon class="imel" style="--t:1.00" points="116.48,-153.55 118.04,-154.45 161.95,-129.10 160.39,-128.20"/><polygon class="imel" style="--t:0.85" points="116.48,-68.75 160.39,-43.40 160.39,-128.20 116.48,-153.55"/><polygon class="imel" style="--t:0.67" points="160.39,-43.40 161.95,-44.30 161.95,-129.10 160.39,-128.20"/><polygon class="ifen" points="121.68,-102.07 121.74,-101.26 121.94,-100.39 122.26,-99.52 122.69,-98.66 123.22,-97.86 123.82,-97.14 124.46,-96.54 125.14,-96.07 151.73,-80.72 152.40,-80.41 153.05,-80.26 153.65,-80.29 154.18,-80.48 154.61,-80.84 154.93,-81.35 155.13,-81.98 155.19,-82.72 155.19,-87.20 155.17,-87.51 155.09,-87.83 154.97,-88.16 154.81,-88.48 154.61,-88.78 154.39,-89.05 154.15,-89.27 153.89,-89.45 122.98,-107.30 122.72,-107.42 122.48,-107.47 122.25,-107.46 122.06,-107.39 121.90,-107.26 121.78,-107.07 121.70,-106.83 121.68,-106.55"/><polygon class="ifen" points="121.68,-144.57 121.74,-143.76 121.94,-142.89 122.26,-142.02 122.69,-141.16 123.22,-140.36 123.82,-139.64 124.46,-139.04 125.14,-138.57 151.73,-123.22 152.40,-122.91 153.05,-122.76 153.65,-122.79 154.18,-122.98 154.61,-123.34 154.93,-123.85 155.13,-124.48 155.19,-125.22 155.19,-131.20 121.68,-150.55"/><polygon class="ipc" style="--t:1.00" points="154.67,-105.70 157.27,-107.20 158.31,-106.60 155.71,-105.10"/><polygon class="ipc" style="--t:0.85" points="154.67,-93.70 155.71,-93.10 155.71,-105.10 154.67,-105.70"/><polygon class="ipc" style="--t:0.67" points="155.71,-93.10 158.31,-94.60 158.31,-106.60 155.71,-105.10"/></svg><p class="cap">Vue éclatée : le plateau levé, la porte sortie vers l'avant, la machine et son tapis aussi. La colonne n'est pas dessinée ici.</p></div>
+
+<h2 id="structure">Structure</h2>
+<p><b>Trois joues pleines</b> de 1,8 debout autour de la machine, un <b>fond</b>, un <b>bas</b> et une <b>étagère</b> entre les joues nord et milieu, le <b>plateau</b> posé directement sur le tout. Rien n'est vissé au mur. Joues, fond, bas, étagère et porte en mélaminé blanc, plateau en chêne.</p>
+<ul>
+<li><b>Devant-derrière.</b> Une joue est un panneau plein : elle ne peut pas se déformer dans son plan. Le mur du fond arrête le recul.</li>
+<li><b>Nord-sud.</b> Le fond empêche le placard de se déformer : vissé aux joues nord et milieu, il fait un U qui tient debout seul. Le plateau y relie la joue sud, et il est pris entre les murs, à 0,3 de chaque côté.</li>
+<li><b>Devant la machine.</b> Les joues s'arrêtent au nu de sa façade : sa porte passe devant elles. Le plateau dépasse de 2.</li>
+<li><b>Derrière la machine.</b> Rien ne passe : les 5 restent libres pour les tuyaux, et une encoche de 6 × 4 à 74 du mur nord laisse monter l'arrivée d'eau au robinet.</li>
+<li><b>Tapis anti-vibration.</b> Plaque anti-vibrations Noma Rub 60 × 60 × 1 recoupée à 54 de profondeur. Elle monte la machine de 1, et ses 60 de large entrent entre les joues.</li>
+</ul>
+<h3 id="placard">Placard</h3>
+<figure class="fcote " id="f-placard"><figcaption class="ftitre">Coupe par le placard</figcaption><div class="scroll"><svg class="cotes" viewBox="158 -96.8 108 118.8" role="img" aria-label="Coupe par le placard, le mur du fond à droite"><rect class="omur" x="234" y="-94.8" width="4" height="98.8"/><rect class="omur" x="160" y="0" width="74" height="4"/><rect class="omel" x="176" y="-87" width="57.7" height="85"/><rect class="omel cut" x="177" y="-46.3" width="54.9" height="1.8"/><rect class="omel cut" x="177" y="-3.8" width="54.9" height="1.8"/><rect class="omel cut" x="231.9" y="-87" width="1.8" height="85"/><rect class="oplan cut" x="174" y="-88.8" width="60" height="1.8"/><rect class="omel cut" x="174" y="-34.33" width="1.8" height="32.33"/><rect class="omel cut" x="174" y="-76.83" width="1.8" height="32.53"/><rect class="opoi" x="171" y="-64" width="3" height="12"/><rect class="olibre" x="177" y="-28.8" width="54" height="25"/><text class="lt" x="204" y="-15.3" text-anchor="middle">Bac 1</text><line class="otq" x1="174" y1="-34.33" x2="233.7" y2="-34.33"/><line class="dim" x1="227" y1="-28.8" x2="227" y2="-3.8"/><line class="tick" x1="226.2" y1="-28" x2="227.8" y2="-29.6"/><line class="tick" x1="226.2" y1="-3" x2="227.8" y2="-4.6"/><text class="ct" x="226.1" y="-16.3" text-anchor="middle" transform="rotate(-90 226.1 -16.3)">25</text><rect class="olibre" x="177" y="-71.3" width="54" height="25"/><text class="lt" x="204" y="-57.8" text-anchor="middle">Bac 2</text><line class="otq" x1="174" y1="-76.83" x2="233.7" y2="-76.83"/><line class="dim" x1="227" y1="-71.3" x2="227" y2="-46.3"/><line class="tick" x1="226.2" y1="-70.5" x2="227.8" y2="-72.1"/><line class="tick" x1="226.2" y1="-45.5" x2="227.8" y2="-47.1"/><text class="ct" x="226.1" y="-58.8" text-anchor="middle" transform="rotate(-90 226.1 -58.8)">25</text><polyline class="ofil" points="200,-8 230.9,-8 230.9,-88.8"/><line class="lead" x1="200" y1="-8" x2="197" y2="-8"/><circle class="pt" cx="200" cy="-8" r=".45"/><text class="lt" x="196.4" y="-7.1" text-anchor="end">Sortie du câble</text><line class="ext" x1="176" y1="4" x2="176" y2="11"/><line class="ext" x1="231.9" y1="4" x2="231.9" y2="11"/><line class="dim" x1="176" y1="11" x2="231.9" y2="11"/><line class="tick" x1="175.2" y1="11.8" x2="176.8" y2="10.2"/><line class="tick" x1="231.1" y1="11.8" x2="232.7" y2="10.2"/><text class="ct" x="203.95" y="10.1" text-anchor="middle">55,9</text><line class="ext" x1="174" y1="4" x2="174" y2="18"/><line class="ext" x1="234" y1="4" x2="234" y2="18"/><line class="dim" x1="174" y1="18" x2="234" y2="18"/><line class="tick" x1="173.2" y1="18.8" x2="174.8" y2="17.2"/><line class="tick" x1="233.2" y1="18.8" x2="234.8" y2="17.2"/><text class="ct" x="204" y="17.1" text-anchor="middle">60 plateau</text><line class="ext" x1="241" y1="-3.8" x2="234" y2="-3.8"/><polygon class="niv" points="239.9,-6 242.1,-6 241,-3.8"/><text class="nt" x="243.2" y="-3.8" text-anchor="start">3,8 bas</text><line class="ext" x1="241" y1="-34.33" x2="234" y2="-34.33"/><polygon class="niv" points="239.9,-36.53 242.1,-36.53 241,-34.33"/><text class="nt" x="243.2" y="-34.33" text-anchor="start">34,3 3/4</text><line class="ext" x1="241" y1="-44.5" x2="234" y2="-44.5"/><polygon class="niv" points="239.9,-46.7 242.1,-46.7 241,-44.5"/><text class="nt" x="243.2" y="-44.5" text-anchor="start">44,5 étagère</text><line class="ext" x1="241" y1="-46.3" x2="234" y2="-46.3"/><polygon class="niv" points="239.9,-48.5 242.1,-48.5 241,-46.3"/><polyline class="lead" points="242.1,-47.4 243,-48.4"/><text class="nt" x="243.2" y="-47.5" text-anchor="start">46,3</text><line class="ext" x1="241" y1="-76.83" x2="234" y2="-76.83"/><polygon class="niv" points="239.9,-79.03 242.1,-79.03 241,-76.83"/><text class="nt" x="243.2" y="-76.83" text-anchor="start">76,8 3/4</text><line class="ext" x1="241" y1="-87" x2="234" y2="-87"/><polygon class="niv" points="239.9,-89.2 242.1,-89.2 241,-87"/><text class="nt" x="243.2" y="-87" text-anchor="start">87 plateau</text></svg></div><p class="cap">Le mur du fond à droite. En pointillé, les 3/4 de chaque étage : les bacs restent dessous, les découpes de la porte partent de là. En tirets rouges, le câble de la colonne, le long de la joue nord ; sa sortie est dessinée à titre d'exemple, à relever.</p></figure>
+<ul>
+<li><b>Étages.</b> L'étagère coupe la hauteur en deux étages égaux de 40,7 : du bas à l'étagère, puis de l'étagère au plateau.</li>
+<li><b>Bas.</b> 47,5 × 54,9, à 2 du sol comme les joues. Le bac du bas pose dessus, rien ne touche le sol sauf les vérins.</li>
+<li><b>Limite des bacs.</b> 3/4 de 40,7, soit 30,5 de haut au maximum.</li>
+<li><b>Bacs.</b> Deux <a href="https://www.ikea.com/fr/fr/p/slibb-panier-a-linge-blanc-70612723/">paniers IKEA SLIBB</a> de 38 L, 54 × 40 × 25, en plastique souple avec 4 poignées. Ils laissent 3,8 de chaque côté et 0,9 devant le fond, et ils montent à 61,4 % de l'étage.</li>
+<li><b>Étagère.</b> Mêmes dimensions que le bas. Les deux sont en retrait de 1 sur le plan des joues, pour que la porte ferme sans y toucher.</li>
+<li><b>Fond.</b> 85 × 47,5, levé à 2 du sol comme les joues, entre elles et au nu de leur arrière.</li>
+<li><b>Assemblage.</b> 3 vis 4 × 40 à chaque bout du fond, du bas et de l'étagère, à travers les joues, avant perçage Ø 2,5 et tête fraisée : ces têtes restent cachées, contre le mur côté nord et contre la machine côté milieu. 3 vis de plus à travers le fond dans l'arrière du bas et de l'étagère.</li>
+</ul>
+<h3 id="porte">Porte</h3>
+<figure class="fcote " id="f-porte"><figcaption class="ftitre">Porte vue de face</figcaption><div class="scroll"><svg class="cotes" viewBox="-19.5 -90.8 92.7 109.8" role="img" aria-label="Porte du placard vue de face"><line class="ocarr" x1="-5.5" y1="0" x2="57.2" y2="0"/><polygon class="omel" points="0.5,-2 51.2,-2 51.2,-86.8 45.2,-86.8 45.2,-80.83 45.12,-80.04 44.9,-79.29 44.53,-78.6 44.03,-78 43.42,-77.5 42.73,-77.13 41.98,-76.9 41.2,-76.83 10.5,-76.83 9.72,-76.9 8.97,-77.13 8.28,-77.5 7.67,-78 7.17,-78.6 6.8,-79.29 6.58,-80.04 6.5,-80.83 6.5,-86.8 0.5,-86.8"/><polygon class="otrou" points="6.5,-38.33 6.58,-37.54 6.8,-36.79 7.17,-36.1 7.67,-35.5 8.28,-35 8.97,-34.63 9.72,-34.4 10.5,-34.33 41.2,-34.33 41.98,-34.4 42.73,-34.63 43.42,-35 44.03,-35.5 44.53,-36.1 44.9,-36.79 45.12,-37.54 45.2,-38.33 45.2,-42.8 45.17,-43.09 45.09,-43.37 44.95,-43.63 44.76,-43.86 44.53,-44.05 44.27,-44.19 43.99,-44.27 43.7,-44.3 8,-44.3 7.71,-44.27 7.43,-44.19 7.17,-44.05 6.94,-43.86 6.75,-43.63 6.61,-43.37 6.53,-43.09 6.5,-42.8"/><circle class="ocache" cx="2.75" cy="-12" r="1.75"/><circle class="ocache" cx="2.75" cy="-70" r="1.75"/><rect class="opoi" x="47.6" y="-64" width="1.2" height="12"/><line class="lead" x1="2.75" y1="-12" x2="12.5" y2="-17"/><circle class="pt" cx="2.75" cy="-12" r=".45"/><text class="lt" x="13.1" y="-16.1" text-anchor="start">Charnière</text><line class="lead" x1="48.2" y1="-58" x2="35.2" y2="-63"/><circle class="pt" cx="48.2" cy="-58" r=".45"/><text class="lt" x="34.6" y="-62.1" text-anchor="end">Poignée</text><line class="ext" x1="0.5" y1="0" x2="0.5" y2="6"/><line class="ext" x1="6.5" y1="0" x2="6.5" y2="6"/><line class="dim" x1="0.5" y1="6" x2="6.5" y2="6"/><line class="tick" x1="-0.3" y1="6.8" x2="1.3" y2="5.2"/><line class="tick" x1="5.7" y1="6.8" x2="7.3" y2="5.2"/><text class="ct" x="-0.5" y="5.1" text-anchor="end">6</text><line class="ext" x1="6.5" y1="0" x2="6.5" y2="6"/><line class="ext" x1="45.2" y1="0" x2="45.2" y2="6"/><line class="dim" x1="6.5" y1="6" x2="45.2" y2="6"/><line class="tick" x1="5.7" y1="6.8" x2="7.3" y2="5.2"/><line class="tick" x1="44.4" y1="6.8" x2="46" y2="5.2"/><text class="ct" x="25.85" y="5.1" text-anchor="middle">38,7</text><line class="ext" x1="45.2" y1="0" x2="45.2" y2="6"/><line class="ext" x1="51.2" y1="0" x2="51.2" y2="6"/><line class="dim" x1="45.2" y1="6" x2="51.2" y2="6"/><line class="tick" x1="44.4" y1="6.8" x2="46" y2="5.2"/><line class="tick" x1="50.4" y1="6.8" x2="52" y2="5.2"/><text class="ct" x="52.2" y="5.1" text-anchor="start">6</text><line class="ext" x1="0.5" y1="0" x2="0.5" y2="13"/><line class="ext" x1="51.2" y1="0" x2="51.2" y2="13"/><line class="dim" x1="0.5" y1="13" x2="51.2" y2="13"/><line class="tick" x1="-0.3" y1="13.8" x2="1.3" y2="12.2"/><line class="tick" x1="50.4" y1="13.8" x2="52" y2="12.2"/><text class="ct" x="25.85" y="12.1" text-anchor="middle">50,7</text><line class="dim" x1="-11.5" y1="-86.8" x2="-11.5" y2="-2"/><line class="tick" x1="-12.3" y1="-86" x2="-10.7" y2="-87.6"/><line class="tick" x1="-12.3" y1="-1.2" x2="-10.7" y2="-2.8"/><text class="ct" x="-12.4" y="-44.4" text-anchor="middle" transform="rotate(-90 -12.4 -44.4)">84,8</text><line class="ext" x1="54.2" y1="-34.33" x2="51.2" y2="-34.33"/><polygon class="niv" points="53.1,-36.53 55.3,-36.53 54.2,-34.33"/><text class="nt" x="56.4" y="-34.33" text-anchor="start">34,3</text><line class="ext" x1="54.2" y1="-44.3" x2="51.2" y2="-44.3"/><polygon class="niv" points="53.1,-46.5 55.3,-46.5 54.2,-44.3"/><text class="nt" x="56.4" y="-44.3" text-anchor="start">44,3</text><line class="ext" x1="54.2" y1="-76.83" x2="51.2" y2="-76.83"/><polygon class="niv" points="53.1,-79.03 55.3,-79.03 54.2,-76.83"/><text class="nt" x="56.4" y="-76.83" text-anchor="start">76,8</text><line class="ext" x1="54.2" y1="-86.8" x2="51.2" y2="-86.8"/><polygon class="niv" points="53.1,-89 55.3,-89 54.2,-86.8"/><text class="nt" x="56.4" y="-86.8" text-anchor="start">86,8</text></svg></div><p class="cap">Le nord à gauche. Les charnières côté mur, la poignée côté machine.</p></figure>
+<ul>
+<li><b>Dimensions.</b> 84,8 × 50,7, en applique devant les joues nord et milieu, comme un meuble IKEA, avec 0,2 de jeu autour. Sa face avant arrive au nu du plateau.</li>
+<li><b>Découpes en U.</b> Une par étage, de 38,7 de large et 10 de haut, à fond arrondi. Le point le plus bas est à 3/4 de l'étage : à 34,3 et à 76,8 du sol. On jette le linge porte fermée, il tombe dans le bac placé dessous.</li>
+<li><b>En haut.</b> La découpe est une encoche ouverte sur le bord de la porte : plus de bois au-dessus, et il reste 2 cornes de 6 × 10. C'est le point fragile de la porte, à ne pas prendre pour attraper.</li>
+<li><b>En bas.</b> La découpe reste fermée : l'ouvrir vers le haut couperait la porte en deux. Il reste 0,2 entre son haut et le dessous de l'étagère.</li>
+<li><b>Bois gardé.</b> 6 de chaque côté des découpes, et 32,5 entre les deux.</li>
+<li><b>Découpe.</b> Fond arrondi à 4, angles hauts de la découpe fermée à 1,5 : percer un trou dans chaque angle fermé, couper à la scie sauteuse, adhésif de masquage sur le tracé. Plaquer le chant sur tout le tour pour que rien n'accroche.</li>
+<li><b>Charnières.</b> 2 <a href="https://www.ikea.com/fr/fr/p/utrusta-charn-a-amort-integre-cuisine-80524882/">IKEA UTRUSTA 110°</a> amorties, côté mur nord, à 12 et 70 du sol. La haute reste sous la découpe. Cuvette Ø 35 mm à percer dans la porte, plaque vissée sur la joue nord. Cotes de perçage à reprendre sur la notice IKEA avant de percer : les caissons METOD sont percés d'usine, pas nos joues.</li>
+<li><b>Poignée.</b> <a href="https://www.ikea.com/fr/fr/p/billsbro-poignee-blanc-50334303/">IKEA BILLSBRO blanc</a> de 12, à droite, dans le montant côté machine, entre les deux découpes, de 52 à 64 du sol. Elle convient aux portes de 16 à 19 mm. Le lot en contient 2, une seule sert.</li>
+<li><b>Ouverture.</b> Porte d'entrée fermée, la porte du placard s'ouvre à environ 85°, estimation à vérifier sur place : la poignée arrive contre la porte d'entrée. Les bacs sortent alors tout droit. <b>Porte d'entrée ouverte à 90°, elle ne s'ouvre que d'environ 7°</b> : le vantail n'est qu'à 9 devant elle. Il faut donc fermer la porte d'entrée pour sortir un bac, pas pour jeter du linge.</li>
+<li><b>Porte de la machine.</b> Elle s'ouvre vers le placard, et la poignée dépasse maintenant de 5 devant les joues. Son angle maximal n'a pas été relevé : à vérifier avant de percer pour la poignée.</li>
+</ul>
+<h3 id="pieds">Pieds</h3>
+<p>Le mélaminé ne touche jamais le sol. Sous chaque joue, <b>2 vérins réglables</b> encastrés dans le chant du bas, à 6 de chaque bord. Le fond, le bas et la porte restent suspendus, sans pied.</p>
+<ul>
+<li><b>Hauteur.</b> Le bas des joues est à 2 du sol. Le vérin se règle de 0,9 à 2,5, ce qui rattrape aussi un sol qui n'est pas droit.</li>
+<li><b>Étanchéité.</b> Le trou de chaque vérin est garni de colle MS. Le chant du bas des joues, du fond et de la porte en est enduit : le mélaminé n'est pas hydrofuge, et son aggloméré gonfle à l'eau.</li>
+<li><b>Écoulement.</b> Seuls les embouts plastique touchent le sol : l'eau et la serpillère passent dessous. On ne pose pas de joint au pied, il retiendrait l'eau.</li>
+<li><b>Point à tester.</b> Le trou de 8 mm laisse 5 mm d'aggloméré de chaque côté : faire un essai sur une chute de tablette avant de percer les joues.</li>
+</ul>
+<h3>Joue</h3>
+<figure class="fcote " id="f-joue"><figcaption class="ftitre">Joue vue de côté</figcaption><div class="scroll"><svg class="cotes" viewBox="158 -96.8 108 118.8" role="img" aria-label="Joue vue de côté"><rect class="omur" x="234" y="-94.8" width="4" height="98.8"/><rect class="omur" x="168" y="0" width="66" height="4"/><rect class="omel" x="176" y="-87" width="57.7" height="85"/><rect class="oplan cut" x="174" y="-88.8" width="60" height="1.8"/><rect class="omet" x="181.2" y="-2" width="1.6" height="2"/><rect class="omet" x="226.9" y="-2" width="1.6" height="2"/><text class="lt" x="204.85" y="-43.5" text-anchor="middle">Joue 85 × 57,7</text><line class="lead" x1="182" y1="-1" x2="189" y2="-12"/><circle class="pt" cx="182" cy="-1" r=".45"/><text class="lt" x="189.6" y="-11.1" text-anchor="start">Vérin</text><line class="ext" x1="174" y1="4" x2="174" y2="11"/><line class="ext" x1="176" y1="4" x2="176" y2="11"/><line class="dim" x1="174" y1="11" x2="176" y2="11"/><line class="tick" x1="173.2" y1="11.8" x2="174.8" y2="10.2"/><line class="tick" x1="175.2" y1="11.8" x2="176.8" y2="10.2"/><text class="ct" x="173" y="10.1" text-anchor="end">2</text><line class="ext" x1="176" y1="4" x2="176" y2="11"/><line class="ext" x1="233.7" y1="4" x2="233.7" y2="11"/><line class="dim" x1="176" y1="11" x2="233.7" y2="11"/><line class="tick" x1="175.2" y1="11.8" x2="176.8" y2="10.2"/><line class="tick" x1="232.9" y1="11.8" x2="234.5" y2="10.2"/><text class="ct" x="204.85" y="10.1" text-anchor="middle">57,7</text><line class="ext" x1="174" y1="4" x2="174" y2="18"/><line class="ext" x1="234" y1="4" x2="234" y2="18"/><line class="dim" x1="174" y1="18" x2="234" y2="18"/><line class="tick" x1="173.2" y1="18.8" x2="174.8" y2="17.2"/><line class="tick" x1="233.2" y1="18.8" x2="234.8" y2="17.2"/><text class="ct" x="204" y="17.1" text-anchor="middle">60 plateau</text><line class="dim" x1="173" y1="-87" x2="173" y2="-2"/><line class="tick" x1="172.2" y1="-86.2" x2="173.8" y2="-87.8"/><line class="tick" x1="172.2" y1="-1.2" x2="173.8" y2="-2.8"/><text class="ct" x="172.1" y="-44.5" text-anchor="middle" transform="rotate(-90 172.1 -44.5)">85</text><line class="ext" x1="241" y1="-87" x2="234" y2="-87"/><polygon class="niv" points="239.9,-89.2 242.1,-89.2 241,-87"/><text class="nt" x="243.2" y="-87" text-anchor="start">87 dessous</text><line class="ext" x1="241" y1="-88.8" x2="234" y2="-88.8"/><polygon class="niv" points="239.9,-91 242.1,-91 241,-88.8"/><polyline class="lead" points="242.1,-89.9 243,-90.9"/><text class="nt" x="243.2" y="-90" text-anchor="start">88,8 dessus</text><rect class="omet" x="180.25" y="-87" width="3.5" height="5"/><rect class="omet" x="225.95" y="-87" width="3.5" height="5"/></svg></div><p class="cap">Le mur du fond à droite. Deux équerres sous le plateau. Le bas de la joue est à 2 du sol.</p></figure>
+<h3 id="finition">Finition</h3>
+<p>Le mélaminé ne se peint pas. Chant blanc thermocollant sur tout ce qui se voit : l'avant des 3 joues, le tour de la porte, le tour des 2 découpes et l'avant du bas et de l'étagère, soit 7,4 m. Le plateau, lui, reçoit 3 couches de vernis sur toutes ses faces.</p>
+<h3>Pièces</h3>
+<div class="scroll"><table><thead><tr><th>Rep.</th><th>Pièce</th><th class="num">Qté</th><th class="num">Longueur</th><th class="num">Largeur</th><th class="num">Ép.</th></tr></thead><tbody><tr><td class="mono">A</td><td>Plateau, chêne</td><td class="num">1</td><td class="num">114,4</td><td class="num">60</td><td class="num">1,8</td></tr><tr><td class="mono">B</td><td>Joue</td><td class="num">3</td><td class="num">85</td><td class="num">57,7</td><td class="num">1,8</td></tr><tr><td class="mono">C</td><td>Fond</td><td class="num">1</td><td class="num">85</td><td class="num">47,5</td><td class="num">1,8</td></tr><tr><td class="mono">D</td><td>Étagère</td><td class="num">1</td><td class="num">47,5</td><td class="num">54,9</td><td class="num">1,8</td></tr><tr><td class="mono">E</td><td>Porte</td><td class="num">1</td><td class="num">84,8</td><td class="num">50,7</td><td class="num">1,8</td></tr><tr><td class="mono">F</td><td>Bas</td><td class="num">1</td><td class="num">47,5</td><td class="num">54,9</td><td class="num">1,8</td></tr><tr><td class="mono">G</td><td>Colonne, biseautée</td><td class="num">1</td><td class="num">69</td><td class="num">18</td><td class="num">1,8</td></tr></tbody></table></div>
+<p><b>A, le plateau</b> : une tablette de chêne de 200 × 60. <b>B à F</b> : trois tablettes de mélaminé blanc, les mêmes que le meuble haut :</p>
+<ul><li>Tablette 1, 250 × 60 : B (85) + B (85) + D (54,9)</li><li>Tablette 2, 250 × 60 : B (85) + E (84,8) + F (54,9)</li><li>Tablette 3, 250 × 50 : C (85) + G (69)</li></ul>
+<p><b>Pieds</b> : 6 vérins.</p>
+<h3>Montage</h3>
+<ol class="pose">
+<li><b>Mesurer l'alcôve</b> devant et au fond. Recouper le plateau à la plus petite mesure, moins 0,6 : les murs ne sont jamais parfaitement droits. Faire l'encoche et le trou de la colonne, vernir.</li>
+<li><b>Couper les panneaux</b> à la scie circulaire avec rail, la face visible dessous, puis plaquer les chants visibles.</li>
+<li><b>Percer et découper la porte</b> : les 2 découpes, leur chant, les 2 cuvettes, les trous de la poignée. Visser la poignée et les charnières sur la porte.</li>
+<li><b>Poser les vérins.</b> Faire un essai sur une chute. Percer Ø 8 bien droit dans le chant du bas de chaque joue, garnir le trou de colle MS, enfoncer le vérin. Enduire de colle les chants du bas des joues, du fond et de la porte. Laisser prendre selon la cartouche.</li>
+<li><b>À plat, sur les joues</b> : visser les équerres sous le plateau, en 4 × 16, à 6 de chaque bord, ras du haut, et les plaques de charnière sur la joue nord, en face des cuvettes.</li>
+<li><b>Pour le câble de la colonne</b> : percer la joue nord en face de la sortie relevée sur le mur, et entailler l'étagère de 2 × 2 dans son angle arrière côté nord.</li>
+<li><b>Assembler le U hors de l'alcôve</b> : le fond entre les joues nord et milieu, au nu du haut et de l'arrière, puis le bas au ras du bas des joues, puis l'étagère, posée sur deux cales de 40,7 sur le bas. 3 vis 4 × 40 à chaque bout, à travers les joues, avant perçage, puis 3 vis à travers le fond dans le bas et dans l'étagère. Le U tient debout seul.</li>
+<li><b>Pousser le U dans l'alcôve</b>, puis dresser la joue sud à sa place et la tenir debout.</li>
+<li><b>Glisser le plateau par l'avant</b> sur les joues et le fond, jusqu'au mur du fond : l'encoche vient autour du tuyau. Vérifier le niveau, régler les vérins.</li>
+<li><b>Visser les équerres dans le plateau</b> par en dessous, en 4 × 16. La machine n'est pas encore là : tout est accessible. Les vis ne traversent pas le plateau.</li>
+<li><b>Bloquer les pieds</b> : un point de colle MS autour de chaque embout de la joue sud, pour qu'elle ne glisse pas vers la machine. <b>Silicone</b> entre le plateau et les murs.</li>
+<li><b>Clipser la porte</b> sur ses plaques, en la tenant par les côtés et pas par les cornes du haut, régler les charnières pour un jeu égal partout, et rentrer les bacs.</li>
+<li><b>Poser le tapis</b> et rentrer la machine par l'avant, puis raccorder. Ouvrir sa porte à fond pour vérifier qu'elle ne bute pas sur la poignée.</li>
+</ol>
+<p>Les 6 équerres :</p>
+<ul><li>Joue nord sous le plateau, côté placard : 2</li><li>Joue du milieu sous le plateau, côté placard : 2</li><li>Joue sud sous le plateau, côté machine : 2</li></ul>
+<h3>Tenue</h3>
+<div class="scroll"><table><thead><tr><th>Contrôle</th><th class="num">Valeur</th></tr></thead><tbody>
+<tr><td>Flèche du plateau sur la machine, 100 kg au milieu</td><td class="num">1,6 mm</td></tr>
+<tr><td>Contrainte dans le plateau, même charge</td><td class="num">4,7 MPa</td></tr>
+<tr><td>Flèche de l'étagère, 15 kg de linge répartis</td><td class="num">0,3 mm</td></tr>
+<tr><td>Marge au basculement, 100 kg sur le bord avant</td><td class="num">× 5,9</td></tr>
+</tbody></table></div>
+<p class="note">6 équerres suffisent parce qu'elles ne portent pas : le plateau pose à plat sur les joues. Ordres de grandeur : chêne à 10 GPa et 700 kg/m³, aggloméré à 2.5 GPa et 650 kg/m³, valeurs courantes non mesurées. Les vis dans le chant de l'aggloméré ne sont pas calculées : à éprouver à la main avant de rentrer la machine. Masse du meuble ≈ 41 kg, dont ≈ 4.1 kg pour la porte.</p>
+<h3>Achats</h3>
+<p>Le meuble bas entier coûte <b>296,82 €</b> : plateau, tablettes, chant, charnières, poignées, 2 bacs, 4 prises et leurs boîtes, vérins, colle, vernis, tapis, équerres, vis et silicone. Les vis 4 × 40 sont prises dans les achats du meuble haut, le kit LED aussi. Le câble, la goulotte et l'électricien ne sont pas comptés. Le détail est dans <a href="sdb-meuble-achats.html#bas">la liste d'achats</a>.</p>
+
+<h2 id="colonne">Colonne de prises</h2>
+<p>Un seul panneau de mélaminé qui coupe l'angle du mur du fond et du mur nord à 45°, posé sur le plateau et vissé au meuble haut. Rien n'est percé dans le carrelage.</p>
+<figure class="fcote " id="f-colonne"><figcaption class="ftitre">Colonne vue de face</figcaption><div class="scroll"><svg class="cotes" viewBox="-34 -166 80 99" role="img" aria-label="Colonne de prises vue de face"><rect class="oequip" x="-10" y="-164" width="38" height="6"/><text class="lt" x="9" y="-160" text-anchor="middle">Meuble haut</text><rect class="oplan cut" x="-10" y="-88.8" width="38" height="1.8"/><rect class="omel" x="0" y="-157.8" width="18" height="69"/><rect class="omel" x="5" y="-104" width="8" height="8"/><circle class="ocache" cx="9" cy="-100" r="2"/><rect class="omel" x="5" y="-114" width="8" height="8"/><circle class="ocache" cx="9" cy="-110" r="2"/><rect class="omel" x="5" y="-124" width="8" height="8"/><circle class="ocache" cx="9" cy="-120" r="2"/><rect class="omel" x="5" y="-150" width="8" height="8"/><circle class="ocache" cx="9" cy="-146" r="2"/><polyline class="ofil" points="9,-146 9,-151 1,-151 1,-157.4 -10,-157.4"/><line class="lead" x1="1" y1="-153" x2="-8" y2="-149"/><circle class="pt" cx="1" cy="-153" r=".45"/><text class="lt" x="-8.6" y="-148.1" text-anchor="end">Fil des LED</text><polyline class="ofil" points="12,-79 12,-100"/><line class="lead" x1="12" y1="-82" x2="-8" y2="-82"/><circle class="pt" cx="12" cy="-82" r=".45"/><text class="lt" x="-8.6" y="-81.1" text-anchor="end">Alimentation</text><line class="ext" x1="0" y1="-88.8" x2="0" y2="-73"/><line class="ext" x1="18" y1="-88.8" x2="18" y2="-73"/><line class="dim" x1="0" y1="-73" x2="18" y2="-73"/><line class="tick" x1="-0.8" y1="-72.2" x2="0.8" y2="-73.8"/><line class="tick" x1="17.2" y1="-72.2" x2="18.8" y2="-73.8"/><text class="ct" x="9" y="-73.9" text-anchor="middle">18</text><line class="dim" x1="-14" y1="-157.8" x2="-14" y2="-88.8"/><line class="tick" x1="-14.8" y1="-157" x2="-13.2" y2="-158.6"/><line class="tick" x1="-14.8" y1="-88" x2="-13.2" y2="-89.6"/><text class="ct" x="-14.9" y="-123.3" text-anchor="middle" transform="rotate(-90 -14.9 -123.3)">69</text><line class="ext" x1="31" y1="-88.8" x2="18" y2="-88.8"/><polygon class="niv" points="29.9,-91 32.1,-91 31,-88.8"/><text class="nt" x="33.2" y="-88.8" text-anchor="start">88,8</text><line class="ext" x1="31" y1="-100" x2="18" y2="-100"/><polygon class="niv" points="29.9,-102.2 32.1,-102.2 31,-100"/><text class="nt" x="33.2" y="-100" text-anchor="start">100</text><line class="ext" x1="31" y1="-110" x2="18" y2="-110"/><polygon class="niv" points="29.9,-112.2 32.1,-112.2 31,-110"/><text class="nt" x="33.2" y="-110" text-anchor="start">110</text><line class="ext" x1="31" y1="-120" x2="18" y2="-120"/><polygon class="niv" points="29.9,-122.2 32.1,-122.2 31,-120"/><text class="nt" x="33.2" y="-120" text-anchor="start">120</text><line class="ext" x1="31" y1="-146" x2="18" y2="-146"/><polygon class="niv" points="29.9,-148.2 32.1,-148.2 31,-146"/><text class="nt" x="33.2" y="-146" text-anchor="start">146</text><line class="ext" x1="31" y1="-158" x2="18" y2="-158"/><polygon class="niv" points="29.9,-160.2 32.1,-160.2 31,-158"/><text class="nt" x="33.2" y="-158" text-anchor="start">158</text></svg></div><p class="cap">Vue perpendiculairement au panneau. Le fil des LED et l'alimentation, en tirets rouges, passent derrière.</p></figure>
+<figure class="fcote " id="f-colonne-dessus"><figcaption class="ftitre">Colonne vue de dessus</figcaption><div class="scroll"><svg class="cotes" viewBox="192.97 -6 72.03 32.03" role="img" aria-label="Colonne vue de dessus, dans l&#x27;angle"><rect class="omur" x="215.97" y="-3" width="21.03" height="3"/><rect class="omur" x="234" y="0" width="3" height="18.03"/><polygon class="omel cut" points="220.97,0.3 233.7,13.03 233.7,10.48 223.52,0.3"/><polygon class="ocache" points="224.97,4.3 229.7,9.03 232.53,6.2 227.8,1.47"/><line class="ovant" x1="224.51" y1="3.84" x2="230.16" y2="9.49"/><circle class="pt" cx="230" cy="4" r="1.0"/><text class="lt" x="222.34" y="9.66" text-anchor="end">Prises</text><line class="dim" x1="220.97" y1="20.03" x2="233.7" y2="20.03"/><line class="tick" x1="220.17" y1="20.83" x2="221.77" y2="19.23"/><line class="tick" x1="232.9" y1="20.83" x2="234.5" y2="19.23"/><text class="ct" x="227.34" y="19.13" text-anchor="middle">12,7</text><line class="dim" x1="206.97" y1="0.3" x2="206.97" y2="13.03"/><line class="tick" x1="206.17" y1="1.1" x2="207.77" y2="-0.5"/><line class="tick" x1="206.17" y1="13.83" x2="207.77" y2="12.23"/><text class="ct" x="206.07" y="6.66" text-anchor="middle" transform="rotate(-90 206.07 6.66)">12,7</text></svg></div><p class="cap">Dans l'angle. En tirets, la boîte de 67 × 40 mm, qui tient derrière le panneau. Le point marque le trou du plateau.</p></figure>
+<ul>
+<li><b>Panneau.</b> 18 de large et 69 de haut, chants longs biseautés à 45° à la scie circulaire. Il prend 12,7 sur chaque mur, et les murs ferment le triangle. Il sort de la chute de la tablette du fond.</li>
+<li><b>Prises.</b> 3 prises libres sur la face en diagonale, à 100, 110 et 120 du sol. Elles regardent vers la pièce et restent à 61 du robinet.</li>
+<li><b>LED.</b> Le kit se branche sur un transformateur. Il a son propre poste, à 146 du sol, pour que les 3 autres restent libres. Son fil entre par un trou de Ø 1 juste au-dessus, monte derrière le panneau, sort par une encoche en haut côté mur nord, et file sous le meuble haut jusqu'au profil LED : ≈ 48 cm. Longueur du fil du kit et présence de l'interrupteur à vérifier sur la boîte : la fiche lue est celle d'une référence voisine.</li>
+<li><b>Alimentation.</b> Le courant arrive en bas du mur nord, derrière la joue nord. Le câble traverse la joue, longe sa face intérieure en goulotte jusqu'à l'angle arrière, passe par une entaille de 2 × 2 dans l'étagère et par un trou Ø 20 mm dans le plateau, caché par la colonne. Le circuit, protégé en 30 mA, et le raccordement sont pour l'électricien. La machine garde sa prise à part, sur son circuit de 20 A.</li>
+<li><b>À relever.</b> La hauteur de la sortie et sa distance au mur du fond. Dessin fait avec 8 du sol et 34 du fond, à titre d'exemple. Le trajet reste valable si la sortie est au-dessus du bas du placard, à plus de 3,8 du sol. Si une boîte dépasse du mur de plus de 0,3, il faut aussi la dégager dans la joue.</li>
+<li><b>Point à tester.</b> Les griffes de la boîte Batibox sont prévues pour les cloisons : faire un essai sur une chute de 18 avant de percer le panneau à Ø 67 mm.</li>
+<li><b>Tenue.</b> Le panneau n'est tenu qu'à ses deux bouts, par 3 vis à chacun. Un cordon qu'on tire ne le sollicite pas beaucoup, mais à éprouver à la main avant de brancher.</li>
+</ul>
+<h3>Pose de la colonne</h3>
+<ol class="pose">
+<li><b>Avant de vernir le plateau</b> : percer son trou à 4 du mur du fond et 4 du mur nord. Avant le montage du placard : percer la joue nord en face de la sortie du câble, entailler l'étagère.</li>
+<li><b>À l'atelier</b> : recouper le panneau à la mesure réelle entre plateau et meuble haut, moins 2 mm, couper les biseaux, percer les 4 trous Ø 67, le trou du fil et l'encoche du haut.</li>
+<li><b>Une fois les deux meubles posés</b> : tirer le câble, glisser le panneau dans l'angle, visser 3 vis 4 × 40 à travers le plateau dans son chant depuis le placard, bacs sortis, et 3 vis à travers le dessous du meuble haut, depuis l'intérieur, étagère retirée. Avant perçage Ø 2,5 au milieu du chant.</li>
+<li><b>Électricien</b> : poser les boîtes et les prises, courant coupé.</li>
+<li><b>Fil des LED</b> : passer le fil, le fixer sous le meuble haut avec des clips adhésifs, brancher le transformateur.</li>
+</ol>
+
+
+<h2 id="plan">Plan</h2>
+<figure class="fcote " id="f-plan"><figcaption class="ftitre">Plan</figcaption><div class="scroll"><svg class="cotes" viewBox="76 -20 190 186" role="img" aria-label="Plan de l&#x27;alcôve avec le meuble, les portes et la machine"><rect class="omur" x="78" y="-4" width="14" height="4"/><rect class="omur" x="165" y="-4" width="73" height="4"/><rect class="omur" x="234" y="-4" width="4" height="168"/><rect class="omasse" x="166" y="115" width="68" height="45"/><rect class="omur" x="78" y="160" width="160" height="4"/><rect class="oequip" x="82" y="115" width="83" height="45"/><text class="lt" x="123.5" y="138.5" text-anchor="middle">Lavabo</text><rect class="olibre" x="176" y="2.1" width="55.9" height="47.5"/><rect class="omet" x="177" y="5.85" width="54" height="40"/><text class="lt" x="204" y="24.85" text-anchor="middle">Bacs</text><text class="ct" x="204" y="28.25" text-anchor="middle">54 × 40</text><rect class="omet" x="175.5" y="52.15" width="54" height="60"/><rect class="omach" x="176" y="52.4" width="53" height="59.5"/><text class="lt" x="202.5" y="81.15" text-anchor="middle">Machine</text><text class="ct" x="202.5" y="84.55" text-anchor="middle">59,5 × 53</text><line class="ovant" x1="165" y1="0" x2="165" y2="73"/><path class="oswing" d="M 92 0 A 73 73 0 0 0 165 73"/><text class="lt" x="162" y="66" text-anchor="end">Porte d&#x27;entrée à 90°</text><line class="ovant" x1="175.8" y1="1" x2="125.29" y2="5.42"/><path class="oswing" d="M 174 51.2 A 50.7 50.7 0 0 1 125.29 5.42"/><text class="lt" x="126.29" y="9.42" text-anchor="start">Porte du placard ouverte</text><rect class="omel cut" x="176" y="0.3" width="57.7" height="1.8"/><rect class="omel cut" x="176" y="49.6" width="57.7" height="1.8"/><rect class="omel cut" x="176" y="112.9" width="57.7" height="1.8"/><rect class="omel cut" x="231.9" y="2.1" width="1.8" height="47.5"/><rect class="omel cut" x="174" y="0.5" width="1.8" height="50.7"/><rect class="opoi" x="171" y="47.6" width="3" height="1.2"/><rect class="oplanl" x="174" y="0.3" width="60" height="114.4"/><polygon class="omel cut" points="220.97,0.3 233.7,13.03 233.7,10.48 223.52,0.3"/><line class="lead" x1="227.34" y1="6.66" x2="217.34" y2="13.66"/><circle class="pt" cx="227.34" cy="6.66" r=".45"/><text class="lt" x="216.74" y="14.56" text-anchor="end">Colonne</text><text class="lt" x="172.5" y="112" text-anchor="end">Plateau</text><line class="dim" x1="92" y1="-9" x2="165" y2="-9"/><line class="tick" x1="91.2" y1="-8.2" x2="92.8" y2="-9.8"/><line class="tick" x1="164.2" y1="-8.2" x2="165.8" y2="-9.8"/><text class="ct" x="128.5" y="-9.9" text-anchor="middle">73 porte</text><line class="dim" x1="165" y1="-9" x2="234" y2="-9"/><line class="tick" x1="164.2" y1="-8.2" x2="165.8" y2="-9.8"/><line class="tick" x1="233.2" y1="-8.2" x2="234.8" y2="-9.8"/><text class="ct" x="199.5" y="-9.9" text-anchor="middle">69 gonds</text><line class="ext" x1="172" y1="-4" x2="172" y2="-15"/><line class="ext" x1="234" y1="-4" x2="234" y2="-15"/><line class="dim" x1="172" y1="-15" x2="234" y2="-15"/><line class="tick" x1="171.2" y1="-14.2" x2="172.8" y2="-15.8"/><line class="tick" x1="233.2" y1="-14.2" x2="234.8" y2="-15.8"/><text class="ct" x="203" y="-15.9" text-anchor="middle">62 mur nord</text><line class="ext" x1="238" y1="2.1" x2="244" y2="2.1"/><line class="ext" x1="238" y1="49.6" x2="244" y2="49.6"/><line class="dim" x1="244" y1="2.1" x2="244" y2="49.6"/><line class="tick" x1="243.2" y1="2.9" x2="244.8" y2="1.3"/><line class="tick" x1="243.2" y1="50.4" x2="244.8" y2="48.8"/><text class="ct" x="243.1" y="25.85" text-anchor="middle" transform="rotate(-90 243.1 25.85)">47,5</text><line class="ext" x1="238" y1="52.4" x2="244" y2="52.4"/><line class="ext" x1="238" y1="111.9" x2="244" y2="111.9"/><line class="dim" x1="244" y1="52.4" x2="244" y2="111.9"/><line class="tick" x1="243.2" y1="53.2" x2="244.8" y2="51.6"/><line class="tick" x1="243.2" y1="112.7" x2="244.8" y2="111.1"/><text class="ct" x="243.1" y="82.15" text-anchor="middle" transform="rotate(-90 243.1 82.15)">59,5</text><line class="ext" x1="238" y1="0.3" x2="252" y2="0.3"/><line class="ext" x1="238" y1="114.7" x2="252" y2="114.7"/><line class="dim" x1="252" y1="0.3" x2="252" y2="114.7"/><line class="tick" x1="251.2" y1="1.1" x2="252.8" y2="-0.5"/><line class="tick" x1="251.2" y1="115.5" x2="252.8" y2="113.9"/><text class="ct" x="251.1" y="57.5" text-anchor="middle" transform="rotate(-90 251.1 57.5)">114,4 plateau</text><line class="ext" x1="238" y1="0" x2="260" y2="0"/><line class="ext" x1="238" y1="115" x2="260" y2="115"/><line class="dim" x1="260" y1="0" x2="260" y2="115"/><line class="tick" x1="259.2" y1="0.8" x2="260.8" y2="-0.8"/><line class="tick" x1="259.2" y1="115.8" x2="260.8" y2="114.2"/><text class="ct" x="259.1" y="57.5" text-anchor="middle" transform="rotate(-90 259.1 57.5)">115 fond</text><line class="ext" x1="176" y1="111.9" x2="176" y2="123"/><line class="ext" x1="229" y1="111.9" x2="229" y2="123"/><line class="dim" x1="176" y1="123" x2="229" y2="123"/><line class="tick" x1="175.2" y1="123.8" x2="176.8" y2="122.2"/><line class="tick" x1="228.2" y1="123.8" x2="229.8" y2="122.2"/><text class="ct" x="202.5" y="122.1" text-anchor="middle">53</text><line class="ext" x1="229" y1="111.9" x2="229" y2="123"/><line class="ext" x1="234" y1="111.9" x2="234" y2="123"/><line class="dim" x1="229" y1="123" x2="234" y2="123"/><line class="tick" x1="228.2" y1="123.8" x2="229.8" y2="122.2"/><line class="tick" x1="233.2" y1="123.8" x2="234.8" y2="122.2"/><text class="ct" x="235" y="122.1" text-anchor="start">5</text><line class="dim" x1="174" y1="133" x2="234" y2="133"/><line class="tick" x1="173.2" y1="133.8" x2="174.8" y2="132.2"/><line class="tick" x1="233.2" y1="133.8" x2="234.8" y2="132.2"/><text class="ct" x="204" y="132.1" text-anchor="middle">60 plateau</text><line class="dim" x1="166" y1="143" x2="234" y2="143"/><line class="tick" x1="165.2" y1="143.8" x2="166.8" y2="142.2"/><line class="tick" x1="233.2" y1="143.8" x2="234.8" y2="142.2"/><text class="ct" x="200" y="142.1" text-anchor="middle">68 mur sud</text><line class="dim" x1="165" y1="80" x2="176" y2="80"/><line class="tick" x1="164.2" y1="80.8" x2="165.8" y2="79.2"/><line class="tick" x1="175.2" y1="80.8" x2="176.8" y2="79.2"/><text class="ct" x="170.5" y="79.1" text-anchor="middle">11</text></svg></div><p class="cap">Le nord en haut. La machine est à 5 du mur du fond et à 3,1 du mur sud. Panneaux en coupe, contour du plateau en tirets. La porte d'entrée, ouverte à 90°, passe à 9 de la porte du placard fermée.</p></figure>
+
+<h2 id="elevation">Élévation</h2>
+<figure class="fcote " id="f-face"><figcaption class="ftitre">Élévation, vue depuis la salle de bain</figcaption><div class="scroll"><svg class="cotes" viewBox="-34 -256 155 278" role="img" aria-label="Élévation de l&#x27;alcôve vue depuis la salle de bain"><rect class="omur" x="-4" y="-254" width="4" height="258"/><rect class="omur" x="115" y="-254" width="4" height="258"/><rect class="omur" x="0" y="-254" width="115" height="4"/><rect class="omur" x="0" y="0" width="115" height="4"/><line class="ocarr" x1="0" y1="-204" x2="115" y2="-204"/><rect class="oequip" x="0.5" y="-248" width="114" height="90"/><text class="lt" x="57.5" y="-203" text-anchor="middle">Meuble haut</text><rect class="omach" x="52.4" y="-86" width="59.5" height="85"/><rect class="omet" x="52.15" y="-1" width="60" height="1"/><text class="lt" x="82.15" y="-51" text-anchor="middle">Machine</text><circle class="ocache" cx="74" cy="-60" r="3"/><line class="ocache" x1="74" y1="-80" x2="74" y2="-102"/><circle class="ovanne" cx="74" cy="-102" r="1.2"/><line class="lead" x1="74" y1="-102" x2="82" y2="-106"/><circle class="pt" cx="74" cy="-102" r=".45"/><text class="lt" x="82.6" y="-105.1" text-anchor="start">Robinet à 102</text><rect class="omel cut" x="0.3" y="-87" width="1.8" height="85"/><rect class="omet" x="0.4" y="-2" width="1.6" height="2"/><rect class="omel cut" x="49.6" y="-87" width="1.8" height="85"/><rect class="omet" x="49.7" y="-2" width="1.6" height="2"/><rect class="omel cut" x="112.9" y="-87" width="1.8" height="85"/><rect class="omet" x="113" y="-2" width="1.6" height="2"/><polygon class="otrou" points="6.5,-80.83 6.58,-80.04 6.8,-79.29 7.17,-78.6 7.67,-78 8.28,-77.5 8.97,-77.13 9.72,-76.9 10.5,-76.83 41.2,-76.83 41.98,-76.9 42.73,-77.13 43.42,-77.5 44.03,-78 44.53,-78.6 44.9,-79.29 45.12,-80.04 45.2,-80.83 45.2,-86.8 6.5,-86.8"/><polygon class="omel" points="0.5,-2 51.2,-2 51.2,-86.8 45.2,-86.8 45.2,-80.83 45.12,-80.04 44.9,-79.29 44.53,-78.6 44.03,-78 43.42,-77.5 42.73,-77.13 41.98,-76.9 41.2,-76.83 10.5,-76.83 9.72,-76.9 8.97,-77.13 8.28,-77.5 7.67,-78 7.17,-78.6 6.8,-79.29 6.58,-80.04 6.5,-80.83 6.5,-86.8 0.5,-86.8"/><polygon class="otrou" points="6.5,-38.33 6.58,-37.54 6.8,-36.79 7.17,-36.1 7.67,-35.5 8.28,-35 8.97,-34.63 9.72,-34.4 10.5,-34.33 41.2,-34.33 41.98,-34.4 42.73,-34.63 43.42,-35 44.03,-35.5 44.53,-36.1 44.9,-36.79 45.12,-37.54 45.2,-38.33 45.2,-42.8 45.17,-43.09 45.09,-43.37 44.95,-43.63 44.76,-43.86 44.53,-44.05 44.27,-44.19 43.99,-44.27 43.7,-44.3 8,-44.3 7.71,-44.27 7.43,-44.19 7.17,-44.05 6.94,-43.86 6.75,-43.63 6.61,-43.37 6.53,-43.09 6.5,-42.8"/><rect class="ocache" x="2.1" y="-46.3" width="47.5" height="1.8"/><rect class="ocache" x="2.1" y="-3.8" width="47.5" height="1.8"/><rect class="ocache" x="5.85" y="-28.8" width="40" height="25"/><rect class="ocache" x="5.85" y="-71.3" width="40" height="25"/><rect class="opoi" x="47.6" y="-64" width="1.2" height="12"/><rect class="oplan cut" x="0.3" y="-88.8" width="114.4" height="1.8"/><rect class="omel" x="0.3" y="-157.8" width="12.73" height="69"/><line class="lead" x1="13.03" y1="-125" x2="23.03" y2="-130"/><circle class="pt" cx="13.03" cy="-125" r=".45"/><text class="lt" x="23.63" y="-129.1" text-anchor="start">Colonne</text><line class="ext" x1="0.5" y1="4" x2="0.5" y2="11"/><line class="ext" x1="51.2" y1="4" x2="51.2" y2="11"/><line class="dim" x1="0.5" y1="11" x2="51.2" y2="11"/><line class="tick" x1="-0.3" y1="11.8" x2="1.3" y2="10.2"/><line class="tick" x1="50.4" y1="11.8" x2="52" y2="10.2"/><text class="ct" x="25.85" y="10.1" text-anchor="middle">50,7</text><line class="ext" x1="52.4" y1="4" x2="52.4" y2="11"/><line class="ext" x1="111.9" y1="4" x2="111.9" y2="11"/><line class="dim" x1="52.4" y1="11" x2="111.9" y2="11"/><line class="tick" x1="51.6" y1="11.8" x2="53.2" y2="10.2"/><line class="tick" x1="111.1" y1="11.8" x2="112.7" y2="10.2"/><text class="ct" x="82.15" y="10.1" text-anchor="middle">59,5</text><line class="ext" x1="0" y1="4" x2="0" y2="18"/><line class="ext" x1="115" y1="4" x2="115" y2="18"/><line class="dim" x1="0" y1="18" x2="115" y2="18"/><line class="tick" x1="-0.8" y1="18.8" x2="0.8" y2="17.2"/><line class="tick" x1="114.2" y1="18.8" x2="115.8" y2="17.2"/><text class="ct" x="57.5" y="17.1" text-anchor="middle">115 fond</text><line class="ext" x1="-7" y1="-86" x2="0" y2="-86"/><polygon class="niv" points="-8.1,-88.2 -5.9,-88.2 -7,-86"/><text class="nt" x="-9.2" y="-86" text-anchor="end">86 machine</text><line class="ext" x1="-7" y1="-88.8" x2="0" y2="-88.8"/><polygon class="niv" points="-8.1,-91 -5.9,-91 -7,-88.8"/><polyline class="lead" points="-8.1,-89.9 -9,-89.9"/><text class="nt" x="-9.2" y="-89" text-anchor="end">88,8 plateau</text><line class="ext" x1="-7" y1="-158" x2="0" y2="-158"/><polygon class="niv" points="-8.1,-160.2 -5.9,-160.2 -7,-158"/><text class="nt" x="-9.2" y="-158" text-anchor="end">158</text><line class="ext" x1="-7" y1="-204" x2="0" y2="-204"/><polygon class="niv" points="-8.1,-206.2 -5.9,-206.2 -7,-204"/><text class="nt" x="-9.2" y="-204" text-anchor="end">204 carrelage</text><line class="ext" x1="-7" y1="-250" x2="0" y2="-250"/><polygon class="niv" points="-8.1,-252.2 -5.9,-252.2 -7,-250"/><text class="nt" x="-9.2" y="-250" text-anchor="end">250 plafond</text><line class="dim" x1="114.4" y1="-158" x2="114.4" y2="-88.8"/><line class="tick" x1="113.6" y1="-157.2" x2="115.2" y2="-158.8"/><line class="tick" x1="113.6" y1="-88" x2="115.2" y2="-89.6"/><text class="ct" x="113.5" y="-123.4" text-anchor="middle" transform="rotate(-90 113.5 -123.4)">69,2</text></svg></div><p class="cap">Le nord à gauche, le sud à droite. En tirets, le bas, l'étagère, les bacs et les réseaux derrière la machine. Sous chaque joue, ses vérins.</p></figure>
+
+<h2 id="coupe">Coupe</h2>
+<figure class="fcote " id="f-coupe"><figcaption class="ftitre">Coupe par la machine</figcaption><div class="scroll"><svg class="cotes" viewBox="145 -256 119 278" role="img" aria-label="Coupe par la machine, le mur du fond à droite"><rect class="omur" x="234" y="-254" width="4" height="258"/><rect class="omur" x="153" y="-254" width="81" height="4"/><rect class="omur" x="153" y="0" width="81" height="4"/><line class="ocarr" x1="234" y1="-204" x2="238" y2="-204"/><line class="ovant" x1="165" y1="0" x2="165" y2="-204"/><text class="lt" x="163.5" y="-196" text-anchor="end">Vantail</text><rect class="oequip" x="189" y="-248" width="45" height="90"/><text class="lt" x="211.5" y="-203" text-anchor="middle">Meuble haut</text><rect class="omet" x="175.5" y="-1" width="54" height="1"/><rect class="omach cut" x="176" y="-86" width="53" height="85"/><text class="lt" x="202.5" y="-43" text-anchor="middle">Machine</text><rect class="oplan cut" x="174" y="-88.8" width="60" height="1.8"/><rect class="otuy" x="230" y="-63" width="4" height="6"/><line class="ocache" x1="233" y1="-80" x2="233" y2="-102"/><circle class="ovanne" cx="233" cy="-102" r="1.2"/><line class="ext" x1="165" y1="4" x2="165" y2="11"/><line class="ext" x1="176" y1="4" x2="176" y2="11"/><line class="dim" x1="165" y1="11" x2="176" y2="11"/><line class="tick" x1="164.2" y1="11.8" x2="165.8" y2="10.2"/><line class="tick" x1="175.2" y1="11.8" x2="176.8" y2="10.2"/><text class="ct" x="170.5" y="10.1" text-anchor="middle">11</text><line class="ext" x1="176" y1="4" x2="176" y2="11"/><line class="ext" x1="229" y1="4" x2="229" y2="11"/><line class="dim" x1="176" y1="11" x2="229" y2="11"/><line class="tick" x1="175.2" y1="11.8" x2="176.8" y2="10.2"/><line class="tick" x1="228.2" y1="11.8" x2="229.8" y2="10.2"/><text class="ct" x="202.5" y="10.1" text-anchor="middle">53</text><line class="ext" x1="229" y1="4" x2="229" y2="11"/><line class="ext" x1="234" y1="4" x2="234" y2="11"/><line class="dim" x1="229" y1="11" x2="234" y2="11"/><line class="tick" x1="228.2" y1="11.8" x2="229.8" y2="10.2"/><line class="tick" x1="233.2" y1="11.8" x2="234.8" y2="10.2"/><text class="ct" x="231.5" y="10.1" text-anchor="middle">5</text><line class="ext" x1="165" y1="4" x2="165" y2="18"/><line class="ext" x1="234" y1="4" x2="234" y2="18"/><line class="dim" x1="165" y1="18" x2="234" y2="18"/><line class="tick" x1="164.2" y1="18.8" x2="165.8" y2="17.2"/><line class="tick" x1="233.2" y1="18.8" x2="234.8" y2="17.2"/><text class="ct" x="199.5" y="17.1" text-anchor="middle">69 gonds</text><line class="ext" x1="241" y1="-60" x2="234" y2="-60"/><polygon class="niv" points="239.9,-62.2 242.1,-62.2 241,-60"/><text class="nt" x="243.2" y="-60" text-anchor="start">60 siphon</text><line class="ext" x1="241" y1="-80" x2="234" y2="-80"/><polygon class="niv" points="239.9,-82.2 242.1,-82.2 241,-80"/><text class="nt" x="243.2" y="-80" text-anchor="start">80 arrivée</text><line class="ext" x1="241" y1="-88.8" x2="234" y2="-88.8"/><polygon class="niv" points="239.9,-91 242.1,-91 241,-88.8"/><text class="nt" x="243.2" y="-88.8" text-anchor="start">88,8 plateau</text><line class="ext" x1="241" y1="-102" x2="234" y2="-102"/><polygon class="niv" points="239.9,-104.2 242.1,-104.2 241,-102"/><text class="nt" x="243.2" y="-102" text-anchor="start">102 robinet</text><line class="ext" x1="241" y1="-158" x2="234" y2="-158"/><polygon class="niv" points="239.9,-160.2 242.1,-160.2 241,-158"/><text class="nt" x="243.2" y="-158" text-anchor="start">158</text><line class="ext" x1="241" y1="-204" x2="234" y2="-204"/><polygon class="niv" points="239.9,-206.2 242.1,-206.2 241,-204"/><text class="nt" x="243.2" y="-204" text-anchor="start">204 carrelage</text><line class="ext" x1="241" y1="-250" x2="234" y2="-250"/><polygon class="niv" points="239.9,-252.2 242.1,-252.2 241,-250"/><text class="nt" x="243.2" y="-250" text-anchor="start">250 plafond</text></svg></div><p class="cap">Le mur du fond à droite, vu vers le nord.</p></figure>
+
+<h2 id="mesures">Mesures</h2>
+<p>Toutes les cotes sont en cm.</p>
+<h3>Relevées</h3>
+<div class="scroll"><table><thead><tr><th>Mesure</th><th class="num">Valeur</th><th>Origine</th></tr></thead><tbody><tr><td>Plafond</td><td class="num">250</td><td>Confirmé par le client</td></tr><tr><td>Mur du fond, de nord à sud</td><td class="num">115</td><td>Relevé client</td></tr><tr><td>Mur de retour nord</td><td class="num">62</td><td>Relevé client</td></tr><tr><td>Mur de retour sud</td><td class="num">68</td><td>Relevé client</td></tr><tr><td>Gonds de la porte d&#x27;entrée, depuis le mur du fond</td><td class="num">69</td><td>Relevé client</td></tr><tr><td>Largeur de la porte d&#x27;entrée</td><td class="num">73</td><td>Porte standard, d&#x27;après le client</td></tr><tr><td>Chambranle, saillie sur le mur nord</td><td class="num">0,5</td><td>Relevé client</td></tr><tr><td>Carrelage, hauteur</td><td class="num">204</td><td>Relevé client</td></tr><tr><td>Machine, largeur × profondeur × hauteur</td><td class="num">59,5 × 53 × 85</td><td>Relevé client</td></tr></tbody></table></div>
+<h3>Reprises des versions précédentes</h3>
+<div class="scroll"><table><thead><tr><th>Mesure</th><th class="num">Valeur</th><th>Origine</th></tr></thead><tbody><tr><td>Machine, côté</td><td class="num">à droite, au sud</td><td>Choix du client depuis la V3.8</td></tr><tr><td>Porte de la machine</td><td class="num">s&#x27;ouvre à gauche</td><td>Validé par le client ; débattement non relevé</td></tr><tr><td>Machine, jeu derrière</td><td class="num">5</td><td>Reprise de la V6.2, pour les coudes des tuyaux</td></tr><tr><td>Machine, distance au mur sud</td><td class="num">3,1</td><td>Joue de 1,8 + 1 de jeu + 0,3 au mur</td></tr><tr><td>Tapis sous la machine, épaisseur</td><td class="num">1</td><td>Plaque Noma Rub, épaisseur de la fiche Weldom</td></tr><tr><td>Plateau, profondeur</td><td class="num">60</td><td>Demande du client</td></tr><tr><td>Siphon d&#x27;évacuation, à 74 du mur nord</td><td class="num">60 de haut</td><td>Position de la V6.0, à vérifier sur place</td></tr><tr><td>Arrivée d&#x27;eau, même axe</td><td class="num">80 de haut</td><td>Position de la V6.0, à vérifier sur place</td></tr><tr><td>Robinet d&#x27;arrêt, même axe</td><td class="num">102 de haut</td><td>Position de la V5.7, à recaler sur le nouveau plateau</td></tr><tr><td>Dessous du meuble haut</td><td class="num">158</td><td>Page du meuble haut V6.4</td></tr></tbody></table></div>
+<h3>Ce qu'il reste</h3>
+<ul><li>Placard, largeur entre les joues nord et milieu : <b>47,5</b></li><li>Placard, profondeur des joues au fond : <b>55,9</b></li><li>Bas des joues au-dessus du sol : <b>2</b></li><li>Chaque étage, hauteur : <b>40,7</b></li><li>Entre la porte du placard et le vantail ouvert : <b>9</b></li><li>Entre le dessus du plateau et le dessous du meuble haut : <b>69,2</b></li></ul>
+<p class="note">À confirmer : le mur de retour nord s'arrête à 62 du fond et les gonds sont à 69. Ces 7 cm d'écart ne sont pas relevés ; le plan les dessine en mur continu.</p>
+
+<p class="note">Repère : origine à l'angle nord-ouest intérieur, x vers l'est, y vers le sud, z depuis le sol, cotes en cm. Source : <span class="mono">3d/sdb/modele.py</span> pour les relevés, <span class="mono">3d/sdb/bas.py</span> pour la page (<span class="mono">just sdb</span>).</p>
+
+<section id="changements">
+<h2>Changements</h2>
+<div class="scroll"><table><thead><tr><th>Version</th><th>Date</th><th>Changements</th></tr></thead>
+<tbody><tr><td class="mono">V8.5</td><td class="mono">05/11/2026</td><td>Panneau perforé et ses deux montants retirés, à la demande du client. Le meuble bas revient à 296,82 €.</td></tr><tr><td class="mono">V8.4</td><td class="mono">05/11/2026</td><td>Colonne en diagonale : un seul panneau biseauté de 18 de large coupe l&#x27;angle à 45°, les prises regardent la pièce. Panneau perforé SKÅDIS de 36 × 56 sur le mur nord, au-dessus du plateau, porté par deux montants vissés au plateau et au meuble haut : rien n&#x27;est percé dans le carrelage. Le meuble bas passe à 306,82 €.</td></tr><tr><td class="mono">V8.3</td><td class="mono">05/11/2026</td><td>Arrivée du courant relevée par le client : en bas du mur nord. Le câble traverse la joue nord, longe sa face intérieure jusqu&#x27;à l&#x27;angle arrière et monte à la colonne. Le bas du placard n&#x27;a plus d&#x27;entaille. Position exacte de la sortie à relever. Prix inchangé.</td></tr><tr><td class="mono">V8.2</td><td class="mono">05/11/2026</td><td>Colonne en mélaminé dans l&#x27;angle du fond et du mur nord, entre le plateau et le meuble haut : 3 prises libres et un 4e poste en haut pour le transformateur des LED, dont le fil monte dans la colonne. Rien n&#x27;est percé dans le carrelage. Étagère et bas entaillés dans l&#x27;angle arrière pour le câble d&#x27;alimentation, qui passe par un trou dans le plateau. Le meuble bas passe à 296,82 €.</td></tr><tr><td class="mono">V8.1</td><td class="mono">05/11/2026</td><td>Placard fermé en bas : un panneau de mélaminé à 2 du sol porte le bac du bas, qui ne pose plus au sol. Étages ramenés à 40,7. Les fenêtres deviennent des U à fond arrondi de 10 de haut : celle du haut est une encoche ouverte sur le bord de la porte, celle du bas reste fermée. Prix inchangé : le bas sort d&#x27;une chute de tablette.</td></tr><tr><td class="mono">V8.0</td><td class="mono">04/11/2026</td><td>Placard : le cadre en tasseau est retiré, le fond est un panneau dans la même matière que les joues. Joues, fond, étagère et porte en mélaminé blanc. Étagère à mi-hauteur, deux bacs SLIBB, porte à poignée à droite sur charnières IKEA UTRUSTA, percée d&#x27;une fenêtre à 3/4 de la hauteur de chaque étage. Plus de peinture.</td></tr><tr><td class="mono">V7.9</td><td class="mono">04/11/2026</td><td>Le dos devient un vrai cadre : 2 montants, 2 traverses et 1 diagonale en tasseau, vissé contre les joues nord et milieu. Les 4 équerres de l&#x27;arrière disparaissent : 6 équerres en tout.</td></tr><tr><td class="mono">V7.8</td><td class="mono">04/11/2026</td><td>Dos remplacé par 2 traverses et 1 diagonale en tasseau de 38 × 38, à la demande du client. Le mur reste visible et la place libre passe à 53,9 de profondeur. Prix inchangé : les tasseaux et les vis de la diagonale sont pris dans les achats du meuble haut.</td></tr><tr><td class="mono">V7.7</td><td class="mono">04/11/2026</td><td>Pieds : les tubes d&#x27;aluminium et les cales sont remplacés par 2 vérins réglables encastrés sous chaque joue, à 2 du sol. Joues et dos de 85 de haut.</td></tr><tr><td class="mono">V7.6</td><td class="mono">04/11/2026</td><td>Dos en panneau rétabli : le client refusait une structure en tasseaux, pas ce panneau. Aucun tasseau au sol, sous le plateau ou à l&#x27;arrière. 10 équerres. Le dos est peint côté place libre et levé comme les joues.</td></tr><tr><td class="mono">V7.5</td><td class="mono">04/11/2026</td><td>Joues levées à 2,3 du sol sur un tube d&#x27;aluminium collé. Dos retiré : plus rien entre les joues et le plateau. 6 équerres au lieu de 17. Finition limitée aux chants avant et aux faces de la place libre. Deux dalles hydrofuges au lieu de la plaque.</td></tr><tr><td class="mono">V7.4</td><td class="mono">04/11/2026</td><td>Joues et dos en aggloméré hydrofuge peint, plateau en chêne : choix provisoire tant que la matière n&#x27;est pas tranchée. Le tableau d&#x27;achats passe dans la liste d&#x27;achats.</td></tr><tr><td class="mono">V7.3</td><td class="mono">04/11/2026</td><td>Structure refaite sur un autre principe : trois joues pleines et un dos en chêne de 18, sans ossature ni diagonale. Découpe et ordre de montage vérifiés. Place libre portée à 47,5 de large.</td></tr><tr><td class="mono">V7.2</td><td class="mono">04/11/2026</td><td>Lambourdes 45 × 70 avec écharpes, tapis anti-vibration sous la machine. Structure abandonnée : trop épaisse, et les écharpes ne s&#x27;assemblaient pas.</td></tr><tr><td class="mono">V7.1</td><td class="mono">04/11/2026</td><td>Bastaings 63 × 175 en trois portiques. Structure abandonnée : trop épaisse.</td></tr><tr><td class="mono">V7.0</td><td class="mono">04/11/2026</td><td>Conception reprise de zéro : alcôve, mesures et machine en place. L&#x27;ancien meuble bas (V6.2) reste dans les archives.</td></tr></tbody></table></div>
+</section>
+</main>
+<script>/* Ancres communes à toutes les pages à sommaire (inséré tel quel par les générateurs et dans les pages statiques).
+   - chaque titre h2 reçoit un id lisible (« plan », « debit »…), suffixé par la version figée s'il y en a une ;
+   - un clic sur un lien du sommaire ou sur un titre h2 met l'ancre dans l'adresse (#…) ;
+   - une adresse avec ancre ouvre la bonne version et défile jusqu'au titre ; précédent / suivant aussi. */
+(function () {
+  function slug(t) {
+    return t.normalize("NFD").replace(/[̀-ͯ]/g, "").toLowerCase().replace(/[^a-z0-9]+/g, "-")
+      .replace(/^-+|-+$/g, "") || "section";
+  }
+  function texte(h) {
+    var c = h.cloneNode(true);
+    c.querySelectorAll("a, span, button").forEach(function (x) { x.remove(); });
+    return c.textContent.trim() || h.textContent.trim();
+  }
+  var pris = {};
+  document.querySelectorAll("[id]").forEach(function (e) { pris[e.id] = true; });
+  function ancre(h) {          // titre d'une section qui porte déjà l'id (Changements) : l'ancre est celle de la section
+    if (h.id) return h.id;
+    var p = h.parentNode;
+    if (p && p.tagName === "SECTION" && p.id && p.querySelector("h2") === h) return p.id;
+    var ver = h.closest(".ver"), suf = ver && ver.dataset.v && ver.dataset.v !== "courante" ? "-" + slug(ver.dataset.v) : "";
+    var base = slug(texte(h)) + suf, id = base, k = 2;
+    while (pris[id]) id = base + "-" + k++;
+    pris[id] = true;
+    h.id = id;
+    return id;
+  }
+  document.querySelectorAll("h2").forEach(ancre);
+  var st = document.createElement("style");
+  st.textContent = "h2[id],section[id]>h2{cursor:pointer}h2[id]:hover::after,section[id]>h2:hover::after" +
+    "{content:' #';color:var(--muted,#888);font-weight:400}";
+  document.head.appendChild(st);
+  function cible(id) {
+    var e = id && document.getElementById(id);
+    if (e && e.tagName === "SECTION") e = e.querySelector("h2") || e;
+    return e;
+  }
+  function montrer(e) {        // titre dans une version cachée : basculer sur cette version d'abord
+    var ver = e.closest(".ver[hidden]");
+    if (ver) {
+      var b = document.querySelector('.vbar button[data-v="' + ver.dataset.v + '"]');
+      if (b) b.click();
+    }
+  }
+  function va(id, doux) {
+    var e = cible(id);
+    if (!e) return;
+    montrer(e);
+    e.scrollIntoView({behavior: doux ? "smooth" : "auto"});
+  }
+  function pose(id) {
+    if (location.hash !== "#" + id) history.pushState(null, "", "#" + id);
+  }
+  document.addEventListener("click", function (ev) {
+    var a = ev.target.closest(".toc a[href^='#']");
+    if (a) { pose(decodeURIComponent(a.getAttribute("href").slice(1))); return; }
+    var h = ev.target.closest("h2");
+    if (h && !ev.target.closest("a, button, summary")) {
+      var id = ancre(h);
+      pose(id);
+      va(id, true);
+    }
+  }, true);
+  window.addEventListener("popstate", function () { va(decodeURIComponent(location.hash.slice(1)), true); });
+  window.addEventListener("load", function () {
+    if (location.hash) setTimeout(function () { va(decodeURIComponent(location.hash.slice(1)), false); }, 0);
+  });
+})();
+</script>
+<script>
+(function () {
+  var toc = document.querySelector(".toc");
+  if (!toc) return;
+  function garde(k, v) { try { localStorage.setItem("sdb-v4-" + k, v); } catch (e) {} }
+  function lit(k) { try { return localStorage.getItem("sdb-v4-" + k); } catch (e) { return null; } }
+  var tol = toc.querySelector("ol"), tb = toc.querySelector(".tbtn");
+  var hs = Array.prototype.slice.call(document.querySelectorAll("main h2"));
+  hs.forEach(function (h) {
+    var id = h.id || h.parentNode.id, li = document.createElement("li"), a = document.createElement("a");
+    a.href = "#" + id;
+    a.textContent = h.textContent.trim();
+    li.appendChild(a);
+    tol.appendChild(li);
+  });
+  function ouvert(on) {
+    document.body.classList.toggle("toc-on", on);
+    tb.setAttribute("aria-expanded", on);
+    tb.textContent = on ? "« Sommaire" : "Sommaire »";
+    garde("toc", on ? "1" : "0");
+  }
+  tb.addEventListener("click", function () { ouvert(!document.body.classList.contains("toc-on")); });
+  ouvert(lit("toc") !== "0");
+  function suivre() {
+    var haut = document.querySelector(".vbar").offsetHeight, k = -1;
+    toc.style.top = haut + "px";
+    hs.forEach(function (h, i) { if (h.getBoundingClientRect().top < haut + 80) k = i; });
+    tol.querySelectorAll("a").forEach(function (a, i) { a.classList.toggle("on", i === k); });
+  }
+  var attente = false;
+  window.addEventListener("scroll", function () {
+    if (!attente) { attente = true; requestAnimationFrame(function () { attente = false; suivre(); }); }
+  }, {passive: true});
+  window.addEventListener("resize", suivre);
+  suivre();
+})();
+</script>
+</body>
+</html>
