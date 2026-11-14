@@ -409,15 +409,11 @@ def test_rendus():
         assert balises(_explication(c), "img") == [] and 'href="./#explication">les voir</a>' in _explication(c)
 
 
-# empreintes de salon-meubles-3d/etageres-{iso,detail}.jpg, les images de l'ancienne page, relevées à la copie (le
-# dossier racine part au nettoyage commun du salon)
-EMPREINTES_RENDUS = {"iso": "a2c68f135665860428190011cef83f997006d557e1da7c4846520756ce5f4e13",
-                     "detail": "047d0c84e7f25c2bbf04e04e1c1fd29c2869faa664ce9488acfe8dfc5832c575"}
-
-
-def test_rendus_copies_tels_quels():
-    for k, empreinte in EMPREINTES_RENDUS.items():
-        assert hashlib.sha256((vues.RENDUS_SITE / f"actuelle-{k}.jpg").read_bytes()).hexdigest() == empreinte, k
+def test_rendus_rendus():
+    """Les deux images (iso, détail) existent, en JPEG : refaites par `just rendu salon/etageres` (14/11/2026)."""
+    for k in ("iso", "detail"):
+        octets = (vues.RENDUS_SITE / f"actuelle-{k}.jpg").read_bytes()
+        assert octets[:3] == b"\xff\xd8\xff" and len(octets) > 50_000, k
 
 
 # sections de l'ancienne page → vue qui reprend leurs morceaux (p, li, td, th, h3)

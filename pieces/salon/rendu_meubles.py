@@ -2,9 +2,9 @@
 # sol, plinthe) :
 #
 #   blender -b --python-exit-code 1 --python pieces/salon/rendu_meubles.py -- [échantillons] [vue ...]
-#   ex. : just salon-etageres-apercu iso    (aperçu rapide)
+#   ex. : just rendu-apercu salon/etageres iso    (aperçu rapide)
 #
-# Lancé par `just salon-etageres-rendu` et `just salon-enfilade-rendu` (cache des empreintes : commun/rendu_cache.py),
+# Lancé par `just rendu salon/etageres` et `just rendu salon/enfilade` (cache des empreintes : commun/rendu_cache.py),
 # et leurs recettes d'aperçu. Vues (fichier <sortie>/salon-meuble-<vue>.png, avec <sortie> = 3d/sortie, SALON_SORTIE=<dossier>
 # pour un autre, SALON_APERCU=1 pour 800 x 600 au lieu de 1600 x 1200) : les caméras de pieces/salon/etageres/document.py
 # et de pieces/salon/enfilade/document.py (CAMERAS), préfixées par le document :

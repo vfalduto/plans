@@ -36,3 +36,9 @@ def marque_bloc(b) -> str:
     """` data-si="…"` d'un bloc du modèle : sa table (`config`), son siège (`assise`) et sa déco ; rien s'il est
     toujours là."""
     return si(JETON_TABLE.get(b.config, ""), JETON_SIEGE.get(b.assise, ""), AFFICHEE if b.deco else "")
+
+
+def essences_rendues():
+    """Un Blender par bois rendu : [(variable de la scène, code, suffixe du fichier)] ; le chêne, valeur d'origine,
+    garde le nom sans suffixe (rendus/iso_se.jpg, rendus/iso_se-noyer.jpg)."""
+    return [("SALON_ESSENCE", v.code, "" if v.code == "chene" else f"-{v.code}") for v in BOIS.valeurs if v.rendue]

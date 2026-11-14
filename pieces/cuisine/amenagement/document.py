@@ -14,7 +14,10 @@ from commun.rendu_cache import CacheRendu
 # une seule variante, d'id vide : rendus/<caméra>.jpg, `-` en ligne de commande
 CACHE_RENDU = CacheRendu(variantes={"": ("pieces.cuisine.piece", "pieces.cuisine.modele")},
                          code=("pieces/cuisine/amenagement/rendu.py", "pieces/cuisine/amenagement/cad.py",
-                               "3d/rendu.py"))
+                               "3d/rendu.py"),
+                         script="pieces/cuisine/amenagement/rendu.py", sortie=("CUISINE_SORTIE", "cache/cuisine"),
+                         apercu="CUISINE_APERCU", png="cuisine-{camera}.png", avant="just cuisine-amenagement-cad",
+                         avant_apercu="just _cuisine-amenagement-glb", copie_apercu=("cuisine-v13.glb",))
 
 # versions figées : (version, chemin sous site/)
 FIGEES = (("V11.49", "archives/cuisine-v11.49.html"), ("V12.7", "archives/cuisine-v12.7.html"))

@@ -43,7 +43,7 @@ print(json.dumps({m.__name__: {c.id: rendu_cache.empreinte(c, rendu_cache.donnee
 
 
 def test_empreinte_stable_d_un_processus_a_l_autre():
-    """Deux lancements de `just entree-rendu` doivent voir la même empreinte : rien ne dépend de l'adresse d'un objet
+    """Deux lancements de `just rendu entree/amenagement` doivent voir la même empreinte : rien ne dépend de l'adresse d'un objet
     en mémoire ni de l'ordre d'un ensemble (graine de hachage différente à chaque processus)."""
     import json
     import os

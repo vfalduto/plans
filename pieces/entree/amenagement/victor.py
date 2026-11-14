@@ -1,7 +1,7 @@
 # Entrée, version Victor : variante de la V4.3 (document.py), même relevé, même entrée en India.
 #
-# Lu par les vues de l'entrée (vues.py, dessin_victor.py ; just entree) et par rendu.py (ENTREE_VARIANTE=victor,
-# just entree-rendu). Toute modification se fait ici.
+# Lu par les vues de l'entrée (vues.py, dessin_victor.py ; just site entree/amenagement) et par rendu.py (ENTREE_VARIANTE=victor,
+# just rendu entree/amenagement). Toute modification se fait ici.
 #
 # Différences avec la V4.3 :
 #   - rien sous le tableau électrique (mur nord libre) ;

@@ -48,6 +48,7 @@ def test_ancienne_page_et_generateur_retires():
 
 def test_recettes():
     j = (RACINE / "justfile").read_text(encoding="utf-8")
-    assert "sdb-meuble-bas:\n    python3 site.py sdb/meuble-bas\n" in j
-    sdb = j.split("\nsdb:\n", 1)[1].split("\n\n", 1)[0]
-    assert "bas.py" not in sdb and "python3 site.py sdb/meuble-bas" in sdb
+    # plus de recette par page : `just site sdb/meuble-bas` ; la recette FreeCAD ne lance que cad.py
+    assert "\nsdb-meuble-bas:" not in j and "\nsite *args:\n    python3 site.py {{args}}" in j
+    sdb = j.split("\nsdb-cad:\n", 1)[1].split("\n\n", 1)[0]
+    assert "bas.py" not in sdb and "3d/sdb/cad.py" in sdb

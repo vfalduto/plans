@@ -329,7 +329,9 @@ CACHE_RENDU = CacheRendu(variantes={"": ("pieces.salon.piece", "pieces.salon.eta
                                          "pieces.salon.enfilade.document")},
                          code=("pieces/salon/rendu_meubles.py", "pieces/salon/amenagement/rendu.py", "pieces/salon/etageres/volumes.py",
                                "pieces/salon/enfilade/volumes.py", "pieces/salon/meubles.py", "3d/rendu.py"),
-                         cameras="pieces.salon.enfilade.document")
+                         cameras="pieces.salon.enfilade.document",
+                         script="pieces/salon/rendu_meubles.py", sortie=("SALON_SORTIE", "3d/sortie"),
+                         apercu="SALON_APERCU", png="salon-meuble-enfilade-{camera}.png", argument="enfilade-{camera}")
 # (caméra, texte de la page) : section Rendus 3D de salon-enfilade.html
 RENDUS = [
     ("iso", "L'enfilade fermée en trois quarts depuis la pièce, sous les étagères du mur ouest."),

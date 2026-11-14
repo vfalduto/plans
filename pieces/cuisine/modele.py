@@ -908,7 +908,7 @@ AVANT = dict(version="V11.34", lin_bas=300, lin_hauts=240, lin_col=120, modules=
              plan=[(0, 68), (122, 187), (243, 305)], cellier_m2=1.46, tablettes_cm=6 * 101,
              volume_cuisine=2055, volume_cellier=739)
 # version de chaque rendu de l'ancienne page, reprise dans les textes alternatifs
-# (rendus : `just cuisine-amenagement-rendu`)
+# (rendus : `just rendu cuisine/amenagement`)
 RENDUS_VERSION = {v: "V11.50" for v in ("iso", "entree", "fenetre", "banquette", "cellier", "dos_cellier", "iso_nuit", "iso_no")}
 RENDUS_VERSION["iso_no_hermione"] = "V11.50"
 # V13.2 : toutes les vues refaites (sauf l'essai Hermione, rendu à part)

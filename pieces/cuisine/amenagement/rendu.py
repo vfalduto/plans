@@ -1,13 +1,13 @@
 # Rendu Blender (Cycles) de la cuisine V13, à partir de <sortie>/cuisine-v13.glb (cad.py, just cuisine-amenagement-cad).
 #
 #   blender -b --python-exit-code 1 --python pieces/cuisine/amenagement/rendu.py -- [échantillons] [caméra ...]
-# Lancé par `just cuisine-amenagement-rendu` (cache des empreintes : commun/rendu_cache.py) et
-# `just cuisine-amenagement-apercu`. Caméras : celles de piece.CAMERAS (toutes sans argument) ; rendus temporaires,
+# Lancé par `just rendu cuisine/amenagement` (cache des empreintes : commun/rendu_cache.py) et
+# `just rendu-apercu cuisine/amenagement`. Caméras : celles de piece.CAMERAS (toutes sans argument) ; rendus temporaires,
 # hors page, par leur nom : zellige, fume, coussins.
 # Produit <sortie>/cuisine-<caméra>.png (et cuisine-v13.blend après un rendu complet), avec <sortie> = cache/cuisine
 # (CUISINE_SORTIE=<dossier> pour un autre, CUISINE_APERCU=1 pour 800 x 600 au lieu de 1600 x 1200).
 # Le temps est proportionnel aux échantillons (~0,5 s/échantillon par vue sur M1 Pro) ; avec le débruiteur OIDN,
-# 64 est indiscernable de 256 (mesuré le 2026-10-09), d'où le défaut de `just cuisine-amenagement-rendu`.
+# 64 est indiscernable de 256 (mesuré le 2026-10-09), d'où le défaut de `just rendu cuisine/amenagement`.
 #
 # Réutilise 3d/rendu.py (matériaux, textures, soleil, réglages Cycles). Les matériaux suivent le rôle des objets
 # (« rôle__nom ») et la section Matériaux de modele.py ; ce que le modèle ne dessine pas encore (poignées, crédence,

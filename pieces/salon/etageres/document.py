@@ -226,13 +226,16 @@ CAMERAS = (
 )
 # Empreinte des rendus (commun/rendu_cache.py) : la pièce, les deux meubles de la scène (l'enfilade est sous les étagères),
 # puis le script de rendu et ses volumes. Les quatre dispositions sont déclarées (une variante oubliée ne serait jamais
-# rendue), mais seule Actuelle a des rendus : la recette salon-etageres-rendu ne lance qu'elle, rendus/actuelle-<caméra>.jpg.
+# rendue), mais seule Actuelle a des rendus : la recette `just rendu salon/etageres` ne lance qu'elle, rendus/actuelle-<caméra>.jpg.
 _DONNEES = ("pieces.salon.piece", "pieces.salon.enfilade.document", "pieces.salon.etageres.document")
 CACHE_RENDU = CacheRendu(variantes={"actuelle": _DONNEES, "rangs": _DONNEES, "decalee": _DONNEES, "escalier": _DONNEES},
                          code=("pieces/salon/rendu_meubles.py", "pieces/salon/amenagement/rendu.py",
                                "pieces/salon/etageres/volumes.py", "pieces/salon/enfilade/volumes.py",
                                "pieces/salon/meubles.py", "3d/rendu.py"),
-                         cameras="pieces.salon.etageres.document")
+                         cameras="pieces.salon.etageres.document",
+                         script="pieces/salon/rendu_meubles.py", sortie=("SALON_SORTIE", "3d/sortie"),
+                         apercu="SALON_APERCU", png="salon-meuble-etageres-{camera}.png",
+                         argument="etageres-{camera}", rendues=("actuelle",))   # seule la disposition Actuelle se rend
 # (caméra, texte de la page) : section Rendus 3D de salon-etageres.html
 RENDUS = [
     ("iso", "Le mur ouest en trois quarts depuis la pièce : les étagères au-dessus de l'enfilade."),

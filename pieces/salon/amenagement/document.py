@@ -543,7 +543,10 @@ CHANGEMENTS = [
 CACHE_RENDU = CacheRendu(variantes={"": ("pieces.salon.piece", "pieces.salon.etageres.document",
                                          "pieces.salon.amenagement.document")},
                          code=("pieces/salon/amenagement/rendu.py", "pieces/salon/etageres/volumes.py",
-                               "pieces/salon/meubles.py", "3d/rendu.py"))
+                               "pieces/salon/meubles.py", "3d/rendu.py"),
+                         script="pieces/salon/amenagement/rendu.py", sortie=("SALON_SORTIE", "3d/sortie"),
+                         apercu="SALON_APERCU", png="salon-{camera}.png",
+                         reglages="pieces.salon.amenagement.options:essences_rendues")   # un Blender par bois rendu
 
 
 # Construit à la demande : vues importe ce module.

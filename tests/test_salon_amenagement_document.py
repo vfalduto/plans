@@ -250,17 +250,12 @@ def test_iso_une_image_par_bois():
         assert (RACINE / "site/salon/amenagement/rendus" / f"{nom}.jpg").exists(), nom
 
 
-def test_images_reprises_telles_quelles():
-    """Les quatre images sont celles de l'ancienne page (V4.25 pour le sud-est, V4.20 pour le nord-ouest) : empreintes
-    relevées sur salon-v4-3d/ à la bascule."""
-    import hashlib
-    empreintes = {"iso_se": "29d319b81ebfba45cb14a5055bb1876a204436946666f4449b23b0f3563c165f",
-                  "iso_se-noyer": "0988c49ca28bc16e43ddc330fe8fcca3bf090ebdaa6622320ff176bea75101b4",
-                  "iso_no": "8edbd0f58d8ce58d643bcc4abd986cb13f2a5f85895ae75140b805949e8ce2f7",
-                  "iso_no-noyer": "4950f0ee6aa9a85f36e946466ac3eac07900f136b19a81a65a2dd504a0141344"}
-    for nom, attendu in empreintes.items():
+def test_images_rendues():
+    """Les quatre images (iso sud-est et nord-ouest, chêne et noyer) existent, en JPEG : refaites par `just rendu`
+    (14/11/2026, scène V4.26) ; leur empreinte de rendu est celle du cache."""
+    for nom in ("iso_se", "iso_se-noyer", "iso_no", "iso_no-noyer"):
         octets = (RACINE / "site/salon/amenagement/rendus" / f"{nom}.jpg").read_bytes()
-        assert hashlib.sha256(octets).hexdigest() == attendu, nom
+        assert octets[:3] == b"\xff\xd8\xff" and len(octets) > 50_000, nom
 
 
 # ------------------------------------------------------------------ document
@@ -349,11 +344,12 @@ def test_rendu_vues_sont_les_cameras_de_la_piece():
 
 
 def test_cache_declare():
-    from commun.rendu_cache import CacheRendu
-    assert document.CACHE_RENDU == CacheRendu(
-        variantes={"": ("pieces.salon.piece", "pieces.salon.etageres.document", "pieces.salon.amenagement.document")},
-        code=("pieces/salon/amenagement/rendu.py", "pieces/salon/etageres/volumes.py", "pieces/salon/meubles.py",
-              "3d/rendu.py"))
+    c = document.CACHE_RENDU
+    assert c.variantes == {"": ("pieces.salon.piece", "pieces.salon.etageres.document",
+                                "pieces.salon.amenagement.document")}
+    assert c.code == ("pieces/salon/amenagement/rendu.py", "pieces/salon/etageres/volumes.py", "pieces/salon/meubles.py",
+                      "3d/rendu.py")
+    assert (c.script, c.png) == ("pieces/salon/amenagement/rendu.py", "salon-{camera}.png")
     for chemin in document.CACHE_RENDU.code:
         assert (RACINE / chemin).is_file(), chemin
 
@@ -365,10 +361,13 @@ def test_empreinte_des_rendus():
 
 def test_recettes_du_justfile():
     j = (RACINE / "justfile").read_text(encoding="utf-8")
-    for recette in ("salon-amenagement:", "salon-amenagement-rendu echantillons=", "salon-amenagement-apercu *vues"):
+    for recette in ("rendu page echantillons=", "rendu-apercu page *vues"):
         assert f"\n{recette}" in j, recette
-    assert "commun.rendu_cache liste salon/amenagement - " in j and "SALON_ESSENCE" in j
-    assert "python3 site.py salon/amenagement" in j
+    assert "\nsalon-amenagement" not in j   # recettes génériques : `just rendu salon/amenagement`, `just site …`
+    # le bois rendu (un Blender par essence) est déclaré par le document, pas par une recette
+    from pieces.salon.amenagement import options
+    assert document.CACHE_RENDU.reglages == "pieces.salon.amenagement.options:essences_rendues"
+    assert options.essences_rendues() == [("SALON_ESSENCE", "chene", ""), ("SALON_ESSENCE", "noyer", "-noyer")]
 
 
 # ------------------------------------------------------------------ bascule

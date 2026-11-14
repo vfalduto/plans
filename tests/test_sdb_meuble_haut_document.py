@@ -71,10 +71,9 @@ def test_anciennes_pages_et_generateurs_retires():
 
 def test_recettes():
     j = (RACINE / "justfile").read_text(encoding="utf-8")
-    assert "sdb-meuble-haut:\n    python3 site.py sdb/meuble-haut\n" in j
-    sdb = j.split("\nsdb:\n", 1)[1].split("\n\n", 1)[0]
-    assert "haut.py" not in sdb and "achats.py" not in sdb and "python3 site.py sdb/meuble-bas" in sdb
-    assert "python3 site.py sdb/meuble-haut" in sdb
+    assert "\nsdb-meuble-haut:" not in j and "\nsdb:" not in j
+    sdb = j.split("\nsdb-cad:\n", 1)[1].split("\n\n", 1)[0]
+    assert "haut.py" not in sdb and "achats.py" not in sdb and "3d/sdb/cad.py" in sdb
 
 
 def test_le_bas_mene_au_nouveau_haut():

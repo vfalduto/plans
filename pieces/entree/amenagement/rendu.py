@@ -2,7 +2,7 @@
 # pieces/entree/ (pas de FreeCAD).
 #
 #   ENTREE_VARIANTE=principale|victor blender -b --python pieces/entree/amenagement/rendu.py -- [échantillons] [caméra ...]
-# Lancé par `just entree-rendu` (cache des empreintes : commun/rendu_cache.py) et `just entree-apercu`.
+# Lancé par `just rendu entree/amenagement` (cache des empreintes : commun/rendu_cache.py) et `just rendu-apercu entree/amenagement`.
 # Caméras : celles de piece.CAMERAS ; la silhouette de chacune vient de HUMAINS (module de la variante), la position
 # des silhouettes de POSITIONS_HUMAINS (à défaut, POSITIONS_HUMAINS_DEFAUT ci-dessous).
 # Produit <sortie>/entree-<variante>-<caméra>.png et entree-<variante>-<caméra>-masque.png, avec <sortie> = 3d/sortie

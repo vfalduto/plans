@@ -11,11 +11,14 @@ from pieces.entree.piece import Bloc, EP, ENVELOPPE, H, H_PORTE, MURS, PORTES, S
 
 VERSION = "V4.8"
 
-# Empreinte des rendus (just entree-rendu) : la pièce puis le module de la variante, le code de rendu de l'entrée puis
+# Empreinte des rendus (just rendu entree/amenagement) : la pièce puis le module de la variante, le code de rendu de l'entrée puis
 # celui de 3d/. Noms et ordre entrent dans l'empreinte : les changer refait tous les rendus.
 CACHE_RENDU = CacheRendu(variantes={"principale": ("pieces.entree.piece", "document"),
                                     "victor": ("pieces.entree.piece", "victor")},
-                         code=("pieces/entree/amenagement/rendu.py", "3d/rendu.py"))
+                         code=("pieces/entree/amenagement/rendu.py", "3d/rendu.py"),
+                         script="pieces/entree/amenagement/rendu.py", sortie=("ENTREE_SORTIE", "3d/sortie"),
+                         apercu="ENTREE_APERCU", variante_env="ENTREE_VARIANTE", png="entree-{variante}-{camera}.png",
+                         masque=True)
 
 # silhouette de chaque caméra
 HUMAINS = {"iso_so": "couloir", "iso_no": "couloir", "iso_se": "entree"}

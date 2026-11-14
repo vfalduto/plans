@@ -4,8 +4,8 @@
 # (étagères), les matériaux de pieces/salon/meubles.py. pieces/salon/rendu_meubles.py le charge pour ses matériaux et ses boîtes.
 #
 #   [SALON_ESSENCE=chene|noyer] blender -b --python-exit-code 1 --python pieces/salon/amenagement/rendu.py -- [échantillons] [caméra ...]
-# Lancé par `just salon-amenagement-rendu` (cache des empreintes : commun/rendu_cache.py, une passe par essence, car
-# l'option Bois de la page change le bois des meubles) et `just salon-amenagement-apercu`.
+# Lancé par `just rendu salon/amenagement` (cache des empreintes : commun/rendu_cache.py, une passe par essence, car
+# l'option Bois de la page change le bois des meubles) et `just rendu-apercu salon/amenagement`.
 # Caméras : celles de piece.CAMERAS (iso_se, iso_no), toutes sans argument.
 # Configuration rendue : table ronde (quotidien), siège DYVLINGE, décoration affichée. Bois : chêne miel, ou noyer quand
 # SALON_ESSENCE=noyer (tout le chêne, enfilade, étagères, desserte, table basse et meuble bas, passe en noyer).
