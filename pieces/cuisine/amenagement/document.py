@@ -7,6 +7,8 @@
 # Toute variable en capitales de ce module (sauf celles de commun.rendu_cache.EXCLUES) doit être une donnée
 # sérialisable : nommer _x ce qui n'en est pas une.
 
+from pathlib import Path
+
 from commun.rendu_cache import CacheRendu
 
 # une seule variante, d'id vide : rendus/<caméra>.jpg, `-` en ligne de commande
@@ -25,10 +27,28 @@ def _texte_changement(texte: str) -> str:
 
 def construire_document():
     """Le Document de la cuisine/aménagement (exposé en `DOCUMENT` à la bascule, tâche 11)."""
-    from commun.modele import Changement, Document, Variante
+    from commun.modele import Annexe, Changement, Document, Variante
     from pieces.cuisine import modele as m
-    from pieces.cuisine.amenagement import dessins, vues
+    from pieces.cuisine.amenagement import dessins, imprimable, vues
     changements = tuple(Changement(v, d, _texte_changement(t)) for v, d, t in m.CHANGEMENTS)
     return Document(piece="cuisine", id="amenagement", nom="Aménagement", type="amenagement",
                     variantes=(Variante("", "Principale", m.VERSION, changements, FIGEES),), generer=vues.vues,
-                    css=dessins.CSS_DESSINS)
+                    css=dessins.CSS_DESSINS,
+                    annexes=(Annexe("imprimable.html", imprimable.page), Annexe("maquette-3d.html", maquette)))
+
+
+# ------------------------------------------------------------------ pages annexes
+_MAQUETTE = Path(__file__).with_name("maquette-3d.html")
+
+
+def maquette(depuis: str = "cuisine/amenagement/maquette-3d.html") -> str:
+    """La maquette 3D tournante de l'ancienne page (three.js 0.170.0 de jsdelivr), liens rebasés depuis `depuis`,
+    points médians remplacés par une virgule ; rien d'autre."""
+    from commun.gabarit import relatif
+    page = _MAQUETTE.read_text(encoding="utf-8")
+    for ancien, cible in (('href="favicon.svg"', "favicon.svg"), ('href="apple-touch-icon.png"', "apple-touch-icon.png"),
+                          ('href="cuisine-v13.html"', "cuisine/amenagement/")):
+        page = page.replace(ancien, f'href="{relatif(cible, depuis)}"')
+    page = page.replace('src="cuisine-v13-maquette/modele.js"',
+                        f'src="{relatif("cuisine/amenagement/maquette-3d/modele.js", depuis)}"')
+    return page.replace(" · ", ", ")

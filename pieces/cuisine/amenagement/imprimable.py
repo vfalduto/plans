@@ -1,21 +1,16 @@
-# Génère cuisine-v13-imprimable.html : version imprimable en noir et blanc, à l'échelle 1:20, sur A4 paysage.
-#
-#   python3 3d/v13/imprimable.py    (aussi lancé par plan.py, donc par `just v13`)
+# Cuisine, aménagement : page annexe imprimable.html, en noir et blanc, à l'échelle 1:20, sur A4 paysage (écrite par
+# commun/construction.py à côté du document, `Annexe` de document.py).
 #
 # Trois feuilles : la pièce meublée, la pièce vide, les meubles à part (à découper pour essayer d'autres positions).
-# Tout est projeté depuis modele.py, comme le plan de la page.
+# Tout est projeté depuis pieces/cuisine/modele.py, comme le plan de la page.
 
-import os
-import sys
 from html import escape
 
-ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", ".."))
-sys.path.insert(0, ROOT)
-sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
-import modele as M  # noqa: E402
-from pieces.cuisine.dessin import cote_h, cote_v, f, pts, rect, text  # noqa: E402
+from commun.gabarit import relatif
+from pieces.cuisine import modele as M
+from pieces.cuisine.dessin import cote_h, cote_v, f, pts, rect, text
 
-OUT = os.path.join(ROOT, "cuisine-v13-imprimable.html")
+DEPUIS = "cuisine/amenagement/imprimable.html"
 MM = 0.5                         # 1:20 → 1 cm réel = 0,5 mm sur le papier
 VUE = (-50, -50, 552, 342)       # cadre des feuilles de la pièce (x, y, largeur, hauteur), en cm
 ECART = 8                        # espace entre deux meubles à découper (4 mm sur le papier)
@@ -100,16 +95,16 @@ def meubles():
         nom, _, equip = b.etiq.partition(" ")
         sous = [s for s in dedans(("plaque", "cuve", "egouttoir"), x0, x1, 0, plan.y1)]
         if any(s.role == "plaque" for s in sous):
-            equip = "induction" + (" · four" if equip == "four" else "")
+            equip = "induction" + (", four" if equip == "four" else "")
         if any(s.role == "cuve" for s in sous):
-            equip = "évier" + (" · " + equip if equip else "")
+            equip = "évier" + (", " + equip if equip else "")
         r.append((nom, equip, x0, 0, x1, plan.y1, sous, "m"))
     for b in M.MEUBLES:
         if b.role == "colonne":
             nom, _, equip = b.etiq.partition(" ")
             r.append((nom, equip, M.COL_X, b.y0, b.x1, b.y1, [], "m"))
     ba = M.BANQ
-    r.append(("Banquette", "coffre · 1 tiroir", ba["x0"], ba["y0"], ba["x1"], ba["y1"],
+    r.append(("Banquette", "coffre, 1 tiroir", ba["x0"], ba["y0"], ba["x1"], ba["y1"],
               [M.Bloc("dossier", "", ba["x0"], ba["x0"] + ba["dossier"], ba["y0"], ba["y1"], 0, 0)], "m"))
     t = M.TABLE
     r.append(("Table", "pied central", t["x0"], t["y0"], t["x1"], t["y1"], [], "m table"))
@@ -146,9 +141,9 @@ def dessin(m, dx=0, dy=0):
     cx, cy = (x0 + x1) / 2, (y0 + y1) / 2
     dim = f"{f(w)} × {f(h)}"
     if w < 30:   # meuble étroit : texte tourné
-        o.append(text(cx + 2, cy, f"{nom} · {dim}", "lbln", extra=f' transform="rotate(-90 {f(cx + 2)} {f(cy)})"'))
+        o.append(text(cx + 2, cy, f"{nom}, {dim}", "lbln", extra=f' transform="rotate(-90 {f(cx + 2)} {f(cy)})"'))
     elif h < 25:  # meuble peu profond : une ligne
-        o.append(text(cx, cy + 2, f"{nom} · {dim}", "lbld"))
+        o.append(text(cx, cy + 2, f"{nom}, {dim}", "lbld"))
     else:
         ty = cy - (2 if sous else -2)
         o.append(text(cx, ty, nom, "lbln"))
@@ -241,9 +236,9 @@ def feuille(titre, sous, figure, pied):
             f'{figure}<p class="pied">{pied}</p></section>')
 
 
-def page():
+def page(depuis: str = DEPUIS) -> str:
     x, y, w, h = VUE
-    sous = f"Cuisine {M.VERSION} · échelle 1:20 · cm"
+    sous = f"Cuisine {M.VERSION}, échelle 1:20, cm"
     bar = echelle(330, 276)
     meublee = svg(x, y, w, h, piece_meublee() + bar, "Plan de la cuisine meublée, 1:20")
     vide = svg(x, y, w, h, piece_vide() + bar, "Plan de la pièce vide, 1:20")
@@ -258,15 +253,15 @@ def page():
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Cuisine imprimable</title>
-<link rel="icon" href="favicon.svg" type="image/svg+xml">
-<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<link rel="icon" href="{relatif("favicon.svg", depuis)}" type="image/svg+xml">
+<link rel="apple-touch-icon" href="{relatif("apple-touch-icon.png", depuis)}">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Archivo:wght@400;700;800&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
 <style>{CSS}</style>
 </head>
 <body>
-<div class="barre"><a href="cuisine-v13.html">← Cuisine V13</a><button type="button" onclick="print()">Imprimer</button>
+<div class="barre"><a href="{relatif("cuisine/amenagement/", depuis)}">← Cuisine V13</a><button type="button" onclick="print()">Imprimer</button>
 <span class="aide">A4 paysage, échelle 100 % : 3 feuilles</span></div>
 <main class="feuilles">
 {feuille("Cuisine meublée", sous, meublee,
@@ -281,13 +276,3 @@ def page():
 </body>
 </html>
 """
-
-
-def ecrire():
-    with open(OUT, "w", encoding="utf-8") as fh:
-        fh.write(page())
-    print(OUT)
-
-
-if __name__ == "__main__":
-    ecrire()

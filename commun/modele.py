@@ -138,6 +138,14 @@ class Variante:
     figees: tuple[tuple[str, str], ...] = ()
 
 
+@dataclass(frozen=True)
+class Annexe:
+    """Page à part d'un document, écrite à `<dossier du document>/<nom>` : `ecrire(depuis)` reçoit son chemin sous
+    site/ (« cuisine/amenagement/imprimable.html ») et rend la page complète."""
+    nom: str
+    ecrire: Callable[[str], str]
+
+
 @dataclass
 class Document:
     piece: str
@@ -148,6 +156,7 @@ class Document:
     generer: Callable[[str], dict[str, Vue]]
     options: tuple[Option, ...] = ()
     css: str = ""  # règles des dessins, filtrées et écrites dans dessins.css
+    annexes: tuple[Annexe, ...] = ()  # pages à part, écrites après les variantes
 
 
 @dataclass

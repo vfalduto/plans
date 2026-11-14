@@ -717,7 +717,5 @@ if __name__ == "__main__":
     with open(OUT, "w", encoding="utf-8") as fh:
         fh.write(page(lire_figees()))
     print(OUT)
-    import imprimable
-    imprimable.ecrire()
     import porte
     porte.ecrire()

@@ -45,7 +45,6 @@ def test_reference_a_jour():
 
 
 def test_annexes_de_reference():
-    assert ancien("imprimable").page() == (FIXTURES / "imprimable.html").read_text(encoding="utf-8")
     assert ancien("porte").page() == (FIXTURES / "porte-cellier.html").read_text(encoding="utf-8")
     assert (FIXTURES / "imprimable.html").read_text(encoding="utf-8") == _racine("cuisine-v13-imprimable.html")
 

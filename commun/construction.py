@@ -381,6 +381,12 @@ def _ecrire_redirections(redirections, sortie: Path) -> None:
         _ecrire(sortie / r.ancienne, page_redirection(r, r.ancienne))
 
 
+def _ecrire_annexe(doc: Document, annexe, sortie: Path) -> None:
+    """La page annexe, dans le dossier du document (l'adresse de sa première variante, « <piece>/<doc>/ »)."""
+    depuis = adresse(doc, doc.variantes[0].id) + annexe.nom
+    _ecrire(sortie / depuis, annexe.ecrire(depuis))
+
+
 def construire(site: Site, redirections, racine: Path, sortie: Path, seulement: str | None = None) -> None:
     """Écrit site/ : passerelle, fichiers communs, pages et historiques des documents, journal et accueil.
 
@@ -407,6 +413,8 @@ def construire(site: Site, redirections, racine: Path, sortie: Path, seulement: 
         dessins = []
         for v in doc.variantes:
             _ecrire_variante(site, doc, v, sortie, dessins)
+        for annexe in doc.annexes:
+            _ecrire_annexe(doc, annexe, sortie)
         if doc.css:
             _ecrire(_fichier(sortie, adresse(doc, doc.variantes[0].id)).parent / "dessins.css",
                     css_dessins(doc.css, dessins, f".d-{doc.piece}") + "\n")

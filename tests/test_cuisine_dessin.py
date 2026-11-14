@@ -42,11 +42,11 @@ def test_ancienne_page_reprend_les_aides():
         assert getattr(plan, nom) is getattr(dessin, nom), nom
 
 
-def test_porte_et_imprimable_inchanges():
+def test_porte_inchangee():
     assert ancien("porte").page() == (FIXTURES / "porte-cellier.html").read_text(encoding="utf-8")
-    assert ancien("imprimable").page() == (FIXTURES / "imprimable.html").read_text(encoding="utf-8")
 
 
-def test_porte_n_importe_plus_plan():
-    for nom in ("porte", "imprimable"):
-        assert "from plan import" not in (RACINE / "3d" / "v13" / f"{nom}.py").read_text(encoding="utf-8")
+def test_porte_et_imprimable_n_importent_plus_plan():
+    # l'imprimable est une annexe du document depuis la tâche 10 (tests/test_cuisine_annexes.py)
+    for chemin in ("3d/v13/porte.py", "pieces/cuisine/amenagement/imprimable.py"):
+        assert "from plan import" not in (RACINE / chemin).read_text(encoding="utf-8")

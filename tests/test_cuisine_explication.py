@@ -89,7 +89,12 @@ def test_tableaux_defilent():
 def test_liens_locaux_existent():
     site = RACINE / "site" / DEPUIS
     liens = set(re.findall(r'(?:src|href)="([^"#?]+)', PAGE))
-    locaux = {l for l in liens if not re.match(r"[a-z]+:", l)} - {"maquette-3d.html", "imprimable.html"}
+    locaux = {l for l in liens if not re.match(r"[a-z]+:", l)}
+    # les deux annexes sont des pages du document, écrites à côté de lui par la construction
+    from pieces.cuisine.amenagement.document import construire_document
+    annexes = {a.nom for a in construire_document().annexes}
+    assert {"maquette-3d.html", "imprimable.html"} <= annexes
+    locaux -= annexes
     assert any("cuisine-sol-reference.png" in l for l in locaux) and "rendus/iso_so.jpg" in locaux
     for l in locaux:
         cible = (site / l).resolve()

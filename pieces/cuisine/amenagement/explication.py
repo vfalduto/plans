@@ -30,6 +30,7 @@ def _racine(depuis: str) -> str:
 
 
 def _liens(depuis: str) -> tuple[tuple[str, str], ...]:
+    """Liens de la tête : les deux annexes du document (écrites à côté de lui), puis la page de la porte du cellier."""
     return (("maquette-3d.html", "Maquette 3D"), ("imprimable.html", "Version imprimable"),
             (f"{_racine(depuis)}cuisine-v13-porte-cellier.html", "Porte du cellier"))
 
