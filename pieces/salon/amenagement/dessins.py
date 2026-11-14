@@ -75,6 +75,14 @@ def volumes_plan():
     return o
 
 
+# Emplacements des étiquettes déplacées pour qu'aucune ne se chevauche (V4.26 : l'ancienne page les avait plus près ;
+# tests/test_salon_amenagement_dessins.py remet les anciennes valeurs pour confronter tout le reste à l'ancienne page).
+X_ETAGERES = 48                  # libellé des étagères : entre leur tireté (32) et la façade de l'enfilade (60)
+DY_TABLE_RONDE = (92, 85)        # libellés de la table ronde au-dessus de ses chaises (y du centre moins ces valeurs)
+Y_COTE_ENFILADE = 28             # coupe A : cotes de l'enfilade et du passage, sous celles des modules
+Y_COTE_MODULE = 13               # coupe A : cotes des trois modules, sous le trait de sol
+
+
 def _vertical(x, y, s, cls):
     return text(x, y, s, cls, extra=f' transform="rotate(-90 {f(x)} {f(y)})"')
 
@@ -136,7 +144,7 @@ def plan_svg(aria: str, zones: str = "") -> str:
     # étiquettes
     ym = (e["y0"] + e["y1"]) / 2
     o.append(_vertical(22, ym, lib["enfilade"], "lbls"))
-    o.append(_vertical(36, ym, lib["etageres"], "lblx"))
+    o.append(_vertical(X_ETAGERES, ym, lib["etageres"], "lblx"))
     for k, (y0, y1) in enumerate(e["modules"]):
         o.append(_vertical(9, (y0 + y1) / 2, f"M{k + 1}", "lblx muted"))
     xc = (c["x0"] + c["x1"]) / 2
@@ -144,8 +152,8 @@ def plan_svg(aria: str, zones: str = "") -> str:
     xd = (d["x0"] + d["x1"]) / 2
     o.append(text(xd, d["y1"] + 9, lib["desserte"], "lbls"))
     rx, ry = t["ronde"]
-    o.append(f'<g{O.si(O.QUOTIDIEN)}>{text(rx, ry - 10, "⑤ Table ronde Ø " + f(t["d"]), "lbls")}'
-             f'{text(rx, ry - 3, lib["quotidien"], "lblx")}</g>')
+    o.append(f'<g{O.si(O.QUOTIDIEN)}>{text(rx, ry - DY_TABLE_RONDE[0], "⑤ Table ronde Ø " + f(t["d"]), "lbls")}'
+             f'{text(rx, ry - DY_TABLE_RONDE[1], lib["quotidien"], "lblx")}</g>')   # au-dessus des chaises, pas dessus
     o.append(f'<g{O.si(O.OUVERTE)}>{text(t["cx"], t["cy"] - 14, "⑤ Table " + f(t["ouvert"]) + " × " + f(t["d"]), "lbls")}'
              f'{text(t["cx"], t["cy"] - 7, lib["ouverte"], "lblx")}</g>')
     tb, ch, dy, k = M.TABLE_BASSE, M.CHILIENNE, M.DYVLINGE, M.CONSOLE
@@ -286,11 +294,11 @@ def coupe_a(aria):
     def cotes(X):
         u0, u1 = sorted((X(e["y0"]), X(e["y1"])))
         p0, p1 = sorted((X(piece.PASSAGE["y0"]), X(piece.PASSAGE["y1"])))
-        r = [cote_h(u0, u1, 18, f'enfilade {cote(e["y1"] - e["y0"])}'),
-             cote_h(p0, p1, 18, f'passage {cote(piece.PASSAGE["y1"] - piece.PASSAGE["y0"])}')]
+        r = [cote_h(u0, u1, Y_COTE_ENFILADE, f'enfilade {cote(e["y1"] - e["y0"])}'),
+             cote_h(p0, p1, Y_COTE_ENFILADE, f'passage {cote(piece.PASSAGE["y1"] - piece.PASSAGE["y0"])}')]
         for y0, y1 in e["modules"]:
             a, b = sorted((X(y0), X(y1)))
-            r.append(cote_h(a, b, 9, f(y1 - y0)))
+            r.append(cote_h(a, b, Y_COTE_MODULE, f(y1 - y0)))
         axes = sorted(X(y) for y in mo["axes"])
         for a, b in zip(axes, axes[1:]):
             r.append(cote_h(a, b, -(mo["z1"] + 7), f(mo["pas"])))

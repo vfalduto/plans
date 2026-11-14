@@ -115,18 +115,27 @@ def face_svg(g=G, label="Élévation de face cotée de l'enfilade"):
     for fc in g["facades"]:
         if fc["type"] == "porte" or fc["z0"] == g["za"]:
             o.append(cote_h(U(fc["y1"]), U(fc["y0"]), yv, cote(fc["y1"] - fc["y0"])))
-    o.append(cote_h(U(0), U(-NORD), V(Z1) - 30, f"jour {cote(NORD)}"))
+    o.append(cote_h(U(0), U(-NORD), V(Z1) - 30, cote(NORD)))
+    o.append(text(U(0) - 4, V(Z1) - 33, "jour", "dimt", "end"))   # « jour » à gauche : le libellé entier dépasse sur le mur
     # hauteurs à gauche (bout sud)
     x1, x2 = -14, -40
     o += [cote_v(V(0), V(ZP), x1, f"pieds {f(ZP)}"),
           cote_v(V(ZP), V(ZP + g["HC"]), x1, f'caisson {cote(g["HC"])}'),
-          cote_v(V(Z1 - g["ep_d"]), V(Z1), x1 - 16, cote(g["ep_d"])),
+          cote_v_mince(V(Z1 - g["ep_d"]), V(Z1), x1 - 16, cote(g["ep_d"]), True),
           cote_v(V(0), V(Z1), x2 - 6, f"{f(Z1)}")]
     porte = next(fc for fc in g["facades"] if fc["type"] == "porte")
     o.append(cote_v(V(porte["z0"]), V(porte["z1"]), U(-5) + 16, f'portes {cote(porte["z1"] - porte["z0"])}'))
     o.append(text(U(L) + 4, V(Z1) - 4, "dessus", "tx muted", "start"))
     vb = f"{f(x2 - 30)} {f(V(Z1) - 46)} {f(U(-NORD - 5) - x2 + 60)} {f(Z1 * k + 46 + 70)}"
     return svg(vb, "".join(o), label)
+
+
+def cote_v_mince(y0, y1, x, label, cote_a_droite=False):
+    """Cote verticale d'une épaisseur trop mince pour son libellé (1,8) : le libellé est écrit à plat, à côté."""
+    base = cote_v(y0, y1, x, label)
+    traits = base[:base.index("<text")]
+    cote_a = "start" if cote_a_droite else "end"
+    return traits + text(x + (5 if cote_a_droite else -5), (y0 + y1) / 2 + 2, label, "dimt", cote_a)
 
 
 def profil_svg(g=G, label="Coupes de profil de l'enfilade"):
@@ -185,14 +194,14 @@ def profil_svg(g=G, label="Coupes de profil de l'enfilade"):
         s += [text(X(P / 2), V(Z1) - 26, titre, "tb"),
               text(X(P / 2), V(Z1) - 8, f'dessus {cote(g["ep_d"])}', "tx"),
               text(X(DOS + TRAV + 2), V(g["zi1"]) + 11, f"traverses {f(TRAV)}", "tx", "start") if kind == "porte" else "",
-              text(X(DOS + PC / 2), V(g["zi0"]) + 12, "fond 1,8", "tx") if kind == "tiroir" else "",
+              text(X(DOS + PC / 2), V(ZP) + 14, "fond 1,8", "tx") if kind == "tiroir" else "",
               text(X(-2.5), V(Z1 + 6) - 4, "mur", "tx muted"),
               cote_h(X(0), X(fr), V(0) + 16, cote(fr)),
               cote_h(X(fr), X(P), V(0) + 16, f(P - fr)),
               cote_h(X(0), X(P), V(0) + 34, f(P)),
               cote_v(V(0), V(ZP), X(P) + 40, f(ZP)),
               cote_v(V(ZP), V(ZP + g["HC"]), X(P) + 40, cote(g["HC"])),
-              cote_v(V(Z1 - g["ep_d"]), V(Z1), X(P) + 40, cote(g["ep_d"])),
+              cote_v_mince(V(Z1 - g["ep_d"]), V(Z1), X(P) + 40, cote(g["ep_d"])),
               cote_v(V(0), V(Z1), X(P) + 62, f(Z1))]
         return s
 

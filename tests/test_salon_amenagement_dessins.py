@@ -100,7 +100,12 @@ def _vu(svg, etat):
 
 @pytest.mark.parametrize("etat", ETATS, ids=lambda e: "-".join(e.values()))
 @pytest.mark.parametrize("nom", DESSINS)
-def test_dessin_dans_chaque_etat(nom, etat):
+def test_dessin_dans_chaque_etat(nom, etat, monkeypatch):
+    # les étiquettes déplacées (V4.26) reprennent ici leur ancien emplacement : tout le reste est celui de l'ancienne page
+    monkeypatch.setattr(dessins, "X_ETAGERES", 36)
+    monkeypatch.setattr(dessins, "DY_TABLE_RONDE", (10, 3))
+    monkeypatch.setattr(dessins, "Y_COTE_ENFILADE", 18)
+    monkeypatch.setattr(dessins, "Y_COTE_MODULE", 9)
     fichier, dessiner = DESSINS[nom]
     config = {"quotidien": "f", "ouverte": "o"}[etat["table"]]
     ancien = (FIXTURES / fichier.format(config)).read_text(encoding="utf-8")
