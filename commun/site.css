@@ -451,3 +451,25 @@ a:hover>.pl-piece,a:focus-visible>.pl-piece{fill:color-mix(in srgb,var(--repere)
   .cartes td.large{grid-column:1 / -1}
   .cartes td.d{grid-row:1;grid-column:3}
 }
+
+/* ------------------------------------------------------------------ Achats en cartes, sous 512 px
+   Le tableau d'achats (quatre colonnes : article, référence, quantité, prix ; repéré par ses deux en-têtes de droite
+   alignés à droite, ce qu'aucun autre tableau défilant n'a) ne tient plus sous 480 px : chaque ligne devient une carte,
+   comme la liste d'achats de la maquette. Article et prix en première rangée ; dessous la référence, et la quantité
+   précédée de « × » sous le prix ; « Sous-total » et « Total » gardent libellé et montant face à face. */
+@media (max-width:511px){
+  .lecture .defile:has(> table > thead th.d:nth-child(3) + th.d:nth-child(4):last-child) table{min-width:0;display:block}
+  .lecture .defile:has(> table > thead th.d:nth-child(3) + th.d:nth-child(4):last-child) thead{display:none}
+  .lecture .defile:has(> table > thead th.d:nth-child(3) + th.d:nth-child(4):last-child) tbody{display:block}
+  .lecture .defile:has(> table > thead th.d:nth-child(3) + th.d:nth-child(4):last-child) tr{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:3px 14px;align-items:baseline;padding:10px 0;border-bottom:1px solid var(--line)}
+  .lecture .defile:has(> table > thead th.d:nth-child(3) + th.d:nth-child(4):last-child) td{border:0;padding:0}
+  .lecture .defile:has(> table > thead th.d:nth-child(3) + th.d:nth-child(4):last-child) td:nth-child(1){grid-area:1 / 1}
+  .lecture .defile:has(> table > thead th.d:nth-child(3) + th.d:nth-child(4):last-child) td:nth-child(4){grid-area:1 / 2;font-weight:600}
+  .lecture .defile:has(> table > thead th.d:nth-child(3) + th.d:nth-child(4):last-child) td:nth-child(2){grid-area:2 / 1;color:var(--muted);font-size:14px}
+  .lecture .defile:has(> table > thead th.d:nth-child(3) + th.d:nth-child(4):last-child) td:nth-child(3){grid-area:2 / 2;color:var(--muted);font-size:14px}
+  .lecture .defile:has(> table > thead th.d:nth-child(3) + th.d:nth-child(4):last-child) td:nth-child(3)::before{content:"× "}
+  .lecture .defile:has(> table > thead th.d:nth-child(3) + th.d:nth-child(4):last-child) tr.total{border-top:2px solid var(--ink);border-bottom:0;background:var(--hair);padding:9px 0}
+  .lecture .defile:has(> table > thead th.d:nth-child(3) + th.d:nth-child(4):last-child) tr.total td{border:0;background:none;font-weight:700}
+  .lecture .defile:has(> table > thead th.d:nth-child(3) + th.d:nth-child(4):last-child) tr.total td:nth-child(2),
+  .lecture .defile:has(> table > thead th.d:nth-child(3) + th.d:nth-child(4):last-child) tr.total td:nth-child(3){display:none}
+}

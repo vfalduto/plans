@@ -45,7 +45,6 @@ async page => {
 
   // Ce qui dépasse : la page en largeur ; la barre, les onglets, la scène, la fiche et le panneau hors de l'écran ;
   // un contenu plus large que sa boîte (barre, fiche, article de lecture), donc coupé ou à faire défiler en largeur.
-  // Les tableaux sont dans .defile, qui défile en largeur exprès : ils ne comptent pas.
   const debordements = p => p.evaluate(() => {
     const l = innerWidth, res = [];
     const vu = e => e && e.checkVisibility({visibilityProperty: true, opacityProperty: true});
@@ -64,13 +63,13 @@ async page => {
   });
 
   // Ce que debordements ne voit pas : un contenu plus large que son cadre défilant (overflow-x auto, scroll ou hidden),
-  // dans la vue visible, hors de la scène. Seul .defile (tableau d'achats) a le droit de défiler en largeur : le débit
-  // (.debit, lui aussi défilant) doit tenir à 390 px, rangé en cartes.
+  // dans la vue visible, hors de la scène. Rien n'a le droit de défiler en largeur à 390 px : le débit (.debit) et les
+  // achats (.defile) y tiennent, rangés en cartes.
   const debordementsCaches = p => p.evaluate(() => {
     const section = [...document.querySelectorAll("#contenu > section.vue")].find(s => s.checkVisibility());
     if (!section) return ["aucune vue visible"];
     return [...section.querySelectorAll("*")]
-      .filter(e => !e.closest(".scene") && !e.matches(".defile") && e.checkVisibility()
+      .filter(e => !e.closest(".scene") && e.checkVisibility()
                    && ["auto", "scroll", "hidden"].includes(getComputedStyle(e).overflowX)
                    && e.scrollWidth > e.clientWidth + 1)
       .map(e => `${e.tagName.toLowerCase()}.${[...e.classList].join(".")} : contenu de ${e.scrollWidth} px dans ${e.clientWidth}`);
