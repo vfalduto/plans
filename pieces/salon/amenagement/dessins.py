@@ -90,7 +90,7 @@ def libelles_plan():
 
 def plan_svg(aria: str, zones: str = "") -> str:
     """Le plan du salon ; `zones` (HTML des zones touchables) juste avant </svg>, role="group" alors."""
-    e, c, d, t, dg = M.ENFILADE, M.CANAPE, M.DESSERTE, M.TABLE, M.DEGAGEMENTS
+    e, c, d, t = M.ENFILADE, M.CANAPE, M.DESSERTE, M.TABLE
     pa, ba = piece.PASSAGE, piece.BAIE
     lib = libelles_plan()
     o = []

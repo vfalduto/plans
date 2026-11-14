@@ -47,7 +47,7 @@ def table_rangement() -> str:
                        f'{len(d["niveaux"])} niveaux pour vinyles', f"≈ {round(M.VINYLES, -1):.0f} disques"),
     ]
     corps = "".join(f'<tr><td>{a}</td><td>{b}</td><td class="num">{v}</td></tr>' for a, b, v in lignes)
-    return (f"<h2>Rangements</h2>"
+    return ("<h2>Rangements</h2>"
             + _defile('<table><thead><tr><th>Meuble</th><th>Dimensions</th><th>Capacité</th></tr></thead>'
                       f"<tbody>{corps}</tbody></table>")
             + note_source(f'Volume utile de l\'enfilade : intérieur des caissons, panneaux de {c(M.ENFILADE["ep"])} '

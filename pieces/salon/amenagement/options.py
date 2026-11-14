@@ -15,8 +15,9 @@ TABLE = Option("table", "Table", (), "choix", "quotidien",
 SIEGE = Option("siege", "Siège", (), "choix", "dyvlinge",
                (Valeur("dyvlinge", "DYVLINGE"), Valeur("chilienne", "Chilienne", rendue=False)),
                "Visible sur le plan et les coupes ; les rendus montrent le DYVLINGE.")
+# les rendus montrent toujours la déco : la portée le dit, aucune valeur n'est « pas encore rendue » (rendue=True)
 DECO = Option("deco", "Décoration", (), "choix", "masquee",
-              (Valeur("masquee", "Masquée", rendue=False), Valeur("affichee", "Affichée")),
+              (Valeur("masquee", "Masquée"), Valeur("affichee", "Affichée")),
               "Visible sur le plan et les coupes ; les rendus la montrent toujours.")
 BOIS = Option("bois", "Bois des meubles", (), "choix", "chene",
               (Valeur("chene", "Chêne miel"), Valeur("noyer", "Noyer")),
