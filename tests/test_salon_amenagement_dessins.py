@@ -8,7 +8,9 @@ import re
 import pytest
 
 from pieces.salon.amenagement import dessins, options
-from tests.salon_anciens import FIXTURES
+from tests.outils import RACINE
+
+FIXTURES = RACINE / "tests" / "fixtures" / "salon"
 
 ARIA = "Légende de l'appelant"
 ETATS = [dict(table=t, siege=s, deco=d) for t, s, d in
@@ -41,6 +43,8 @@ def _converti(svg):
     fin de balise, dans l'ordre table, siège, déco ; `cadre`, `tapis` et `lbl muted` prennent leurs nouveaux noms."""
     for ancien, nouveau in ECARTS:
         svg = svg.replace(ancien, nouveau)
+    # cotes à la virgule : « 254.5 » devient « 254,5 » dans les textes du dessin (pas dans les attributs)
+    svg = re.sub(r">([^<>]*)<", lambda m: ">" + re.sub(r"(\d)\.(\d)", r"\1,\2", m[1]) + "<", svg)
 
     def balise(m):
         ferme, nom, attrs, auto = m.groups()
@@ -137,6 +141,13 @@ def test_voisines_ont_la_classe_des_calques():
     svg = dessins.plan_svg(ARIA)
     for nom in ("Cellier", "WC", "Couloir", "Pièce 1", "Chambre"):
         assert re.search(rf'<text class="roomt"[^>]*>{nom}</text>', svg), nom
+
+
+def test_cotes_a_la_virgule():
+    for nom, (_, dessiner) in DESSINS.items():
+        assert not re.search(r">[^<>]*\d\.\d[^<>]*<", dessiner()), nom
+    assert ">254,5<" in dessins.coupe_a(ARIA) and "baie 204,5" in dessins.plan_svg(ARIA)
+    assert "dessous à 231,7" in dessins.plan_svg(ARIA)
 
 
 def test_cotes_formatees():

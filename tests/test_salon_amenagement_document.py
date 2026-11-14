@@ -16,8 +16,8 @@ from commun.modele import Document, Passerelle, Piece, Site
 from pieces.salon import piece
 from pieces.salon.amenagement import dessins, document, explication, options, textes, vues, zones
 from tests.outils import RACINE, charger_site
-from tests.salon_anciens import PAGES
 
+FIXTURES = RACINE / "tests" / "fixtures" / "salon"
 DOC = document.DOCUMENT
 VUES = DOC.generer("")
 PLAN = VUES["plan"].elements[0]
@@ -38,7 +38,8 @@ def _chiffres(t):
 
 @pytest.fixture(scope="module")
 def ancienne_page():
-    return PAGES["salon-v4.html"]()
+    """La page salon-v4.html de la V4.26, figée à la bascule (ce que produisait 3d/salon/plan.py)."""
+    return (FIXTURES / "amenagement-ancienne-page.html").read_text(encoding="utf-8")
 
 
 # ------------------------------------------------------------------ options
@@ -178,14 +179,13 @@ def test_tableaux_et_listes_de_l_ancienne_page(ancienne_page):
         # le début de la section (jusqu'à la première note) se retrouve tel quel
         for morceau in re.split(r"(?<=\.)\s", a):
             if len(morceau) > 25 and "Source" not in morceau:
-                assert morceau in nouveau or morceau.replace("(voir la page Étagères)", "(voir la page Étagères)") in nouveau, \
-                    (h2, morceau)
+                assert morceau in nouveau, (h2, morceau)
 
 
 def test_chapo_et_repere(ancienne_page):
     pitch = re.search(r'<p class="pitch">(.*?)</p>', ancienne_page, re.S)[1]
     assert explication.CHAPO == html.unescape(pitch)
-    assert f'<p class="chapo">{html.escape(explication.CHAPO, quote=False)}' in S_EXPLICATION or explication.CHAPO in html.unescape(S_EXPLICATION)
+    assert explication.CHAPO in html.unescape(S_EXPLICATION)
     assert "3d/salon" not in S_EXPLICATION and "just salon" not in S_EXPLICATION
     assert "Rendus 3D sur demande" in S_EXPLICATION
 
@@ -251,14 +251,16 @@ def test_iso_une_image_par_bois():
 
 
 def test_images_reprises_telles_quelles():
-    """Les quatre images sont celles de l'ancienne page (V4.25 pour le sud-est, V4.20 pour le nord-ouest)."""
-    import subprocess
-    for nouveau, ancien in (("iso_se", "iso"), ("iso_se-noyer", "iso_noyer"), ("iso_no", "iso_no"),
-                            ("iso_no-noyer", "iso_no_noyer")):
-        r = subprocess.run(["git", "show", f"34a9a20:salon-v4-3d/{ancien}.jpg"], cwd=RACINE, capture_output=True)
-        if r.returncode:
-            pytest.skip("historique git absent")
-        assert (RACINE / "site/salon/amenagement/rendus" / f"{nouveau}.jpg").read_bytes() == r.stdout, nouveau
+    """Les quatre images sont celles de l'ancienne page (V4.25 pour le sud-est, V4.20 pour le nord-ouest) : empreintes
+    relevées sur salon-v4-3d/ à la bascule."""
+    import hashlib
+    empreintes = {"iso_se": "29d319b81ebfba45cb14a5055bb1876a204436946666f4449b23b0f3563c165f",
+                  "iso_se-noyer": "0988c49ca28bc16e43ddc330fe8fcca3bf090ebdaa6622320ff176bea75101b4",
+                  "iso_no": "8edbd0f58d8ce58d643bcc4abd986cb13f2a5f85895ae75140b805949e8ce2f7",
+                  "iso_no-noyer": "4950f0ee6aa9a85f36e946466ac3eac07900f136b19a81a65a2dd504a0141344"}
+    for nom, attendu in empreintes.items():
+        octets = (RACINE / "site/salon/amenagement/rendus" / f"{nom}.jpg").read_bytes()
+        assert hashlib.sha256(octets).hexdigest() == attendu, nom
 
 
 # ------------------------------------------------------------------ document
@@ -329,15 +331,21 @@ def test_rendu_compile_et_ne_lit_que_les_nouveaux_modules():
         assert attendu in t, attendu
 
 
+# vues de 3d/salon/rendu.py (V4.26), relevées à la bascule : (ortho, position, cible, motif des murs cachés)
+COUPES_SE = ("^(mur__(mur_sud|mur_est_n|mur_est_s|couloir)|sol__couloir|linteau__linteau_baie|poutre__|plafond__|clim__"
+             "|plinthe__(sud|est_)|baie__|rideau__|tringle__)")
+COUPES_NO = ("^(mur__(mur_nord|mur_nord_decroche|mur_ouest_n|mur_ouest_s|couloir)|sol__couloir|papier_peint__"
+             "|linteau__linteau_passage|cadre__cadre_passage|cadre_mur__|plafond__|plinthe__(nord|ouest_n))")
+
+
 def test_rendu_vues_sont_les_cameras_de_la_piece():
-    """Les deux vues du script sont les caméras de la pièce, avec leurs murs cachés, comme l'ancien script."""
-    from tests.salon_anciens import vues_du_rendu
-    anciennes = vues_du_rendu("rendu.py")
+    """Les deux caméras de la pièce sont les vues de l'ancien script, avec leurs murs cachés."""
     cams = {c.id: c for c in piece.CAMERAS}
     assert list(cams) == ["iso_se", "iso_no"]
-    for ancien, nouveau in (("iso", "iso_se"), ("iso_no", "iso_no")):
-        v, c = anciennes[ancien], cams[nouveau]
-        assert (v["ortho"], v["loc"], v["target"], v["coupes"]) == (c.ortho, c.loc, c.cible, c.reglages["coupes"])
+    attendu = {"iso_se": (8.2, (912, 779, 600), (272, 179, 70), COUPES_SE),
+               "iso_no": (8.2, (-368, -421, 600), (272, 179, 70), COUPES_NO)}
+    for k, c in cams.items():
+        assert (c.ortho, tuple(c.loc), tuple(c.cible), c.reglages["coupes"]) == attendu[k], k
 
 
 def test_cache_declare():

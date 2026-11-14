@@ -14,6 +14,7 @@ from pieces.salon import piece
 from pieces.salon.amenagement import document as M
 from pieces.salon.amenagement import options as O
 from pieces.salon.dessin import cote_h, cote_v, f, rect, text
+from pieces.salon.meubles import cote
 
 COUPE_A, COUPE_B, COUPE_C, COUPE_D = M.COUPE_A, M.COUPE_B, M.TABLE["cy"], M.COUPE_D
 
@@ -81,10 +82,10 @@ def _vertical(x, y, s, cls):
 def libelles_plan():
     """Les étiquettes du plan et de ses calques : (texte « ② … » de l'enfilade, etc.) ; séparé pour être testé."""
     e = M.ENFILADE
-    return {"enfilade": f'① Enfilade {f(e["y1"] - e["y0"])} × {e["p"]}, h {e["z1"]}',
+    return {"enfilade": f'① Enfilade {cote(e["y1"] - e["y0"])} × {e["p"]}, h {e["z1"]}',
             "etageres": f"② {len(M.TABLETTES)} étagères suspendues au-dessus (tireté)",
             "desserte": "④ Desserte, platine vinyle",
-            "ouverte": f'{M.CONFIGS["o"]["chaises"]} couverts, {M.TABLE["allonges"]} allonges de {f(M.TABLE["allonge"])}',
+            "ouverte": f'{M.CONFIGS["o"]["chaises"]} couverts, {M.TABLE["allonges"]} allonges de {cote(M.TABLE["allonge"])}',
             "quotidien": f'{M.CONFIGS["f"]["chaises"]} couverts'}
 
 
@@ -116,11 +117,11 @@ def plan_svg(aria: str, zones: str = "") -> str:
     # baie coulissante : deux vantaux dans l'épaisseur du mur
     o.append(f'<line class="glass" x1="{M.L + 4}" y1="{ba["y0"]}" x2="{M.L + 4}" y2="{ba["milieu"] + 3}"/>')
     o.append(f'<line class="glass" x1="{M.L + 8}" y1="{ba["milieu"] - 3}" x2="{M.L + 8}" y2="{ba["y1"]}"/>')
-    o.append(_vertical(M.L + 21, (ba["y0"] + ba["y1"]) / 2, f'baie {f(ba["y1"] - ba["y0"])}', "lbls muted"))
+    o.append(_vertical(M.L + 21, (ba["y0"] + ba["y1"]) / 2, f'baie {cote(ba["y1"] - ba["y0"])}', "lbls muted"))
     # passage sans porte
     o.append(f'<line class="seuil" x1="-10" y1="{pa["y0"]}" x2="-10" y2="{pa["y1"]}"/>')
     o.append(f'<line class="seuil" x1="0" y1="{pa["y0"]}" x2="0" y2="{pa["y1"]}"/>')
-    o.append(_vertical(14, (pa["y0"] + pa["y1"]) / 2, f'passage {f(pa["y1"] - pa["y0"])}', "lblx muted"))
+    o.append(_vertical(14, (pa["y0"] + pa["y1"]) / 2, f'passage {cote(pa["y1"] - pa["y0"])}', "lblx muted"))
     # enfilade : séparation des modules et des portes
     for y0, y1 in e["modules"][1:]:
         o.append(f'<line class="sep" x1="0" y1="{f(y0)}" x2="{f(e["p"])}" y2="{f(y0)}"/>')
@@ -160,9 +161,9 @@ def plan_svg(aria: str, zones: str = "") -> str:
     o.append(f'<g{O.si(O.OUVERTE, O.CHILIENNE)}>{text(60 + ch["l"] / 2, M.P - 18, "⑦ chilienne pliée", "lblx")}</g>')
     o.append(text((k["x0"] + k["x1"]) / 2, k["y0"] + 14, f'⑧ Meuble bas {k["l"]} × {k["p"]}', "lbls"))
     o.append(text((k["x0"] + k["x1"]) / 2, k["y0"] + 22,
-                  f'écran au-dessus : image {f(M.ECRAN["l"])} × {f(M.ECRAN["h"])}', "lblx"))
-    o.append(text((M.CLIM["x0"] + M.CLIM["x1"]) / 2, M.P - M.CLIM["p"] + 13, f'clim (h {f(M.CLIM["z0"])})', "lblx"))
-    o.append(text(360, M.P - 5, f'poutre au-dessus, dessous à {f(M.POUTRE["z0"])}', "lblx muted"))
+                  f'écran au-dessus : image {cote(M.ECRAN["l"])} × {cote(M.ECRAN["h"])}', "lblx"))
+    o.append(text((M.CLIM["x0"] + M.CLIM["x1"]) / 2, M.P - M.CLIM["p"] + 13, f'clim (h {cote(M.CLIM["z0"])})', "lblx"))
+    o.append(text(360, M.P - 5, f'poutre au-dessus, dessous à {cote(M.POUTRE["z0"])}', "lblx muted"))
     pj = M.PROJECTEUR
     o.append(text(pj["cx"], pj["cy"] + pj["p"] / 2 + 7, "vidéoprojecteur (plafond)", "lblx"))
     # décoration
@@ -175,7 +176,7 @@ def plan_svg(aria: str, zones: str = "") -> str:
     o.append(cote_h(c["x0"], c["x1"], -18, f'{c["l"]}'))
     o.append(cote_h(e["p"], c["x0"], -18, f'{M.ALLEE_ENFILADE}'))
     o.append(cote_h(0, e["p"], -18, f'{e["p"]}'))
-    o.append(cote_v(e["y0"], e["y1"], -14 + 0, f'{f(e["y1"] - e["y0"])} utiles'))
+    o.append(cote_v(e["y0"], e["y1"], -14 + 0, f'{cote(e["y1"] - e["y0"])} utiles'))
     o.append(cote_h(d["x0"], d["x1"], -18, f'{d["x1"] - d["x0"]}'))
     # dégagements
     lo = t["ouvert"]
@@ -285,8 +286,8 @@ def coupe_a(aria):
     def cotes(X):
         u0, u1 = sorted((X(e["y0"]), X(e["y1"])))
         p0, p1 = sorted((X(piece.PASSAGE["y0"]), X(piece.PASSAGE["y1"])))
-        r = [cote_h(u0, u1, 18, f'enfilade {f(e["y1"] - e["y0"])}'),
-             cote_h(p0, p1, 18, f'passage {round(piece.PASSAGE["y1"] - piece.PASSAGE["y0"], 1):g}')]
+        r = [cote_h(u0, u1, 18, f'enfilade {cote(e["y1"] - e["y0"])}'),
+             cote_h(p0, p1, 18, f'passage {cote(piece.PASSAGE["y1"] - piece.PASSAGE["y0"])}')]
         for y0, y1 in e["modules"]:
             a, b = sorted((X(y0), X(y1)))
             r.append(cote_h(a, b, 9, f(y1 - y0)))
@@ -306,7 +307,7 @@ def coupe_b(aria):
         u0, u1 = sorted((X(d["y0"]), X(d["y1"])))
         b0, b1 = sorted((X(b["y0"]), X(b["y1"])))
         m = X(b["milieu"])
-        return [cote_h(u0, u1, 18, f'desserte {d["y1"] - d["y0"]}'), cote_h(b0, b1, -b["h"] - 6, f'baie {b["y1"] - b["y0"]}'),
+        return [cote_h(u0, u1, 18, f'desserte {cote(d["y1"] - d["y0"])}'), cote_h(b0, b1, -b["h"] - 6, f'baie {cote(b["y1"] - b["y0"])}'),
                 f'<line class="seuil" x1="{f(m)}" y1="0" x2="{f(m)}" y2="{-b["h"]}"/>',
                 text((b0 + m) / 2 if X(b["y0"]) < m else (m + b1) / 2, -b["h"] + 10, "vantail nord", "lblx muted"),
                 text((m + b1) / 2 if X(b["y0"]) < m else (b0 + m) / 2, -b["h"] + 10, "vantail sud", "lblx muted")]
@@ -332,9 +333,9 @@ def coupe_d(aria):
         k0, k1 = sorted((X(k["x0"]), X(k["x1"])))
         c0, c1 = sorted((X(cl["x0"]), X(cl["x1"])))
         return [cote_h(k0, k1, 18, f'meuble bas {k["l"]}'),
-                cote_h(u0, u1, -(ec["bas"] + ec["h"]) - 6, f'image {f(ec["l"])} × {f(ec["h"])} (16/9)'),
+                cote_h(u0, u1, -(ec["bas"] + ec["h"]) - 6, f'image {cote(ec["l"])} × {cote(ec["h"])} (16/9)'),
                 text((u0 + u1) / 2, -(ec["bas"] + ec["h"] / 2), "écran (mur peint en blanc mat)", "lblc"),
-                cote_h(c0, c1, -cl["z1"] - 6, f'clim {cl["x1"] - cl["x0"]}')]
+                cote_h(c0, c1, -cl["z1"] - 6, f'clim {cote(cl["x1"] - cl["x0"])}')]
 
     return coupe_svg(COUPE_D, "sud", -20, M.L + 20,
                      [k["pieds"], k["z1"], ec["bas"], ec["bas"] + ec["h"], cl["z0"], cl["z1"]], aria, extra=cotes)
