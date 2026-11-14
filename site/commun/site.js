@@ -407,6 +407,19 @@ function brancherScenes() {
   surMontrer.push((etat, section, k) => {
     const el = elementActif(section);
     if (el) controleur(el);
+    // Mesurer est sans objet hors d'un SVG mesurable (rendu, data-mesure="non") : bouton caché, mesure éteinte
+    const bm = $(".b-mesure", section);
+    if (bm && el) {
+      const mesurable = !!$(':scope > svg:not([data-mesure="non"])', el);
+      bm.closest(".groupe").hidden = !mesurable;
+      if (!mesurable && bm.getAttribute("aria-pressed") === "true") {
+        bm.setAttribute("aria-pressed", "false");
+        $(".scene", section).classList.remove("mesure");
+        for (const x of $$(".scene > .element", section)) { const c = controleurs.get(x); if (c && c.mesurer) c.mesurer(false); }
+        const m = $(".bandeau .mes", section);
+        if (m) m.hidden = true;
+      }
+    }
     montrerMeuble(section, etat.k);
     // « Position » : le trait de la coupe ou le point de vue de l'élément affiché (même data-k) passe au premier plan
     for (const x of $$(".mini [data-k]", section)) x.classList.toggle("ici", x.dataset.k === k);
