@@ -80,9 +80,12 @@ Chaque tâche les inclut sans les répéter.
 - **Rendus :** sous `site/cuisine/amenagement/rendus/`, sans préfixe de variante : `iso_so.jpg` (ancien `iso`),
   `iso_so_nuit.jpg` (`iso_nuit`), `iso_no.jpg`, `entree.jpg`, `fenetre.jpg`, `banquette.jpg`, `cellier.jpg`,
   `dos_cellier.jpg`, octet pour octet ceux de `cuisine-v13-3d/` (V13.26, `iso_no` V13.27).
-- **Valeurs figées jusqu'à la tâche 12 :** taille **1,75 m** (règle `data-t="175"` seule visible), portes **fermées**
-  (entrée et cellier, `data-etat="ferme"`), porte du cellier **opaque** sur la coupe C (étiquettes `.trp-lbl`
-  cachées).
+- **Valeurs figées jusqu'à la tâche 12 (= défauts de l'ancienne page, ruling de l'orchestrateur) :** taille
+  **1,75 m** (règle `data-t="175"` seule visible), porte de l'entrée **fermée** (`data-etat="ferme"`), porte du
+  cellier **mi-ouverte** (`data-etat="mi"`, comme `plan.py` l.252), porte du cellier **en transparence** sur la
+  coupe C (comme `plan.py` l.1324 : `.trp` tireté, étiquettes `.trp-lbl` visibles ; la légende reprise dit
+  « dessinée en transparence »). CSS sans sélecteur `.fig`/`.transp`/`html` (filtrés par `css_dessins`) : règle
+  `.trp{…}` directe, `.trp-lbl` jamais cachée.
 - **Style :** aucun point médian (U+00B7) dans ce que génère la page, ses annexes, ses alt et ses changements : une
   virgule à la place (« cellier, 1,44 m² », « L2, LED ») ; aucune police à chasse fixe (`JetBrains Mono`,
   `monospace`) dans `dessins.css` ; pas d'étiquette en capitales, pas de flèche ajoutée, pas de mode sombre
@@ -154,9 +157,10 @@ Chaque tâche les inclut sans les répéter.
   du motif en capitale, l'entrée fait de même — coût : réécrire les motifs.
 - Ruling : la recette `v13` est remplacée par `v13-porte` (`python3 3d/v13/porte.py`) — `plan.py` disparaît, la
   page porte du cellier doit rester régénérable — coût : un nom de recette.
-- Ruling : les options de la tâche 12 gardent pour défaut les valeurs figées (1,75 m, fermées, opaque), et non les
-  défauts de l'ancienne page (cellier mi-ouvert, porte en transparence) — imposé par la commande du contrôleur ;
-  aucune page ne change à la fusion — coût : deux défauts à changer (au client).
+- Ruling (orchestrateur, remplace celui du plan) : valeurs figées et défauts des options = défauts de l'ancienne
+  page (1,75 m, entrée fermée, cellier mi-ouvert, coupe C en transparence) — consignes : « le plus fidèle à
+  l'ancienne page », et la légende reprise de la coupe C dit « dessinée en transparence » — coût : deux défauts à
+  changer.
 
 ## Tableau de contenu : chaque section de l'ancienne page, et la vue qui la reprend
 
@@ -174,7 +178,7 @@ la nouvelle adresse (`site.py`, tâche 11). Une ancre absente ouvre le Plan.
 | 6 | Surtitre « Cuisine, V13.30 » et titre « Plan de la cuisine V13 » | | Barre du haut : pièce, document, pastille de version (socle) | |
 | 7 | Chapô (`p.pitch`) | | Explication : chapô de `tete` (8) | |
 | 8 | Titre du plan : liens « Maquette 3D », « Porte du cellier », « Version imprimable » | `plan` → `plan` | Explication : liens de `tete` vers `maquette-3d.html`, `imprimable.html`, la page porte du cellier (8) | |
-| 9 | Plan : boutons « Portes » (entrée 2 états, cellier 3 états) | | Fermées, figées (5) ; options `porte-entree`, `porte-cellier` de « Personnaliser » (12, si `rapport-options.md`) | Les boutons posés sur le dessin : spec « Personnaliser » générique |
+| 9 | Plan : boutons « Portes » (entrée 2 états, cellier 3 états) | | Entrée fermée, cellier mi-ouvert, figés (5) ; options `porte-entree`, `porte-cellier` de « Personnaliser » (12, si `rapport-options.md`) | Les boutons posés sur le dessin : spec « Personnaliser » générique |
 | 10 | Plan : dessin (dessin 1/7) | | Plan, élément `""`, meubles touchables (`Zone`, ids stables) (5, 6, 9) | |
 | 11 | Plan : légende, 8 439 caractères (légende 1/22) | | Conventions → légende de la fiche du plan ; le reste → cartes « Principe » de l'Explication, chacune reprise dans la fiche de son meuble (7) | |
 | 12 | Coupe A-A : dessin (2/7) | `coupe-a-a-mur-nord` → `coupes?k=A` | Coupes, `A` (5, 9) | |
@@ -190,7 +194,7 @@ la nouvelle adresse (`site.py`, tâche 11). Une ancre absente ouvre le Plan.
 | 22 | Coupe B-B : légende, 573 c. (5/22) | | Texte alternatif de la coupe B (9) | « pas de descriptions d'images à l'écran » |
 | 23 | Coupe C-C : dessin (5/7) | `coupe-c-c-mur-est` → `coupes?k=C` | Coupes, `C` (5, 9) | |
 | 24 | Coupe C-C : légende, 853 c. (6/22) | | Texte alternatif de la coupe C (9) | « pas de descriptions d'images à l'écran » |
-| 25 | Coupe C-C : bouton « en transparence » | | Opaque, figée (5) ; option `transparence` (12, si `rapport-options.md`) | Le bouton sur le dessin : « Personnaliser » générique |
+| 25 | Coupe C-C : bouton « en transparence » | | En transparence, figée (5) ; option `transparence` (12, si `rapport-options.md`) | Le bouton sur le dessin : « Personnaliser » générique |
 | 26 | Porte du cellier, Mantion Tango : titre et lien « Plans détaillés » | `porte-du-cellier-mantion-tango` → `explication` | Explication, « Porte du cellier, Mantion Tango », lien vers la page porte du cellier (8) | |
 | 27 | … fiche Tango, 6 lignes (tableau 2/9) | | Même partie (8) | |
 | 28 | … texte (principe, ouverture, pourquoi, pose) et sources | | Même partie (8) | |
@@ -526,30 +530,32 @@ git commit -m "Cuisine : chaîne de rendu FreeCAD puis Blender dans pieces/cuisi
     `font-variant-numeric:tabular-nums` à la place pour `.dimt`, `.trit`, `.diagt`), `body:not(.explications) .cap`,
     `.kicker`, `.toc*`, `.vbar`, `.pbar`, `.impr`, `.tog*`, `.mono`. Valeurs figées : la règle
     `html[data-taille…] .regle[data-t…]` devient `.regle[data-t="175"]{display:inline}` ; `.fig:not(.transp)
-    .trp-lbl{display:none}` devient `.trp-lbl{display:none}` ; `.transp .trp{…}` est retirée (la tâche 12 la reprend).
+    .trp-lbl{display:none}` est retirée (étiquettes visibles) ; `.transp .trp{…}` devient `.trp{…}` (transparence
+    par défaut ; la tâche 12 la rend réglable). Portes : `.vt[data-etat…]` gardées telles quelles.
 - Changements imposés par rapport à l'ancien dessin, et seulement ceux-là :
   1. point médian → virgule (« cellier, 1,44 m² », « 3,61 m³ brut, ≈ 3,4 net », « tableau noir, aimants »,
      « L2, LED ») ;
-  2. `data-etat="ferme"` sur chaque groupe `.vt` (portes fermées) ;
+  2. `data-etat` figé : `ferme` pour `entree`, `mi` pour `cellier` (états par défaut de l'ancienne page) ;
   3. aria-label : celui que passe l'appelant ;
   4. zones du plan insérées.
 
 - [ ] **Step 1 : tests :**
   - `test_dessins_identiques_a_la_reference` (paramétré sur les sept) : `_normaliser(dessin)` égale
     `_normaliser(référence)`, où `_normaliser` remplace « · » par « , » selon la liste ci-dessus, retire l'attribut
-    `aria-label`, `role`, et les `<rect class="zone"…/>`, et met tout `data-etat` à `ferme` (modèle :
-    `tests/test_entree.py::_sans_ajouts`).
+    `aria-label`, `role`, et les `<rect class="zone"…/>` (les `data-etat` de référence sont déjà `ferme` et `mi` :
+    rien à normaliser) (modèle : `tests/test_entree.py::_sans_ajouts`).
   - `test_sans_point_median` : `"·"` absent des sept dessins et de `REGLE_LEGENDE`.
-  - `test_portes_fermees` : chaque `data-etat=` du plan vaut `"ferme"` ; il y en a au moins deux (`entree`,
-    `cellier`).
+  - `test_portes_par_defaut` : dans le plan, le groupe `data-vt="entree"` a `data-etat="ferme"`, le groupe
+    `data-vt="cellier"` a `data-etat="mi"`.
   - `test_regle_175_seule_visible` : `coupe_a` contient `data-t="175"` et `data-t="180"` ; `CSS_DESSINS` contient
     `.regle[data-t="175"]{display:inline}` et `.regle{display:none}`, aucune règle visant `html`.
-  - `test_opaque` : `CSS_DESSINS` contient `.trp-lbl{display:none}`, pas `.transp`.
+  - `test_transparence` : `CSS_DESSINS` contient une règle `.trp{…}` avec le tireté de l'ancienne `.transp .trp`
+    (`fill:none`, `stroke-dasharray:4 2`), aucune occurrence de `.transp`, et ne cache pas `.trp-lbl`.
   - `test_css_sans_chasse_fixe_ni_sombre` : ni `Mono`, ni `monospace`, ni `prefers-color-scheme` dans `CSS_DESSINS`.
 - [ ] **Step 2 : constater l'échec.**
 - [ ] **Step 3 : implémenter.**
 - [ ] **Step 4 : vérifier** : `… pytest -q tests/test_cuisine_dessins.py`, suite complète.
-- [ ] **Step 5 : commit** — `git commit -m "Cuisine : les sept dessins de l'aménagement, sans point médian, portes fermées, taille 1,75 m, porte opaque"`
+- [ ] **Step 5 : commit** — `git commit -m "Cuisine : les sept dessins de l'aménagement, sans point médian, états par défaut de l'ancienne page"`
 
 ### Task 6 : Meubles touchables du plan
 
@@ -867,7 +873,7 @@ git commit -m "Cuisine, aménagement : bascule (document dans site.py, trois anc
 
 - [ ] **Step 0 : condition.** `test -f /Users/nvi/code/work/personal/plan/.superpowers/sdd/2026-11-13-refonte-pages/socle/rapport-options.md`.
   Absent : ne rien fusionner, ne rien changer ; écrire au rapport `Ruling : options non faites, rapport-options.md
-  absent — valeurs figées (1,75 m, portes fermées, opaque) — coût : une tâche après la livraison du lot S4` ; fin.
+  absent — valeurs figées (1,75 m, entrée fermée, cellier mi-ouvert, coupe C en transparence) — coût : une tâche après la livraison du lot S4` ; fin.
 - [ ] **Step 1 : `git merge refonte`** (conflits : garder les deux côtés dans `site.py`, `justfile`, `commun/` ;
   `commun/modele.py` : `Annexe` et l'apport du socle) ; suite de tests verte avant d'aller plus loin. Lire
   `rapport-options.md` en entier : il donne l'API exacte (`Option(type="choix", …)`, `Valeur`, `si(...)`,
@@ -884,8 +890,8 @@ git commit -m "Cuisine, aménagement : bascule (document dans site.py, trois anc
 |---|---|---|---|---|---|
 | `taille` | Taille de la personne qui cuisine | `175` : 1,75 m ; `180` : 1,80 m ; `masquee` : masquée | `175` | « Visible sur les coupes A et C. » | `<g class="regle" data-t="175" data-si="taille:175">`, idem 180 ; masquée : aucune règle |
 | `porte-entree` | Porte d'entrée | `fermee` : fermée ; `ouverte` : ouverte | `fermee` | « Visible sur le plan. » | un `<g data-si>` par état du groupe `.vt[data-vt="entree"]` |
-| `porte-cellier` | Porte du cellier | `fermee` ; `mi-ouverte` ; `ouverte` | `fermee` | « Visible sur le plan. » | un `<g data-si>` par état du groupe `.vt[data-vt="cellier"]` |
-| `transparence` | Porte du cellier sur la coupe C | `non` : opaque ; `oui` : en transparence | `non` | « Visible sur la coupe C. » | porte dessinée deux fois (opaque `transparence:non`, tiretée `transparence:oui`), `.trp-lbl` marquées `transparence:oui` |
+| `porte-cellier` | Porte du cellier | `fermee` ; `mi-ouverte` ; `ouverte` | `mi-ouverte` | « Visible sur le plan. » | un `<g data-si>` par état du groupe `.vt[data-vt="cellier"]` |
+| `transparence` | Porte du cellier sur la coupe C | `non` : opaque ; `oui` : en transparence | `oui` | « Visible sur la coupe C. » | porte dessinée deux fois (opaque `transparence:non`, tiretée `transparence:oui`), `.trp-lbl` marquées `transparence:oui` |
 
 Aucune option n'a `filtre` ; les rendus ne changent pas (`rendue=False` si le socle l'exige pour les portes : les
 rendus montrent la porte d'entrée fermée et la porte du cellier selon la caméra).
@@ -893,7 +899,7 @@ rendus montrent la porte d'entrée fermée et la porte du cellier selon la camé
 - [ ] **Step 2 : tests** (`tests/test_cuisine_options.py`) : `test_declarations` (quatre options, défauts ci-dessus,
   ids et codes conformes `^[a-z][a-z0-9-]*$`) ; `test_jetons_connus` (`commun.modele.verifier` du socle passe) ;
   `test_defaut_inchange` (avec l'état par défaut, le dessin visible égale celui de la tâche 5) ; `test_css_fige_retire`
-  (`.regle[data-t="175"]{display:inline}` et `.trp-lbl{display:none}` retirés de `CSS_DESSINS`, la visibilité vient des
+  (`.regle[data-t="175"]{display:inline}` et la règle `.trp{…}` directe retirées de `CSS_DESSINS`, la visibilité vient des
   règles générées) ; `test_masquee` : la largeur de la coupe « masquée » — **hors modèle du socle** (changement de
   viewBox) : la coupe garde sa viewBox élargie, la règle est seulement cachée ; ruling à écrire.
 - [ ] **Step 3 : implémenter**, aucun JS ni CSS propre à la page.
@@ -912,6 +918,6 @@ rendus montrent la porte d'entrée fermée et la porte du cellier selon la camé
 - Porte de l'entrée : 228 → 306 dans la cuisine (8 → 86 dans le couloir) contre 8 → 87 dans `pieces/entree/piece.py`.
 - `JOUE_C2` vaut 115 ; son commentaire du modèle dit « y 110 ».
 - Accueil : l'étiquette de la cuisine passe de « 325 × 252 » à sa surface calculée.
-- Défauts de l'ancienne page changés : porte du cellier mi-ouverte → fermée, coupe C en transparence → opaque.
+- Défauts de l'ancienne page gardés : porte du cellier mi-ouverte, coupe C en transparence.
 - Annexes : polices d'origine (Archivo, JetBrains Mono) gardées ; points médians remplacés.
 - Points médians remplacés partout ailleurs (étiquettes des dessins, alt, un changement).
