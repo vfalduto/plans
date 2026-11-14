@@ -152,6 +152,10 @@ entree-apercu *vues:
     images=$(ls cache/apercu/entree-*.png | grep -v -- '-masque.png')
     open $images
 
+# Salon, enfilade : reconstruit sa page (site/salon/enfilade/) depuis pieces/salon/enfilade/
+salon-enfilade:
+    python3 site.py salon/enfilade
+
 # Salon V4 : régénère salon-v4.html et les pages des meubles (étagères, enfilade) depuis 3d/salon/modele.py
 salon:
     python3 3d/salon/plan.py

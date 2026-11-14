@@ -16,6 +16,7 @@ from commun.modele import Passerelle, Piece, Site
 from commun.redirections import Redirection
 from pieces.chambre.amenagement import document as chambre_amenagement
 from pieces.entree.amenagement import document as entree_amenagement
+from pieces.salon.enfilade import document as salon_enfilade
 
 RACINE = Path(__file__).resolve().parent
 
@@ -34,7 +35,7 @@ SITE = Site((
     Piece("salon", "Salon", (
         Passerelle("salon", "amenagement", "Aménagement", "amenagement", "salon-v4.html"),
         Passerelle("salon", "etageres", "Étagères", "construction", "salon-etageres.html"),
-        Passerelle("salon", "enfilade", "Enfilade", "construction", "salon-enfilade.html"),
+        salon_enfilade.DOCUMENT,
     )),
     Piece("chambre", "Chambre", (
         chambre_amenagement.DOCUMENT,
@@ -48,6 +49,11 @@ ANCRES_ENTREE = {"plan": "plan", "vues-3d": "iso", "principe": "explication", "a
                  "materiaux": "explication", "points-a-verifier": "explication"}
 COUPES = ((r"^coupe-([a-d])-", "coupes?k={1}"),)
 HISTORIQUE_ENTREE = {"changements": "entree/amenagement/historique.html"}
+# anciennes ancres de salon-enfilade.html, posées en dur par son générateur
+ANCRES_ENFILADE = {"iso": "plans?k=iso", "meuble": "plans?k=elevation", "rendus": "explication",
+                   "construction": "explication", "materiaux": "explication", "comparaison": "explication",
+                   "metod": "explication", "debit": "decoupe", "achats": "achats", "montage": "montage",
+                   "valider": "explication"}
 # la page de la chambre ne posait d'identifiant que sur « Points à vérifier » (verifier) ; les trois autres sont les
 # slugs de ses titres, au cas où un lien les cite
 ANCRES_CHAMBRE = {"verifier": "explication", "plan-a-l-echelle": "plan", "elevations": "coupes",
@@ -58,6 +64,8 @@ REDIRECTIONS = (
     # la page de Victor avait en plus « Différences avec la V4.3 », passée dans son Explication
     Redirection("entree-amenagement-victor.html", "entree/amenagement/victor.html",
                 {**ANCRES_ENTREE, "differences-avec-la-v4-3": "explication"}, COUPES, HISTORIQUE_ENTREE),
+    Redirection("salon-enfilade.html", "salon/enfilade/", ANCRES_ENFILADE, (),
+                {"changements": "salon/enfilade/historique.html"}),
     Redirection("chambre-amenagement.html", "chambre/amenagement/", ANCRES_CHAMBRE, (),
                 {"changements": "chambre/amenagement/historique.html"}),
 )
