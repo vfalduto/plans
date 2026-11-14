@@ -84,7 +84,9 @@ def jeton(option: Option, code: str) -> str:
 
 
 def si(*jetons: str) -> str:
-    """L'attribut ` data-si="…"` (espace en tête) qui réunit des jetons, chacun requis ; rien sans jeton."""
+    """L'attribut ` data-si="…"` (espace en tête) qui réunit des jetons, chacun requis ; les chaînes vides sont
+    ignorées ; rien sans jeton."""
+    jetons = [j for j in jetons if j]
     return f' data-si="{_e(" ".join(jetons))}"' if jetons else ""
 
 
@@ -206,11 +208,22 @@ def rendus_choix(dossier: Path, variante: str, cle: str, option: Option) -> dict
     return {v.code: rendu(dossier, variante, cle, "" if v.code == option.defaut else v.code) for v in option.valeurs}
 
 
+def _exiger_choix(option: Option) -> None:
+    """`ValueError` qui nomme l'option si elle n'est pas « choix »."""
+    if option.type != "choix":
+        raise ValueError(f"option « {option.id} » : une image par valeur ne vaut que pour une option « choix »,"
+                         f" pas « {option.type} »")
+
+
 def figure_choix(rendus: Mapping[str, Rendu], option: Option, alt: str, filtre: str = "") -> str:
     """Un cadre qui porte une image par valeur de `option` (`data-si`), et son calque comme `figure_rendu` si `filtre`
     et que le masque de l'image montrée existe ; une valeur sans image reprend celle d'origine, suivie après le cadre
     d'une note « <valeur> : pas encore rendu, image en <origine> ». Rien si le rendu d'origine n'existe pas. `alt` et
-    les noms des valeurs sont du texte, échappés."""
+    les noms des valeurs sont du texte, échappés. `ValueError` pour une option qui n'est pas « choix », ou un
+    `rendus` sans la valeur d'origine."""
+    _exiger_choix(option)
+    if option.defaut not in rendus:
+        raise ValueError(f"option « {option.id} » : rendus sans la valeur d'origine « {option.defaut} »")
     origine = rendus[option.defaut]
     if not origine.existe:
         return ""
@@ -244,6 +257,8 @@ def vue_iso(dossier: Path, variante: str, lieu: Lieu, points: Mapping[str, tuple
     """Un élément par coin de `COINS`, inactif s'il n'est pas rendu ; aucun coin rendu : vue vide (onglet grisé).
     Avec `option` (« choix »), la scène d'un coin porte une image par valeur (`figure_choix`) ; le coin est actif si
     son rendu d'origine existe."""
+    if option is not None:
+        _exiger_choix(option)
     alts = alts or {}
     elements = []
     for k in COINS:
@@ -277,6 +292,8 @@ def vue_camera(dossier: Path, variante: str, lieu: Lieu, cameras: Sequence[Camer
     """Un élément par caméra, dans l'ordre donné ; aucune caméra, ou aucune rendue : vue vide (onglet grisé).
     Avec `option` (« choix »), la scène d'une caméra porte une image par valeur (`figure_choix`) ; la caméra est
     active si son rendu d'origine existe."""
+    if option is not None:
+        _exiger_choix(option)
     alts = alts or {}
     elements = []
     for c in cameras:

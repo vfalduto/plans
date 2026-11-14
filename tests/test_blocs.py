@@ -449,3 +449,37 @@ def test_vue_camera_option(tmp_path):
     # aucune caméra rendue à l'origine : vue vide
     (tmp_path / "a-banc.jpg").unlink()
     assert vue_camera(tmp_path, "a", LIEU, [banc, porte], option=BOIS).elements == []
+
+
+def test_figure_choix_sans_origine(tmp_path):
+    (tmp_path / "a-iso_se-noyer.jpg").write_bytes(b"")
+    rendus = rendus_choix(tmp_path, "a", "iso_se", BOIS)
+    del rendus["chene"]
+    with pytest.raises(ValueError, match="« bois ».*« chene »"):
+        figure_choix(rendus, BOIS, "Vue")
+
+
+def test_option_qui_n_est_pas_un_choix_refusee(tmp_path):
+    teinte = Option("teinte", "Teinte", ("murs",), "nuancier", "a", (Valeur("a", "A", "#112233"),), "Partout.")
+    rendus = {"a": rendu(tmp_path, "a", "iso_se")}
+    banc = Camera("banc", "Banc", (10, 20, 112), (40, 300, 112))
+    for present in (False, True):
+        if present:
+            (tmp_path / "a-iso_se.jpg").write_bytes(b"")
+            (tmp_path / "a-banc.jpg").write_bytes(b"")
+        with pytest.raises(ValueError, match="« teinte »"):
+            figure_choix(rendus, teinte, "Vue")
+        with pytest.raises(ValueError, match="« teinte »"):
+            vue_iso(tmp_path, "a", LIEU, points_iso((0, 0, 100, 200)), option=teinte)
+        with pytest.raises(ValueError, match="« teinte »"):
+            vue_camera(tmp_path, "a", LIEU, [banc], option=teinte)
+    # dès l'entrée, même sans caméra
+    with pytest.raises(ValueError, match="« teinte »"):
+        vue_camera(tmp_path, "a", LIEU, [], option=teinte)
+
+
+def test_si_chaines_vides():
+    assert si("") == ""
+    assert si("", "") == ""
+    assert si("a:x", "") == ' data-si="a:x"'
+    assert si("", "a:x", "b:y") == ' data-si="a:x b:y"'
