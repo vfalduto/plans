@@ -10,7 +10,8 @@ est `<variante>-<cle>.jpg` (ou `<cle>.jpg` pour un document sans variante, d'id 
 valeur d'option « choix » autre que celle d'origine, son masque `<…>-masque.png`, et la page les lit sous `rendus/`.
 
 Selon une option « choix » : un élément qui ne vaut que pour une valeur porte `data-si="<option>:<code>"` (`jeton`,
-`si`) ; une zone le porte par son champ `si`, une scène de l'iso par `vue_iso(…, option=…)`.
+`si`) ; une zone le porte par son champ `si`, une scène de l'iso ou d'une caméra par `vue_iso(…, option=…)`,
+`vue_camera(…, option=…)`.
 """
 import re
 from dataclasses import dataclass
@@ -271,13 +272,20 @@ def _optique(c):
 
 
 def vue_camera(dossier: Path, variante: str, lieu: Lieu, cameras: Sequence[Camera],
-               alts: Mapping[str, str] | None = None, filtre: str = "", vide: str = "Pas encore rendu") -> Vue:
-    """Un élément par caméra, dans l'ordre donné ; aucune caméra, ou aucune rendue : vue vide (onglet grisé)."""
+               alts: Mapping[str, str] | None = None, filtre: str = "", vide: str = "Pas encore rendu",
+               option: Option | None = None) -> Vue:
+    """Un élément par caméra, dans l'ordre donné ; aucune caméra, ou aucune rendue : vue vide (onglet grisé).
+    Avec `option` (« choix »), la scène d'une caméra porte une image par valeur (`figure_choix`) ; la caméra est
+    active si son rendu d'origine existe."""
     alts = alts or {}
     elements = []
     for c in cameras:
         r = rendu(dossier, variante, c.id)
-        scene = figure_rendu(r, alts.get(c.id, c.nom), filtre)
+        alt = alts.get(c.id, c.nom)
+        if option is None:
+            scene = figure_rendu(r, alt, filtre)
+        else:
+            scene = figure_choix(rendus_choix(dossier, variante, c.id, option), option, alt, filtre)
         elements.append(Element(k=c.id, nom=c.nom, titre=c.nom, scene=scene, fiche=_optique(c), actif=r.existe))
     if not any(e.actif for e in elements):
         return Vue("camera", [], vide=vide)

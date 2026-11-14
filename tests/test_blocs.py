@@ -428,3 +428,24 @@ def test_vue_iso_option(tmp_path):
     sans = vue_iso(tmp_path, "a", LIEU, points)
     assert sans.elements[3].scene == figure_rendu(rendu(tmp_path, "a", "iso_se"), "Vue isométrique, coin SE")
     assert "data-si" not in sans.elements[3].scene
+
+
+def test_vue_camera_option(tmp_path):
+    for nom in ("a-banc.jpg", "a-banc-noyer.jpg", "a-banc-masque.png", "a-porte-noyer.jpg"):
+        (tmp_path / nom).write_bytes(b"")
+    banc = Camera("banc", "Assis sur le banc", (10, 20, 112), (40, 300, 112), focale=17)
+    porte = Camera("porte", "Devant la porte", (50, 150, 160), (50, 0, 160), focale=17)
+    vue = vue_camera(tmp_path, "a", LIEU, [banc, porte], alts={"banc": "Le banc"}, filtre="teinte", option=BOIS)
+    scene = vue.elements[0].scene
+    assert scene == figure_choix(rendus_choix(tmp_path, "a", "banc", BOIS), BOIS, "Le banc", "teinte")
+    assert [i["data-si"] for i in balises(scene, "img") if "class" not in i] == ["bois:chene", "bois:noyer", "bois:frene"]
+    # une image de valeur sans image d'origine n'active pas la caméra
+    assert [e.actif for e in vue.elements] == [True, False] and vue.elements[1].scene == ""
+    assert vue.elements[0].fiche == '<p class="cotes">objectif 17 mm</p>'
+    # sans option : la sortie d'avant, à l'octet
+    sans = vue_camera(tmp_path, "a", LIEU, [banc, porte], alts={"banc": "Le banc"}, filtre="teinte")
+    assert sans.elements[0].scene == figure_rendu(rendu(tmp_path, "a", "banc"), "Le banc", "teinte")
+    assert "data-si" not in sans.elements[0].scene
+    # aucune caméra rendue à l'origine : vue vide
+    (tmp_path / "a-banc.jpg").unlink()
+    assert vue_camera(tmp_path, "a", LIEU, [banc, porte], option=BOIS).elements == []
