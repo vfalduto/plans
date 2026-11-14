@@ -6,7 +6,8 @@
    - Variante : le choix de la variante garde la vue et le repère.
    - Comparaison sur Plans (élévation face à Rangs, iso face à Escalier qui n'en a pas) ; pas de Comparer ailleurs.
    - Onglet grisé de Rangs ; Mesurer caché et éteint sur la vue iso (SVG data-mesure="non").
-   - Largeur : à 390 px, rien ne déborde dans aucune vue ; à 1100 et 1440 px, ni la barre ni la fiche.
+   - Largeur : chaque repère attendu de Plans, un à un ; à 390 px, rien ne déborde dans aucune vue et la quantité
+     reste en tête de chaque carte du débit ; à 1100 et 1440 px, ni la barre ni la fiche.
    - Sans JavaScript (1440 et 390 px) : les cinq vues l'une sous l'autre ; aucune erreur de console ni 404.
    Lancé par tests/navigateur/lancer.sh, qui ouvre la racine du site d'essai avant d'appeler ce script. */
 async page => {
@@ -16,6 +17,8 @@ async page => {
   const VUES = ["plans", "decoupe", "montage", "achats", "explication"];
   const NOMS = ["Plans", "Découpe", "Montage", "Achats", "Explication"];
   const LARGEURS = [[1440, 900], [1100, 800], [390, 844]];
+  // repères de Plans attendus par variante (segments) ; les autres vues n'en ont pas
+  const REPERES = {actuelle: ["elevation", "iso"], rangs: ["elevation", "iso"], escalier: ["elevation"]};
   const echecs = [], erreurs = [];
   let lieu = "";   // la partie en cours, pour situer une erreur de console
   const verifier = (vrai, message) => { if (!vrai) echecs.push(message); };
@@ -193,6 +196,7 @@ async page => {
           const t = `4 pas de Comparer, ${L}, #${vue}${suite}`;
           await ouvrir(page, `${DOC}#${vue}${suite}`);
           await vueVisible(page, vue, `${t} : la section ne s'affiche pas`);
+          await page.waitForLoadState("networkidle");   // étiquettes et clones viendraient après les chargements
           const e = await etat(page);
           verifier(!e.comparer && !e.avec && e.toutesEtiquettes === 0 && e.clones === 0, `${t} : ${JSON.stringify(e)}`);
         }
@@ -256,8 +260,16 @@ async page => {
         for (const vue of VUES) {
           await ouvrir(page, `${adresse}#${vue}`);
           await vueVisible(page, vue, `7 largeur, ${L}, ${variante}, ${vue} : la section ne s'affiche pas`);
-          const ks = await page.evaluate(v => [...document.querySelectorAll(
-            `section[data-vue="${v}"] .segments button[data-k]:not(:disabled)`)].map(b => b.dataset.k), vue);
+          // repères des segments ; un seul dessin n'a pas de segments : celui de son élément
+          const ks = await page.evaluate(v => {
+            const s = `section[data-vue="${v}"]`;
+            const segments = [...document.querySelectorAll(`${s} .segments button[data-k]:not(:disabled)`)];
+            const elements = [...document.querySelectorAll(`${s} .scene > .element:not(.b)`)];
+            return (segments.length ? segments : elements).map(b => b.dataset.k).filter(k => k);
+          }, vue);
+          const attendus = vue === "plans" ? REPERES[variante] : [];
+          verifier(egal(ks, attendus), `7 largeur, ${L}, ${variante}, ${vue} : repères ${JSON.stringify(ks)}, `
+                   + `attendu ${JSON.stringify(attendus)}`);
           for (const k of ks.length ? ks : [""]) {
             const t = `7 largeur, ${L}, ${variante}, ${vue}${k ? " " + k : ""}`;
             if (k) {
