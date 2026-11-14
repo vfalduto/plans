@@ -275,6 +275,17 @@ def test_css_dessins_regle_repetee():
     assert sortie.endswith(".d-entree .w{fill:teal}")      # une règle différente, même sélecteur, reste à sa place
 
 
+
+def test_css_dessins_classe_au_nom_d_element():
+    # seul un sélecteur d'élément est refusé : une classe nommée comme un élément garde sa règle
+    css = (".table{fill:teal}.table-basse{fill:olive}.porte.h1{stroke:red}rect.nav{fill:navy}"
+           "table .x{fill:pink}html[data-options] .x{fill:pink}.x h2{fill:pink}.x:not(button){fill:pink}")
+    dessins = ['<rect class="table table-basse porte h1 nav x"/>']
+    sortie = css_dessins(css, dessins, ".d-salon").split("\n")
+    assert sortie == [".d-salon .table{fill:teal}", ".d-salon .table-basse{fill:olive}",
+                      ".d-salon .porte.h1{stroke:red}", ".d-salon rect.nav{fill:navy}"]
+
+
 LAMPE = Option("lampe", "Lampe", ("plafond",), "choix", "eteinte",
                (Valeur("allumee", "Allumée", rendue=False), Valeur("eteinte", "Éteinte")), "Visible sur le plan.")
 AVEC_LAMPE = dataclasses.replace(DOC, options=DOC.options + (LAMPE,))
