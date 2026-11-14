@@ -28,6 +28,7 @@
 .d-sdb .icarrl{fill:none;stroke:var(--water);stroke-width:.5;stroke-dasharray:2 1.2}
 .d-sdb .icarrt{font-size:7px;font-weight:600;fill:var(--water)}
 .d-sdb .ipc{fill:hsl(40 15% calc(var(--t) * 100% - 4%));stroke:var(--ink);stroke-width:.32;stroke-linejoin:round}
+.d-sdb .inew{fill:hsl(32 80% calc(var(--t) * 72% + 8%));stroke:var(--ink);stroke-width:.4;stroke-linejoin:round}
 .d-sdb .isac{fill:hsl(205 60% calc(var(--t) * 40% + 55%));fill-opacity:.8;stroke:var(--water);stroke-width:.35;stroke-dasharray:1.2 .8}
 .d-sdb .ifen{fill:var(--ink);fill-opacity:.62;stroke:var(--ink);stroke-width:.3}
 .d-sdb .idec{fill:#fbfaf5;stroke:var(--ink);stroke-width:.3}

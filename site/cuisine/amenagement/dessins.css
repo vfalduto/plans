@@ -1,0 +1,113 @@
+.d-cuisine .z1{fill:#5B9E6A;opacity:.85}
+.d-cuisine .z2{fill:#A9CF8F;opacity:.85}
+.d-cuisine .z3{fill:#E8C26A;opacity:.85}
+.d-cuisine .z4{fill:#D9826B;opacity:.85}
+.d-cuisine .rep{stroke:#C8412C;stroke-width:.5;stroke-dasharray:3 2;opacity:.7}
+.d-cuisine .rept{fill:#C8412C}
+.d-cuisine .lblz{font-size:3.8px;fill:var(--ink)}
+.d-cuisine .hsa{fill:#C98A1E;opacity:.45}
+.d-cuisine .hsl{fill:#2F7FB5;opacity:.4}
+.d-cuisine .hpb{opacity:.92}
+.d-cuisine text.hph{fill:#C98A1E;font-weight:600;paint-order:stroke;stroke:var(--panel);stroke-width:4px}
+.d-cuisine .hpg{stroke:var(--line);stroke-width:.6}
+.d-cuisine .hpt{font-size:12px;fill:var(--muted)}
+.d-cuisine .hpt.on{fill:#fff;font-weight:600}
+.d-cuisine .hpt.rept{fill:#C8412C}
+.d-cuisine .hpn{font-size:15px;font-weight:700;fill:var(--ink)}
+.d-cuisine .hpp{stroke:#C98A1E;stroke-width:2}
+.d-cuisine .hpc{stroke:var(--ink);stroke-width:1;stroke-dasharray:5 4;opacity:.7}
+.d-cuisine .hpc.act{stroke-dasharray:none;stroke-width:2;opacity:1}
+.d-cuisine .hpc.rec{stroke:#2F7FB5;opacity:1}
+.d-cuisine text.hpc{stroke:none;fill:var(--ink);font-weight:600}
+.d-cuisine text.hpc.rec{fill:#2F7FB5}
+.d-cuisine .lblz.rept{fill:#C8412C}
+.d-cuisine .leg .sw{display:inline-block;width:12px;height:9px;border-radius:2px;margin:0 3px 0 8px;vertical-align:middle}
+.d-cuisine .w{fill:var(--ink)}
+.d-cuisine .bgwall{fill:var(--line);fill-opacity:.35}
+.d-cuisine .wallv{fill:#D5DADD;stroke:var(--muted);stroke-width:.5}
+.d-cuisine .floorbg{fill:var(--wood);fill-opacity:.13}
+.d-cuisine .wc{fill:var(--line);fill-opacity:.55}
+.d-cuisine .lame{fill:none;stroke:var(--wood);stroke-width:.5;stroke-opacity:.5}
+.d-cuisine .ciment{fill:var(--cement,#C9CBCA)}
+.d-cuisine .depose{fill:none;stroke:var(--muted);stroke-width:.8;stroke-dasharray:4 3}
+.d-cuisine .win{fill:var(--glass);stroke:var(--ink);stroke-width:.7}
+.d-cuisine .glass{stroke:var(--water);stroke-width:1.4}
+.d-cuisine .tech{fill:var(--tech);stroke:var(--ink);stroke-width:.7;stroke-dasharray:3 2}
+.d-cuisine .cab{fill:var(--cab);stroke:var(--ink);stroke-width:.7}
+.d-cuisine .fac{fill:var(--tall);stroke:var(--ink);stroke-width:.7}
+.d-cuisine .plinth{fill:#EFE9DC;stroke:var(--ink);stroke-width:.6}
+.d-cuisine .ecs{fill:var(--panel);stroke:var(--water);stroke-width:1.2}
+.d-cuisine .leaf{fill:var(--wood);stroke:var(--ink);stroke-width:.6}
+.d-cuisine .dark{fill:var(--ink)}
+.d-cuisine .pt{fill:var(--panel);fill-opacity:.55;stroke:var(--ink);stroke-width:1.1}
+.d-cuisine .ptbase{fill:var(--panel);stroke:none}
+.d-cuisine .peint{fill:#4B2E3B;fill-opacity:.35;stroke:none}
+.d-cuisine .egout{fill:#D9D9D6;stroke:var(--ink);stroke-width:.5;stroke-dasharray:1 1.5}
+.d-cuisine .vitro{fill:var(--ink);stroke:var(--ink);stroke-width:.6}
+.d-cuisine .inox{fill:var(--tech);stroke:var(--ink);stroke-width:.6}
+.d-cuisine .cuve{fill:var(--panel);stroke:var(--ink);stroke-width:.7}
+.d-cuisine .onDark{fill:var(--paper)}
+.d-cuisine .tall{fill:var(--tall);stroke:var(--ink);stroke-width:.8}
+.d-cuisine .neuf{fill:var(--wood);stroke:var(--ink);stroke-width:.6}
+.d-cuisine .pin{fill:none;stroke:var(--water);stroke-width:1.6}
+.d-cuisine .pout{fill:none;stroke:var(--water);stroke-width:1.6;stroke-dasharray:5 3}
+.d-cuisine .chute{fill:var(--panel);stroke:var(--water);stroke-width:1.6}
+.d-cuisine .nourrice{fill:var(--water)}
+.d-cuisine .tri{fill:var(--tri);fill-opacity:.07;stroke:var(--tri);stroke-width:1.4}
+.d-cuisine .triv{fill:var(--tri)}
+.d-cuisine .tribg{fill:var(--panel);stroke:var(--tri);stroke-width:.6}
+.d-cuisine .trit{fill:var(--tri);font-variant-numeric:tabular-nums;font-size:7px;font-weight:600;text-anchor:middle}
+.d-cuisine .tbl{fill:var(--wood);fill-opacity:.5;stroke:var(--ink);stroke-width:.9}
+.d-cuisine .stool{fill:var(--wood);fill-opacity:.28;stroke:var(--ink);stroke-width:.7}
+.d-cuisine .swingz{fill:var(--tri);fill-opacity:.05;stroke:var(--muted);stroke-width:.7;stroke-dasharray:3 2}
+.d-cuisine .swing{fill:none;stroke:var(--muted);stroke-width:.7;stroke-dasharray:2 2}
+.d-cuisine .doorleaf{stroke:var(--ink);stroke-width:2}
+.d-cuisine .ardoise{fill:#2B3230;stroke:var(--ink);stroke-width:.6}
+.d-cuisine .aimant{fill:#A7AEB2;stroke:var(--ink);stroke-width:.6}
+.d-cuisine .lampe{fill:#F2C94C;fill-opacity:.35;stroke:#B8860B;stroke-width:.7;stroke-dasharray:3 2}
+.d-cuisine .lblc{font-size:3.6px;font-style:italic;fill:var(--ink)}
+.d-cuisine .plante{fill:#6E9B5A;fill-opacity:.8;stroke:#3F6B31;stroke-width:.6;stroke-dasharray:3 2}
+.d-cuisine .pot{fill:#C2703D;stroke:var(--ink);stroke-width:.5}
+.d-cuisine .aspi{fill:#8A97A3;stroke:var(--ink);stroke-width:.6}
+.d-cuisine .cafe{fill:#1C1E21;fill-opacity:.35;stroke:var(--ink);stroke-width:.5}
+.d-cuisine .led{fill:#F2C94C;stroke:#B8860B;stroke-width:.4}
+.d-cuisine .poig{stroke:#8E8E8B;stroke-width:1.4;stroke-linecap:round}
+.d-cuisine .poig.bois{stroke:#8A5A2B;stroke-width:2.2;stroke-linecap:butt}
+.d-cuisine .balai{fill:#C9A46A;stroke:var(--ink);stroke-width:.4}
+.d-cuisine .pliee{fill:none;stroke:var(--ink);stroke-width:2.5;stroke-linejoin:round}
+.d-cuisine .trp{fill:none;stroke:var(--ink);stroke-width:.7;stroke-dasharray:4 2}
+.d-cuisine .shelf{fill:var(--wood);fill-opacity:.3;stroke:var(--wood);stroke-width:.6}
+.d-cuisine .shelfc{fill:var(--wood);stroke:var(--ink);stroke-width:.6}
+.d-cuisine .upper{fill:none;stroke:var(--ink);stroke-width:.8;stroke-dasharray:3 2}
+.d-cuisine .dim{stroke:var(--muted);stroke-width:.6;fill:none}
+.d-cuisine .dimt{fill:var(--muted);font-variant-numeric:tabular-nums;font-size:8px}
+.d-cuisine .lbl{font-size:7.5px}
+.d-cuisine .lbls{font-size:6.5px}
+.d-cuisine .lblx{font-size:5px}
+.d-cuisine .lblb{font-size:9px;font-weight:700}
+.d-cuisine .muted{fill:var(--muted)}
+.d-cuisine .sec{stroke:var(--tri);stroke-opacity:.3;stroke-width:.9;stroke-dasharray:10 3 2 3;fill:none}
+.d-cuisine .secm{fill:var(--tri);fill-opacity:.45}
+.d-cuisine .sect{fill:var(--tri);fill-opacity:.55;font-weight:800;font-size:11px}
+.d-cuisine .floorl{stroke:var(--ink);stroke-width:2}
+.d-cuisine .ceil{stroke:var(--muted);stroke-width:1;stroke-dasharray:6 4}
+.d-cuisine .fade{opacity:.4}
+.d-cuisine .ell{fill:#F2C94C;fill-opacity:.45;stroke:var(--elec,#A86F00);stroke-width:1}
+.d-cuisine .ellx{stroke:var(--elec,#A86F00);stroke-width:1}
+.d-cuisine .eli{fill:var(--panel);stroke:var(--elec,#A86F00);stroke-width:1.1}
+.d-cuisine .elil{stroke:var(--elec,#A86F00);stroke-width:1.1}
+.d-cuisine .elk{fill:none;stroke:var(--elec,#A86F00);stroke-width:.8;stroke-dasharray:3 2}
+.d-cuisine .elp,.d-cuisine .elpe{fill:var(--panel);stroke:var(--prise,#7B4FBF);stroke-width:1.1}
+.d-cuisine .elpd{fill:var(--prise,#7B4FBF)}
+.d-cuisine .elc{stroke-dasharray:2 1.2}
+.d-cuisine .elt{fill:var(--elec,#A86F00);font-weight:700}
+.d-cuisine .elpt{fill:var(--prise,#7B4FBF);font-weight:600}
+.d-cuisine .hpw svg{display:block;width:100%;min-width:480px;max-width:690px;height:auto;margin:0 auto}
+.d-cuisine tr.hpr td{background:color-mix(in srgb,#2F7FB5 10%,transparent)}
+.d-cuisine .note{font-size:13px;color:var(--muted)}
+.d-cuisine .tango th{width:190px}
+.d-cuisine .capa td.ok{background:color-mix(in srgb,#3E8E5A 20%,transparent)}
+.d-cuisine .capa td.ko{background:color-mix(in srgb,var(--tri) 22%,transparent)}
+.d-cuisine td.num,.d-cuisine th.num{text-align:right;white-space:nowrap}
+.d-cuisine .mat th{width:30%;color:var(--ink);font-weight:600;font-size:15px;padding-right:16px}
+.d-cuisine .ech{display:block;margin:0 0 6px}
