@@ -1,0 +1,182 @@
+[
+ {
+  "id": "plan",
+  "bloc": "courante",
+  "texte": "Plan"
+ },
+ {
+  "id": "coupe-a-a-mur-nord",
+  "bloc": "courante",
+  "texte": "Coupe A-A · mur nord"
+ },
+ {
+  "id": "hauteur-du-plan-de-travail-etude",
+  "bloc": "courante",
+  "texte": "Hauteur du plan de travail (étude)"
+ },
+ {
+  "id": "coupe-b-b-mur-sud",
+  "bloc": "courante",
+  "texte": "Coupe B-B · mur sud"
+ },
+ {
+  "id": "coupe-c-c-mur-est",
+  "bloc": "courante",
+  "texte": "Coupe C-C · mur est"
+ },
+ {
+  "id": "porte-du-cellier-mantion-tango",
+  "bloc": "courante",
+  "texte": "Porte du cellier · Mantion Tango"
+ },
+ {
+  "id": "electricite",
+  "bloc": "courante",
+  "texte": "Électricité"
+ },
+ {
+  "id": "elevation-du-mur-nord-electricite",
+  "bloc": "courante",
+  "texte": "Élévation du mur nord · électricité"
+ },
+ {
+  "id": "rendus-3d",
+  "bloc": "courante",
+  "texte": "Rendus 3D"
+ },
+ {
+  "id": "materiaux",
+  "bloc": "courante",
+  "texte": "Matériaux"
+ },
+ {
+  "id": "contenu-des-rangements",
+  "bloc": "courante",
+  "texte": "Contenu des rangements"
+ },
+ {
+  "id": "capacite-v11-34-v13-30-et-proposition-9-a",
+  "bloc": "courante",
+  "texte": "Capacité : V11.34 → V13.30 et proposition 9 A"
+ },
+ {
+  "id": "changements",
+  "bloc": "courante",
+  "texte": "Changements"
+ },
+ {
+  "id": "plan-v11-49",
+  "bloc": "V11.49",
+  "texte": "Plan"
+ },
+ {
+  "id": "coupe-a-a-mur-nord-v11-49",
+  "bloc": "V11.49",
+  "texte": "Coupe A-A · mur nord"
+ },
+ {
+  "id": "coupe-b-b-mur-sud-v11-49",
+  "bloc": "V11.49",
+  "texte": "Coupe B-B · mur sud"
+ },
+ {
+  "id": "coupe-c-c-mur-est-v11-49",
+  "bloc": "V11.49",
+  "texte": "Coupe C-C · mur est"
+ },
+ {
+  "id": "rendus-3d-v11-49",
+  "bloc": "V11.49",
+  "texte": "Rendus 3D"
+ },
+ {
+  "id": "materiaux-v11-49",
+  "bloc": "V11.49",
+  "texte": "Matériaux"
+ },
+ {
+  "id": "contenu-des-rangements-v11-49",
+  "bloc": "V11.49",
+  "texte": "Contenu des rangements"
+ },
+ {
+  "id": "capacite-v11-34-v11-49-et-proposition-9-a-v11-49",
+  "bloc": "V11.49",
+  "texte": "Capacité : V11.34 → V11.49 et proposition 9 A"
+ },
+ {
+  "id": "changements-V11.49",
+  "bloc": "V11.49",
+  "texte": "Changements"
+ },
+ {
+  "id": "plan-v12-7",
+  "bloc": "V12.7",
+  "texte": "Plan"
+ },
+ {
+  "id": "coupe-a-a-mur-nord-v12-7",
+  "bloc": "V12.7",
+  "texte": "Coupe A-A · mur nord"
+ },
+ {
+  "id": "coupe-b-b-mur-sud-v12-7",
+  "bloc": "V12.7",
+  "texte": "Coupe B-B · mur sud"
+ },
+ {
+  "id": "coupe-c-c-mur-est-v12-7",
+  "bloc": "V12.7",
+  "texte": "Coupe C-C · mur est"
+ },
+ {
+  "id": "electricite-v12-7",
+  "bloc": "V12.7",
+  "texte": "Électricité"
+ },
+ {
+  "id": "elevation-du-mur-nord-electricite-v12-7",
+  "bloc": "V12.7",
+  "texte": "Élévation du mur nord · électricité"
+ },
+ {
+  "id": "rendus-3d-v12-7",
+  "bloc": "V12.7",
+  "texte": "Rendus 3D"
+ },
+ {
+  "id": "materiaux-v12-7",
+  "bloc": "V12.7",
+  "texte": "Matériaux"
+ },
+ {
+  "id": "contenu-des-rangements-v12-7",
+  "bloc": "V12.7",
+  "texte": "Contenu des rangements"
+ },
+ {
+  "id": "capacite-v11-34-v12-7-et-proposition-9-a-v12-7",
+  "bloc": "V12.7",
+  "texte": "Capacité : V11.34 → V12.7 et proposition 9 A"
+ },
+ {
+  "id": "changements-V12.7",
+  "bloc": "V12.7",
+  "texte": "Changements"
+ },
+ {
+  "id": "br",
+  "bloc": "courante",
+  "texte": ""
+ },
+ {
+  "id": "br-V11.49",
+  "bloc": "V11.49",
+  "texte": ""
+ },
+ {
+  "id": "br-V12.7",
+  "bloc": "V12.7",
+  "texte": ""
+ }
+]

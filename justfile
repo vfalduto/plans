@@ -2,6 +2,8 @@ set shell := ["bash", "-euo", "pipefail", "-c"]
 
 repo := "vfalduto/plans"
 site := "https://vfalduto.github.io/plans/"
+# FreeCAD en ligne de commande, pour la cuisine (FREECADCMD=<binaire> pour un autre)
+cuisine_freecadcmd := env_var_or_default("FREECADCMD", "/Applications/FreeCAD.app/Contents/Resources/bin/freecadcmd")
 
 # Liste les commandes
 default:
@@ -62,40 +64,13 @@ rendu-salon echantillons="256":
     mkdir -p salon-3d
     for f in 3d/sortie/salon-biblio-*.png; do sips -s format jpeg -s formatOptions 85 "$f" --out "salon-3d/$(basename "$f" .png).jpg" >/dev/null; done
 
-# Cuisine V13 : régénère cuisine-v13.html, la version imprimable et le modèle FreeCAD depuis 3d/v13/modele.py (source unique)
-v13:
-    python3 3d/v13/plan.py
-    /Applications/FreeCAD.app/Contents/Resources/bin/freecadcmd 3d/v13/cad.py
+# Cuisine, aménagement : reconstruit sa page (site/cuisine/amenagement/, annexes comprises) depuis pieces/cuisine/
+cuisine-amenagement:
+    python3 site.py cuisine/amenagement
 
-# Cuisine V13 : rendus 3D (Blender) depuis le modèle FreeCAD → cuisine-v13-3d/*.jpg, puis regénère la page
-# (toutes les vues par défaut, ou seulement celles données : just v13-rendu 64 entree iso ; 64 échantillons ≈ 256 une fois débruité)
-v13-rendu echantillons="64" *vues:
-    /Applications/Blender.app/Contents/MacOS/Blender -b --python 3d/v13/rendu.py -- {{echantillons}} {{vues}}
-    mkdir -p cuisine-v13-3d
-    for v in {{ if vues == "" { "iso iso_no entree fenetre banquette cellier dos_cellier iso_nuit" } else { vues } }}; do f="3d/sortie/v13-rendu-$v.png"; [ -f "$f" ] && sips -s format jpeg -s formatOptions 85 "$f" --out "cuisine-v13-3d/$v.jpg" >/dev/null || true; done
-    python3 3d/v13/plan.py
-
-# Cuisine V13 : vidéo du tour à 360° en vue iso, mannequin au centre — aperçu EEVEE 960 × 540 pour valider l'animation
-# → 3d/sortie/v13-video-apercu-360.mp4
-v13-video-apercu:
-    /Applications/Blender.app/Contents/MacOS/Blender -b --python 3d/v13/video.py -- apercu
-
-# Cuisine V13 : la même vidéo en définitif (Cycles, 1920 × 1080) → 3d/sortie/v13-video-360.mp4
-v13-video echantillons="64":
-    /Applications/Blender.app/Contents/MacOS/Blender -b --python 3d/v13/video.py -- {{echantillons}}
-
-# Cuisine V13 : maquette 3D tournante de la page cuisine-v13-maquette.html (three.js) → cuisine-v13-maquette/modele.js
-v13-maquette:
-    /Applications/Blender.app/Contents/MacOS/Blender -b --python 3d/v13/maquette.py
-
-# Cuisine V13 : aperçu rapide (16 échantillons, demi-résolution) → 3d/sortie/v13-apercu-<vue>.png, page non touchée
-v13-apercu *vues:
-    /Applications/Blender.app/Contents/MacOS/Blender -b --python 3d/v13/rendu.py -- 16 apercu {{vues}}
-    @ls 3d/sortie/v13-apercu-*.png
-
-# Fige la version courante de la cuisine V13 (bouton de comparaison + archive/cuisine-v13.x.html)
-v13-figer:
-    python3 3d/v13/plan.py --figer
+# Porte du cellier : régénère cuisine-v13-porte-cellier.html depuis pieces/cuisine/modele.py
+v13-porte:
+    python3 3d/v13/porte.py
 
 # Entrée : reconstruit les pages des deux variantes (site/entree/amenagement/) depuis pieces/entree/
 entree:
@@ -151,6 +126,73 @@ entree-apercu *vues:
     done
     images=$(ls cache/apercu/entree-*.png | grep -v -- '-masque.png')
     open $images
+
+# Cuisine, aménagement : modèle FreeCAD depuis pieces/cuisine/modele.py → cache/cuisine/cuisine-v13.FCStd et .glb
+# (CUISINE_SORTIE=<dossier> pour un autre), l'entrée des rendus
+cuisine-amenagement-cad:
+    #!/usr/bin/env bash
+    set -euo pipefail
+    sortie="${CUISINE_SORTIE:-$PWD/cache/cuisine}"
+    mkdir -p "$sortie"
+    rm -f "$sortie/cuisine-v13.glb"
+    CUISINE_SORTIE="$sortie" "{{cuisine_freecadcmd}}" pieces/cuisine/amenagement/cad.py
+    [ -s "$sortie/cuisine-v13.glb" ] || { echo "cad.py n'a pas écrit $sortie/cuisine-v13.glb" >&2; exit 1; }   # freecadcmd sort en 0 sur une erreur
+
+# Le glb de la cuisine, refait s'il manque ou s'il est plus ancien que le modèle ou que cad.py
+_cuisine-amenagement-glb:
+    #!/usr/bin/env bash
+    set -euo pipefail
+    glb="${CUISINE_SORTIE:-$PWD/cache/cuisine}/cuisine-v13.glb"
+    if [ ! -f "$glb" ] || [ "$glb" -ot pieces/cuisine/modele.py ] || [ "$glb" -ot pieces/cuisine/amenagement/cad.py ]; then
+      just cuisine-amenagement-cad
+    fi
+
+# Cuisine, aménagement : rendus 3D (FreeCAD puis Blender) → site/cuisine/amenagement/rendus/<caméra>.jpg, puis la page.
+# Ne rend que les caméras dont l'empreinte a changé (cache/empreintes.json, commun/rendu_cache.py) ; avec des noms de
+# caméras (just cuisine-amenagement-rendu 64 entree iso_so), rend celles-là. Le glb est refait, puis un seul Blender.
+cuisine-amenagement-rendu echantillons="64" *vues:
+    #!/usr/bin/env bash
+    set -euo pipefail
+    dest=site/cuisine/amenagement/rendus
+    export CUISINE_SORTIE="${CUISINE_SORTIE:-$PWD/cache/cuisine}"   # le dossier où cad.py et rendu.py écrivent
+    cams=$(python3 -m commun.rendu_cache liste cuisine/amenagement - {{echantillons}} {{vues}})   # sans variante : -
+    if [ -z "$cams" ]; then echo "cuisine/amenagement : rien à rendre"; exit 0; fi
+    echo "cuisine/amenagement : $cams"
+    for c in $cams; do rm -f "$CUISINE_SORTIE/cuisine-$c.png"; done   # aucun reste d'un ancien rendu à copier
+    just cuisine-amenagement-cad
+    "${BLENDER:-/opt/homebrew/bin/blender}" -b --python-exit-code 1 --python pieces/cuisine/amenagement/rendu.py -- {{echantillons}} $cams
+    mkdir -p "$dest"
+    for c in $cams; do
+      nom="$c"   # sans variante : rendus/<caméra>.jpg
+      sips -s format jpeg -s formatOptions 85 "$CUISINE_SORTIE/cuisine-$c.png" --out "$dest/$nom.jpg" >/dev/null
+    done
+    python3 -m commun.rendu_cache noter cuisine/amenagement - {{echantillons}} $cams
+    python3 site.py cuisine/amenagement
+
+# Cuisine, aménagement : aperçu rapide (16 échantillons, 800 × 600) → cache/apercu/cuisine-<caméra>.png, sans cache ni
+# copie dans site/ (glb de cache/cuisine, refait s'il est plus ancien que le modèle)
+cuisine-amenagement-apercu *vues: _cuisine-amenagement-glb
+    #!/usr/bin/env bash
+    set -euo pipefail
+    mkdir -p cache/apercu
+    rm -f cache/apercu/cuisine-*.png   # la liste finale ne montre que les images de ce Blender
+    cp "${CUISINE_SORTIE:-$PWD/cache/cuisine}/cuisine-v13.glb" cache/apercu/cuisine-v13.glb
+    CUISINE_APERCU=1 CUISINE_SORTIE="$PWD/cache/apercu" "${BLENDER:-/opt/homebrew/bin/blender}" -b --python-exit-code 1 --python pieces/cuisine/amenagement/rendu.py -- 16 {{vues}}
+    ls cache/apercu/cuisine-*.png
+
+# Cuisine, aménagement : maquette 3D tournante (three.js) → site/cuisine/amenagement/maquette-3d/modele.js
+# (CUISINE_MAQUETTE=<fichier> pour un autre)
+cuisine-amenagement-maquette: _cuisine-amenagement-glb
+    "${BLENDER:-/opt/homebrew/bin/blender}" -b --python-exit-code 1 --python pieces/cuisine/amenagement/maquette.py
+
+# Cuisine, aménagement : vidéo du tour à 360° en vue iso, mannequin au centre — aperçu EEVEE 960 × 540 pour valider
+# l'animation → cache/cuisine/cuisine-video-apercu-360.mp4
+cuisine-amenagement-video-apercu: _cuisine-amenagement-glb
+    "${BLENDER:-/opt/homebrew/bin/blender}" -b --python-exit-code 1 --python pieces/cuisine/amenagement/video.py -- apercu
+
+# Cuisine, aménagement : la même vidéo en définitif (Cycles, 1920 × 1080) → cache/cuisine/cuisine-video-360.mp4
+cuisine-amenagement-video echantillons="64": _cuisine-amenagement-glb
+    "${BLENDER:-/opt/homebrew/bin/blender}" -b --python-exit-code 1 --python pieces/cuisine/amenagement/video.py -- {{echantillons}}
 
 # Salon, enfilade : reconstruit sa page (site/salon/enfilade/) depuis pieces/salon/enfilade/
 salon-enfilade:

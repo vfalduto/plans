@@ -44,9 +44,10 @@ IMAGES_D_ESSAI = {"essai-ancienne-3d/V1.1/plan.svg", "essai-ancienne-3d/V1.1/cou
                   "essai-ancienne-3d/V1.0/plan.svg"}
 IMAGES = (".jpg", ".jpeg", ".png", ".svg", ".webp")
 
-# pages de la racine qui ne sont pas des documents (annexes, pages destinées aux archives) : permises si présentes
-HORS_DOCUMENTS = {"index.html", "cuisine-plan.html", "cuisine-couleurs.html", "cuisine-v13-imprimable.html",
-                  "cuisine-v13-maquette.html", "sdb-meuble-achats.html"}
+# pages de la racine qui ne sont pas des documents (annexes, pages destinées aux archives, page de la porte du cellier
+# non migrée et retirée du menu) : permises si présentes
+HORS_DOCUMENTS = {"index.html", "cuisine-plan.html", "cuisine-couleurs.html", "sdb-meuble-achats.html",
+                  "cuisine-v13-porte-cellier.html"}
 
 
 def _instantane(racine, sauf=("site", "cache")):
@@ -377,8 +378,11 @@ def test_documents_declares(construit):
     connues = {d.page for d in _passerelles(site)} | {r.ancienne for r in module.REDIRECTIONS} | HORS_DOCUMENTS
     assert sorted(p.name for p in RACINE.glob("*.html") if p.name not in connues) == []
     # chaque redirection mène à une page qu'écrit la construction : celle d'un document ou son historique
+    # (ou, depuis la tâche 10 de la cuisine, une de ses annexes ; une version figée, sous site/archive/)
     construites = {a for d in _documents(site) for a in [adresse(d, v.id) for v in d.variantes]
-                   + [f"{d.piece}/{d.id}/historique.html"]}
+                   + [f"{d.piece}/{d.id}/historique.html"] + [adresse(d, d.variantes[0].id) + x.nom for x in d.annexes]}
+    construites |= {c for d in _documents(site) for v in d.variantes for _, c in v.figees
+                    if (RACINE / "site" / c).is_file()}
     for r in module.REDIRECTIONS:
         for cible in (r.cible, *r.pages.values()):
             assert cible in construites, (r.ancienne, cible)
@@ -552,3 +556,27 @@ def test_figer_garde_le_css_des_dessins(tmp_path):
     for u in _references(tete):
         assert (dossier / u).resolve().is_file(), u
     assert _liens_morts(sortie, "archive/essai-amenagement-b-v0.3/index.html") == []
+
+
+# ------------------------------------------------------------------ pages annexes d'un document
+def _fichiers(dossier):
+    return sorted(str(f.relative_to(dossier)) for f in dossier.rglob("*") if f.is_file())
+
+
+def test_annexe_ecrite(tmp_path):
+    """Une `Annexe` est écrite dans le dossier du document ; `ecrire` reçoit son chemin sous site/."""
+    from commun.modele import Annexe
+    doc = dataclasses.replace(ESSAI.DOCUMENT, annexes=(Annexe("annexe.html", lambda d: f"<p>{d}</p>"),))
+    construire(Site((Piece("essai", "Essai", (doc,)),)), (), tmp_path, tmp_path / "site")
+    assert _lire(tmp_path / "site/essai/amenagement/annexe.html") == "<p>essai/amenagement/annexe.html</p>"
+
+
+def test_sans_annexe_rien_de_neuf(tmp_path):
+    """Un document sans annexe écrit exactement les mêmes fichiers qu'avant ; une annexe n'ajoute que sa page."""
+    from commun.modele import Annexe
+    assert ESSAI.DOCUMENT.annexes == ()
+    construire(Site((Piece("essai", "Essai", (ESSAI.DOCUMENT,)),)), (), tmp_path / "a", tmp_path / "a/site")
+    doc = dataclasses.replace(ESSAI.DOCUMENT, annexes=(Annexe("annexe.html", lambda d: "<p></p>"),))
+    construire(Site((Piece("essai", "Essai", (doc,)),)), (), tmp_path / "b", tmp_path / "b/site")
+    sans, avec = _fichiers(tmp_path / "a/site"), _fichiers(tmp_path / "b/site")
+    assert sorted(set(avec) - set(sans)) == ["essai/amenagement/annexe.html"] and set(sans) <= set(avec)

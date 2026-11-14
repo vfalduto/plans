@@ -1,0 +1,4 @@
+{
+ "COUPES_ISO": "^(mur__(ouest_nord|ouest_sud|sud_ouest|sud_est)|allege__|linteau__(linteau_fenetre|linteau_entree|linteau_galandage)|cloison__galandage|porte__entree|ardoise__|aimant__|peinture__|joue__bas_de_mur|socle__plinthe_|plafond__|verre__|alu__|ext_)",
+ "COUPES_ISO_NO": "^(mur__(nord|nord_alcove|ouest_nord|ouest_sud)|allege__|socle__plinthe_fenetre|linteau__linteau_fenetre|cafetiere__|plafond__|verre__|alu__|ext_|caisson__|caisson_haut__|plan__|plaque__|evier__|cuve__|mitigeur__|egouttoir__|hotte__|led__|credence__|four__facade_b|facade__facade_b|facade_haut__|socle__socle_(b|fileur)|joue__(joue_h|fileur_ouest|fileur_est|fileur_h_est)|fileur__fileur_hauts|etagere_haute__etagere_mur|tech__coffre_reseaux|poignee_(inox|bois)__facade_(b|h)|aspiration__)"
+}
