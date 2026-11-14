@@ -21,73 +21,31 @@ ANCRES = open(os.path.join(ROOT, "3d", "ancres.js"), encoding="utf-8").read()   
 
 OUT = os.path.join(ROOT, "cuisine-v13.html")
 
-COUPE_A = 90   # plan de coupe A-A (y), regard vers le nord
-COUPE_B = 150  # plan de coupe B-B (y), regard vers le sud
-COUPE_C = 315  # plan de coupe C-C (x), regard vers l'est
+from pieces.cuisine.amenagement.dessins import (COUPE_A, COUPE_B, COUPE_C, COUPE_CLS, REGARDS,  # noqa: E402,F401
+                                                REPERES_175, TAILLES, VERS, ZONES_175, batons_rompus, battant,
+                                                chaine, coupe_svg, hauteur_pt_svg, minus, plan_elec_svg, pos_plan,
+                                                POS_PLAN, regle, sym_inter, sym_lumiere, sym_prise, uv, vantail,
+                                                zones_taille)
+from pieces.cuisine.amenagement import dessins as _D  # noqa: E402
 
+# les dessins sont dans pieces/cuisine/amenagement/dessins.py ; ici, l'ancienne page les garde tels qu'elle les
+# montrait (aria-label d'origine, règle ajoutée par page(), points médians de plan_svg et coupe_elec_nord)
+TAILLE_LEG = _D.REGLE_LEGENDE
+
+
+def coupe_a():
+    return _D.coupe_a_seule()
+
+
+def coupe_b():
+    return _D.coupe_b()
+
+
+def coupe_c():
+    return _D.coupe_c_seule()
 
 
 # ------------------------------------------------------------------ plan vu de dessus
-
-
-def batons_rompus(w=8, l=32):
-    """Motif de parquet en bâtons rompus : lames w × l, période 2l × 2l, posé à 45°."""
-    p = 2 * l
-    r = []
-    for j in range(-4, 5):
-        for n in range(-2 * p // w, 2 * p // w):
-            ox, oy = j * l + n * w, -j * l + n * w
-            for x, y, dx, dy in ((ox, oy, l, w), (ox, oy + w, w, l)):
-                if x < p and y < p and x + dx > 0 and y + dy > 0:
-                    r.append(f'<rect class="lame" x="{x}" y="{y}" width="{dx}" height="{dy}"/>')
-    return (f'<pattern id="br" width="{p}" height="{p}" patternUnits="userSpaceOnUse" '
-            f'patternTransform="rotate(-45)">{"".join(r)}</pattern>')
-
-
-def battant(h, ferme, ouvert, label):
-    """Porte battante ouverte à 90° : vantail de la charnière au bout ouvert, arc depuis le bout fermé."""
-    (hx, hy), (fx, fy), (ox, oy) = h, ferme, ouvert
-    w = math.dist(h, ferme)
-    sweep = 1 if (fx - hx) * (oy - hy) - (fy - hy) * (ox - hx) > 0 else 0
-    lx, ly = hx + 0.55 * (fx - hx + ox - hx), hy + 0.55 * (fy - hy + oy - hy)
-    return (f'<line class="doorleaf" x1="{f(hx)}" y1="{f(hy)}" x2="{f(ox)}" y2="{f(oy)}"/>'
-            f'<path class="swing" d="M{f(fx)} {f(fy)} A{f(w)} {f(w)} 0 0 {sweep} {f(ox)} {f(oy)}"/>'
-            + text(lx, ly + 2, label, "lblx muted"))
-
-
-def vantail(v, ouvert=True):
-    """Vantail fermé ou ouvert à son angle, à son épaisseur réelle, avec ses balais (face côté cellier) et sa paumelle ;
-    ouvert, avec le balayage depuis la position fermée."""
-    (hx, hy), (fx, fy), w = v["h"], v["ferme"], v["w"]
-    ox, oy = v["ouvert"] if ouvert else v["ferme"]
-    d0 = ((fx - hx) / w, (fy - hy) / w)                 # direction fermée
-    d1 = ((ox - hx) / w, (oy - hy) / w)                 # direction ouverte
-    c, s_ = d0[0] * d1[0] + d0[1] * d1[1], d0[0] * d1[1] - d0[1] * d1[0]
-
-    def tourne(px, py):
-        """Point du vantail fermé (repère : charnière) → position ouverte."""
-        return hx + c * px - s_ * py, hy + s_ * px + c * py
-
-    def piece(u0, u1, x0, x1):
-        """Rectangle du vantail fermé, de u0 à u1 le long du vantail, de x0 à x1 en épaisseur (x relatif à la charnière)."""
-        return [tourne(x + d0[0] * u, d0[1] * u) for x, u in ((x0, u0), (x0, u1), (x1, u1), (x1, u0))]
-
-    o = []
-    if ouvert:
-        sweep = 1 if (fx - hx) * (oy - hy) - (fy - hy) * (ox - hx) > 0 else 0
-        o.append(f'<path class="swing" d="M{f(fx)} {f(fy)} A{f(w)} {f(w)} 0 0 {sweep} {f(ox)} {f(oy)}"/>')
-    o.append(f'<polygon class="leaf" points="{pts(piece(0, w, -M.EP_VANTAIL, 0))}"/>')
-    for dist, larg in v["balais"]:
-        o.append(f'<polygon class="balai" points="{pts(piece(dist - larg / 2, dist + larg / 2, 0, v["saillie"]))}"/>')
-    o.append(f'<circle class="pivot" cx="{f(hx)}" cy="{f(hy)}" r="1.4"/>')
-    if ouvert:
-        lx, ly = hx + 0.6 * (fx - hx + ox - hx), hy + 0.6 * (fy - hy + oy - hy)
-        o.append(text(lx, ly + 2, f'{f(w)} · {f(round(v["angle"]))}°', "lblx"))
-    return "".join(o)
-
-
-
-
 def plan_svg():
     o = [f"<defs>{batons_rompus()}</defs>"]
     o.append(f'<polygon class="floorbg" points="{pts(M.SOL_PARQUET)}"/>')
@@ -253,257 +211,9 @@ def plan_svg():
             f'6 meubles bas et 5 meubles hauts de 60 au mur nord">{"".join(o)}</svg>')
 
 
-# ------------------------------------------------------------------ coupes
-COUPE_CLS = {"mur": ("bgwall", "w"), "allege": ("bgwall", "w"), "linteau": ("wallv", "w"),
-             "caisson_haut": ("cab", "cab"), "facade_haut": ("fac", "fac"), "plan": ("pt", "pt"),
-             "plaque": ("dark", "dark"), "aspiration": ("dark", "dark"), "hotte": ("inox", "inox"), "evier": ("inox", "inox"), "egouttoir": ("inox", "inox"),
-             "cuve": ("inox", "inox"), "mitigeur": ("inox", "inox"), "ballon": ("ecs", "ecs"),
-             "tech": ("tech", "tech"), "socle": ("plinth", "plinth"),
-             "caisson": ("cab", "cab"), "facade": ("fac", "fac"), "porte": ("leaf", "leaf"),
-             "colonne": ("tall", "tall"), "cloison": ("wallv", "neuf"),
-             "fileur": ("fac", "fac"), "banquette": ("stool", "stool"), "table": ("tbl", "tbl"), "chant": ("dark", "dark"), "peinture": ("peint", "peint"), "pied": ("tbl", "tbl"), "chaise": ("stool", "stool"), "facade_col": ("fac", "fac"), "four": ("dark", "dark"),
-             "etagere": ("shelf", "shelfc"), "montant": ("shelf", "shelfc"), "trappe": ("trappe", "trappe"),
-             "ardoise": ("ardoise", "ardoise"), "aimant": ("aimant", "aimant"), "micro_onde": ("dark", "dark"),
-             "dormant": ("dorm", "dorm"), "dormant_haut": ("dorm", "dorm"), "joue": ("fac", "fac"),
-             "paumelle": ("dark", "dark"), "ratelier": ("dark", "dark"), "balai": ("balai", "balai"),
-             "manche": ("balai", "balai"), "led": ("led", "led"), "etagere_haute": ("shelf", "shelfc"),
-             "enceinte": ("dark", "dark"), "lampe": ("lampe", "lampe"), "fil": ("dark", "dark"),
-             "aspirateur": ("aspi", "aspi"), "cafetiere": ("dark", "dark"), "plante": ("plante", "plante"), "pot": ("pot", "pot"),
-             "seau": ("aspi", "aspi")}
-
-
-# Regard d'une coupe : (axe coupé, sens de la profondeur, miroir de l'axe horizontal)
-# nord : coupe en y, on regarde vers les y décroissants, l'ouest à gauche ; sud : l'est à gauche ;
-# est : coupe en x, on regarde vers les x croissants, le nord à gauche (u = y).
-REGARDS = {"nord": ("y", -1, False), "sud": ("y", 1, True), "est": ("x", 1, False)}
-VERS = {"nord": "le nord", "sud": "le sud", "est": "l'est"}
-
-
-def uv(b, axe):
-    """(u0, u1, d0, d1) : étendue horizontale à l'écran et profondeur, selon l'axe de coupe."""
-    return (b.x0, b.x1, b.y0, b.y1) if axe == "y" else (b.y0, b.y1, b.x0, b.x1)
-
-
-def chaine(blocs, y, X, axe="y", origine=0):
-    """Chaîne de cotes depuis le mur (origine) puis meuble par meuble, en coordonnées d'écran X(u)."""
-    o = []
-    bords = [origine] + [uv(b, axe)[0] for b in blocs[:1]] + [uv(b, axe)[1] for b in blocs]
-    for a, b in zip(bords, bords[1:]):
-        u, v = sorted((X(a), X(b)))
-        o.append(cote_h(u, v, y, f(abs(b - a))))
-    return "".join(o)
-
-
-def coupe_svg(cut, regard, umin, umax, chaines, hauteurs, xh, extra=None, origine=0, transparents=()):
-    """Coupe au plan cut (y pour nord/sud, x pour est). Vers le sud, l'est est à gauche : u écran = umin + umax - x."""
-    axe, sens, miroir = REGARDS[regard]
-    X = (lambda u: umin + umax - u) if miroir else (lambda u: u)
-    o, etiquettes = [], []
-    tous = M.ENVELOPPE + M.MEUBLES + [M.BALLON]
-
-    def vu(b):
-        u0, u1, d0, d1 = uv(b, axe)
-        return (d1 > cut if sens > 0 else d0 < cut) and u1 > umin and u0 < umax
-
-    vus = [b for b in tous if vu(b)]
-    # du plus loin au plus proche, les éléments coupés en dernier
-    vus.sort(key=lambda b: (uv(b, axe)[2] < cut < uv(b, axe)[3], -uv(b, axe)[2] if sens > 0 else uv(b, axe)[3]))
-    trans = [t for t in vus if transparents and t.nom.startswith(transparents)]
-
-    def derriere(b):
-        """b est caché par un élément transparent (porte du cellier…) quand celui-ci est opaque."""
-        u0, u1, d0, d1 = uv(b, axe)
-        for t in trans:
-            tu0, tu1, td0, td1 = uv(t, axe)
-            if (d0 >= td1 if sens > 0 else d1 <= td0) and u0 < tu1 and u1 > tu0 and b.z0 < t.z1 and b.z1 > t.z0:
-                return True
-        return False
-
-    for b in vus:
-        n0 = len(etiquettes)
-        u0, u1, d0, d1 = uv(b, axe)
-        coupe = d0 < cut < d1
-        if isinstance(b, M.Pan) and coupe:
-            # panneau en biais coupé : on ne voit que la partie au-delà du plan, plus sa section au point de coupe
-            (ua, da), (ub, db) = [(p[0], p[1]) if axe == "y" else (p[1], p[0]) for p in (b.a, b.b)]
-            ui = ua + (ub - ua) * (cut - da) / (db - da)
-            loin = ua if (da - cut) * sens > 0 else ub
-            u0, u1 = sorted((ui, loin))
-            uc, vc = sorted((X(ui - b.ep / 2), X(ui + b.ep / 2)))
-            o.append(rect(uc, -b.z1, vc, -b.z0, COUPE_CLS[b.role][1]))
-            coupe = False
-        u, v = sorted((X(max(u0, umin)), X(min(u1, umax))))
-        # éléments dessinés en transparence (contour seul) pour voir ce qu'il y a derrière
-        cls = COUPE_CLS[b.role][1 if coupe else 0]
-        o.append(rect(u, -b.z1, v, -b.z0, f"{cls} trp" if transparents and b.nom.startswith(transparents) else cls))
-        xm = (u + v) / 2
-        if b.role == "allege" and coupe:
-            o.append(text(xm, -150, "fenêtre", "lblx", extra=f' transform="rotate(-90 {f(xm)} -150)"'))
-        if b.role == "ballon":
-            etiquettes.append(text(xm, -(b.z0 + b.z1) / 2, "Ballon", "lblx"))
-        if b.role == "four" and v - u > 10:  # pas d'étiquette sur un four vu sur chant
-            etiquettes.append(text(xm, -(b.z0 + b.z1) / 2 + 2, "four", "lblx onDark"))
-        if b.role == "micro_onde" and v - u > 10:
-            etiquettes.append(text(xm, -(b.z0 + b.z1) / 2 + 2, "micro-ondes", "lblx onDark"))
-        if getattr(b, "poignee", "") and v - u > 10:
-            # poignée : tiroir en haut au centre, porte basse en haut sur le côté, porte haute en bas sur le côté,
-            # relevable en bas au centre
-            zt, zb, um = -b.z1 + 4, -b.z0 - 4, (u + v) / 2
-            if b.role in ("facade_haut", "facade_col"):
-                # façades bois : profilé toute longueur, même matière (tiroir : toute la largeur ; porte : toute la hauteur)
-                if b.poignee == "tiroir":
-                    o.append(f'<line class="poig bois" x1="{f(u + 2)}" y1="{f(-b.z1 + 1.5)}" x2="{f(v - 2)}" y2="{f(-b.z1 + 1.5)}"/>')
-                else:
-                    # C2 (frigo) : charnières au sud, poignée côté nord (à gauche en coupe C-C)
-                    xp = u + 1.5 if b.nom.endswith("_c2") else v - 1.5
-                    o.append(f'<line class="poig bois" x1="{f(xp)}" y1="{f(-b.z1 + 2)}" x2="{f(xp)}" y2="{f(-b.z0 - 2)}"/>')
-            elif b.poignee == "tiroir":
-                o.append(f'<line class="poig" x1="{f(um - 8)}" y1="{f(zt)}" x2="{f(um + 8)}" y2="{f(zt)}"/>')
-            elif b.poignee == "relevable":
-                o.append(f'<line class="poig" x1="{f(um - 8)}" y1="{f(zb)}" x2="{f(um + 8)}" y2="{f(zb)}"/>')
-            elif b.role == "facade_haut":
-                o.append(f'<line class="poig" x1="{f(v - 4)}" y1="{f(zb)}" x2="{f(v - 4)}" y2="{f(zb - 12)}"/>')
-            else:
-                o.append(f'<line class="poig" x1="{f(v - 4)}" y1="{f(zt)}" x2="{f(v - 4)}" y2="{f(zt + 12)}"/>')
-        if (getattr(b, "contenu", "") and b.role == "etagere" and not coupe and v - u > 20
-                and u1 - u0 >= d1 - d0):  # tablette vue de face (pas sur chant)
-            etiquettes.append(text(xm, -(b.z1 + 17), b.contenu, "lblc"))  # au milieu de l'espace au-dessus
-        elif getattr(b, "contenu", "") and b.role != "etagere" and v - u > 20:
-            zc = b.z0 + 13 if b.role == "facade_haut" else b.z1 - 10
-            if b.role == "facade" and 44 < zc < 60:  # pas sur l'étiquette du meuble (B2…) : en bas de la façade
-                zc = b.z0 + 6
-            zc = -zc
-            etiquettes.append(text(xm, zc, b.contenu, "lblc"))
-        if b.role == "seau" and v - u > 10:
-            etiquettes.append(text(xm, -(b.z0 + b.z1) / 2 + 2, "seau", "lblx onDark"))
-        if b.nom == "aspirateur_bloc" and v - u > 10:
-            etiquettes.append(text(xm, -(b.z0 + b.z1) / 2 + 2, "aspirateur", "lblx onDark"))
-        if b.role == "cafetiere" and v - u > 10:
-            etiquettes.append(text(xm, -(b.z0 + b.z1) / 2 + 2, "café", "lblx onDark"))
-        if b.role == "enceinte" and v - u > 10:
-            etiquettes.append(text(xm, -(b.z0 + b.z1) / 2 + 2, "enceinte", "lblx onDark"))
-        if b.role in ("ardoise", "aimant"):
-            etiquettes.append(text(xm, -(b.z0 + b.z1) / 2 + 2, "tableau noir" if b.role == "ardoise" else "aimants",
-                                   "lblx onDark" if b.role == "ardoise" else "lblx"))
-        if getattr(b, "etiq", ""):
-            zm = (b.z0 + b.z1) / 2 if b.role != "colonne" else 200
-            nom, _, equip = b.etiq.partition(" ")
-            etiquettes.append(text(xm, -zm + 3, nom, "lblb"))
-            if equip and b.role == "caisson":
-                etiquettes.append(text(xm, -zm + 12, equip, "lbls"))
-        if trans and not b.nom.startswith(transparents) and derriere(b):
-            # étiquettes de ce qui est derrière la porte : visibles seulement en transparence
-            etiquettes[n0:] = [e.replace('class="', 'class="trp-lbl ', 1) for e in etiquettes[n0:]]
-    # une seule étiquette par position : celle de l'élément le plus proche (ajoutée en dernier) l'emporte
-    o += list({(e.split('x="')[1].split('"')[0], e.split('y="')[1].split('"')[0]): e for e in etiquettes}.values())
-    if extra:
-        o += extra(X)
-    o.append(f'<line class="floorl" x1="{f(umin)}" y1="0" x2="{f(umax)}" y2="0"/>')
-    o.append(f'<line class="ceil" x1="{f(umin)}" y1="{-M.H}" x2="{f(umax)}" y2="{-M.H}"/>')
-    for blocs, y in chaines:
-        o.append(chaine(blocs, y, X, axe, origine))
-    zs = [0] + hauteurs + [M.H]
-    for z0, z1 in zip(zs, zs[1:]):
-        o.append(cote_v(-z0, -z1, xh))
-    o.append(cote_v(0, -M.H, umin - 14))
-    return (f'<svg viewBox="{f(umin - 40)} -285 {f(umax - umin + 80)} 337" role="img" '
-            f'aria-label="Coupe à {axe} {f(cut)}, regard vers {VERS[regard]}">{"".join(o)}</svg>')
-
-
-def coupe_a():
-    bas = [b for b in M.MEUBLES if b.role == "caisson" and b.y0 == 0]
-    hauts = [b for b in M.MEUBLES if b.role == "caisson_haut"]
-    rn = M.RAYON_NORD
-
-    def sol(X):
-        xm = X((rn["x0"] + rn["x1"]) / 2)
-        return [text(xm, -30, rn["sol"].split(", ")[0] + ", " + rn["sol"].split(", ")[1], "lblc"),
-                text(xm, -25, ", ".join(rn["sol"].split(", ")[2:]), "lblc")]
-
-    return coupe_svg(COUPE_A, "nord", -20, 494, [(bas, 22), (hauts, -M.H - 8)],
-                     [M.SOCLE, M.CAISSON_H, M.PT_Z1, M.HAUT_Z0, M.HAUT_JOINT, M.HAUT_Z1], -50, sol)
-
-
-def coupe_b():
-    xmin, xmax = -20, 392
-    en = M.ENTREE
-    v = next(b for b in M.ENVELOPPE if b.nom == "entree_vantail")
-
-    tn = next(b for b in M.ENVELOPPE if b.nom == "tableau_noir")
-    za = next(b for b in M.ENVELOPPE if b.nom == "zone_aimantee")
-
-    def porte(X):
-        u0, u1 = sorted((X(en["x0"]), X(en["x1"])))
-        w0, w1 = sorted((X(v.x0), X(v.x1)))
-        p0, p1 = sorted((X(en["poche"][0]), X(en["poche"][1])))
-        return [cote_h(u0, u1, 38, f'baie {f(en["x1"] - en["x0"])}'),
-                cote_h(p0, p1, 38, f'poche {f(en["poche"][1] - en["poche"][0])}'),
-                cote_h(w0, w1, -v.z1 - 6, f'vantail {f(v.x1 - v.x0)} × {f(v.z1 - v.z0)}'),
-                cote_v(0, -en["h"], w0 - 8, f'baie h {en["h"]}'),
-                cote_v(-za.z0, -za.z1, p1 + 6), cote_v(-tn.z0, -tn.z1, p1 + 6)]
-
-    return coupe_svg(COUPE_B, "sud", xmin, xmax, [], [45, 75, 85, en["h"], M.COL_Z1], xmin - 30, porte)
-
-
-def coupe_c():
-    cols = sorted([b for b in M.MEUBLES if b.role == "colonne"], key=lambda b: b.y0)
-    def cellier(X):
-        return [cote_h(X(M.BAIE_Y0), X(M.BAIE_Y1), -M.H - 8, f"baie {f(M.BAIE_Y1 - M.BAIE_Y0)}"),
-                cote_h(X(M.BAIE_Y1 - M.PASSAGE_CELLIER), X(M.BAIE_Y1), -204 - 6, f"passage {f(M.PASSAGE_CELLIER)}")]
-
-    return coupe_svg(COUPE_C, "est", -20, 262, [(cols, 22)],
-                     [M.SOCLE_COL, M.LV_Z0, M.MO_Z0, M.MO_Z1, M.FRIGO_Z1, M.COL_Z1], -50, cellier,
-                     transparents=("cellier_pliante", "linteau_cellier"))
-
-
-# ------------------------------------------------------------------ règle des hauteurs de rangement (V13.23)
-# Zones et repères du corps pour 1,75 m, mis à l'échelle pour les autres tailles (proportions moyennes du corps,
-# estimations). Zone centrale 60 → 150 et rien au-delà de 180 sans aide d'après les guides (Bora, FCBA).
-TAILLES = (175, 180)
-ZONES_175 = [(0, 50, "z3", "bas"), (50, 75, "z2", "facile"), (75, 150, "z1", "zone d'or"), (150, 180, "z2", "facile"),
-             (180, 200, "z3", "pointe des pieds"), (200, None, "z4", "escabeau")]
-REPERES_175 = [(110, "coude"), (144, "épaule"), (163, "yeux"), (180, "main levée")]
-
-
-def zones_taille(t):
-    k = t / 175
-    return ([(round(a * k), round(b * k) if b else M.H, c, n) for a, b, c, n in ZONES_175],
-            [(round(z * k), n) for z, n in REPERES_175])
-
-
-def regle(svg, umin, umax):
-    """Ajoute à droite d'une coupe la règle des zones de hauteur, une par taille. Bouton Taille à trois états :
-    1,75 m, 1,80 m, masquée ; masquée, la coupe reprend sa largeur (viewBox d'origine, data-vb0)."""
-    xb = umax + 18                                   # bande de 7, noms des zones dedans (verticaux)
-    o = []
-    for t in TAILLES:
-        zones, reperes = zones_taille(t)
-        g = []
-        for z0, z1, cls, nom in zones:
-            zm = -(z0 + z1) / 2
-            court = {"pointe des pieds": "pointe", "zone d'or": "zone d'or"}.get(nom, nom)
-            g.append(rect(xb, -z1, xb + 7, -z0, cls))
-            if z1 - z0 >= 18:
-                g.append(f'<text class="lblz" x="{f(xb + 3.5)}" y="{f(zm)}" text-anchor="middle" dominant-baseline="central" '
-                         f'transform="rotate(-90 {f(xb + 3.5)} {f(zm)})">{escape(court)}</text>')
-        for z, nom in reperes:
-            g.append(f'<line class="rep" x1="{f(umin)}" y1="{-z}" x2="{f(xb + 7)}" y2="{-z}"/>')
-            g.append(text(xb + 9, -z + 1.5, f"{nom} {z}", "lblz rept", anchor="start"))
-        g.append(text(xb + 3.5, -M.H - 8, f"{t / 100:.2f} m".replace(".", ","), "lblx"))
-        o.append(f'<g class="regle" data-t="{t}">{"".join(g)}</g>')
-    m = re.search(r'viewBox="(\S+) (\S+) (\S+) (\S+)"', svg)
-    vb0 = " ".join(m.groups())
-    vb1 = f"{m[1]} {m[2]} {f(float(m[3]) + 44)} {m[4]}"
-    svg = svg.replace(m[0], f'viewBox="{vb1}" data-vb0="{vb0}" data-vb1="{vb1}"', 1)
-    return svg.replace("</svg>", "".join(o) + "</svg>")
-
-
+# ------------------------------------------------------------------ règle des hauteurs (bouton de la page)
 TAILLE_BTN = ('<div class="tog"><span>Taille</span><button type="button" class="btaille" aria-pressed="true">'
               '1,75 m</button></div>')
-TAILLE_LEG = ('<span class="leg"><i class="sw" style="background:#5B9E6A"></i>zone d\'or '
-              '<i class="sw" style="background:#A9CF8F"></i>facile '
-              '<i class="sw" style="background:#E8C26A"></i>bas ou pointe des pieds '
-              '<i class="sw" style="background:#D9826B"></i>escabeau</span>')
 TAILLE_JS = """
   var TAILLES = ["175", "180", "off"], TLIB = {"175": "1,75 m", "180": "1,80 m", "off": "masquée"};
   function taille(t) {
@@ -533,38 +243,6 @@ def hors_fourchette(h, coude, regle=None):
     lo_s, hi_s = regle or M.PT_SOUS_COUDE
     lo, hi = coude - hi_s, coude - lo_s
     return h - hi if h > hi else (h - lo if h < lo else 0)
-
-
-def hauteur_pt_svg():
-    zmin, zmax, k, y0 = 78, 118, 8, 24
-    Y = lambda z: y0 + (zmax - z) * k
-    o = []
-    for z in range(zmin, zmax + 1, 2):
-        o.append(f'<line class="hpg" x1="70" y1="{Y(z)}" x2="470" y2="{Y(z)}"/>')
-        if z % 4 == 2:
-            o.append(f'<text class="hpt" x="62" y="{Y(z) + 4}" text-anchor="end">{z}</text>')
-    for h, _, _ in M.PT_CANDIDATS:
-        cls = "hpc act" if h == M.PT_Z1 else ("hpc rec" if h == M.PT_RECO else "hpc")
-        lib = f"{h} actuel" if h == M.PT_Z1 else (f"{h} conseillé" if h == M.PT_RECO else str(h))
-        o.append(f'<line class="{cls}" x1="80" y1="{Y(h)}" x2="470" y2="{Y(h)}"/>'
-                 f'<text class="hpt {cls}" x="476" y="{Y(h) + 4}">{lib}</text>')
-    (al, ah), (ll, lh) = M.HSE_APPUI, M.HSE_LEGER
-    for i, (nom, c) in enumerate(M.COUDES.items()):
-        x0, x1 = 110 + i * 210, 240 + i * 210
-        # bandes HSE : appui à gauche, geste léger à droite (bornées au cadre du schéma)
-        for xb, (s0, s1), cls in ((x0 - 12, M.HSE_APPUI, "hsa"), (x1 + 4, M.HSE_LEGER, "hsl")):
-            z0, z1 = max(zmin, c - s1), min(zmax, c - s0)
-            o.append(f'<rect class="{cls}" x="{xb}" y="{Y(z1)}" width="8" height="{(z1 - z0) * k}" rx="2"/>')
-        lo, hi = c - M.PT_SOUS_COUDE[1], c - M.PT_SOUS_COUDE[0]
-        o.append(f'<rect class="z1 hpb" x="{x0}" y="{Y(hi)}" width="{x1 - x0}" height="{(hi - lo) * k}" rx="3"/>')
-        o.append(f'<text class="hpt on" x="{(x0 + x1) / 2}" y="{Y((lo + hi) / 2) + 4}" text-anchor="middle">plan {lo} → {hi}</text>')
-        zp = c - M.PLAQUE_SOUS_COUDE
-        o.append(f'<line class="hpp" x1="{x0}" y1="{Y(zp)}" x2="{x1}" y2="{Y(zp)}"/>'
-                 f'<text class="hpt hph" x="{x0 - 16}" y="{Y(zp) + 4}" text-anchor="end">plaque {zp}</text>')
-        o.append(f'<line class="rep" x1="{x0}" y1="{Y(c)}" x2="{x1}" y2="{Y(c)}" style="stroke-width:1.5"/>'
-                 f'<text class="hpt rept" x="{(x0 + x1) / 2}" y="{Y(c) - 6}" text-anchor="middle">coude {c}</text>')
-        o.append(f'<text class="hpn" x="{(x0 + x1) / 2}" y="14" text-anchor="middle">{nom}</text>')
-    return f'<svg viewBox="0 0 570 {Y(zmin) + 12}" role="img" aria-label="Hauteur du plan de travail selon le coude">{"".join(o)}</svg>'
 
 
 def etat(e):
@@ -639,96 +317,6 @@ de largeur (lu en mm ; en cm, chaque panneau perd 5 mm) ; la finition des pannea
 
 
 # ------------------------------------------------------------------ électricité
-# position du symbole sur le plan quand elle diffère du boîtier (boîtiers groupés, au fond des meubles)
-POS_PLAN = {"P5": (15, 24), "P6": (15, 42), "P4": (55, 14), "P7": (372, M.JOUE_C2 + 15), "P8": (372, M.JOUE_C2 + 47),
-            "P9": (372, M.COL_Y0 + 15), "S2": (M.X_CLOISON - 5, 21)}
-
-
-def minus(nom):
-    """Première lettre en minuscule, sauf sigle (« LED »)."""
-    return nom if nom[1:2].isupper() else nom[0].lower() + nom[1:]
-
-
-def pos_plan(rep, x, y):
-    """Symbole devant le mur (5 vers l'intérieur de la pièce), sauf position imposée."""
-    if rep in POS_PLAN:
-        return POS_PLAN[rep]
-    if y == 0:
-        return x, 5
-    if x == 0:
-        return 5, y
-    return x, y - 5   # mur sud ou fileur de l'entrée (face nord)
-
-
-def sym_lumiere(x, y, r=6):
-    d = r * 0.7
-    return (f'<circle class="ell" cx="{f(x)}" cy="{f(y)}" r="{f(r)}"/>'
-            f'<path class="ellx" d="M{f(x - d)} {f(y - d)}L{f(x + d)} {f(y + d)}M{f(x - d)} {f(y + d)}L{f(x + d)} {f(y - d)}"/>')
-
-
-def sym_prise(x, y, socles, cache=False, dedie=False):
-    cls = "elp" + (" elpd" if dedie else "") + (" elc" if cache else "")
-    if socles == 1:
-        return f'<circle class="{cls}" cx="{f(x)}" cy="{f(y)}" r="3"/>'
-    return f'<rect class="{cls}" x="{f(x - 5.5)}" y="{f(y - 3)}" width="11" height="6" rx="3"/>'
-
-
-def sym_inter(x, y):
-    return (f'<circle class="eli" cx="{f(x)}" cy="{f(y)}" r="3.2"/>'
-            f'<line class="elil" x1="{f(x + 2.2)}" y1="{f(y - 2.2)}" x2="{f(x + 6)}" y2="{f(y - 6)}"/>')
-
-
-def plan_elec_svg():
-    o = [f'<polygon class="floorbg" points="{pts(M.SOL_PARQUET)}"/>', f'<polygon class="ciment" points="{pts(M.SOL_CIMENT)}"/>',
-         f'<polygon class="wc" points="{pts(M.WC)}"/>', text(438, 185, "WC", "lbl muted"),
-         '<g class="fade">'] + volumes_plan() + ["</g>"]
-    for b in M.MEUBLES:
-        if b.role in ("caisson", "colonne") and b.etiq:
-            nom = b.etiq.split(" ")[0]
-            y = (74 if b.y1 >= M.P_CAISSON else b.y1 / 2 + 3) if b.role == "caisson" else (b.y0 + b.y1) / 2 + 3
-            o.append(text((b.x0 + b.x1) / 2, y, nom, "lbls muted"))
-    lum = {r: (x, y) for r, _, x, y, _ in M.LUMIERES}
-    inter = {r: pos_plan(r, x, y) for r, _, x, y, _, _, _ in M.INTERRUPTEURS}
-    # liaisons de commande : de chaque interrupteur à la lumière qu'il commande
-    for r, _, _, _, _, _, touches in M.INTERRUPTEURS:
-        sx, sy = inter[r]
-        for _, l, _ in touches:
-            lx, ly = lum[l]
-            mx, my = (sx + lx) / 2, (sy + ly) / 2
-            nx, ny = -(ly - sy), lx - sx
-            n = math.hypot(nx, ny) or 1
-            k = 0.18 * math.dist((sx, sy), (lx, ly))
-            o.append(f'<path class="elk" d="M{f(sx)} {f(sy)}Q{f(mx + nx / n * k)} {f(my + ny / n * k)} {f(lx)} {f(ly)}"/>')
-    for r, nom, x, y, _ in M.LUMIERES:
-        o.append(sym_lumiere(x, y))
-        o.append(text(x + 8, y - 5, f"{r} {minus(nom)}", "lbls elt", "start"))
-    for r, _, x, y, z, _, _ in M.INTERRUPTEURS:
-        px, py = inter[r]
-        o.append(sym_inter(px, py))
-        ty = py + 10 if y == 0 else py - 6
-        o.append(text(px + (5 if x == 0 else 0), ty, f"{r} h{z}", "lbls elt", "start" if x == 0 else "middle"))
-    for r, x, y, z, n, c, _, ou in M.PRISES:
-        px, py = pos_plan(r, x, y)
-        o.append(sym_prise(px, py, n, ou.startswith("dans"), c not in ("plan", "autres")))
-        if x == 0:
-            o.append(text(px + 8, py + 2, f"{r} h{z}", "lblx elpt", "start"))
-        elif x >= M.COL_DOS - 1:
-            o.append(text(px - 5, py + 2, f"{r} h{z}", "lblx elpt", "end"))
-        elif y == M.Y_MUR_SUD:
-            o.append(text(px, py - 6, f"{r} h{z}", "lblx elpt"))
-        else:
-            o.append(text(px + 6, py + 2, f"{r} h{z}", "lblx elpt", "start"))
-    # légende
-    y = 290
-    leg = [(sym_lumiere(0, y, 4.5), "point lumineux"), (sym_inter(0, y), "interrupteur"),
-           (sym_prise(0, y, 1), "prise"), (sym_prise(0, y, 2), "prise double"),
-           (sym_prise(0, y, 1, dedie=True), "circuit spécialisé"), (sym_prise(0, y, 1, cache=True), "dans un meuble")]
-    for k, (s, t) in enumerate(leg):
-        x = k * 70
-        o.append(f'<g transform="translate({x} 0)">{s}</g>' + text(x + 10, y + 2, t, "lbls", "start"))
-    o.append(f'<path class="elk" d="M{6 * 70} {y}h18"/>' + text(6 * 70 + 22, y + 2, "commande", "lbls", "start"))
-    return (f'<svg viewBox="-30 -15 545 320" role="img" aria-label="Plan électrique : points lumineux, prises et '
-            f'interrupteurs">{"".join(o)}</svg>')
 
 
 def coupe_elec_nord():
