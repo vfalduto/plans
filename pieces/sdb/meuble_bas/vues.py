@@ -9,7 +9,7 @@ from html import escape, unescape
 from commun.blocs import Achat, euros, note_source, tableau_achats, vue_lecture
 from commun.blocs_construction import Colonne, DessinMeuble, Etape, etapes, tableau_debit, vue_plans
 from commun.modele import Vue
-from pieces.sdb import piece as P
+from pieces.sdb import iso, piece as P
 from pieces.sdb.achats_communs import deux_meubles, prix
 from pieces.sdb.meuble_bas import modele as B
 from pieces.sdb.meuble_bas.document import VERSION
@@ -92,11 +92,36 @@ def pose_colonne() -> list[str]:
     ]
 
 
+def figure_montage(n: int) -> str:
+    """Schéma de l'étape n (1 à 13) : ce qui est déjà monté en gris, les pièces posées à l'étape ou sur lesquelles elle
+    travaille en couleur. Chaîne vide quand l'étape n'a rien à montrer (couper, silicone) : le modèle n'a pas la pièce."""
+    neuves = {k for k, v in B.POSE.items() if v == n} | set(B.ACCENT.get(n, ()))
+    vus = {k for k, v in B.POSE.items() if v <= n} | neuves | set(B.CONTEXTE.get(n, ()))
+    if not neuves:
+        return ""
+    blocs = [b for b in B.blocs() if b.nom in vus and not (b.nom.startswith("verin_") and f"joue_{b.nom[6]}" not in vus)]
+    return iso.dessin(blocs, neuves, reperes=False, titre=f"Montage, étape {n}")
+
+
+def figure_colonne(n: int) -> str:
+    """Schéma de l'étape n (1 à 5) de la pose de la colonne : la colonne seule à l'atelier, puis dans l'angle, sur le
+    meuble monté. Chaîne vide pour les étapes sans pièce (percer le plateau, fil des LED)."""
+    neuves = {k for k, v in B.POSE_COLONNE.items() if v == n} | set(B.ACCENT_COLONNE.get(n, ()))
+    if not neuves:
+        return ""
+    if n == 2:
+        blocs = [b for b in B.blocs() if b.nom in neuves]
+    else:
+        blocs = B.blocs()
+    return iso.dessin(blocs, neuves, reperes=False, titre=f"Pose de la colonne, étape {n}")
+
+
 def _montage() -> str:
     eq = "".join(f"<li>{escape(o)} : {n}</li>" for o, n in B.EQUERRES)
-    return (etapes([Etape("", f"<p>{t}</p>") for t in etapes_montage()], titre="Montage")
+    return (etapes([Etape("", f"<p>{t}</p>", figure_montage(i)) for i, t in enumerate(etapes_montage(), 1)], titre="Montage")
             + f"<p>Les {B.N_EQUERRES} équerres :</p><ul>{eq}</ul>"
-            + etapes([Etape("", f"<p>{t}</p>") for t in pose_colonne()], titre="Pose de la colonne"))
+            + etapes([Etape("", f"<p>{t}</p>", figure_colonne(i)) for i, t in enumerate(pose_colonne(), 1)],
+                      titre="Pose de la colonne"))
 
 
 # ------------------------------------------------------------------ Achats
