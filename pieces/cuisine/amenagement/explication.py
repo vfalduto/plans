@@ -227,7 +227,7 @@ def _hauteur_pt():
 # ------------------------------------------------------------------ porte du cellier : Mantion Tango (V13.14)
 def _tango(depuis):
     a, t = M.PLIANTE, M.TANGO
-    fiche = fiche_tango().replace('<table class="orga fiche">', '<table class="fiche">', 1)
+    fiche = fiche_tango().replace('<table class="orga fiche">', '<table class="tango">', 1)
     return f"""<h2>Porte du cellier, {t["nom"]}</h2>
 <p><a class="btn" href="{_racine(depuis)}cuisine-v13-porte-cellier.html">Plans détaillés</a></p>
 {_defile(fiche)}

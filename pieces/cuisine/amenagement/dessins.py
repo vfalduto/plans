@@ -750,7 +750,7 @@ CSS_DESSINS = """
 .hpw svg{display:block;width:100%;min-width:480px;max-width:690px;height:auto;margin:0 auto}
 tr.hpr td{background:color-mix(in srgb,#2F7FB5 10%,transparent)}
 .note{font-size:13px;color:var(--muted)}
-.fiche th{width:190px}
+.tango th{width:190px}
 .capa td.ok{background:color-mix(in srgb,#3E8E5A 20%,transparent)}
 .capa td.ko{background:color-mix(in srgb,var(--tri) 22%,transparent)}
 td.num,th.num{text-align:right;white-space:nowrap}

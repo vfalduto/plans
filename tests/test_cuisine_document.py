@@ -217,3 +217,12 @@ def test_tableau_de_contenu(construit):
         version, _, texte = re.findall(r"<td[^>]*>(.*?)</td>", ligne, re.S)
         attendu = _norm(texte).replace("#hauteur-du-plan-de-travail-etude", "./#explication")
         assert attendu in texte_historique, version
+
+
+def test_classes_du_gabarit_absentes():
+    """Aucune classe de mise en page du site (commun/site.css) dans les scènes, fiches et lectures : la fiche Tango,
+    `<table class="fiche">`, devenait à 390 px le panneau du bas (`.fiche{position:absolute}`) et la page débordait."""
+    tout = "".join(v.fiche + e.scene + e.fiche for v in VUES.values() for e in v.elements)
+    classes = {c for m in re.findall(r'class="([^"]+)"', tout) for c in m.split()}
+    assert not classes & {"app", "rail", "barre", "contenu", "vue", "scene", "fiche", "element", "lecture"}
+    assert not re.search(r"(^|[}\s,])\.fiche[\s{.:]", DOC.css)
