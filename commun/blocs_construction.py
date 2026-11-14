@@ -31,8 +31,16 @@ class DessinMeuble:
 
 
 def _scene(d):
-    if not d.mesure and d.scene.startswith("<svg"):
-        return '<svg data-mesure="non"' + d.scene[len("<svg"):]
+    """`mesure` faux : `data-mesure="non"` sur le `<svg>` de tête (blancs de tête retirés) ; un SVG qui n'est pas en
+    tête (enveloppé, après un commentaire ou un prologue) ne peut pas le porter : erreur. Une scène sans SVG passe."""
+    if d.mesure:
+        return d.scene
+    scene = d.scene.lstrip()
+    if scene.startswith("<svg"):
+        return '<svg data-mesure="non"' + scene[len("<svg"):]
+    if "<svg" in scene:
+        raise ValueError(f"dessin « {d.k} » : mesure=False, mais la scène ne commence pas par <svg (enveloppe, "
+                         "commentaire ou prologue avant) : Mesurer y resterait ; mettre le <svg> en tête")
     return d.scene
 
 
