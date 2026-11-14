@@ -1,8 +1,7 @@
 """Outils des tests de la cuisine : les anciens modules de 3d/v13/, chargés à la demande.
 
 Chaque ancien module (modele, plan, imprimable, porte) est importé seul, au premier besoin, comme le font les anciens
-générateurs (3d/v13/ en tête de sys.path). Un ancien module absent ou qui ne s'importe plus fait sauter (skip) les
-seuls tests qui le lisent.
+générateurs (3d/v13/ en tête de sys.path). Un ancien module absent fait sauter (skip) les seuls tests qui le lisent ; une erreur d'import échoue.
 """
 import importlib
 import sys
@@ -18,7 +17,7 @@ _cache = {}
 
 
 def ancien(nom):
-    """Module `nom` de 3d/v13/ (et ses dépendances), importé une fois ; skip s'il n'existe plus."""
+    """Module `nom` de 3d/v13/ (et ses dépendances), importé une fois ; skip s'il n'existe plus (une erreur d'import fait échouer)."""
     if nom in _cache:
         return _cache[nom]
     if not (ANCIEN / f"{nom}.py").exists():
@@ -28,8 +27,6 @@ def ancien(nom):
     sys.path.insert(0, str(ANCIEN))
     try:
         importlib.import_module(nom)
-    except ImportError as e:
-        pytest.skip(f"3d/v13/{nom}.py ne s'importe plus : {e}")
     finally:
         sys.path[:] = [p for p in sys.path if p != str(ANCIEN)]   # les anciens modules s'y remettent eux-mêmes
         for n in _NOMS:

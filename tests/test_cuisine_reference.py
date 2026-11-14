@@ -5,6 +5,8 @@ import importlib.util
 import json
 import re
 
+import pytest
+
 from tests.cuisine_anciens import FIXTURES, ancien
 from tests.outils import RACINE
 
@@ -27,9 +29,17 @@ def test_reference_complete():
     assert tab["changements"].count("<tr") == 91     # en-tête + 90 changements
 
 
+def _racine(nom):
+    """Texte d'un fichier de la racine ; saute si la bascule l'a supprimé."""
+    chemin = RACINE / nom
+    if not chemin.exists():
+        pytest.skip(f"{nom} n'existe plus")
+    return chemin.read_text(encoding="utf-8")
+
+
 def test_reference_a_jour():
     plan = ancien("plan")                             # saute après la bascule
-    page = (RACINE / "cuisine-v13.html").read_text(encoding="utf-8")
+    page = _racine("cuisine-v13.html")
     assert plan.page(plan.lire_figees()) == page      # l'ancienne page se régénère à l'identique
     assert extraire.extraire(page) == extraire.lire(FIXTURES)   # mêmes morceaux que sur disque
 
@@ -37,7 +47,7 @@ def test_reference_a_jour():
 def test_annexes_de_reference():
     assert ancien("imprimable").page() == (FIXTURES / "imprimable.html").read_text(encoding="utf-8")
     assert ancien("porte").page() == (FIXTURES / "porte-cellier.html").read_text(encoding="utf-8")
-    assert (FIXTURES / "imprimable.html").read_text(encoding="utf-8") == (RACINE / "cuisine-v13-imprimable.html").read_text(encoding="utf-8")
+    assert (FIXTURES / "imprimable.html").read_text(encoding="utf-8") == _racine("cuisine-v13-imprimable.html")
 
 
 def test_ancres():
@@ -54,5 +64,7 @@ def test_modele_et_rendu_de_reference():
     modele = ancien("modele")
     assert json.loads((FIXTURES / "modele.json").read_text(encoding="utf-8")) == json.loads(extraire.donnees_modele(modele))
     rendu = json.loads((FIXTURES / "rendu.json").read_text(encoding="utf-8"))
-    assert sorted(rendu) == ["COUPES_ISO", "COUPES_ISO_NO"] and rendu == extraire.coupes_rendu()
-    assert (FIXTURES / "maquette.html").read_text(encoding="utf-8") == (RACINE / "cuisine-v13-maquette.html").read_text(encoding="utf-8")
+    assert sorted(rendu) == ["COUPES_ISO", "COUPES_ISO_NO"]
+    if (extraire.ANCIEN / "rendu.py").exists():
+        assert rendu == extraire.coupes_rendu()
+    assert (FIXTURES / "maquette.html").read_text(encoding="utf-8") == _racine("cuisine-v13-maquette.html")
