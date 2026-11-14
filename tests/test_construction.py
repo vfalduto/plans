@@ -302,7 +302,7 @@ def test_copier_passerelle_exclues(tmp_path):
 
 
 def test_plan_appartement(monkeypatch):
-    from commun.appartement import plan_appartement
+    from commun.appartement import APPART, plan_appartement
     from pieces.entree import piece as entree
 
     site = charger_site().SITE
@@ -310,6 +310,9 @@ def test_plan_appartement(monkeypatch):
     liens = re.findall(r'<a href="([^"]*)" aria-label="([^"]*)">', svg)
     # chaque pièce mène à son premier document, passerelle ou document migré
     assert {href for href, _ in liens} == {adresse(p.documents[0]) for p in site.pieces}
+    # chaque lien porte le nom de son contour (le cellier mène à la cuisine) : couples (adresse, libellé)
+    pieces = {p.id: p for p in site.pieces}
+    assert set(liens) == {(adresse(pieces[c.vers or c.id].documents[0]), c.nom) for c in APPART if not c.inerte}
     assert ("entree/amenagement/", "Entrée") in liens
     assert not any(nom in ("WC", "Pièce ouest", "Placard") for _, nom in liens)
     # une pièce en passerelle mène à la page de la passerelle
@@ -379,6 +382,87 @@ def test_documents_declares(construit):
     for r in module.REDIRECTIONS:
         for cible in (r.cible, *r.pages.values()):
             assert cible in construites, (r.ancienne, cible)
+
+
+# documents nés sans ancienne page (« <piece>/<document> ») : dispensés d'une Redirection
+SANS_ANCIENNE_PAGE = set()
+
+
+def _modules_documents():
+    """(dossier de la pièce, module) de chaque pieces/<piece>/<document>/document.py qui porte DOCUMENT."""
+    res = []
+    for f in sorted((RACINE / "pieces").glob("*/*/document.py")):
+        module = importlib.import_module(".".join(f.relative_to(RACINE).with_suffix("").parts))
+        if hasattr(module, "DOCUMENT"):
+            res.append((f.parts[-3], module))
+    return res
+
+
+def _non_declares(site, modules):
+    """Modules dont le DOCUMENT n'est pas dans SITE, dans la pièce de son dossier : perdu à une fusion de site.py."""
+    pieces = {p.id: p.documents for p in site.pieces}
+    return [m.__name__ for dossier, m in modules
+            if not any(isinstance(d, Document) and d.id == m.DOCUMENT.id for d in pieces.get(dossier, ()))
+            or m.DOCUMENT.piece != dossier]
+
+
+def _sans_redirection(site, redirections, dispenses=frozenset()):
+    """Documents de SITE qu'aucune Redirection ne désigne : leur ancienne page, perdue à une fusion, resterait morte."""
+    menent = {c for r in redirections for c in (r.cible, *r.pages.values())}
+    return [f"{d.piece}/{d.id}" for d in _documents(site) if f"{d.piece}/{d.id}" not in dispenses
+            and not menent & {adresse(d, v.id) for v in d.variantes}]
+
+
+def _vues_inconnues(site, redirections):
+    """Vues visées par `ancres` et `motifs` d'une Redirection qui n'existent pas dans le type du document cible."""
+    from commun.modele import VUES
+    par_page = {adresse(d, v.id): d for d in _documents(site) for v in d.variantes}
+    res = []
+    for r in redirections:
+        doc = par_page.get(r.cible)
+        visees = list(r.ancres.values()) + [gabarit for _, gabarit in r.motifs]
+        res += [(r.ancienne, v) for v in visees if doc is None or v.split("?")[0] not in VUES[doc.type]]
+    return res
+
+
+def _caches_faux(site):
+    """Documents dont CACHE_RENDU ne déclare pas exactement ses variantes : une variante oubliée n'est jamais rendue."""
+    res = []
+    for d in _documents(site):
+        module = importlib.import_module(f"pieces.{d.piece}.{d.id.replace('-', '_')}.document")
+        cache = getattr(module, "CACHE_RENDU", None)
+        if cache is not None and set(cache.variantes) != {v.id for v in d.variantes}:
+            res.append((f"{d.piece}/{d.id}", sorted(cache.variantes), [v.id for v in d.variantes]))
+    return res
+
+
+def test_site_py_tient_documents_et_redirections():
+    """Ce que huit branches qui touchent SITE et REDIRECTIONS peuvent perdre à la fusion, sans liste figée."""
+    from commun.redirections import Redirection
+
+    module = charger_site()
+    site, redirections = module.SITE, module.REDIRECTIONS
+    modules = _modules_documents()
+    assert modules, "aucun document migré sur le disque"
+    assert _non_declares(site, modules) == []
+    assert _sans_redirection(site, redirections, SANS_ANCIENNE_PAGE) == []
+    assert _vues_inconnues(site, redirections) == []
+    assert _caches_faux(site) == []
+    # chaque garde voit la faute qu'elle doit voir
+    sans_entree = Site(tuple(dataclasses.replace(p, documents=()) if p.id == "entree" else p for p in site.pieces))
+    assert "pieces.entree.amenagement.document" in _non_declares(sans_entree, modules)
+    deplace = Site(tuple(dataclasses.replace(p, documents=()) if p.id == "entree" else
+                         dataclasses.replace(p, documents=p.documents + (modules[0][1].DOCUMENT,)) if p.id == "salon"
+                         else p for p in site.pieces))
+    assert _non_declares(deplace, modules) != []
+    assert _sans_redirection(site, ()) == ["entree/amenagement"]
+    assert _sans_redirection(site, (), {"entree/amenagement"}) == []
+    faute = (Redirection("vieux.html", "entree/amenagement/", {"plan": "plans"}, ((r"^c-(a)", "coupe?k={1}"),)),)
+    assert _vues_inconnues(site, faute) == [("vieux.html", "plans"), ("vieux.html", "coupe?k={1}")]
+    entree = next(d for d in _documents(site) if d.id == "amenagement" and d.piece == "entree")
+    oubli = dataclasses.replace(entree, variantes=entree.variantes + (dataclasses.replace(entree.variantes[0],
+                                                                                           id="oubliee"),))
+    assert _caches_faux(Site((Piece("entree", "Entrée", (oubli,)),))) != []
 
 
 def test_historique_de_l_entree(construit):
