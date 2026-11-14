@@ -16,12 +16,13 @@ RACINE = Path(__file__).resolve().parents[3]
 if str(RACINE) not in sys.path:
     sys.path.insert(0, str(RACINE))
 
+from commun.construction import FAVICON  # noqa: E402
 from commun.gabarit import adresse, page_document  # noqa: E402
 from commun.modele import Site, verifier  # noqa: E402
 from commun.redirections import Redirection, page_redirection  # noqa: E402
 
 SORTIE = RACINE / "cache" / "essai-site"
-COMMUNS = ("commun/site.css", "commun/site.js", "favicon.svg")
+COMMUNS = ("commun/site.css", "commun/site.js")
 
 # anciennes adresses de l'essai (tests/navigateur/redirections.js) : à la racine et dans un sous-dossier
 REDIRECTIONS = (
@@ -65,6 +66,7 @@ def construire(sortie: Path = SORTIE) -> Path:
             continue
         (sortie / nom).parent.mkdir(parents=True, exist_ok=True)
         shutil.copyfile(source, sortie / nom)
+    (sortie / "favicon.svg").write_text(FAVICON, encoding="utf-8")   # écrit par la construction, comme pour site/
     return sortie
 
 
