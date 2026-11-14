@@ -150,37 +150,48 @@ async page => {
   });
 
   // ------------------------------------------------------------------ 5. dessins : pas de noir, texte dans le viewBox
+  // Tous les dessins de la page : svg.enf (plans, découpe, schémas) et le svg de tête de chaque élément de scène
+  // (iso et ouverte, à fills en ligne). site.js agrandit le viewBox des dessins de scène : le texte se compare au
+  // viewBox d'origine, lu dans le HTML servi (même rang parmi les dessins de la même section).
   await partie("dessins", async () => {
     await page.setViewportSize({width: 1440, height: 900});
-    for (const k of REPERES) {
-      const t = `dessins, ${k}`;
-      await ouvrir(page, `${DOC}#plans?k=${k}`);
-      await repereAffiche(page, k, t);
-      const r = await page.evaluate(() => {
-        const svgs = [...document.querySelectorAll("svg.enf")].filter(s => s.checkVisibility());
-        const noirs = [], dehors = [];
+    await ouvrir(page, DOC);
+    const html = await page.evaluate(async u => (await fetch(u)).text(), DOC);
+    const etats = [...REPERES.map(k => ["plans", k]), ...VUES.slice(1).map(v => [v, ""])];
+    for (const [vue, k] of etats) {
+      const t = `dessins, ${vue}${k ? " " + k : ""}`;
+      await ouvrir(page, `${DOC}#${vue}${k ? "?k=" + k : ""}`);
+      await vueAffichee(page, vue, t);
+      if (k) await repereAffiche(page, k, t);
+      const r = await page.evaluate(([v, source]) => {
+        const SEL = "svg.enf, .scene > .element > svg";
+        const section = document.querySelector(`section[data-vue="${v}"]`);
+        const d0 = new DOMParser().parseFromString(source, "text/html").querySelector(`section[data-vue="${v}"]`);
+        const tous = [...section.querySelectorAll(SEL)], origine = [...d0.querySelectorAll(SEL)];
+        const noirs = [], dehors = [], svgs = tous.filter(s => s.checkVisibility());
         for (const svg of svgs) {
-          const vb = svg.viewBox.baseVal;
+          const o = origine[tous.indexOf(svg)].getAttribute("viewBox").trim().split(/[\s,]+/).map(Number);
+          const [x0, y0, w, h] = o;
           for (const e of svg.querySelectorAll("path,rect,circle,ellipse,polygon,polyline,text,tspan")) {
             if (e.closest("defs,clipPath,marker,mask,symbol")) continue;
             if (getComputedStyle(e).fill === "rgb(0, 0, 0)") noirs.push(`${e.tagName}${e.getAttribute("class") ? "." + e.getAttribute("class") : ""}`);
           }
           const versSvg = svg.getScreenCTM().inverse();
           for (const tx of svg.querySelectorAll("text")) {
-            if (!tx.checkVisibility() || !tx.textContent.trim()) continue;
+            if (!tx.checkVisibility() || !tx.textContent.trim() || tx.closest(".trace-mesure")) continue;
             const b = tx.getBBox(), m = versSvg.multiply(tx.getScreenCTM());
             const pts = [[b.x, b.y], [b.x + b.width, b.y], [b.x, b.y + b.height], [b.x + b.width, b.y + b.height]].map(([x, y]) => {
               const p = svg.createSVGPoint(); p.x = x; p.y = y; return p.matrixTransform(m);
             });
             const g = 0.5;
-            if (Math.min(...pts.map(p => p.x)) < vb.x - g || Math.max(...pts.map(p => p.x)) > vb.x + vb.width + g
-                || Math.min(...pts.map(p => p.y)) < vb.y - g || Math.max(...pts.map(p => p.y)) > vb.y + vb.height + g)
+            if (Math.min(...pts.map(p => p.x)) < x0 - g || Math.max(...pts.map(p => p.x)) > x0 + w + g
+                || Math.min(...pts.map(p => p.y)) < y0 - g || Math.max(...pts.map(p => p.y)) > y0 + h + g)
               dehors.push(tx.textContent.trim().slice(0, 30));
           }
         }
         return {n: svgs.length, noirs, dehors};
-      });
-      verifier(r.n > 0 || ["iso", "ouverte"].includes(k), `${t} : aucun svg.enf visible`);
+      }, [vue, html]);
+      verifier(r.n > 0 || ["montage", "achats"].includes(vue), `${t} : aucun dessin visible`);
       verifier(r.noirs.length === 0, `${t} : aplat noir ${JSON.stringify(r.noirs.slice(0, 8))}`);
       verifier(r.dehors.length === 0, `${t} : texte hors du viewBox ${JSON.stringify(r.dehors.slice(0, 8))}`);
     }
