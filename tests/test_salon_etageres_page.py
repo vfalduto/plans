@@ -1,5 +1,6 @@
 """Salon, étagères : la page du document salon/etageres (calculs, dessins, vues, document), comparée à l'ancienne
 page V1.8 figée (tests/fixtures/salon/salon-etageres.html) et aux dessins de référence (tests/fixtures/salon/)."""
+import hashlib
 import json
 import math
 import re
@@ -346,6 +347,12 @@ def test_achats(cle):
         assert escape(a["article"]) in v.scene and f"prix {a['statut']}" in v.scene
         if a["url"]:
             assert f'href="{a["url"]}"' in v.scene
+    # chaque ligne du bloc : quantité, montant de la ligne, prix unitaire dans la note
+    rangees = re.findall(r"<tr><td>(.*?)</td><td[^>]*>(.*?)</td><td[^>]*>(.*?)</td><td[^>]*>(.*?)</td></tr>", v.scene)
+    for a in e.achats:
+        (r,) = [r for r in rangees if r[0].startswith(escape(a["article"]) + "<small>")]
+        assert (unescape(r[1]), r[2], r[3]) == (a["ref"], f'{a["qte"]:g}', euros(a["total"])), (a["article"], r)
+        assert f"{euros(a['pu'])} l'unité" in r[0]
     # intro, total de la disposition, transport, note : chaque paragraphe de la section, dans sa version `cle`
     paragraphes = re.findall(r"<p[^>]*>(.*?)</p>", _dispo(_section("achats"), cle), re.S)
     assert len(paragraphes) == 4
@@ -401,9 +408,15 @@ def test_rendus():
         assert balises(_explication(c), "img") == [] and 'href="./#explication">les voir</a>' in _explication(c)
 
 
+# empreintes de salon-meubles-3d/etageres-{iso,detail}.jpg, les images de l'ancienne page, relevées à la copie (le
+# dossier racine part au nettoyage commun du salon)
+EMPREINTES_RENDUS = {"iso": "a2c68f135665860428190011cef83f997006d557e1da7c4846520756ce5f4e13",
+                     "detail": "047d0c84e7f25c2bbf04e04e1c1fd29c2869faa664ce9488acfe8dfc5832c575"}
+
+
 def test_rendus_copies_tels_quels():
-    for k in ("iso", "detail"):
-        assert (vues.RENDUS_SITE / f"actuelle-{k}.jpg").read_bytes() == (RACINE / f"salon-meubles-3d/etageres-{k}.jpg").read_bytes()
+    for k, empreinte in EMPREINTES_RENDUS.items():
+        assert hashlib.sha256((vues.RENDUS_SITE / f"actuelle-{k}.jpg").read_bytes()).hexdigest() == empreinte, k
 
 
 # sections de l'ancienne page → vue qui reprend leurs morceaux (p, li, td, th, h3)
@@ -411,7 +424,7 @@ DESTINATION = {"dispositions": "explication", "meuble": "explication", "presento
                "rendus": "explication", "materiaux": "explication", "debit": "decoupe", "charges": "explication",
                "achats": "achats", "montage": "montage", "valider": "explication"}
 # morceaux retirés ou réécrits par une décision de ce plan (décisions 5, 6 et 10, tableau « Ancienne page → vues »)
-ECARTS = ("Cliquer une vignette", "<b>Outils</b> :", "Total TTC (disposition", "Géométrie :")
+ECARTS = ("Cliquer une vignette", "<b>Outils</b> :", "Total TTC (disposition")
 # en-têtes des tableaux refaits par un bloc du socle (décision 5 : achats ; matériaux : retenu, pourquoi, autres
 # possibilités dans une seule cellule), qui ont leurs propres en-têtes
 SANS_ENTETES = ("achats", "materiaux")
@@ -460,6 +473,8 @@ def test_rien_ne_se_perd(cle, ident):
         vus += 1
     assert vus > 0 or (ident == "rendus" and cle != "actuelle")
     if ident == "dispositions":
+        ouverture = re.search(r"<p>(.*?)Cliquer une vignette", html, re.S)[1]   # avant la phrase réécrite
+        assert _texte(ouverture) + " Choisir une disposition" in lu["explication"]
         assert ("Choisir une disposition change toute la page : élévation, vues de dessus, vue iso, composition, "
                 "débit, achats et prix.") in lu["explication"]
     if ident == "rendus" and cle != "actuelle":
@@ -561,3 +576,18 @@ def test_journal_apres_la_bascule():
     lignes = [e for e in entrees(charger_site().SITE, RACINE) if e.piece == "Salon" and e.document == "Étagères"]
     assert [(e.version, e.texte) for e in lignes] == [(c.version, c.texte) for c in depuis_page(ANCIENNE)]
     assert len(lignes) == 9 and {e.lien for e in lignes} == {"salon/etageres/"} and {e.variante for e in lignes} == {"Actuelle"}
+
+
+def _table(html: str, entete: str) -> str:
+    """Le premier <table> de `html` dont un en-tête est `entete`."""
+    (t,) = [t for t in re.findall(r"<table.*?</table>", html, re.S) if f">{entete}</th>" in t][:1]
+    return t
+
+
+@pytest.mark.parametrize("cle", calculs.CLES)
+@pytest.mark.parametrize("ident,entete", [("dispositions", "Hauteurs de dessus"), ("presentoir", "Poids posé"),
+                                          ("charges", "Résistance")])
+def test_tableaux_de_l_explication(cle, ident, entete):
+    """Tableau comparatif, présentoir, ce qui peut céder : les lignes de l'ancienne page, cellule par cellule."""
+    ancien = _table(_dispo(_section(ident), cle), entete)
+    assert _lignes(_table(_explication(cle), entete)) == _lignes(ancien)

@@ -9,8 +9,8 @@
      l'adresse rechargée redonne le même état ; Escalier en base inverse les deux ; « Comparer » caché hors de Plans.
    - Mesurer : les centres de deux montants voisins de l'élévation donnent 55 cm (± 0,5) ; caché sur l'iso.
    - Dessins lisibles (scènes, Découpe, Explication) : aucune forme ni texte noir par défaut, aucune police à chasse
-     fixe ; un texte hors du viewBox (déjà dans le dessin de référence, identique à la virgule près) est relevé
-     sans échec.
+     fixe ; aucun texte hors du viewBox, sauf les écarts connus de la référence (ECARTS_CONNUS : l'étiquette « mur »
+     du dessin de l'entaille, en Découpe), relevés sans échec.
    - Explication : quatre vignettes, celle de la variante en aria-current ; Actuelle : deux images chargées ; les
      trois autres : aucune image, « les voir » mène à l'Explication d'Actuelle.
    - Anciennes adresses (chaque ancre, inconnue, aucune, changements), historique (neuf changements sous Actuelle,
@@ -26,6 +26,8 @@ async page => {
   const ANCRES = {dispositions: "explication", iso: "plans?k=iso", meuble: "plans?k=elevation", presentoir: "explication",
                   rendus: "explication", materiaux: "explication", debit: "decoupe", charges: "explication",
                   achats: "achats", montage: "montage", valider: "explication"};
+  // textes hors du viewBox déjà dans le dessin de référence (tracé identique à la virgule près), par vue
+  const ECARTS_CONNUS = {decoupe: ["mur"]};
   const echecs = [], erreurs = [], releves = [];
   const verifier = (vrai, message) => { if (!vrai) echecs.push(message); };
   const egal = (a, b) => JSON.stringify(a) === JSON.stringify(b);
@@ -252,7 +254,10 @@ async page => {
         verifier(r.n > 0, `${t} : aucun dessin visible`);
         verifier(r.noirs.length === 0, `${t} : noir par défaut ${JSON.stringify(r.noirs.slice(0, 8))}`);
         verifier(r.chasse.length === 0, `${t} : police à chasse fixe ${JSON.stringify(r.chasse.slice(0, 4))}`);
-        if (r.dehors.length) releves.push(`${t} : texte hors du viewBox, comme dans la référence ${JSON.stringify(r.dehors.slice(0, 8))}`);
+        const connus = ECARTS_CONNUS[vue] || [], inconnus = r.dehors.filter(x => !connus.includes(x));
+        verifier(inconnus.length === 0, `${t} : texte hors du viewBox ${JSON.stringify(inconnus.slice(0, 8))}`);
+        if (r.dehors.length > inconnus.length)
+          releves.push(`${t} : texte hors du viewBox, comme dans la référence ${JSON.stringify(r.dehors.filter(x => connus.includes(x)))}`);
       }
     }
   });
