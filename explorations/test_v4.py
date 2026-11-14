@@ -4,6 +4,7 @@ import sys
 
 sys.path.insert(0, os.path.dirname(__file__))
 sys.path.insert(1, os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "3d", "sdb"))
+sys.path.insert(2, os.path.join(os.path.dirname(os.path.abspath(__file__)), ".."))   # pieces/
 import modele as M  # noqa: E402
 
 
@@ -328,16 +329,16 @@ def test_page_achats_sections():
     h = A.page()
     for sec in ('id="deux-meubles"', 'id="haut-seul"', 'id="changements"'):
         assert sec in h, sec
-    import bas
+    from pieces.sdb.meuble_bas import document
     assert 'id="bas"' in h
-    assert "<h1>Liste d'achats</h1>" in h and f"achats · {bas.VERSION}" in h
+    assert "<h1>Liste d'achats</h1>" in h and f"achats · {document.VERSION}" in h
     assert 'href="sdb-meuble-haut.html"' in h and 'href="sdb-meuble-bas.html"' in h and 'href="index.html"' in h
     assert M.MAGASIN["tel"] in h
 
 
 def test_page_achats_suit_le_meuble_bas_courant():
     import achats as A
-    import bas
+    from pieces.sdb.meuble_bas import modele as bas
     h = A.page()
     for nom, ref, _, _, _ in bas.prix():
         assert ref in h, nom
