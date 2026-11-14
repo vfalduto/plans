@@ -153,3 +153,14 @@ def test_pas_de_li_dans_les_etapes():
     m = V["montage"].elements[0].scene
     for etape in re.findall(r"<ol class=\"etapes\".*?</ol>", m, re.S):
         assert etape.count("<li>") == 3
+
+
+def test_cotes_des_faces_ancrees_par_attribut():
+    """La cote d'en-tête d'une face est ancrée à droite : aucune règle CSS ne doit l'écraser (elle sortait du cadre)."""
+    assert "text-anchor" not in re.search(r"\.ftx\{[^}]*\}", D.CSS)[0]
+    assert 'class="ftx muted" x=' in D.fiches() and 'text-anchor="end"' in D.fiches()
+
+
+def test_explication_sans_chemin_de_code():
+    e = texte(V["explication"].elements[0].scene)
+    assert "pieces/sdb" not in e and "3d/sdb" not in e and "Repère : origine" in e

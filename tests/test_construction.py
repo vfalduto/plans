@@ -385,7 +385,7 @@ def test_documents_declares(construit):
                     if (RACINE / "site" / c).is_file()}
     for r in module.REDIRECTIONS:
         for cible in (r.cible, *r.pages.values()):
-            assert cible in construites, (r.ancienne, cible)
+            assert cible.split("#")[0] in construites, (r.ancienne, cible)
 
 
 # documents nés sans ancienne page (« <piece>/<document> ») : dispensés d'une Redirection

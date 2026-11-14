@@ -57,5 +57,4 @@ def vue_explication() -> Vue:
              (f"{sum(p['q'] for p in pieces)}", f"Pièces, en {len(pieces)} repères")]
     return vue_lecture("explication", tete(_chapo()) + chiffres(stats) + _alcove() + _materiaux()
                        + note_source("Repère : origine à l'angle nord-ouest intérieur, x vers l'est, y vers le sud, z "
-                                     "depuis le sol, cotes en cm (débit en mm). Cotes et données : "
-                                     "pieces/sdb/meuble_haut/ pour le meuble, 3d/sdb/modele.py (V6.4) pour le modèle."))
+                                     "depuis le sol, cotes en cm (débit en mm)."))

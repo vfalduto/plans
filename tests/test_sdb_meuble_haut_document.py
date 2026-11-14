@@ -49,7 +49,7 @@ def test_redirection_du_haut():
 def test_redirection_des_achats():
     (r,) = [r for r in charger_site().REDIRECTIONS if r.ancienne == "sdb-meuble-achats.html"]
     assert r.cible == "sdb/meuble-haut/" and r.ancres["haut-seul"] == r.ancres["deux-meubles"] == "achats"
-    assert r.ancres[""] == "achats" and r.pages["bas"] == "sdb/meuble-bas/"
+    assert r.ancres[""] == "achats" and r.pages["bas"] == "sdb/meuble-bas/#achats"
     assert r.pages["changements"] == "sdb/meuble-bas/historique.html"
 
 

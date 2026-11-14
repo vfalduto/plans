@@ -226,17 +226,34 @@ async page => {
       await ouvrir(page, `${DOC}#${vue}`);
       await vueAffichee(page, vue, `dessins de ${vue}`);
       const r = await page.evaluate(v => {
-        const noirs = [];
+        const noirs = [], dehors = [];
         const svgs = [...document.querySelectorAll(`section[data-vue="${v}"] svg`)].filter(s => !s.classList.contains("ico"));
-        for (const svg of svgs)
+        for (const svg of svgs) {
           for (const e of svg.querySelectorAll("path,rect,circle,ellipse,polygon,polyline,text")) {
             if (e.closest("defs,clipPath,marker,mask,symbol")) continue;
             if (getComputedStyle(e).fill === "rgb(0, 0, 0)") noirs.push(`${e.tagName}${e.getAttribute("class") ? "." + e.getAttribute("class") : ""}`);
           }
-        return {n: svgs.length, noirs: [...new Set(noirs)]};
+          // texte hors du viewBox (cotes des faces, étiquettes des calepinages)
+          const vb = svg.viewBox.baseVal;
+          if (!vb || !vb.width) continue;
+          const versSvg = svg.getScreenCTM().inverse();
+          for (const tx of svg.querySelectorAll("text")) {
+            if (!tx.checkVisibility() || !tx.textContent.trim()) continue;
+            const b = tx.getBBox(), m = versSvg.multiply(tx.getScreenCTM());
+            const pts = [[b.x, b.y], [b.x + b.width, b.y + b.height]].map(([x, y]) => {
+              const p = svg.createSVGPoint(); p.x = x; p.y = y; return p.matrixTransform(m);
+            });
+            const g = 0.6;
+            if (Math.min(pts[0].x, pts[1].x) < vb.x - g || Math.max(pts[0].x, pts[1].x) > vb.x + vb.width + g
+                || Math.min(pts[0].y, pts[1].y) < vb.y - g || Math.max(pts[0].y, pts[1].y) > vb.y + vb.height + g)
+              dehors.push(tx.textContent.trim().slice(0, 30));
+          }
+        }
+        return {n: svgs.length, noirs: [...new Set(noirs)], dehors: [...new Set(dehors)]};
       }, vue);
       verifier(r.n > 0, `dessins de ${vue} : aucun`);
       verifier(r.noirs.length === 0, `dessins de ${vue} : aplat noir ${JSON.stringify(r.noirs.slice(0, 8))}`);
+      verifier(r.dehors.length === 0, `dessins de ${vue} : texte hors du viewBox ${JSON.stringify(r.dehors.slice(0, 8))}`);
     }
   });
 
@@ -280,7 +297,7 @@ async page => {
       ["/sdb-meuble-achats.html#haut-seul", H, "#achats"],
       ["/sdb-meuble-achats.html#deux-meubles", H, "#achats"],
       ["/sdb-meuble-achats.html", H, "#achats"],
-      ["/sdb-meuble-achats.html#bas", "/sdb/meuble-bas/", ""],
+      ["/sdb-meuble-achats.html#bas", "/sdb/meuble-bas/", "#achats"],
       ["/sdb-meuble-achats.html#changements", "/sdb/meuble-bas/historique.html", ""],
     ];
     for (const [entree, chemin, hash] of cas) {

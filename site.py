@@ -80,7 +80,7 @@ MOTIFS_SDB_HAUT = ((r"^etape-\d+$", "montage"), (r"^op-\d+-\d+$", "montage"))
 # sdb-meuble-achats.html (la liste d'achats des deux meubles) : la liste du haut seul et le total des deux sont dans
 # les achats du meuble haut ; sans ancre, la page s'ouvre sur ces achats (la clé vide est le fragment absent)
 ANCRES_SDB_ACHATS = {"": "achats", "haut-seul": "achats", "deux-meubles": "achats"}
-PAGES_SDB_ACHATS = {"bas": "sdb/meuble-bas/", "changements": "sdb/meuble-bas/historique.html"}
+PAGES_SDB_ACHATS = {"bas": "sdb/meuble-bas/#achats", "changements": "sdb/meuble-bas/historique.html"}
 
 # ancres de cuisine-v13.html (3d/ancres.js) : la page courante ; ses blocs figés V11.49 et V12.7 (ids relevés une
 # fois dans tests/fixtures/cuisine/ancres.json, plus l'id du bloc) mènent à leur archive

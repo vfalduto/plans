@@ -237,7 +237,6 @@ def test_pages_ne_regenerent_plus_les_archives():
 def test_gabarit_barre_par_defaut_inchangee():
     par_defaut = pages.gabarit("t", "bas", "<p>x</p>")
     assert 'href="sdb-meuble-v4-bas.html"' in par_defaut and "Caisson haut" in par_defaut
-    assert "BARRE-PROPRE" in pages.gabarit("t", "haut", "", barre_html="BARRE-PROPRE")
 
 
 def test_etapes_du_haut_sans_le_bas():

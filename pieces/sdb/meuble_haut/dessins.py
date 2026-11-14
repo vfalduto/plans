@@ -191,7 +191,7 @@ def face_svg(b, k, s, trous_a, trous_b, label="") -> str:
         der[k_] = X(u)
         y = h_ + (k_ + 1) * (fs + 0.8)
         o.append(f'<line class="fdim" x1="{X(u):.2f}" y1="{h_:.2f}" x2="{X(u):.2f}" y2="{y - fs + .4:.2f}"/>'
-                 f'<text class="ftx" x="{X(u):.2f}" y="{y:.2f}" style="font-size:{fs}px">{u * 10:.0f}</text>')
+                 f'<text class="ftx" x="{X(u):.2f}" y="{y:.2f}" text-anchor="middle" style="font-size:{fs}px">{u * 10:.0f}</text>')
     nb = len(der)
     gauche, der = [], []
     for w in sorted(vs):                # cotes à gauche, décalées si elles se touchent
@@ -388,15 +388,19 @@ def pose_en_coupe(label="Pose du caisson haut, en coupe") -> str:
         o.append(rect(M.X1, -(z + 2), M.X1 + ep, -(z - 2), "dg"))     # cale de l'épaisseur du carrelage
         o.append(f'<line x1="{hx - 1.5}" y1="{-z}" x2="{M.X1 + ep + 6}" y2="{-z}" style="stroke:var(--ink);stroke-width:.6"/>')
         o.append(rect(M.X1 + ep, -(z + 0.6), M.X1 + ep + 6, -(z - 0.6), "", ' style="fill:var(--tri);fill-opacity:.7"'))
-    o.append(text(hx - 3, -zs[-1] - 3, f"vis 6 × {M.VIS_MUR['L']} tête fraisée", "lblx", "end"))
-    o.append(text(hx - 3, -zs[-1] + 8, f"cale de {cm(ep)} (épaisseur du carrelage)", "lblx", "end"))
-    o.append(text(hx - 3, -zs[0] + 5, "cheville Ø 8 dans le mur nu", "lblx", "end"))
+    # étiquettes hors du caisson, à sa gauche, reliées par un trait fin à ce qu'elles nomment
+    for y, t, cible in ((-zs[-1] - 3, f"vis 6 × {M.VIS_MUR['L']} tête fraisée", hx - 2),
+                        (-zs[-1] + 8, f"cale de {cm(ep)} (épaisseur du carrelage)", M.X1 + ep / 2),
+                        (-zs[0] + 5, "cheville Ø 8 dans le mur nu", M.X1 + ep + 3)):
+        o.append(f'<line class="dim" x1="{f(ch["x0"] - 1.5)}" y1="{f(y - 1.2)}" x2="{f(cible)}" y2="{f(y - 1.2)}"/>')
+        o.append(text(ch["x0"] - 2, y, t, "lblx", "end"))
     o.append(cote_h(ch["x0"], M.X1, -M.H - 3, "45"))
     o.append(cote_v(0, -cr, M.X1 + 13, str(cr)))
     o.append(cote_v(-cr, -zs[0], M.X1 + 13, cm(zs[0] - cr)))
     o.append(text(x0, 6, "pièce ←   → mur du fond", "lblx muted", "start"))
     # 2 de plus en haut que l'ancien dessin : la cote « 45 » y sortait du cadre
-    return (f'<svg viewBox="{x0 - 2} {-M.H - 10} {M.X1 + 22 - x0} {M.H + 20}" role="img" '
+    # 40 de plus à gauche : les étiquettes sont à la gauche du caisson
+    return (f'<svg viewBox="{x0 - 42} {-M.H - 10} {M.X1 + 62 - x0} {M.H + 20}" role="img" '
             f'aria-label="{escape(label)}">{"".join(o)}</svg>')
 
 
@@ -447,7 +451,7 @@ svg.face{display:block;width:100%;height:auto}
 .fta{fill:var(--ink)}
 .ftb{fill:var(--panel);stroke:var(--ink);stroke-width:.12}
 .fdim{stroke:var(--muted);stroke-width:.06}
-.ftx{fill:var(--ink);font-family:var(--ui);font-variant-numeric:tabular-nums;text-anchor:middle}
+.ftx{fill:var(--ink);font-family:var(--ui);font-variant-numeric:tabular-nums}
 .ftx.muted{fill:var(--muted)}
 .dg{fill:#D29A68;fill-opacity:.75;stroke:var(--ink);stroke-width:.35}
 .pvide{fill:var(--panel);stroke:var(--ink);stroke-width:.3}
