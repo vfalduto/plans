@@ -297,12 +297,16 @@ async page => {
 
     // Zone : seule la zone de l'état se touche ; sa fiche dit 25 cm ; une seule zone .ici
     await aller(page, "#plan");
-    const zoneVue = await page.evaluate(() => {
-      const z = [...document.querySelectorAll('section[data-vue="plan"] rect.zone[data-meuble="table"]')].filter(x => x.checkVisibility());
-      if (z.length !== 1) return {n: z.length};
-      const b = z[0].getBoundingClientRect();
-      return {n: 1, si: z[0].dataset.si, x: b.left + b.width / 2, y: b.top + b.height / 2};
-    });
+    // zones montrées : par vus(), qui remonte les ancêtres, une zone désignée par son data-si
+    const ZONES_TABLE = `${PLAN} rect.zone[data-meuble="table"]`;
+    const zoneSelon = x => x ? `${ZONES_TABLE}[data-si="${x}"]` : `${ZONES_TABLE}:not([data-si])`;
+    const sisTable = await page.evaluate(s => [...document.querySelectorAll(s)].map(z => z.dataset.si || ""), ZONES_TABLE);
+    const zonesVues = await vus(page, sisTable.map(zoneSelon));
+    const montrees = sisTable.filter(x => zonesVues[zoneSelon(x)]);
+    const zoneVue = montrees.length !== 1 ? {n: montrees.length, zones: sisTable} : await page.evaluate(s => {
+      const z = document.querySelector(s), b = z.getBoundingClientRect();
+      return {n: 1, si: z.dataset.si, x: b.left + b.width / 2, y: b.top + b.height / 2};
+    }, zoneSelon(montrees[0]));
     verifier(zoneVue.n === 1 && zoneVue.si === "table:ouverte", `ouverte, zones de la table : ${JSON.stringify(zoneVue)}`);
     if (zoneVue.n === 1) await page.mouse.click(zoneVue.x, zoneVue.y);
     let fm = await ficheMeuble(page);
@@ -355,6 +359,18 @@ async page => {
     await cliquerValeur(page, "bois", "noyer");
     pa = await panneauChoix(page);
     verifier(pa.pastille === "3" && pa.etiquette === "3 options modifiées", `trois options : ${JSON.stringify(pa)}`);
+    // le même état sur l'autre variante du document : html, plan, panneau
+    await ouvrir(page, DOC + "b.html#plan");
+    v = await vus(page, [Q, O, COMBI]);
+    verifier(await etatHtml(page) === "table:ouverte bois:noyer" && tous(v, {[Q]: false, [O]: true, [COMBI]: true}),
+             `variante B, état des choix : « ${await etatHtml(page)} » ${JSON.stringify(v)}`);
+    await ouvrirPanneau(page);
+    pa = await panneauChoix(page);
+    verifier(pa.pastille === "3" && JSON.stringify(pa.choisis) === '["teinte:v2","table:ouverte","bois:noyer"]',
+             `variante B, panneau : ${JSON.stringify(pa)}`);
+    await fermerPanneau(page);
+    await ouvrir(page, DOC + "#camera");
+    await ouvrirPanneau(page);
     await page.click("#panneau-options >> text=Valeurs d'origine");
     pa = await panneauChoix(page);
     l = await lire(page);
@@ -398,6 +414,11 @@ async page => {
     const BQ = 'section[data-vue="coupes"] .element.b g[data-si="table:quotidien"]', BO = 'section[data-vue="coupes"] .element.b g[data-si="table:ouverte"]';
     v = await vus(page, [BQ, BO]);
     verifier(tous(v, {[BQ]: false, [BO]: true}), `comparaison, coupe A : ${JSON.stringify(v)}`);
+    // comparaison ouverte, la valeur change : le dessin du clone suit, comme celui de la base
+    await cliquerValeur(page, "table", "quotidien");
+    await fermerPanneau(page);
+    v = await vus(page, [BQ, BO, AQ, AO]);
+    verifier(tous(v, {[BQ]: true, [BO]: false, [AQ]: true, [AO]: false}), `comparaison, coupe A en quotidien : ${JSON.stringify(v)}`);
     await ouvrir(page, DOC + "#camera?c=b");
     await attendre(page, () => document.querySelector('section[data-vue="camera"] .element.b'), "comparaison, caméra : pas de clone");
     const BIMG = code => `section[data-vue="camera"] .element.b img[data-si="bois:${code}"]:not(.calque)`;
