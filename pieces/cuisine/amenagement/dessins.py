@@ -1,16 +1,17 @@
 """Les sept dessins de la cuisine/aménagement : plan meublé, coupes A, B et C, élévation et plan électriques, hauteur
 du plan de travail, et leur CSS.
 
-Code repris de l'ancien générateur 3d/v13/plan.py (supprimé à la bascule). Écarts avec l'ancienne page, et seulement ceux-là : virgule à la place du point médian,
-aria-label donné par l'appelant, zones du plan insérées avant </svg>. Les portes restent dans les états par défaut de
-l'ancienne page (entrée fermée, cellier mi-ouvert), la règle des hauteurs à 1,75 m, la porte du cellier en
-transparence sur la coupe C.
+Code repris de l'ancien générateur 3d/v13/plan.py (supprimé à la bascule). Écarts avec l'ancienne page, et seulement
+ceux-là : virgule à la place du point médian, aria-label donné par l'appelant, zones du plan insérées avant </svg>, et
+chaque état que changeaient ses boutons (portes, taille de la règle, transparence de la coupe C) marqué du jeton de son
+option (options.py, `data-si`) au lieu de classes cachées par le CSS de la page.
 """
 import math
 import re
 from html import escape
 
 from pieces.cuisine import modele as M
+from pieces.cuisine.amenagement.options import PORTE_CELLIER, PORTE_ENTREE, TAILLE, TRANSPARENCE, marque
 from pieces.cuisine.dessin import aire, cote_d, cote_h, cote_v, f, pts, rect, text, volumes_plan
 
 COUPE_A = 90   # plan de coupe A-A (y), regard vers le nord
@@ -109,9 +110,9 @@ def plan_svg(aria: str, zones: str = "") -> str:
     o.append(f'<line class="glass" x1="-13" y1="{(fe["y0"] + fe["y1"]) / 2 - 2}" x2="-13" y2="{fe["y1"]}"/>')
     # porte d'entrée à galandage : fermée en trait plein, rentrée dans sa poche en ocre
     en = M.ENTREE
-    o.append(f'<g class="vt" data-vt="entree" data-etat="ferme">'
-             f'<g class="ouv">{rect(en["ouvert"][0], en["y"] - 2, en["ouvert"][1], en["y"] + 2, "leaf")}</g>'
-             f'<g class="fer"><line class="doorleaf" x1="{f(en["ferme"][0])}" y1="{f(en["y"])}" '
+    o.append(f'<g class="vt" data-vt="entree">'
+             f'<g{marque(PORTE_ENTREE, "ouverte")}>{rect(en["ouvert"][0], en["y"] - 2, en["ouvert"][1], en["y"] + 2, "leaf")}</g>'
+             f'<g{marque(PORTE_ENTREE, "fermee")}><line class="doorleaf" x1="{f(en["ferme"][0])}" y1="{f(en["y"])}" '
              f'x2="{f(en["ferme"][1])}" y2="{f(en["y"])}"/></g></g>')
     o.append(text((en["x0"] + en["x1"]) / 2, 270, "Entrée", "lbls"))
     o.append(text(sum(en["poche"]) / 2, 237, "tableau noir, aimants", "lblx"))
@@ -158,8 +159,8 @@ def plan_svg(aria: str, zones: str = "") -> str:
         mi = (f'<polyline class="pliee" points="{pts([(r, y0), p1, p2])}"/>'
               f'<path class="swing" d="M{f(r)} {f(y0 + l)} A{f(l)} {f(l)} 0 0 1 {f(p1[0])} {f(p1[1])}"/>'
               + text(p1[0] - 3, p1[1] + 2, f'{a["mi"]}°', "lblx", "end"))
-        o.append(f'<g class="vt" data-vt="cellier" data-etat="mi"><g class="ouv">{ouvert}</g><g class="mi">{mi}</g>'
-                 f'<g class="fer">{ferme}</g></g>')
+        o.append(f'<g class="vt" data-vt="cellier"><g{marque(PORTE_CELLIER, "ouverte")}>{ouvert}</g>'
+                 f'<g{marque(PORTE_CELLIER, "mi-ouverte")}>{mi}</g><g{marque(PORTE_CELLIER, "fermee")}>{ferme}</g></g>')
         # baie et passage libre côte à côte, côté cellier, juste derrière la porte (V13.2 : la cote côté cuisine se
         # perdait dans le triangle d'activité)
         o.append(cote_v(y0, y1, 337, f'baie {f(y1 - y0)}'))
@@ -332,7 +333,12 @@ def coupe_svg(cut, regard, umin, umax, chaines, hauteurs, xh, extra=None, origin
         u, v = sorted((X(max(u0, umin)), X(min(u1, umax))))
         # éléments dessinés en transparence (contour seul) pour voir ce qu'il y a derrière
         cls = COUPE_CLS[b.role][1 if coupe else 0]
-        o.append(rect(u, -b.z1, v, -b.z0, f"{cls} trp" if transparents and b.nom.startswith(transparents) else cls))
+        if transparents and b.nom.startswith(transparents):
+            # les deux dessins, chacun marqué : opaque, ou en transparence (contour tireté)
+            o.append(f'<g{marque(TRANSPARENCE, "non")}>{rect(u, -b.z1, v, -b.z0, cls)}</g>'
+                     f'<g{marque(TRANSPARENCE, "oui")}>{rect(u, -b.z1, v, -b.z0, f"{cls} trp")}</g>')
+        else:
+            o.append(rect(u, -b.z1, v, -b.z0, cls))
         xm = (u + v) / 2
         if b.role == "allege" and coupe:
             o.append(text(xm, -150, "fenêtre", "lblx", extra=f' transform="rotate(-90 {f(xm)} -150)"'))
@@ -390,7 +396,8 @@ def coupe_svg(cut, regard, umin, umax, chaines, hauteurs, xh, extra=None, origin
                 etiquettes.append(text(xm, -zm + 12, equip, "lbls"))
         if trans and not b.nom.startswith(transparents) and derriere(b):
             # étiquettes de ce qui est derrière la porte : visibles seulement en transparence
-            etiquettes[n0:] = [e.replace('class="', 'class="trp-lbl ', 1) for e in etiquettes[n0:]]
+            etiquettes[n0:] = [e.replace(' class="', f'{marque(TRANSPARENCE, "oui")} class="trp-lbl ', 1)
+                               for e in etiquettes[n0:]]
     # une seule étiquette par position : celle de l'élément le plus proche (ajoutée en dernier) l'emporte
     o += list({(e.split('x="')[1].split('"')[0], e.split('y="')[1].split('"')[0]): e for e in etiquettes}.values())
     if extra:
@@ -444,8 +451,9 @@ def zones_taille(t):
 
 
 def regle(svg, umin, umax):
-    """Ajoute à droite d'une coupe la règle des zones de hauteur, une par taille. Bouton Taille à trois états :
-    1,75 m, 1,80 m, masquée ; masquée, la coupe reprend sa largeur (viewBox d'origine, data-vb0)."""
+    """Ajoute à droite d'une coupe la règle des zones de hauteur, une par taille, marquée de sa valeur de l'option Taille.
+    Masquée, aucune règle ne se montre, mais la coupe garde sa largeur avec la règle (viewBox selon la valeur : hors du
+    modèle des options) ; data-vb0, data-vb1 : les deux largeurs de l'ancienne page."""
     xb = umax + 18                                   # bande de 7, noms des zones dedans (verticaux)
     o = []
     for t in TAILLES:
@@ -462,7 +470,7 @@ def regle(svg, umin, umax):
             g.append(f'<line class="rep" x1="{f(umin)}" y1="{-z}" x2="{f(xb + 7)}" y2="{-z}"/>')
             g.append(text(xb + 9, -z + 1.5, f"{nom} {z}", "lblz rept", anchor="start"))
         g.append(text(xb + 3.5, -M.H - 8, f"{t / 100:.2f} m".replace(".", ","), "lblx"))
-        o.append(f'<g class="regle" data-t="{t}">{"".join(g)}</g>')
+        o.append(f'<g class="regle" data-t="{t}"{marque(TAILLE, str(t))}>{"".join(g)}</g>')
     m = re.search(r'viewBox="(\S+) (\S+) (\S+) (\S+)"', svg)
     vb0 = " ".join(m.groups())
     vb1 = f"{m[1]} {m[2]} {f(float(m[3]) + 44)} {m[4]}"
@@ -471,7 +479,7 @@ def regle(svg, umin, umax):
 
 
 def coupe_a(aria: str) -> str:
-    """Coupe A-A avec la règle des hauteurs (les deux tailles dessinées, 1,75 m seule visible par le CSS)."""
+    """Coupe A-A avec la règle des hauteurs (les deux tailles dessinées, chacune marquée de sa valeur)."""
     bas = [b for b in M.MEUBLES if b.role == "caisson" and b.y0 == 0]
     hauts = [b for b in M.MEUBLES if b.role == "caisson_haut"]
     rn = M.RAYON_NORD
@@ -487,7 +495,7 @@ def coupe_a(aria: str) -> str:
 
 
 def coupe_c(aria: str) -> str:
-    """Coupe C-C avec la règle des hauteurs, la porte du cellier en transparence."""
+    """Coupe C-C avec la règle des hauteurs, la porte du cellier dessinée opaque et en transparence (option)."""
     cols = sorted([b for b in M.MEUBLES if b.role == "colonne"], key=lambda b: b.y0)
     def cellier(X):
         return [cote_h(X(M.BAIE_Y0), X(M.BAIE_Y1), -M.H - 8, f"baie {f(M.BAIE_Y1 - M.BAIE_Y0)}"),
@@ -654,13 +662,12 @@ def coupe_elec_nord(aria: str) -> str:
 
 # CSS des dessins : celui de l'ancienne page (pieces/cuisine/dessin.py, CSS) sans les règles de page (mode sombre,
 # @media, mise en page, sommaire, barres, boutons, tableaux), sans police à chasse fixe (chiffres tabulaires à la
-# place). Valeurs figées, défauts de l'ancienne page : règle de 1,75 m seule visible, porte du cellier en
-# transparence sur la coupe C (étiquettes de derrière visibles). Le :root disparaît au filtre du socle
-# (commun/css_dessins.py) : --cement, --elec et --prise, absents de site.css, gardent leur valeur en repli.
+# place), sans les règles qui cachaient un état (les options le font par data-si). `.trp` : le contour tireté de la
+# porte en transparence, dessin à part. --cement, --elec et --prise, absents de site.css, ont leur valeur en repli.
 CSS_DESSINS = """
 .z1{fill:#5B9E6A;opacity:.85}.z2{fill:#A9CF8F;opacity:.85}.z3{fill:#E8C26A;opacity:.85}.z4{fill:#D9826B;opacity:.85}
 .rep{stroke:#C8412C;stroke-width:.5;stroke-dasharray:3 2;opacity:.7}.rept{fill:#C8412C}
-.lblz{font-size:3.8px;fill:var(--ink)}.hsa{fill:#C98A1E;opacity:.45}.hsl{fill:#2F7FB5;opacity:.4}.hpb{opacity:.92}text.hph{fill:#C98A1E;font-weight:600;paint-order:stroke;stroke:var(--panel);stroke-width:4px}.hpg{stroke:var(--line);stroke-width:.6}.hpt{font-size:12px;fill:var(--muted)}.hpt.on{fill:#fff;font-weight:600}.hpt.rept{fill:#C8412C}.hpn{font-size:15px;font-weight:700;fill:var(--ink)}.hpp{stroke:#C98A1E;stroke-width:2}.hpc{stroke:var(--ink);stroke-width:1;stroke-dasharray:5 4;opacity:.7}.hpc.act{stroke-dasharray:none;stroke-width:2;opacity:1}.hpc.rec{stroke:#2F7FB5;opacity:1}text.hpc{stroke:none;fill:var(--ink);font-weight:600}text.hpc.rec{fill:#2F7FB5}.lblz.rept{fill:#C8412C}.regle{display:none}.regle[data-t="175"]{display:inline}
+.lblz{font-size:3.8px;fill:var(--ink)}.hsa{fill:#C98A1E;opacity:.45}.hsl{fill:#2F7FB5;opacity:.4}.hpb{opacity:.92}text.hph{fill:#C98A1E;font-weight:600;paint-order:stroke;stroke:var(--panel);stroke-width:4px}.hpg{stroke:var(--line);stroke-width:.6}.hpt{font-size:12px;fill:var(--muted)}.hpt.on{fill:#fff;font-weight:600}.hpt.rept{fill:#C8412C}.hpn{font-size:15px;font-weight:700;fill:var(--ink)}.hpp{stroke:#C98A1E;stroke-width:2}.hpc{stroke:var(--ink);stroke-width:1;stroke-dasharray:5 4;opacity:.7}.hpc.act{stroke-dasharray:none;stroke-width:2;opacity:1}.hpc.rec{stroke:#2F7FB5;opacity:1}text.hpc{stroke:none;fill:var(--ink);font-weight:600}text.hpc.rec{fill:#2F7FB5}.lblz.rept{fill:#C8412C}
 .leg .sw{display:inline-block;width:12px;height:9px;border-radius:2px;margin:0 3px 0 8px;vertical-align:middle}
 .w{fill:var(--ink)}
 .bgwall{fill:var(--line);fill-opacity:.35}
@@ -714,7 +721,6 @@ CSS_DESSINS = """
 .poig{stroke:#8E8E8B;stroke-width:1.4;stroke-linecap:round}
 .poig.bois{stroke:#8A5A2B;stroke-width:2.2;stroke-linecap:butt}
 .balai{fill:#C9A46A;stroke:var(--ink);stroke-width:.4}
-.vt[data-etat="ferme"] .ouv,.vt[data-etat="mi"] .ouv,.vt:not([data-etat="ferme"]) .fer,.vt:not([data-etat="mi"]) .mi{display:none}
 .pliee{fill:none;stroke:var(--ink);stroke-width:2.5;stroke-linejoin:round}
 .trp{fill:none;stroke:var(--ink);stroke-width:.7;stroke-dasharray:4 2}
 .dorm{fill:var(--panel);stroke:var(--ink);stroke-width:.6}

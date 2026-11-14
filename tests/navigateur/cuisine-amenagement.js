@@ -2,7 +2,9 @@
    - Vues : chaque vue et chaque repère à 1440, 1100 et 390 px : sans erreur de console ni réponse en erreur, images
      chargées, rien ne déborde ; « Position » marque l'élément affiché ; Iso : NE et SE grisés.
    - Plan : toucher B3 ouvre sa fiche (« Coupe A », « Iso »), la touche Entrée aussi ; #plan?k=b3 l'ouvre ;
-     #plan?k=elec montre le plan électrique sans fiche de meuble. Ni « Comparer » ni « Personnaliser ».
+     #plan?k=elec montre le plan électrique sans fiche de meuble. Pas de « Comparer » (une seule variante).
+   - Personnaliser : Taille, Porte d'entrée, Porte du cellier, transparence de la coupe C ; chaque valeur change le
+     dessin, « Valeurs d'origine » revient, le choix tient au rechargement ; sans localStorage, les défauts.
    - Anciennes adresses (cuisine-v13.html et ses ancres, imprimable, maquette : modele.js sans 404 ; three.js, chargé
      depuis jsdelivr, est remplacé par des modules vides : la maquette ne tourne pas, seules les réponses comptent).
    - Historique (versions figées V11.49 et V12.7, 90 changements) et la page sans JavaScript. */
@@ -144,7 +146,86 @@ async page => {
     const barre = await page.evaluate(() => ({
       comparer: [...document.querySelectorAll("#c-comp")].filter(b => b.checkVisibility()).length,
       perso: [...document.querySelectorAll("#c-options")].filter(b => b.checkVisibility()).length}));
-    verifier(barre.comparer === 0 && barre.perso === 0, `barre : ${JSON.stringify(barre)}`);
+    verifier(barre.comparer === 0 && barre.perso === 1, `barre : ${JSON.stringify(barre)}`);
+  });
+
+
+  // ------------------------------------------------------------------ Personnaliser : options « choix »
+  const ORIGINE = "taille:175 porte-entree:fermee porte-cellier:mi-ouverte transparence:oui";
+  // les jetons montrés dans la vue (éléments marqués visibles), et l'état posé sur <html>
+  // (checkVisibility ne voit pas display:none sur un élément SVG : on remonte les styles calculés)
+  const montres = (p, vue) => p.evaluate(v => {
+    const vu = e => { for (let x = e; x; x = x.parentElement) if (getComputedStyle(x).display === "none") return false; return true; };
+    return {options: document.documentElement.dataset.options,
+            vus: [...new Set([...document.querySelectorAll(`section[data-vue="${v}"] .scene [data-si]`)].filter(vu)
+              .map(e => e.dataset.si))].sort(),
+            etiquettes: [...document.querySelectorAll(`section[data-vue="${v}"] .scene .trp-lbl`)].filter(vu).length};
+  }, vue);
+  const choisir = async (p, o, code) => {
+    await p.click("#c-options");
+    await attendre(p, () => document.querySelector("#panneau-options").checkVisibility(), null, "le panneau ne s'ouvre pas");
+    await p.click(`#panneau-options section[data-o="${o}"] [data-v="${code}"]`);
+    await p.keyboard.press("Escape");
+  };
+  await partie("personnaliser", async () => {
+    await page.setViewportSize({width: 1440, height: 900});
+    await ouvrir(page, DOC + "#plan");
+    await page.evaluate(() => localStorage.clear());
+    const cas = [
+      ["plan", "porte-entree", "fermee", ["porte-cellier:mi-ouverte", "porte-entree:fermee"]],
+      ["plan", "porte-entree", "ouverte", ["porte-cellier:mi-ouverte", "porte-entree:ouverte"]],
+      ["plan", "porte-cellier", "fermee", ["porte-cellier:fermee", "porte-entree:ouverte"]],
+      ["plan", "porte-cellier", "ouverte", ["porte-cellier:ouverte", "porte-entree:ouverte"]],
+      ["coupes?k=A", "taille", "180", ["taille:180"]],
+      ["coupes?k=A", "taille", "masquee", []],
+      ["coupes?k=C", "transparence", "non", ["transparence:non"]],
+    ];
+    await ouvrir(page, DOC + "#coupes?k=C");
+    let m = await montres(page, "coupes");
+    verifier(m.options === ORIGINE && egal(m.vus, ["taille:175", "transparence:oui"]) && m.etiquettes > 0,
+             `origine, coupe C : ${JSON.stringify(m)}`);
+    for (const [adresse, o, code, attendu] of cas) {
+      await ouvrir(page, `${DOC}#${adresse}`);
+      const vue = adresse.split("?")[0];
+      const avant = await page.evaluate(v => document.querySelector(`section[data-vue="${v}"] .scene`).innerHTML.length, vue);
+      await choisir(page, o, code);
+      m = await montres(page, vue);
+      verifier(egal(m.vus, attendu) && m.options.includes(`${o}:${code}`), `${o} = ${code} : ${JSON.stringify(m)}`);
+      if (o === "transparence") verifier(m.etiquettes === 0, `opaque : étiquettes de derrière visibles (${m.etiquettes})`);
+      verifier(await page.evaluate(([v, a]) => document.querySelector(`section[data-vue="${v}"] .scene`).innerHTML.length === a,
+                                   [vue, avant]), `${o} = ${code} : la scène a été réécrite au lieu d'être filtrée`);
+    }
+    // le choix tient au rechargement (taille masquée, coupe C opaque)
+    await ouvrir(page, DOC + "#coupes?k=C");
+    m = await montres(page, "coupes");
+    verifier(egal(m.vus, ["transparence:non"]) && m.options === "taille:masquee porte-entree:ouverte porte-cellier:ouverte transparence:non",
+             `après rechargement : ${JSON.stringify(m)}`);
+    // Valeurs d'origine
+    await page.click("#c-options");
+    await page.click("#panneau-options >> text=Valeurs d'origine");
+    await page.keyboard.press("Escape");
+    m = await montres(page, "coupes");
+    verifier(m.options === ORIGINE && egal(m.vus, ["taille:175", "transparence:oui"]), `valeurs d'origine : ${JSON.stringify(m)}`);
+    await page.evaluate(() => localStorage.clear());
+
+    // sans localStorage : les défauts, sans erreur
+    const prive = await page.context().browser().newContext();
+    try {
+      await sansPolices(prive);
+      await prive.addInitScript(() => {
+        const refus = () => { throw new DOMException("stockage refusé", "SecurityError"); };
+        Storage.prototype.getItem = refus;
+        Storage.prototype.setItem = refus;
+      });
+      const p = await prive.newPage();
+      await preparer(p);
+      await p.goto(DOC + "#plan");
+      m = await montres(p, "plan");
+      verifier(m.options === ORIGINE && egal(m.vus, ["porte-cellier:mi-ouverte", "porte-entree:fermee"]),
+               `sans localStorage : ${JSON.stringify(m)}`);
+    } finally {
+      await prive.close();
+    }
   });
 
   // ------------------------------------------------------------------ anciennes adresses

@@ -144,8 +144,9 @@ def test_journal_compte():
 @pytest.mark.parametrize("vue", ["plan", "coupes", "explication"])
 def test_dessins_styles(vue):
     """Chaque classe d'un élément (scène et fiche) a une règle dans dessins.css (filtré comme à la construction) ou
-    site.css ; sauf `trp-lbl`, simple repère des étiquettes de la porte en transparence (coupe C), qui ne sont
-    jamais cachées : leurs autres classes les stylent."""
+    site.css ; sauf les simples repères sans style : `trp-lbl` (étiquettes derrière la porte du cellier, coupe C),
+    `vt` (groupe d'une porte, plan) et `regle` (règle d'une taille, coupes A et C), dont les options montrent
+    l'état choisi par `data-si`."""
     css = css_dessins(DOC.css, _dessins(VUES), ".d-cuisine")
     site_css = (RACINE / "commun/site.css").read_text(encoding="utf-8")
 
@@ -154,7 +155,7 @@ def test_dessins_styles(vue):
 
     for e in VUES[vue].elements:
         interieur = e.scene.split(">", 1)[1] + e.fiche
-        classes = {c for m in re.findall(r'class="([^"]+)"', interieur) for c in m.split()} - {"trp-lbl"}
+        classes = {c for m in re.findall(r'class="([^"]+)"', interieur) for c in m.split()} - {"trp-lbl", "vt", "regle"}
         assert classes, (vue, e.k)
         assert sorted(c for c in classes if not regle(c, css) and not regle(c, site_css)) == [], (vue, e.k)
     if vue == "coupes":

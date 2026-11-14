@@ -31,7 +31,12 @@ def _normaliser(svg):
     return tete + ">" + reste
 
 
-@pytest.mark.parametrize("nom", DESSINS)
+# le plan et les coupes A et C portent les états des options (data-si) : confrontés à la référence dans leur état
+# d'origine par tests/test_cuisine_options.py::test_defaut_inchange
+SANS_OPTION = [n for n in DESSINS if n not in ("plan", "coupe-a", "coupe-c")]
+
+
+@pytest.mark.parametrize("nom", SANS_OPTION)
 def test_dessins_identiques_a_la_reference(nom):
     svg = DESSINS[nom]()
     attendu = (FIXTURES / "dessins" / f"{nom}.svg").read_text(encoding="utf-8")
@@ -56,19 +61,15 @@ def test_sans_point_median():
     assert "L2, LED" in dessins.coupe_elec_nord(ARIA)
 
 
-def test_portes_par_defaut():
+def test_portes_et_regle_marquees():
+    """Les états de l'ancienne page (portes, règle) ne sont plus cachés par le CSS : chacun porte son jeton."""
     svg = dessins.plan_svg(ARIA)
-    assert '<g class="vt" data-vt="entree" data-etat="ferme">' in svg
-    assert '<g class="vt" data-vt="cellier" data-etat="mi">' in svg
-
-
-def test_regle_175_seule_visible():
+    assert '<g class="vt" data-vt="entree">' in svg and '<g class="vt" data-vt="cellier">' in svg
+    assert "data-etat" not in svg
     for svg in (dessins.coupe_a(ARIA), dessins.coupe_c(ARIA)):
-        assert 'data-t="175"' in svg and 'data-t="180"' in svg
+        assert '<g class="regle" data-t="175" data-si="taille:175">' in svg and 'data-t="180" data-si="taille:180"' in svg
     css = dessins.CSS_DESSINS
-    assert '.regle[data-t="175"]{display:inline}' in css
-    assert ".regle{display:none}" in css
-    assert not re.search(r"\bhtml\b", css)
+    assert ".regle{display:none}" not in css and not re.search(r"\bhtml\b", css)
     assert (dessins.COUPE_A, dessins.COUPE_B, dessins.COUPE_C) == (90, 150, 315)
 
 
