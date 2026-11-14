@@ -4,6 +4,7 @@ montre le même dessin qu'avant les options (valeurs figées de la tâche 5)."""
 import re
 
 from commun import modele
+from pieces.cuisine import piece
 from pieces.cuisine.amenagement import dessins, document, options
 from tests.cuisine_anciens import FIXTURES
 
@@ -16,8 +17,9 @@ CODE = re.compile(r"^[a-z0-9][a-z0-9-]*$")
 
 def test_declarations():
     attendu = [("taille", "175", ["175", "180", "masquee"], "Visible sur les coupes A et C."),
-               ("porte-entree", "fermee", ["fermee", "ouverte"], "Visible sur le plan."),
-               ("porte-cellier", "mi-ouverte", ["fermee", "mi-ouverte", "ouverte"], "Visible sur le plan."),
+               ("porte-entree", "fermee", ["fermee", "ouverte"], "Visible sur le plan. Rendus : fermée."),
+               ("porte-cellier", "mi-ouverte", ["fermee", "mi-ouverte", "ouverte"],
+                "Visible sur le plan. Rendus : ouverte ou fermée selon la vue."),
                ("transparence", "oui", ["non", "oui"], "Visible sur la coupe C.")]
     assert [(o.id, o.defaut, [v.code for v in o.valeurs], o.portee) for o in DOC.options] == attendu
     for o in DOC.options:
@@ -26,6 +28,16 @@ def test_declarations():
     assert [o.nom for o in DOC.options] == ["Taille de la personne qui cuisine", "Porte d'entrée", "Porte du cellier",
                                             "Porte du cellier sur la coupe C"]
     assert DOC.options == options.OPTIONS
+
+
+def test_rendue_selon_les_rendus():
+    """Une valeur est « rendue » quand une image la montre. La porte du cellier : fermée sous les caméras réglées
+    porte="fermee", repliée (ouverte) sous les autres (rendu.py, porte_cellier), jamais mi-ouverte ; la porte
+    d'entrée : toujours fermée."""
+    cellier = {"fermee" if c.reglages.get("porte") == "fermee" else "ouverte" for c in piece.CAMERAS}
+    assert cellier == {"fermee", "ouverte"}
+    assert {v.code for v in options.PORTE_CELLIER.valeurs if v.rendue} == cellier
+    assert {v.code for v in options.PORTE_ENTREE.valeurs if v.rendue} == {"fermee"}
 
 
 def test_jetons_connus():
