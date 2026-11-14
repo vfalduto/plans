@@ -178,14 +178,14 @@ def test_commun_n_importe_pas_pieces():
 
 # ------------------------------------------------------------------ Explication et achats
 def test_euros():
-    assert euros(80) == "80 €"
+    assert euros(80) == "80,00 €"
     assert euros(12.5) == "12,50 €"
     assert euros(64.9) == "64,90 €"
     assert euros(38.97) == "38,97 €"
     assert euros(14.99) == "14,99 €"
     assert euros(0.1 + 0.2) == "0,30 €"
-    assert euros(100) == "100 €"
-    assert euros(79.999) == "80 €"
+    assert euros(100) == "100,00 €"
+    assert euros(79.999) == "80,00 €"
     assert euros(12345.67) == "12345,67 €"
 
 
@@ -193,23 +193,23 @@ def test_somme_exacte():
     """Les montants s'additionnent sur leur écriture décimale : 3 × 12,45 + 0,15 = 37,50, arrondi à 38 (en flottants,
     37,49999999999999 tombait à 37)."""
     lignes = [Achat("Tasseau", "T", 3, 12.45), Achat("Vis", "V", 1, 0.15)]
-    assert total_achats([SectionAchats("", lignes)]) == "38 €"
-    assert _cellules(tableau_achats(lignes), "total") == [["Total", "", "", "38 €"]]
+    assert total_achats([SectionAchats("", lignes)]) == "38,00 €"
+    assert _cellules(tableau_achats(lignes), "total") == [["Total", "", "", "38,00 €"]]
     assert total_achats([SectionAchats("A", lignes[:1]), SectionAchats("B", lignes[1:])], arrondi=False) == "37,50 €"
 
 
 def test_rien_de_chiffre():
-    """Une section sans ligne chiffrée : « non chiffré » au lieu d'un sous-total de 0 € ; de même pour le total."""
+    """Une section sans ligne chiffrée : « non chiffré » au lieu d'un sous-total de 0,00 € ; de même pour le total."""
     porte = SectionAchats("Porte", [Achat("Porte", "P1", 1, None)])
     vis = SectionAchats("Vis", [Achat("Vis", "V1", 2, 1.5)])
     assert _cellules(tableau_achats(porte.achats, approx=True), "total") == [["Total", "", "", "non chiffré"]]
     deux = achats([porte, vis])
-    assert _cellules(deux, "total") == [["Sous-total", "", "", "non chiffré"], ["Sous-total", "", "", "3 €"]]
-    assert '<span class="num">3 €</span>' in deux
+    assert _cellules(deux, "total") == [["Sous-total", "", "", "non chiffré"], ["Sous-total", "", "", "3,00 €"]]
+    assert '<span class="num">3,00 €</span>' in deux
     rien = achats([porte, SectionAchats("Poignée", [Achat("Poignée", "P2", 1, None)])], approx=True)
     assert '<p class="total-achats"><span>Total</span><span class="num">non chiffré</span></p>' in rien
     assert total_achats([porte], approx=True) == "non chiffré"
-    assert "0 €" not in deux + rien
+    assert "0,00 €" not in deux + rien
 
 
 def _cellules(html, classe):
@@ -222,9 +222,9 @@ def test_tableau_achats_forme_de_l_entree():
     html = tableau_achats([Achat("Caisson", "604.582.27", 1, 80), Achat("Tablette", "702.779.95", 2, 27.5)],
                           approx=True)
     assert "<thead><tr><th>Article</th><th>Référence</th><th class=\"d\">Qté</th><th class=\"d\">Prix</th></tr></thead>" in html
-    assert '<td class="num d">80 €</td>' in html and '<td class="num d">55 €</td>' in html
+    assert '<td class="num d">80,00 €</td>' in html and '<td class="num d">55,00 €</td>' in html
     assert '<td class="num d">2</td>' in html
-    assert _cellules(html, "total") == [["Total", "", "", "≈ 135 €"]]
+    assert _cellules(html, "total") == [["Total", "", "", "≈ 135,00 €"]]
     assert html.startswith('<div class="defile"><table>') and html.endswith("</tbody></table></div>")
 
 
@@ -234,13 +234,13 @@ def test_achats_sections():
     html = achats([ikea, weldom], note="Prix relevés.")
     assert html.startswith("<h2>Achats</h2>")
     assert html.count("<h3>") == 2 and "<h3>IKEA</h3>" in html and "<h3>Weldom</h3>" in html
-    assert _cellules(html, "total") == [["Sous-total", "", "", "80 €"], ["Sous-total", "", "", "4 €"]]
+    assert _cellules(html, "total") == [["Sous-total", "", "", "80,00 €"], ["Sous-total", "", "", "4,00 €"]]
     # arrondi depuis la somme exacte (84,8), pas depuis les sous-totaux arrondis (80 + 4)
-    assert '<p class="total-achats"><span>Total</span><span class="num">85 €</span></p>' in html
+    assert '<p class="total-achats"><span>Total</span><span class="num">85,00 €</span></p>' in html
     assert html.endswith('<p class="remarque">Prix relevés.</p>')
     seule = achats([SectionAchats("", [Achat("Caisson", "1", 1, 80)])], titre="Achats IKEA", approx=True)
     assert seule.startswith("<h2>Achats IKEA</h2>") and "<h3>" not in seule
-    assert _cellules(seule, "total") == [["Total", "", "", "≈ 80 €"]]
+    assert _cellules(seule, "total") == [["Total", "", "", "≈ 80,00 €"]]
     assert "total-achats" not in seule and "remarque" not in seule
     exact = achats([ikea, weldom], arrondi=False)
     assert '<span class="num">84,80 €</span>' in exact and '<td class="num d">4,40 €</td></tr></tbody>' in exact
@@ -249,7 +249,7 @@ def test_achats_sections():
 def test_total_achats_est_celui_d_achats():
     ikea = SectionAchats("IKEA", [Achat("Caisson", "1", 1, 80.4), Achat("Porte", "3", 1, None)])
     weldom = SectionAchats("Weldom", [Achat("Vis", "2", 4, 1.1)])
-    assert total_achats([ikea, weldom]) == "85 €"
+    assert total_achats([ikea, weldom]) == "85,00 €"
     assert total_achats([ikea, weldom], approx=True, arrondi=False) == "≈ 84,80 €"
     for sections in ([ikea], [ikea, weldom]):
         for approx in (False, True):
@@ -265,8 +265,8 @@ def test_total_achats_est_celui_d_achats():
 def test_achat_non_chiffre():
     html = tableau_achats([Achat("Porte", "P1", 1, None), Achat("Poignée", "P2", 2, 4.5)])
     assert '<td class="num d">non chiffré</td>' in html
-    assert _cellules(html, "total") == [["Total", "", "", "9 €"]]
-    assert "0 €" not in html
+    assert _cellules(html, "total") == [["Total", "", "", "9,00 €"]]
+    assert "0,00 €" not in html
 
 
 def test_achat_note():
@@ -324,12 +324,12 @@ def test_arrondi_demi_vers_le_haut():
     assert euros(0.125) == "0,13 €"
     assert euros(2.675) == "2,68 €"
     html = tableau_achats([Achat("Caisson", "1", 1, 80), Achat("Vis", "2", 3, 1.5)])
-    assert _cellules(html, "total") == [["Total", "", "", "85 €"]]          # 84,5
+    assert _cellules(html, "total") == [["Total", "", "", "85,00 €"]]          # 84,5
     ikea = SectionAchats("IKEA", [Achat("Caisson", "1", 1, 80.5)])
     weldom = SectionAchats("Weldom", [Achat("Vis", "2", 1, 52)])
     html = achats([ikea, weldom])
-    assert _cellules(html, "total")[0] == ["Sous-total", "", "", "81 €"]    # 80,5
-    assert '<span class="num">133 €</span>' in html                        # 132,5
+    assert _cellules(html, "total")[0] == ["Sous-total", "", "", "81,00 €"]    # 80,5
+    assert '<span class="num">133,00 €</span>' in html                        # 132,5
     centimes = achats([SectionAchats("A", [Achat("Clou", "1", 1, 0.005)]),
                        SectionAchats("B", [Achat("Vis", "2", 1, 0.12)])], arrondi=False)
     assert _cellules(centimes, "total")[0] == ["Sous-total", "", "", "0,01 €"]   # 0,005

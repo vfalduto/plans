@@ -85,7 +85,7 @@ def test_meuble_sous_totaux_au_centime():
     assert sous == ["102,40 €", "25,35 €"]
     assert '<span class="num">127,75 €</span>' in achats
     assert "<dt>127,75 €</dt><dd>Total</dd>" in _scene(MEUBLE.vues("actuelle")["explication"])
-    assert "<dt>78 €</dt><dd>Total</dd>" in _scene(MEUBLE.vues("rangs")["explication"])
+    assert "<dt>78,00 €</dt><dd>Total</dd>" in _scene(MEUBLE.vues("rangs")["explication"])
 
 
 def test_meuble_total_de_l_explication():

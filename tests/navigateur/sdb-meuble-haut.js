@@ -4,7 +4,7 @@
    - Entrée sans fragment : Plans, vue iso ; ni Comparer, ni variante, ni Personnaliser.
    - Mesurer : les deux bouts de la plus longue cote de la pose de face donnent « Mesuré : 204 cm » ; caché sur l'iso.
    - Fiche de Plans : les liens Découpe et Montage ; Montage : les boutons vers la pose de face et en coupe.
-   - Montage : trois étapes numérotées et aucun <li> imbriqué (il prendrait une pastille numérotée).
+   - Montage : trois étapes numérotées de 1 à 3 et aucun <li> imbriqué (il prendrait une pastille numérotée).
    - Dessins : aucun aplat noir, aucun texte hors du viewBox (Plans), aucun aplat noir dans Découpe et Montage.
    - Achats : totaux, lien « Meuble bas » vers les achats du meuble bas.
    - Anciennes adresses (sdb-meuble-haut.html, sdb-meuble-achats.html), historique (deux entrées, huit versions figées)
@@ -173,7 +173,7 @@ async page => {
               ops: ol.querySelectorAll(".op").length, perc: ol.querySelectorAll("details.perc").length,
               figures: ol.querySelectorAll("figure.etape-figure svg").length};
     });
-    verifier(e.n === 3 && e.li === 3 && e.debut === "8", `montage : étapes ${JSON.stringify(e)}`);
+    verifier(e.n === 3 && e.li === 3 && e.debut === null, `montage : étapes ${JSON.stringify(e)}`);
     verifier(e.ops === 10 && e.perc === 2 && e.figures === 3, `montage : opérations, perçages ou schémas ${JSON.stringify(e)}`);
   });
 

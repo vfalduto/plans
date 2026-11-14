@@ -290,7 +290,7 @@ def test_explication_complete():
     (principes,) = re.findall(r'<ol class="principes">(.*?)</ol>', scene, re.S)
     assert principes.count("<li>") == 5
     total = round(sum(q * p for _, _, q, p in document.IKEA))
-    assert re.search(rf"Total.*?≈ {total} €", scene, re.S)
+    assert re.search(rf"Total.*?≈ {total},00 €", scene, re.S)
     (liste,) = re.findall(r'<ul class="liste">(.*?)</ul>', scene, re.S)
     assert liste.count("<li>") == 10
     assert "Portes pour ce caisson" in scene
@@ -301,7 +301,7 @@ def test_explication_complete():
             assert interdit not in texte
         assert "Repère : x vers l'est" in texte
     victor_total = sum(q * p for _, _, q, p in victor.IKEA)
-    assert re.search(rf"Total.*?{victor_total:g} €", _explication("victor"), re.S)
+    assert re.search("Total.*?" + f"{victor_total:.2f}".replace(".", ",") + " €", _explication("victor"), re.S)
     (liste,) = re.findall(r'<ul class="liste">(.*?)</ul>', _explication("victor"), re.S)
     assert liste.count("<li>") == 8
 

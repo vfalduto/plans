@@ -231,7 +231,7 @@ def _montage() -> str:
              "suite ; <b>Attention</b> : le piège. Dessous, le dessin du résultat de l'étape : les pièces de l'étape en "
              "orange, les trous à percer en points noirs.</p>")
     return (intro + _pieces() + _quincaillerie() + _comment_percer()
-            + etapes([_etape(i) for i in H.ETAPES], titre="Étapes", outils=_outils(), debut=H.ETAPES[0])
+            + etapes([_etape(i) for i in H.ETAPES], titre="Étapes", outils=_outils())
             + _fixation())
 
 

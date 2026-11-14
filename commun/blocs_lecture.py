@@ -89,11 +89,9 @@ def _demi(montant, pas):
 
 
 def euros(montant: float) -> str:
-    """Au centime, demi vers le haut ; virgule, pas de séparateur de milliers ; un montant entier sans décimales, sinon
-    deux : 80 -> « 80 € », 12.5 -> « 12,50 € », 14.99 -> « 14,99 € »."""
-    centimes = _demi(montant, "0.01")
-    texte = f"{centimes:.0f}" if centimes == centimes.to_integral_value() else f"{centimes:.2f}"
-    return texte.replace(".", ",") + " €"
+    """Au centime, demi vers le haut ; virgule, pas de séparateur de milliers ; toujours deux décimales (choix du
+    client, 14/11) : 80 -> « 80,00 € », 12.5 -> « 12,50 € », 14.99 -> « 14,99 € »."""
+    return f"{_demi(montant, '0.01'):.2f}".replace(".", ",") + " €"
 
 
 def _montant(a):
