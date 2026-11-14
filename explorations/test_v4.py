@@ -1,8 +1,9 @@
-# Tests de la V4 du document (modèle V6.0) : uv run -q --no-project --with pytest pytest -q 3d/sdb/test_v4.py
+# Tests de la V4 du document (modèle V6.0) : uv run -q --no-project --with pytest pytest -q explorations/test_v4.py
 import os
 import sys
 
 sys.path.insert(0, os.path.dirname(__file__))
+sys.path.insert(1, os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "3d", "sdb"))
 import modele as M  # noqa: E402
 
 
@@ -84,7 +85,7 @@ def test_chapitre_paniers():
     ens = pages.page_ensemble()
     assert '<h2 id="paniers">Variante : deux paniers à roulettes</h2>' in ens
     assert ens.index('id="budget"') < ens.index('id="paniers"') < ens.index('id="changements"')
-    racine = os.path.join(os.path.dirname(__file__), "..", "..")
+    racine = os.path.join(os.path.dirname(__file__), "..")
     # V6.3 : la photo est rangée avec les pages archivées (archive/sdb-meuble-photos/)
     assert f'src="{M.CORNO["photo"]}"' in ens and os.path.exists(os.path.join(racine, "archive", M.CORNO["photo"]))
     eco = sum(q * px for _, _, q, px in pages.en_moins_paniers())
@@ -93,7 +94,7 @@ def test_chapitre_paniers():
 
 
 def test_plus_de_v3():
-    racine = os.path.join(os.path.dirname(__file__), "..", "..")
+    racine = os.path.join(os.path.dirname(__file__), "..")
     assert not os.path.exists(os.path.join(racine, "sdb-meuble-v3.html"))
     assert not hasattr(M, "PANIERS")
 
@@ -221,7 +222,7 @@ from collections import Counter  # noqa: E402
 import haut as H  # noqa: E402
 import calepinage as CAL  # noqa: E402
 
-RACINE = os.path.join(os.path.dirname(__file__), "..", "..")
+RACINE = os.path.join(os.path.dirname(__file__), "..")
 
 
 def _hors_notice_bas(h):
