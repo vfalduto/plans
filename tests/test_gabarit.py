@@ -8,7 +8,7 @@ from outils import RACINE, balises
 
 from commun.css_dessins import css_dessins
 from commun.gabarit import adresse, menu, page_document, page_simple, relatif
-from commun.modele import VUES, Passerelle, Piece, Site
+from commun.modele import VUES, Option, Passerelle, Piece, Site, Valeur
 
 
 def _charger_essai():
@@ -109,7 +109,7 @@ def test_choix_du_document():
 
 def test_sans_js():
     # le doctype reste en tête : sans lui, le navigateur passe en mode quirks
-    assert _page().startswith('<!doctype html>\n<html lang="fr" class="sans-js">')
+    assert _page().startswith('<!doctype html>\n<html lang="fr" class="sans-js"')
 
 
 def test_script_de_tete_avant_les_feuilles():
@@ -160,7 +160,7 @@ def test_corps_et_donnees():
     corps = balises(page, "body")[0]
     assert (corps["data-type"], corps["data-piece"], corps["data-document"], corps["data-variante"]) == (
         "amenagement", "essai", "amenagement", "b")
-    assert [o["id"] for o in _json(page, "options")] == ["teinte"]
+    assert [o["id"] for o in _json(page, "options")] == ["teinte", "table", "bois"]
     assert _json(page, "options")[0]["css"] == "--teinte"
     assert list(_json(page, "noms-vues")) == ["plan", "coupes", "iso", "camera", "explication"]
     assert balises(page, "button", id="c-options")
@@ -273,3 +273,59 @@ def test_css_dessins_regle_repetee():
     assert sortie.count(".d-entree .room{fill:red;fill-opacity:.18}") == 1
     assert sortie.count(".d-entree .w{fill:blue}") == 1
     assert sortie.endswith(".d-entree .w{fill:teal}")      # une règle différente, même sélecteur, reste à sa place
+
+
+
+def test_css_dessins_classe_au_nom_d_element():
+    # seul un sélecteur d'élément est refusé : une classe nommée comme un élément garde sa règle
+    css = (".table{fill:teal}.table-basse{fill:olive}.porte.h1{stroke:red}rect.nav{fill:navy}"
+           "table .x{fill:pink}html[data-options] .x{fill:pink}.x h2{fill:pink}.x:not(button){fill:pink}")
+    dessins = ['<rect class="table table-basse porte h1 nav x"/>']
+    sortie = css_dessins(css, dessins, ".d-salon").split("\n")
+    assert sortie == [".d-salon .table{fill:teal}", ".d-salon .table-basse{fill:olive}",
+                      ".d-salon .porte.h1{stroke:red}", ".d-salon rect.nav{fill:navy}"]
+
+
+LAMPE = Option("lampe", "Lampe", ("plafond",), "choix", "eteinte",
+               (Valeur("allumee", "Allumée", rendue=False), Valeur("eteinte", "Éteinte")), "Visible sur le plan.")
+AVEC_LAMPE = dataclasses.replace(DOC, options=DOC.options + (LAMPE,))
+
+
+def test_choix_etat_par_defaut():
+    (html,) = balises(_page(doc=AVEC_LAMPE), "html")
+    assert "lampe:eteinte" in html["data-options"].split()
+
+
+def test_choix_regles():
+    tete = _entre(_page(doc=AVEC_LAMPE), "<head>", "</head>")
+    assert tete.index("<style>") > tete.index("commun/site.css")
+    style = _entre(tete, "<style>", "</style>")
+    assert 'html:not([data-options~="lampe:allumee"]) [data-si~="lampe:allumee"]{display:none!important}' in style
+    assert 'html:not([data-options~="lampe:eteinte"]) [data-si~="lampe:eteinte"]{display:none!important}' in style
+
+
+def test_choix_script_de_tete():
+    tete = _entre(_page(doc=AVEC_LAMPE), "<head>", "</head>")
+    scripts = re.findall(r"<script>(.*?)</script>", tete)
+    assert len(scripts) == 2
+    assert tete.index("<script>" + scripts[1]) < tete.index("<link")
+    for attendu in ('"plans:"', '"lampe": ["eteinte", "allumee", "eteinte"]', '"essai/amenagement"'):
+        assert attendu in scripts[1], attendu
+
+
+def test_choix_json():
+    lampe = next(o for o in _json(_page(doc=AVEC_LAMPE), "options") if o["id"] == "lampe")
+    allumee, eteinte = lampe["valeurs"]
+    assert allumee["rendue"] is False
+    assert "rendue" not in eteinte
+
+
+def test_sans_choix_rien_de_neuf():
+    page = _page(doc=dataclasses.replace(DOC, options=(ESSAI.TEINTE,)))
+    assert "data-options=" not in page
+    assert "data-si~=" not in page
+    assert len(re.findall(r"<script>", page)) == 1
+    attendu = dataclasses.asdict(ESSAI.TEINTE)
+    for v in attendu["valeurs"]:
+        del v["rendue"]
+    assert _json(page, "options")[0] == json.loads(json.dumps(attendu))

@@ -5,9 +5,13 @@ Chaque bloc est une fonction pure qui rend du HTML (ou une `Vue`) à partir de c
 n'importe `pieces`, et les chemins (dossier des rendus) arrivent en argument. Titres, noms, libellés et cotes sont
 échappés ; les textes longs (`texte` d'une zone, légende, SVG) sont insérés tels quels, à la charge de l'appelant.
 
-Nommage des rendus : `rendu(dossier, variante, cle)` est la seule fonction qui sait nommer un rendu. Le fichier est
-`<variante>-<cle>.jpg` (ou `<cle>.jpg` pour un document sans variante, d'id vide), son masque `<…>-masque.png`, et la
-page les lit sous `rendus/`.
+Nommage des rendus : `rendu(dossier, variante, cle, valeur)` est la seule fonction qui sait nommer un rendu. Le fichier
+est `<variante>-<cle>.jpg` (ou `<cle>.jpg` pour un document sans variante, d'id vide), suivi de `-<valeur>` pour une
+valeur d'option « choix » autre que celle d'origine, son masque `<…>-masque.png`, et la page les lit sous `rendus/`.
+
+Selon une option « choix » : un élément qui ne vaut que pour une valeur porte `data-si="<option>:<code>"` (`jeton`,
+`si`) ; une zone le porte par son champ `si`, une scène de l'iso ou d'une caméra par `vue_iso(…, option=…)`,
+`vue_camera(…, option=…)`.
 """
 import re
 from dataclasses import dataclass
@@ -19,7 +23,7 @@ from commun.blocs_lecture import (Achat, Carte, SectionAchats, a_verifier, achat
                                   materiaux, note_source, principes, tableau_achats, tete, total_achats,
                                   vue_lecture)
 from commun.dessin import f
-from commun.modele import Camera, Element, Vue
+from commun.modele import Camera, Element, Option, Vue
 from commun.position import mini_plan
 
 # Calques du plan : (id, nom). Le JS pose `sans-<id>` sur la section ; les éléments SVG qu'il masque portent ces classes.
@@ -56,7 +60,9 @@ class Zone:
     """Un meuble touchable du plan.
 
     `id` stable (`data-meuble`, `#plan?k=<id>`) ; `emprise` x0, y0, x1, y1 en cm ; `cotes` : `cotes_meuble(...)` ou
-    texte de la page ; `texte` HTML ; `coupe` (lettre) et `iso` (coin) : boutons de la fiche, seulement si non vides."""
+    texte de la page ; `texte` HTML ; `coupe` (lettre) et `iso` (coin) : boutons de la fiche, seulement si non vides ;
+    `si` : jetons `<option>:<code>` séparés par une espace (`jeton`), la zone et sa fiche n'existant que dans cet
+    état ; deux zones de même `id` et de `si` différents donnent deux emprises d'un même meuble."""
     id: str
     titre: str
     emprise: tuple[float, float, float, float]
@@ -64,14 +70,33 @@ class Zone:
     texte: str
     coupe: str = ""
     iso: str = ""
+    si: str = ""
+
+
+def jeton(option: Option, code: str) -> str:
+    """Le jeton d'état `<id>:<code>` d'une valeur d'une option « choix » ; `ValueError` pour une autre option ou un
+    code absent de ses valeurs."""
+    if option.type != "choix":
+        raise ValueError(f"option « {option.id} » : un jeton ne vaut que pour une option « choix »")
+    if code not in [v.code for v in option.valeurs]:
+        raise ValueError(f"option « {option.id} » : valeur « {code} » inconnue")
+    return f"{option.id}:{code}"
+
+
+def si(*jetons: str) -> str:
+    """L'attribut ` data-si="…"` (espace en tête) qui réunit des jetons, chacun requis ; les chaînes vides sont
+    ignorées ; rien sans jeton."""
+    jetons = [j for j in jetons if j]
+    return f' data-si="{_e(" ".join(jetons))}"' if jetons else ""
 
 
 def zones_svg(zones: Sequence[Zone]) -> str:
-    """Rectangles touchables du plan, un par zone, à poser dans le SVG du plan."""
+    """Rectangles touchables du plan, un par zone, à poser dans le SVG du plan ; `data-si` pour une zone qui a `si`."""
     rects = []
     for z in zones:
         x0, y0, x1, y1 = z.emprise
-        rects.append(f'<rect class="zone" data-meuble="{_e(z.id)}" x="{f(x0)}" y="{f(y0)}" width="{f(x1 - x0)}"'
+        marque = si(z.si) if z.si else ""
+        rects.append(f'<rect class="zone" data-meuble="{_e(z.id)}"{marque} x="{f(x0)}" y="{f(y0)}" width="{f(x1 - x0)}"'
                      f' height="{f(y1 - y0)}" rx="2" tabindex="0" role="button" aria-label="{_e(z.titre)}"/>')
     return "".join(rects)
 
@@ -86,8 +111,9 @@ def _modeles(zones):
             liens += f'<a class="btn" href="#coupes?k={_e(z.coupe)}">Coupe {_e(z.coupe)}</a>'
         if z.iso:
             liens += f'<a class="btn" href="#iso?k={_e(z.iso)}">Iso</a>'
-        modeles.append(f'<template data-meuble="{_e(z.id)}" data-titre="{_e(z.titre)}"><p class="cotes">{_e(cotes)}</p>'
-                       f'<p>{z.texte}</p><div class="actions">{liens}</div></template>')
+        marque = si(z.si) if z.si else ""
+        modeles.append(f'<template data-meuble="{_e(z.id)}"{marque} data-titre="{_e(z.titre)}">'
+                       f'<p class="cotes">{_e(cotes)}</p><p>{z.texte}</p><div class="actions">{liens}</div></template>')
     return "".join(modeles)
 
 
@@ -148,12 +174,23 @@ class Rendu:
     masque_existe: bool = False
 
 
-def rendu(dossier: Path, variante: str, cle: str) -> Rendu:
-    """Le rendu `cle` de `variante` (sans préfixe si la variante est d'id vide)."""
-    nom = f"{variante}-{cle}" if variante else cle
+def rendu(dossier: Path, variante: str, cle: str, valeur: str = "") -> Rendu:
+    """Le rendu `cle` de `variante` (sans préfixe si la variante est d'id vide), pour le code `valeur` d'une option
+    « choix » (suffixe `-<valeur>`) ; `valeur` vide : la valeur d'origine, sans suffixe."""
+    nom = (f"{variante}-{cle}" if variante else cle) + (f"-{valeur}" if valeur else "")
     fichier = dossier / f"{nom}.jpg"
     return Rendu(image=f"rendus/{nom}.jpg", masque=f"rendus/{nom}-masque.png", fichier=fichier,
                  existe=fichier.exists(), masque_existe=(dossier / f"{nom}-masque.png").exists())
+
+
+def _calque(r, filtre, marque=""):
+    """La copie de `r` recolorée par `#filtre-<filtre>` à travers son masque ; rien sans `filtre` ou sans masque.
+    `marque` : attribut placé avant `src` (` data-si="…"`)."""
+    if not (filtre and r.masque_existe):
+        return ""
+    masque = f"url({r.masque})"
+    return (f'<img class="calque"{marque} src="{r.image}" alt="" aria-hidden="true" draggable="false"'
+            f' style="filter:url(#filtre-{filtre});-webkit-mask-image:{masque};mask-image:{masque}">')
 
 
 def figure_rendu(r: Rendu, alt: str, filtre: str = "") -> str:
@@ -161,12 +198,48 @@ def figure_rendu(r: Rendu, alt: str, filtre: str = "") -> str:
     ce masque ; rien si le rendu n'existe pas."""
     if not r.existe:
         return ""
-    calque = ""
-    if filtre and r.masque_existe:
-        masque = f"url({r.masque})"
-        calque = (f'<img class="calque" src="{r.image}" alt="" aria-hidden="true" draggable="false"'
-                  f' style="filter:url(#filtre-{filtre});-webkit-mask-image:{masque};mask-image:{masque}">')
-    return f'<figure class="cadre rendu"><img src="{r.image}" alt="{_e(alt)}" draggable="false">{calque}</figure>'
+    return (f'<figure class="cadre rendu"><img src="{r.image}" alt="{_e(alt)}" draggable="false">'
+            f'{_calque(r, filtre)}</figure>')
+
+
+def rendus_choix(dossier: Path, variante: str, cle: str, option: Option) -> dict[str, Rendu]:
+    """Le rendu `cle` de `variante` pour chaque valeur de `option`, dans l'ordre des valeurs : {code: Rendu} ; la
+    valeur d'origine garde le nom sans suffixe."""
+    return {v.code: rendu(dossier, variante, cle, "" if v.code == option.defaut else v.code) for v in option.valeurs}
+
+
+def _exiger_choix(option: Option) -> None:
+    """`ValueError` qui nomme l'option si elle n'est pas « choix »."""
+    if option.type != "choix":
+        raise ValueError(f"option « {option.id} » : une image par valeur ne vaut que pour une option « choix »,"
+                         f" pas « {option.type} »")
+
+
+def figure_choix(rendus: Mapping[str, Rendu], option: Option, alt: str, filtre: str = "") -> str:
+    """Un cadre qui porte une image par valeur de `option` (`data-si`), et son calque comme `figure_rendu` si `filtre`
+    et que le masque de l'image montrée existe ; une valeur sans image reprend celle d'origine, suivie après le cadre
+    d'une note « <valeur> : pas encore rendu, image en <origine> ». Rien si le rendu d'origine n'existe pas. `alt` et
+    les noms des valeurs sont du texte, échappés. `ValueError` pour une option qui n'est pas « choix », ou un
+    `rendus` sans la valeur d'origine."""
+    _exiger_choix(option)
+    if option.defaut not in rendus:
+        raise ValueError(f"option « {option.id} » : rendus sans la valeur d'origine « {option.defaut} »")
+    origine = rendus[option.defaut]
+    if not origine.existe:
+        return ""
+    nom_origine = next(v.nom for v in option.valeurs if v.code == option.defaut)
+    images, notes = [], []
+    for v in option.valeurs:
+        marque = si(jeton(option, v.code))
+        r = rendus.get(v.code)
+        if r is None or not r.existe:
+            r = origine
+            if v.code != option.defaut:
+                notes.append(f'<p class="note-rendu"{marque}>{_e(v.nom)} : pas encore rendu,'
+                             f' image en {_e(nom_origine)}</p>')
+        a = alt if r is origine else f"{alt}, {v.nom}"
+        images.append(f'<img{marque} src="{r.image}" alt="{_e(a)}" draggable="false">{_calque(r, filtre, marque)}')
+    return f'<figure class="cadre rendu">{"".join(images)}</figure>{"".join(notes)}'
 
 
 def points_iso(enveloppe: tuple[float, float, float, float], marge: float = MARGE_ISO) -> dict[str, tuple]:
@@ -179,14 +252,23 @@ def points_iso(enveloppe: tuple[float, float, float, float], marge: float = MARG
 
 
 def vue_iso(dossier: Path, variante: str, lieu: Lieu, points: Mapping[str, tuple],
-            alts: Mapping[str, str] | None = None, filtre: str = "", vide: str = "Pas encore rendu") -> Vue:
-    """Un élément par coin de `COINS`, inactif s'il n'est pas rendu ; aucun coin rendu : vue vide (onglet grisé)."""
+            alts: Mapping[str, str] | None = None, filtre: str = "", vide: str = "Pas encore rendu",
+            option: Option | None = None) -> Vue:
+    """Un élément par coin de `COINS`, inactif s'il n'est pas rendu ; aucun coin rendu : vue vide (onglet grisé).
+    Avec `option` (« choix »), la scène d'un coin porte une image par valeur (`figure_choix`) ; le coin est actif si
+    son rendu d'origine existe."""
+    if option is not None:
+        _exiger_choix(option)
     alts = alts or {}
     elements = []
     for k in COINS:
         cle = f"iso_{k}"
         r = rendu(dossier, variante, cle)
-        scene = figure_rendu(r, alts.get(cle, f"Vue isométrique, coin {k.upper()}"), filtre)
+        alt = alts.get(cle, f"Vue isométrique, coin {k.upper()}")
+        if option is None:
+            scene = figure_rendu(r, alt, filtre)
+        else:
+            scene = figure_choix(rendus_choix(dossier, variante, cle, option), option, alt, filtre)
         elements.append(Element(k=k, nom=k.upper(), titre=f"Vue iso {k.upper()}", scene=scene, actif=r.existe))
     if not any(e.actif for e in elements):
         return Vue("iso", [], vide=vide)
@@ -205,13 +287,22 @@ def _optique(c):
 
 
 def vue_camera(dossier: Path, variante: str, lieu: Lieu, cameras: Sequence[Camera],
-               alts: Mapping[str, str] | None = None, filtre: str = "", vide: str = "Pas encore rendu") -> Vue:
-    """Un élément par caméra, dans l'ordre donné ; aucune caméra, ou aucune rendue : vue vide (onglet grisé)."""
+               alts: Mapping[str, str] | None = None, filtre: str = "", vide: str = "Pas encore rendu",
+               option: Option | None = None) -> Vue:
+    """Un élément par caméra, dans l'ordre donné ; aucune caméra, ou aucune rendue : vue vide (onglet grisé).
+    Avec `option` (« choix »), la scène d'une caméra porte une image par valeur (`figure_choix`) ; la caméra est
+    active si son rendu d'origine existe."""
+    if option is not None:
+        _exiger_choix(option)
     alts = alts or {}
     elements = []
     for c in cameras:
         r = rendu(dossier, variante, c.id)
-        scene = figure_rendu(r, alts.get(c.id, c.nom), filtre)
+        alt = alts.get(c.id, c.nom)
+        if option is None:
+            scene = figure_rendu(r, alt, filtre)
+        else:
+            scene = figure_choix(rendus_choix(dossier, variante, c.id, option), option, alt, filtre)
         elements.append(Element(k=c.id, nom=c.nom, titre=c.nom, scene=scene, fiche=_optique(c), actif=r.existe))
     if not any(e.actif for e in elements):
         return Vue("camera", [], vide=vide)
