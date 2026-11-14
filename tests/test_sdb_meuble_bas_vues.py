@@ -35,6 +35,7 @@ def test_achats():
         assert ref in table and nom.replace("'", "&#x27;") in table
     assert "2 × 16,50 €, stock : 25" in table and "stock : 50" in table
     assert "Le détail est dans la liste d'achats." in texte(s) and "sdb-meuble-achats.html#bas" not in s
+    assert "<td>Meuble bas</td>" in s and 'href="#achats"' not in s
     # le titre « Achats » de l'ancienne page est devenu l'onglet ; chaque paragraphe est pris entier
     vieux = entre(page_bas(), "<p>Le meuble bas entier", "</p>") + "</p>" \
         + section(page_achats(), "bas").split("<div", 1)[0] + "<p>" + section(page_achats(), "bas").split('<p class="note">', 1)[1]

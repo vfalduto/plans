@@ -31,10 +31,13 @@ def total_haut() -> float:
 
 def deux_meubles(liens: Mapping[str, str]) -> str:
     """Section « Les deux meubles » ; `liens` : adresses (relatives à la page) des achats de chaque meuble, clés
-    « bas » et « haut »."""
+    « bas » et « haut ». Adresse vide : le meuble de la page qui appelle, écrit sans lien (pas de lien vers soi)."""
     bas, haut = B.total(), total_haut()
-    ligne = lambda nom, cle, v: (f'<tr><td><a href="{escape(liens[cle], quote=True)}">{nom}</a></td>'   # noqa: E731
-                                 f'<td class="num d">{euros(v)}</td></tr>')
+
+    def ligne(nom, cle, v):
+        lien = f'<a href="{escape(liens[cle], quote=True)}">{nom}</a>' if liens[cle] else nom
+        return f'<tr><td>{lien}</td><td class="num d">{euros(v)}</td></tr>'
+
     mg = MAGASIN
     return ('<h2>Les deux meubles</h2>'
             '<div class="defile"><table><thead><tr><th>Meuble</th><th class="d">Prix du meuble entier</th></tr></thead>'

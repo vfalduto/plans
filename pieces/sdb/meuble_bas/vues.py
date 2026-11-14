@@ -123,7 +123,7 @@ def _achats() -> str:
                           "lot de poignées en contient 2, une seule sert. Non comptés : le câble, la goulotte et "
                           "l'électricien, la scie sauteuse, le rail de coupe, le foret à cuvette Ø 35, la scie cloche "
                           "Ø 67 et les clips adhésifs du fil des LED.")
-            + deux_meubles({"bas": "#achats", "haut": "../../sdb-meuble-achats.html#haut-seul"}))
+            + deux_meubles({"bas": "", "haut": "../../sdb-meuble-achats.html#haut-seul"}))
 
 
 def vues(variante: str) -> dict[str, Vue]:

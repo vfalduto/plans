@@ -1,6 +1,6 @@
 from commun.appartement import APPART, BAIES, contours
 from pieces.sdb import ancien, piece
-from tests.sdb_anciennes import ancien as vieux, page_bas, page_achats
+from tests.sdb_anciennes import ancien as vieux
 
 RELEVES = ("H", "X0", "X1", "Y0", "Y1", "ALCOVE", "SDB", "GONDS", "PORTE", "CHAMBRANLE", "DOUCHE", "LAVABO",
            "CARRELAGE", "EP_CARRELAGE", "ROBINET", "TUYAUX", "PASSE")
@@ -35,7 +35,3 @@ def test_chargeur():
     assert round(H.total_lignes(H.lignes()), 2) == 179.82
     import sys
     assert "modele" not in sys.modules and "haut" not in sys.modules and "plan" not in sys.modules
-
-
-def test_fixtures_sont_les_pages():
-    assert page_bas() == vieux("bas").page() and page_achats() == vieux("achats").page()

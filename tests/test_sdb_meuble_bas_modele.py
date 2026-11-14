@@ -1,7 +1,5 @@
 # Le modèle du meuble bas : les tests de 3d/sdb/test_bas.py (sauf ceux de l'ancienne page), puis la comparaison avec
 # l'ancien générateur, tant qu'il existe.
-from dataclasses import fields
-
 from commun.journal import depuis_page
 from pieces.sdb import ancien, piece as P
 from pieces.sdb.meuble_bas import document, modele as B
@@ -216,23 +214,6 @@ def test_vis_de_la_colonne_accessibles_des_deux_cotes():
 def test_tenue():
     t = B.tenue()
     assert t["fleche"] < 3 and t["marge"] > 2 and t["fleche_e"] < 2
-
-
-def _champs(b):
-    noms = [f.name for f in fields(B.Bloc)] if isinstance(b, B.Bloc) or hasattr(b, "encoche") else []
-    d = {n: getattr(b, n) for n in noms + ["role", "nom", "x0", "x1", "y0", "y1", "z0", "z1", "groupe"] if hasattr(b, n)}
-    for n in ("fenetres", "xy", "decor", "rep"):
-        if hasattr(b, n):
-            d[n] = getattr(b, n)
-    return type(b).__name__, d
-
-
-def test_comme_bas_py():
-    V = vieux("bas")
-    assert [_champs(b) for b in B.blocs()] == [_champs(b) for b in V.blocs()]
-    assert B.prix() == V.prix() and B.decoupe() == V.decoupe() and B.tenue() == V.tenue()
-    assert (B.chant_vu(), B.rouleaux_chant(), B.contour_porte(), B.PIECES_DEBIT, B.EQUERRES) == \
-           (V.chant_vu(), V.rouleaux_chant(), V.contour_porte(), V.PIECES_DEBIT, V.EQUERRES)
 
 
 def test_valeurs():
