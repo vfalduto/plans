@@ -1,4 +1,4 @@
-"""Vues du document salon/enfilade : Plans, Découpe, Montage, Achats (l'Explication vient ensuite).
+"""Vues du document salon/enfilade : Plans, Découpe, Montage, Achats ; l'Explication est dans explication.py.
 
 Textes repris de 3d/salon/enfilade.py (section_meuble, section_iso, section_debit, section_achats, section_montage) ;
 les textes sous les dessins deviennent leurs textes alternatifs (`alts`). Toutes les valeurs viennent de document.py,
@@ -7,7 +7,7 @@ volumes.py et chiffrage.py.
 from html import escape
 from pathlib import Path
 
-from commun.blocs import Achat, SectionAchats, achats, euros, note_source, vue_lecture
+from commun.blocs import Achat, SectionAchats, achats, euros, note_source, total_achats, vue_lecture
 from commun.blocs_construction import (Calepin, Colonne, DessinMeuble, Etape, calepinage, etapes, tableau_debit,
                                        vue_plans)
 from commun.modele import Vue
@@ -187,11 +187,15 @@ def _poste(ch, choisit, nom):
     raise ValueError(f"salon/enfilade, achats : poste inconnu : « {nom} »")
 
 
-def _achats(ch):
+def _sections_achats(ch):
+    """Un tableau par magasin, dans l'ordre des magasins ; les panneaux d'abord."""
     lignes = sorted(ch["lignes"], key=lambda li: (ORDRE_MAG.index(li["mag"]), not li["panneau"]))
-    sections = [SectionAchats(MAGASINS[m]["nom"], [Achat(li["poste"], li["ref"], li["q"], li["pu"],
-                                                         note=_note_achat(li)) for li in lignes if li["mag"] == m])
-                for m in ORDRE_MAG if any(li["mag"] == m for li in lignes)]
+    return [SectionAchats(MAGASINS[m]["nom"], [Achat(li["poste"], li["ref"], li["q"], li["pu"],
+                                                     note=_note_achat(li)) for li in lignes if li["mag"] == m])
+            for m in ORDRE_MAG if any(li["mag"] == m for li in lignes)]
+
+
+def _achats(ch, sections):
     c18 = _poste(ch, lambda p: p == FORMATS["C18"]["nom"], FORMATS["C18"]["nom"])
     huile = _poste(ch, lambda p: p.startswith("Huile"), "Huile…")
     chapo = (f'<p class="chapo">{_lien("weldom")} d\'abord, puis {_lien("lm")} pour ce que Weldom n\'a pas (fibres '
@@ -215,12 +219,15 @@ def _achats(ch):
 def vues(variante: str) -> dict[str, Vue]:
     if variante != "":
         raise ValueError(f"salon/enfilade : variante « {variante} » inconnue (une seule variante, d'id vide)")
+    from pieces.salon.enfilade.explication import vue_explication   # explication.py importe RENDUS_SITE d'ici
     chs = chiffrage.chiffrages()
     ch = chiffrage.retenu(chs)
+    sections = _sections_achats(ch)
     return {
         "plans": _plans(ch),
         "decoupe": vue_lecture("decoupe", _decoupe(ch)),
         "montage": vue_lecture("montage", _montage(ch)),
-        "achats": vue_lecture("achats", _achats(ch)),
-        "explication": vue_lecture("explication", ""),
+        "achats": vue_lecture("achats", _achats(ch, sections)),
+        "explication": vue_explication(ch, chs, len(etapes_montage(ch["g"])),
+                                       total_achats(sections, arrondi=False)),
     }
