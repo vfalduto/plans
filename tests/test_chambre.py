@@ -41,3 +41,10 @@ def test_accueil():
     chambre = {c.id: c for c in contours()}["chambre"]
     assert chambre.p == next(c.p for c in APPART if c.id == "chambre")
     assert chambre.cotes == "10,3 m²"
+
+
+def test_barres_de_la_niche():
+    # page, carte ④ : « devant à 70, derrière à 76 » ; la pièce est côté x 401, le mur à x 441
+    devant, derriere = sorted(document.NICHE["barres"])
+    assert devant[0] < derriere[0]
+    assert (devant[1], derriere[1]) == (70, 76)

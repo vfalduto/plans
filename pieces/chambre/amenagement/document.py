@@ -47,14 +47,15 @@ PRISES = dict(x=(137, 344), h=85, l=10, z0=83, z1=87)
 # la fiche dit « h 85 » et l'épaisseur est ep.
 PLAN = dict(x0=399, x1=441, y0=10, y1=251, z1=85, ep=3)
 COMMODE_NORD = dict(x0=401, x1=441, y0=91, y1=171, z1=82)
-COMMODE_SUD = dict(x0=401, x1=441, y0=171, y1=251, z1=82)
+COMMODE_SUD = dict(x0=401, x1=441, y0=COMMODE_NORD["y1"], y1=251, z1=82)
 # Quatre tiroirs par commode : séparations (z) et poignées (z du bas ; 12 de large, 2 de haut) vues en élévation.
 COMMODE = dict(tiroirs=4, separations=(20, 41, 62), poignees=(71, 50, 29, 9), poignee_l=12, poignee_h=2)
 # Joue de 2 au nord des commodes, qui porte le plan.
 JOUE = dict(x0=401, x1=441, y0=10, y1=12, z1=82)
 # ------------------------------------------------------------------ ④ niche à pantalons et patères
-# Deux barres fixes parallèles au mur, décalées : (x, h) ; 3 pantalons par barre.
-NICHE = dict(x0=401, x1=441, y0=12, y1=91, z1=82, barres=((413, 76), (429, 70)), pantalons=3)
+# Deux barres fixes parallèles au mur, décalées : (x, h), devant (côté pièce, x 413) à 70, derrière à 76 ; 3 pantalons
+# par barre.
+NICHE = dict(x0=401, x1=441, y0=12, y1=91, z1=82, barres=((413, 70), (429, 76)), pantalons=3)
 PATERES = dict(x=439.5, y=(28, 48, 68), z=165)
 # Zone de débattement d'un tiroir ouvert de la commode nord (pas un meuble) : 35 de profondeur.
 TIROIR_OUVERT = dict(x0=COMMODE_NORD["x0"] - 35, x1=COMMODE_NORD["x0"], y0=95, y1=167)
