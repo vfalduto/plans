@@ -8,7 +8,8 @@ from html.parser import HTMLParser
 
 import pytest
 
-from pieces.salon.etageres import calculs, dessins
+from commun.blocs import euros, total_achats
+from pieces.salon.etageres import calculs, dessins, document, vues
 from tests.outils import RACINE, balises
 
 ANCIENNE = (RACINE / "tests/fixtures/salon/salon-etageres.html").read_text(encoding="utf-8")
@@ -26,12 +27,16 @@ def _texte(html: str) -> str:
     return re.sub(r"\s+", " ", unescape(sans)).strip()
 
 
-class _Blocs(HTMLParser):
-    """HTML intérieur des <div class="dv" data-d="cle">, par la profondeur des div."""
+class _Dv(HTMLParser):
+    """Blocs <div class="dv" data-d="…"> d'un fragment, par la profondeur des div : (clé, début, début de l'intérieur,
+    fin de l'intérieur, fin), en positions dans le fragment."""
 
-    def __init__(self, cle):
+    def __init__(self, source):
         super().__init__(convert_charrefs=False)
-        self.cle, self.profondeur, self.debut, self.blocs = cle, 0, None, []
+        self.source, self.profondeur, self.ouvert, self.blocs = source, 0, None, []
+        self.lignes = [0]
+        for ligne in source.splitlines(keepends=True):
+            self.lignes.append(self.lignes[-1] + len(ligne))
 
     def _pos(self):
         ligne, col = self.getpos()
@@ -42,31 +47,46 @@ class _Blocs(HTMLParser):
             return
         self.profondeur += 1
         a = dict(attrs)
-        if self.debut is None and a.get("class") == "dv" and a.get("data-d") == self.cle:
-            self.debut = (self.profondeur, self._pos() + len(self.get_starttag_text()))
+        if self.ouvert is None and a.get("class") == "dv":
+            debut = self._pos()
+            self.ouvert = (self.profondeur, a["data-d"], debut, debut + len(self.get_starttag_text()))
 
     def handle_endtag(self, tag):
         if tag != "div":
             return
-        if self.debut is not None and self.profondeur == self.debut[0]:
-            self.blocs.append(self.source[self.debut[1]:self._pos()])
-            self.debut = None
+        if self.ouvert is not None and self.profondeur == self.ouvert[0]:
+            fin = self._pos()
+            self.blocs.append((self.ouvert[1], self.ouvert[2], self.ouvert[3], fin, fin + len("</div>")))
+            self.ouvert = None
         self.profondeur -= 1
+
+
+def _dv(html: str) -> list[tuple[str, int, int, int, int]]:
+    p = _Dv(html)
+    p.feed(html)
+    p.close()
+    return p.blocs
 
 
 def _blocs(cle: str) -> list[str]:
     """HTML intérieur des sept <div class="dv" data-d="cle"> de la page figée, dans l'ordre : chapô, vue iso, le
     meuble, débit, fixation, achats, point « Composition »."""
     corps = ANCIENNE[ANCIENNE.index("<body"):]
-    p = _Blocs(cle)
-    p.source = corps
-    p.lignes = [0]
-    for ligne in corps.splitlines(keepends=True):
-        p.lignes.append(p.lignes[-1] + len(ligne))
-    p.feed(corps)
-    p.close()
-    assert len(p.blocs) == 7, (cle, len(p.blocs))
-    return p.blocs
+    blocs = [corps[a:b] for c, _, a, b, _ in _dv(corps) if c == cle]
+    assert len(blocs) == 7, (cle, len(blocs))
+    return blocs
+
+
+def _dispo(html: str, cle: str) -> str:
+    """`html` dans la version de la disposition `cle` : les blocs des autres dispositions ôtés, celui de `cle` gardé
+    sans son enveloppe."""
+    out, i = [], 0
+    for c, d, a, b, fin in _dv(html):
+        out.append(html[i:d])
+        if c == cle:
+            out.append(html[a:b])
+        i = fin
+    return "".join(out) + html[i:]
 
 
 def _section(ident: str) -> str:
@@ -240,3 +260,96 @@ def test_css_sur_les_jetons_du_site():
     for interdit in ("monospace", "JetBrains", "Archivo", "prefers-color-scheme", "@media", "·", ".mono"):
         assert interdit not in dessins.CSS
     assert dessins.ECHELLES == {"elevation": 2.4, "dessus": 2.6, "profil": 9, "travee": 3}
+
+
+# ------------------------------------------------------------------ tâche 3 : Plans, Découpe, Montage, Achats
+V = {c: vues.vues(c) for c in calculs.CLES}
+
+
+def _viewbox(svg):
+    return [float(x) for x in balises(svg, "svg")[0]["viewbox"].split()]
+
+
+def test_vues_et_variante_inconnue():
+    assert all(list(v) == ["plans", "decoupe", "montage", "achats", "explication"] for v in V.values())
+    with pytest.raises(ValueError, match="niche"):
+        vues.vues("niche")
+
+
+def test_plans():
+    for c, v in V.items():
+        p = v["plans"]
+        assert [(x.k, x.nom) for x in p.elements] == list(vues.REPERES)
+        assert p.outils == ("zoom", "mesure") and {x.titre for x in p.elements} == {f"Disposition {calculs.etat(c).nom}"}
+        assert f'<p class="cotes">{escape(calculs.etat(c).kit)}</p>' in p.fiche
+        assert 'href="#decoupe"' in p.fiche and 'href="#montage"' in p.fiche
+        for x in p.elements:
+            (svg,) = balises(x.scene, "svg")[:1]
+            assert svg["aria-label"] == dessins.legendes(calculs.etat(c))[x.k]
+            assert (svg.get("data-mesure") == "non") == (x.k in ("iso", "detail"))
+
+
+def test_cadrage_commun():
+    for k in [k for k, _ in vues.REPERES]:
+        assert len({balises(next(x.scene for x in v["plans"].elements if x.k == k), "svg")[0]["viewbox"]
+                    for v in V.values()}) == 1, k
+    iso = _viewbox(next(x.scene for x in V["actuelle"]["plans"].elements if x.k == "iso"))
+    assert iso == pytest.approx([-491.8, -499.6, 553.9, 562.2], abs=0.05)
+    dessus = _viewbox(next(x.scene for x in V["actuelle"]["plans"].elements if x.k == "dessus"))
+    assert [v * 2.6 for v in dessus] == pytest.approx([-110, -24.4, 786.9, 1028.4], abs=0.05)
+
+
+def test_mesure_en_cm():
+    """Deux axes de montants voisins, lus dans le repère de la scène : 55 cm, le pas."""
+    for k in ("elevation", "dessus"):
+        scene = next(x.scene for x in V["actuelle"]["plans"].elements if x.k == k)
+        s = float(re.search(r'<g transform="scale\(([\d.]+)\)">', scene)[1])
+        monts = sorted({float(r["x"]) + float(r["width"]) / 2 for r in balises(scene, "rect", classe="mont")})
+        assert (monts[1] - monts[0]) * s == pytest.approx(document.MONTANTS["pas"], abs=0.01), k
+
+
+@pytest.mark.parametrize("cle,reperes,pieces", [("actuelle", 6, 44), ("rangs", 4, 53), ("decalee", 4, 53), ("escalier", 4, 59)])
+def test_decoupe(cle, reperes, pieces):
+    (e,) = V[cle]["decoupe"].elements
+    nom = calculs.etat(cle).nom
+    assert f"Disposition {nom} : {reperes} repères, {pieces} pièces à débiter." in e.scene
+    assert _lignes(e.scene.split("</table>")[0]) == _lignes(_blocs(cle)[3].split("<h3>")[0])
+    assert [unescape(t) for t in re.findall(r"<figcaption>(.*?)</figcaption>", e.scene)] == [
+        "Tablettes : refente des plans de chêne", "Montants et chevilles", "Perçage d'un montant", "Entaille d'une tablette"]
+    assert 'class="mono"' not in e.scene
+
+
+@pytest.mark.parametrize("cle", calculs.CLES)
+def test_montage(cle):
+    (e,) = V[cle]["montage"].elements
+    ancien = _section("montage")
+    assert _lignes(e.scene.split("</table>")[0]) == _lignes(_blocs(cle)[2].split("<h3>Composition</h3>")[1])
+    titres = re.findall(r"<li><b>(.*?)</b> : ", ancien)
+    assert re.findall(r"<h3>(.*?)</h3>", e.scene) == titres and len(titres) == 9
+    for li in re.findall(r"<li><b>.*?</b> : (.*?)</li>", ancien):
+        assert _texte(li) in _texte(e.scene)
+    outils = re.search(r"<p><b>Outils</b> : (.*?)</p>", ancien)[1]
+    assert "Outils à réunir" in e.scene and _texte(outils) in _texte(e.scene)
+
+
+@pytest.mark.parametrize("cle", calculs.CLES)
+def test_achats(cle):
+    (v,) = V[cle]["achats"].elements
+    e = calculs.etat(cle)
+    assert re.findall(r"<h3>(.*?)</h3>", v.scene) == ["Weldom Marseille Saint-Barnabé", "Castorama"]
+    assert f"Disposition {e.nom}" in v.scene and total_achats(vues.sections_achats(e), arrondi=False) == euros(e.total)
+    for a in e.achats:
+        assert escape(a["article"]) in v.scene and f"prix {a['statut']}" in v.scene
+        if a["url"]:
+            assert f'href="{a["url"]}"' in v.scene
+    # intro, total de la disposition, transport, note : chaque paragraphe de la section, dans sa version `cle`
+    paragraphes = re.findall(r"<p[^>]*>(.*?)</p>", _dispo(_section("achats"), cle), re.S)
+    assert len(paragraphes) == 4
+    for p in paragraphes:
+        assert _texte(p) in _texte(v.scene)
+
+
+def test_apres_titre():
+    assert vues._apres_titre("<h2>A</h2><p>b</p>", "<i>x</i>") == "<h2>A</h2><i>x</i><p>b</p>"
+    with pytest.raises(ValueError):
+        vues._apres_titre("<p>b</p>", "x")
