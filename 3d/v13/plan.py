@@ -27,6 +27,10 @@ from pieces.cuisine.amenagement.dessins import (COUPE_A, COUPE_B, COUPE_C, COUPE
                                                 POS_PLAN, regle, sym_inter, sym_lumiere, sym_prise, uv, vantail,
                                                 zones_taille)
 from pieces.cuisine.amenagement import dessins as _D  # noqa: E402
+# calculs de la capacité et de la hauteur du plan : dans la vue Explication, réimportés ici
+from pieces.cuisine.amenagement.explication import (LIGNES_CAPACITE, colonne_p9a, corps_capacite,  # noqa: E402,F401
+                                                    details_capacite, etat, hors_fourchette, lignes_avant_apres,
+                                                    nombre, note)
 
 # les dessins sont dans pieces/cuisine/amenagement/dessins.py ; ici, l'ancienne page les garde tels qu'elle les
 # montrait (aria-label d'origine, règle ajoutée par page(), points médians de plan_svg et coupe_elec_nord)
@@ -238,17 +242,6 @@ TAILLE_JS = """
 
 
 # ------------------------------------------------------------------ hauteur du plan de travail (V13.28)
-def hors_fourchette(h, coude, regle=None):
-    """Écart (cm) entre le plan h et la fourchette coude − hi → coude − lo ; > 0 trop haut, < 0 trop bas, 0 dedans."""
-    lo_s, hi_s = regle or M.PT_SOUS_COUDE
-    lo, hi = coude - hi_s, coude - lo_s
-    return h - hi if h > hi else (h - lo if h < lo else 0)
-
-
-def etat(e):
-    return "oui" if e == 0 else (f"{e} trop haut" if e > 0 else f"{-e} trop bas")
-
-
 def section_hauteur_pt():
     noms = list(M.COUDES)
     ent = "".join(f"<th>{n} (coude {M.COUDES[n]})</th>" for n in noms)
@@ -393,119 +386,11 @@ def section_elec():
 # ------------------------------------------------------------------ page
 
 
-def lignes_avant_apres():
-    """Mesures V11.34 (avant) et version en cours : [(mesure, avant, en cours, écart)], textes à la française."""
-    a, v = M.AVANT, M.CAPACITE["v11"]
-    lib = lambda x: sum(b - c for c, b in x)
-    apres = dict(lin_bas=v["lin_bas"], lin_hauts=v["lin_hauts"], lin_col=v["lin_col"], modules=sum(v["modules"]),
-                 tiroirs=v["tiroirs"], anglaise=len(M.TIROIRS_ANGLAISE), plan=lib(v["plan"]),
-                 plan_max=max(b - c for c, b in v["plan"]), cellier_m2=aire(M.CELLIER_SOL) / 1e4,
-                 tablettes=v["cellier"][1] * v["cellier"][2] + (v["cellier_sud"][1] * v["cellier_sud"][2] if v["cellier_sud"] else 0),
-                 vol_cuisine=M.VOLUMES["v11"]["cuisine"], vol_cellier=M.VOLUMES["v11"]["cellier"])
-    avant = dict(lin_bas=a["lin_bas"], lin_hauts=a["lin_hauts"], lin_col=a["lin_col"], modules=sum(a["modules"]),
-                 tiroirs=a["tiroirs"], anglaise=a["anglaise"], plan=lib(a["plan"]),
-                 plan_max=max(b - c for c, b in a["plan"]), cellier_m2=a["cellier_m2"], tablettes=a["tablettes_cm"],
-                 vol_cuisine=a["volume_cuisine"], vol_cellier=a["volume_cellier"])
-    fr = lambda t: re.sub(r"(\d)\.(\d)", r"\1,\2", t)
-    rows = []
-    for nom, k, div, fmt in LIGNES_CAPACITE:
-        x, y = avant[k] / div, apres[k] / div
-        d = y - x
-        signe = "+" if d > 0 else "−" if d < 0 else "±"
-        rows.append((nom, fr(fmt.format(x)), fr(fmt.format(y)), fr(signe + fmt.format(abs(d)))))
-    tot_a, tot_v = (avant["vol_cuisine"] + avant["vol_cellier"]) / 1000, (apres["vol_cuisine"] + apres["vol_cellier"]) / 1000
-    rows.append(("Volume total", fr(f"{tot_a:.2f} m³"), fr(f"{tot_v:.2f} m³"),
-                 fr(f"{'+' if tot_v >= tot_a else '−'}{abs(tot_v - tot_a):.2f} m³")))
-    return rows
-
-
-# mesures du tableau de capacité : (libellé, clé, diviseur, format)
-LIGNES_CAPACITE = [
-    ("Meubles bas (m linéaires)", "lin_bas", 100, "{:.2f} m"), ("Meubles hauts (m linéaires)", "lin_hauts", 100, "{:.2f} m"),
-    ("Colonnes (m linéaires)", "lin_col", 100, "{:.2f} m"), ("Nombre de meubles", "modules", 1, "{:.0f}"),
-    ("Tiroirs à sortie totale", "tiroirs", 1, "{:.0f}"), ("Tiroirs à l'anglaise (derrière une porte)", "anglaise", 1, "{:.0f}"),
-    ("Plan de travail utile", "plan", 100, "{:.2f} m"), ("Plus grand plan d'un seul tenant", "plan_max", 1, "{:.0f} cm"),
-    ("Cellier : surface au sol", "cellier_m2", 1, "{:.2f} m²"), ("Cellier : tablettes", "tablettes", 100, "{:.2f} m"),
-    ("Volume fermé de la cuisine", "vol_cuisine", 1, "{:.0f} L"), ("Volume du cellier (rayonnages)", "vol_cellier", 1, "{:.0f} L")]
-
-
-def colonne_p9a():
-    """Proposition 9 A (figée, ne change plus) et repères d'une cuisine de 8 m², dans l'ordre de LIGNES_CAPACITE + total."""
-    p, r, vol = M.CAPACITE["p9a"], M.REPERES, M.VOLUMES["p9a"]
-    segs = [b - a for a, b in p["plan"]]
-    fr = lambda t: re.sub(r"(\d)\.(\d)", r"\1,\2", t)
-    p9a = [f"{p['lin_bas'] / 100:.2f} m (dont le café)", f"{p['lin_hauts'] / 100:.2f} m", f"{p['lin_col'] / 100:.2f} m (LV, frigo, four)",
-           f"{sum(p['modules'])}", f"{p['tiroirs']}", "0", f"{sum(segs) / 100:.2f} m ({' + '.join(f(x) for x in segs)})",
-           f"{max(segs)} cm", "", f"{p['cellier'][1] * p['cellier'][2] / 100:.2f} m",
-           f"{vol['cuisine']:.0f} L", f"{vol['cellier']:.0f} L", f"{sum(vol.values()) / 1000:.2f} m³"]
-    rep = ["", "", "", f"{r['modules'][0]} à {r['modules'][1]}",
-           "plus il y en a, mieux c'est", "", f"{r['plan'][0] / 100:g} à {r['plan'][1] / 100:g} m", "", "", "", "", "",
-           f"{r['volume'][0]:g} à {r['volume'][1]:g} m³ (bien optimisée)"]
-    return [fr(x) for x in p9a], [fr(x) for x in rep]
-
-
-def details_capacite():
-    """Lignes descriptives de la version en cours : implantation, rayonnages du cellier, rangements ouverts."""
-    v = M.CAPACITE["v11"]
-    n, s = v["cellier"], v["cellier_sud"]
-    return dict(
-        implantation=f"{max(b.x1 for b in M.MEUBLES if b.role == 'plan') / 100:.2f} m, "
-                     f"{v['modules'][0] + v['modules'][1]} meubles".replace(".", ","),
-        rayonnages=(f"nord {n[0]} cm, {n[1]} tablettes P{n[3]} de {n[2]}"
-                    + (f" ; sud (mur du WC) {s[0]} cm, {s[1]} tablettes P{s[3]} de {s[2]}" if s else "")),
-        ouverts=escape(v["autres"]))
-
-
-def nombre(t):
-    """Premier nombre d'un texte à la française (« 2,60 m » → 2.6), None s'il n'y en a pas."""
-    m = re.search(r"\d+(?:,\d+)?", re.sub(r"<[^>]+>", "", t))
-    return float(m.group().replace(",", ".")) if m else None
-
-
-def note(t, lo, hi=None):
-    """Classe de cellule : « ok » à partir du bas du repère, « ko » en dessous (dépasser le haut n'est pas une erreur)."""
-    x = nombre(t)
-    if x is None:
-        return ""
-    return ' class="ok"' if lo <= x else ' class="ko"'
-
-
 def section_capacite(version, rows, details):
     """Section « Capacité » : V11.34 (avant), version affichée, écart, proposition 9 A et repères. Sert aussi à
     réécrire les versions figées (rows et details lus dans leur HTML). Cellules vertes dans le repère d'une cuisine
     de 8 m², rouges en dehors."""
-    p9a, rep = colonne_p9a()
-    r = M.REPERES
-    lignes = [list(x) + [p9a[k], rep[k], None] for k, x in enumerate(rows)]
-    # bas + hauts : c'est la somme qui a un repère
-    som = lambda i: f"{nombre(lignes[0][i]) + nombre(lignes[1][i]):.2f} m".replace(".", ",")
-    d = nombre(lignes[0][2]) + nombre(lignes[1][2]) - nombre(lignes[0][1]) - nombre(lignes[1][1])
-    signe = "+" if d > 0.001 else "−" if d < -0.001 else "±"
-    lignes.insert(2, ["Meubles bas + hauts", som(1), som(2), f"{signe}{abs(d):.2f} m".replace(".", ","), som(4),
-                      f"{r['lin'][0] / 100:g} à {r['lin'][1] / 100:g} m", (r["lin"][0] / 100, r["lin"][1] / 100)])
-    regles = {"Nombre de meubles": r["modules"], "Plan de travail utile": (r["plan"][0] / 100, r["plan"][1] / 100),
-              "Volume total": (r["volume"][0], None)}
-    corps = ""
-    for k, (nom, av, ap, ec, p9, rp, regle) in enumerate(lignes):
-        regle = regle or regles.get(nom)
-        c = (lambda t: note(t, *regle)) if regle else (lambda t: "")
-        gras = "<b>" + nom + "</b>" if k == len(lignes) - 1 else nom
-        corps += (f"<tr><td>{gras}</td><td{c(av)}>{av}</td><td{c(ap)}><b>{ap}</b></td><td>{ec}</td>"
-                  f"<td{c(p9)}>{p9}</td><td>{rp}</td></tr>")
-    p, (i0, i1, n0, n1) = M.CAPACITE["p9a"], r["implantation"]
-
-    def impl(t):   # au moins 2,50 m et 6 meubles (au-delà du repère : pas une erreur)
-        n = re.search(r"(\d+) meubles", t)
-        ok = i0 / 100 <= nombre(t) and n and n0 <= int(n.group(1))
-        return ' class="ok"' if ok else ' class="ko"'
-    p9_impl = "2,49 m, 7 meubles + colonne LV"
-    corps += "".join(f'<tr><td>{nom}</td><td></td><td colspan="2"{cx}>{x}</td><td{cy}>{y}</td><td>{z}</td></tr>'
-                     for nom, x, cx, y, cy, z in [
-        ("Implantation (mur nord)", details["implantation"], impl(details["implantation"]), p9_impl, impl(p9_impl),
-         f"{i0 / 100:.2f} à {i1 / 100:g} m, ".replace(".", ",") + f"{n0} ou {n1} meubles"),
-        ("Cellier : rayonnages", details["rayonnages"], "",
-         f"{p['cellier'][0]} cm, {p['cellier'][1]} tablettes P{p['cellier'][3]} de {p['cellier'][2]}", "", ""),
-        ("Rangements ouverts", details["ouverts"], "", escape(p["autres"]), "", "")])
+    corps = corps_capacite(rows, details)
     av = M.AVANT["version"]
     return f"""<h2>Capacité : {av} → {version} et proposition 9 A</h2>
 <div class="fig"><div class="scroll"><table class="orga capa"><thead><tr><th>Mesure</th><th>{av} (avant)</th><th>{version}</th><th>Écart</th>

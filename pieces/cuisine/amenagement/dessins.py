@@ -765,4 +765,13 @@ CSS_DESSINS = """
 .elp,.elpe{fill:var(--panel);stroke:var(--prise,#7B4FBF);stroke-width:1.1}.elpd{fill:var(--prise,#7B4FBF)}.elc{stroke-dasharray:2 1.2}
 .elie{fill:var(--panel);stroke:var(--elec,#A86F00);stroke-width:1.1}
 .elt{fill:var(--elec,#A86F00);font-weight:700}.elpt{fill:var(--prise,#7B4FBF);font-weight:600}
+.hpw svg{display:block;width:100%;min-width:480px;max-width:690px;height:auto;margin:0 auto}
+tr.hpr td{background:color-mix(in srgb,#2F7FB5 10%,transparent)}
+.note{font-size:13px;color:var(--muted)}
+.fiche th{width:190px}
+.capa td.ok{background:color-mix(in srgb,#3E8E5A 20%,transparent)}
+.capa td.ko{background:color-mix(in srgb,var(--tri) 22%,transparent)}
+td.num,th.num{text-align:right;white-space:nowrap}
+.mat th{width:30%;color:var(--ink);font-weight:600;font-size:15px;padding-right:16px}
+.ech{display:block;margin:0 0 6px}
 """
