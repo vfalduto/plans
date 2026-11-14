@@ -332,6 +332,13 @@ async page => {
         }));
         verifier(s.classe.includes("sans-js") && egal(s.vues, VUES) && s.principes > 0,
                  `sans JavaScript, ${largeur} px : ${JSON.stringify(s)}`);
+        // les rendus de l'iso et des caméras restent dans leur section : ni empilés, ni posés sur le texte de l'explication
+        const r = await p.evaluate(() => [...document.querySelectorAll("figure.cadre.rendu")].map(f => {
+          const sec = f.closest("section.vue").getBoundingClientRect(), b = f.getBoundingClientRect();
+          return {pos: getComputedStyle(f).position, dedans: b.top >= sec.top - 1 && b.bottom <= sec.bottom + 1, h: b.height};
+        }));
+        verifier(r.length >= 8 && r.every(x => x.pos !== "absolute" && x.dedans && x.h > 0),
+                 `sans JavaScript, ${largeur} px : rendus hors de leur section (${JSON.stringify(r.filter(x => x.pos === "absolute" || !x.dedans || !x.h))})`);
         const d = await debordements(p);
         verifier(!d.some(x => x.startsWith("page")), `sans JavaScript, ${largeur} px : déborde (${d.join(" ; ")})`);
       }

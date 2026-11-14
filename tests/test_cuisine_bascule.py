@@ -35,9 +35,9 @@ def _traduire(r, ancre):
 
 def test_document_dans_site():
     (cuisine,) = [p for p in charger_site().SITE.pieces if p.id == "cuisine"]
-    amenagement, porte = cuisine.documents
+    (amenagement,) = cuisine.documents
     assert amenagement is cuisine_amenagement.DOCUMENT and isinstance(amenagement, Document)
-    assert isinstance(porte, Passerelle) and porte.page == "cuisine-v13-porte-cellier.html"
+    assert not any(isinstance(d, Passerelle) for d in cuisine.documents)   # « Porte du cellier » : page non migrée
 
 
 def test_trois_redirections():

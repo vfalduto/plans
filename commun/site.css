@@ -313,6 +313,8 @@ a.b-case[aria-current="page"] > .ico{color:inherit}
 .sans-js .lecture{overflow:visible}
 .sans-js .planche .scene{position:static;overflow:visible;container-type:normal;touch-action:auto;user-select:auto;-webkit-user-select:auto}
 .sans-js .scene > .element{position:static;display:block}
+.sans-js .rendu{position:relative;inset:auto}
+.sans-js .cadre{width:min(100%,900px)}
 .sans-js .element > svg{position:static;height:auto;max-height:80vh}
 .sans-js .fiche{position:static;max-height:none;overflow:visible}
 /* plusieurs éléments (coupes) : chaque fiche porte son titre, celui de l'en-tête ne nommerait que le premier */

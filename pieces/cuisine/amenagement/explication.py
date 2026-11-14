@@ -30,9 +30,9 @@ def _racine(depuis: str) -> str:
 
 
 def _liens(depuis: str) -> tuple[tuple[str, str], ...]:
-    """Liens de la tête : les deux annexes du document (écrites à côté de lui), puis la page de la porte du cellier."""
-    return (("maquette-3d.html", "Maquette 3D"), ("imprimable.html", "Version imprimable"),
-            (f"{_racine(depuis)}cuisine-v13-porte-cellier.html", "Porte du cellier"))
+    """Liens de la tête : les deux annexes du document (écrites à côté de lui). La page dédiée à la porte du cellier n'est
+    pas migrée : elle n'est plus liée d'ici."""
+    return (("maquette-3d.html", "Maquette 3D"), ("imprimable.html", "Version imprimable"))
 
 
 LIENS = _liens(DEPUIS)
@@ -229,7 +229,6 @@ def _tango(depuis):
     a, t = M.PLIANTE, M.TANGO
     fiche = fiche_tango().replace('<table class="orga fiche">', '<table class="tango">', 1)
     return f"""<h2>Porte du cellier, {t["nom"]}</h2>
-<p><a class="btn" href="{_racine(depuis)}cuisine-v13-porte-cellier.html">Plans détaillés</a></p>
 {_defile(fiche)}
 <p><b>Le principe.</b> Une porte pliante à deux vantaux, sans dormant ni cadre : toute la ferrure tient dans un rail en
 aluminium vissé sous le linteau. Le vantail nord tourne sur deux pivots (haut et bas) placés contre le bout du mur neuf ;

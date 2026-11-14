@@ -71,12 +71,11 @@ def test_ordre_et_titres():
     assert "Nouveau départ depuis la pièce vide." in PAGE
     assert PAGE.endswith('<p class="remarque">Repère : x vers l\'est depuis le mur ouest, y vers le sud depuis le mur '
                          'nord, z depuis le sol fini, en cm. Dimensions : pieces/cuisine/modele.py.</p>')
-    assert "Plans détaillés" in PAGE.split("Mantion Tango</h2>")[1].split("<h2>")[0]
+    assert "cuisine-v13-porte-cellier" not in PAGE
 
 
 def test_liens():
-    assert X.LIENS == (("maquette-3d.html", "Maquette 3D"), ("imprimable.html", "Version imprimable"),
-                       ("../../cuisine-v13-porte-cellier.html", "Porte du cellier"))
+    assert X.LIENS == (("maquette-3d.html", "Maquette 3D"), ("imprimable.html", "Version imprimable"))
     for h, n in X.LIENS:
         assert f'href="{h}">{n}</a>' in PAGE
 

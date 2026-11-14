@@ -24,7 +24,6 @@ RACINE = Path(__file__).resolve().parent
 SITE = Site((
     Piece("cuisine", "Cuisine", (
         cuisine_amenagement.DOCUMENT,
-        Passerelle("cuisine", "porte-cellier", "Porte du cellier", "construction", "cuisine-v13-porte-cellier.html"),
     )),
     Piece("sdb", "Salle de bain", (
         Passerelle("sdb", "meuble-bas", "Meuble bas", "construction", "sdb-meuble-bas.html"),
