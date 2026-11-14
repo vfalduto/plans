@@ -7,6 +7,8 @@
 # Les meubles sont des dicts x0, x1, y0, y1 (plan) et z0, z1 (hauteurs) ; une valeur absente est une valeur que la
 # page ne donne pas.
 
+from commun.modele import Changement, Document, Variante
+from pieces.chambre.amenagement import dessin
 from pieces.chambre.piece import (CAMERAS, CLIM, DECROCHE, EP, FENETRE, H, H_PORTE, ID, L, NOM, P, PLACARD, PORTE,  # noqa: F401
                                   PORTES, POSITION, SOL, SURFACE)
 
@@ -74,3 +76,32 @@ def passages(M):
         dict(a=(M.LIT["x1"], 185), b=(M.TIROIR_OUVERT["x0"], 185)),                # lit → tiroir ouvert
         dict(a=(M.CHEVET_EST["x1"], 233), b=(M.TIROIR_OUVERT["x0"], 233)),         # chevet est → tiroir
     ]
+
+
+# ------------------------------------------------------------------ meubles touchables du plan
+# Une zone par meuble, son id stable ; carte : rang de la carte « Principe » (vues.PRINCIPES) qui fait sa fiche ;
+# coupe : l'élévation où il se voit. Un bord donné ici remplace celui du meuble : la zone « commodes » part du nu nord
+# de la commode nord, la zone « niche » prend le plan qui la couvre.
+ZONES = (
+    dict(id="lit", meuble="LIT", carte=0, coupe="sud"),
+    dict(id="chevet_ouest", meuble="CHEVET_OUEST", carte=1, coupe="sud"),
+    dict(id="chevet_est", meuble="CHEVET_EST", carte=1, coupe="sud"),
+    dict(id="commodes", meuble="PLAN", y0=COMMODE_NORD["y0"], carte=2, coupe="est"),
+    dict(id="niche", meuble="NICHE", x0=PLAN["x0"], y0=PLAN["y0"], carte=3, coupe="est"),
+)
+
+
+def _document():
+    # import ici : vues importe ce module
+    from pieces.chambre.amenagement import vues
+    changements = tuple(Changement(*c) for c in CHANGEMENTS)
+    return Document(piece="chambre", id="amenagement", nom="Aménagement", type="amenagement",
+                    variantes=(Variante("", "Principale", VERSION, changements, FIGEES_ANCIENNES),),
+                    generer=vues.vues, css=dessin.CSS)
+
+
+def __getattr__(nom):
+    if nom == "DOCUMENT":
+        globals()["DOCUMENT"] = _document()
+        return globals()["DOCUMENT"]
+    raise AttributeError(f"module {__name__!r} has no attribute {nom!r}")

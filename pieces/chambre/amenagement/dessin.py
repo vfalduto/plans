@@ -380,7 +380,8 @@ ALTS = {
 
 
 # Styles des dessins (le reste de la page, polices comprises, vient de commun/site.css). Règles de l'ancienne page ;
-# `--cook2` de l'ancienne page, sans jeton du site, s'écrit #7B5EA7.
+# `--cook2` de l'ancienne page, sans jeton du site, s'écrit #7B5EA7. `.sec` (trait du mur regardé dans le mini-plan
+# « Position » des coupes) n'était pas dans l'ancienne page : règle de l'entrée.
 CSS = """
 .legend{display:flex;flex-wrap:wrap;gap:6px 14px;font-size:13.5px;margin:6px 0}
 .legend span{display:inline-flex;align-items:center;gap:6px}
@@ -431,4 +432,5 @@ CSS = """
 .tech{fill:var(--tech);stroke:var(--ink);stroke-width:.7;stroke-dasharray:3 2}
 .plug{fill:var(--tri)}
 .cloth{fill:#7B5EA7;fill-opacity:.18;stroke:#7B5EA7;stroke-width:.6}
+.sec{stroke:var(--tri);stroke-opacity:.35;stroke-width:.9;stroke-dasharray:10 3 2 3;fill:none}
 """

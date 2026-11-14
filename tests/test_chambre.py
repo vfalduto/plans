@@ -1,15 +1,17 @@
 import html
 import math
 import re
+from html import escape, unescape
 from html.parser import HTMLParser
 
 import pytest
 
+from commun import modele
 from commun.appartement import APPART, contours
 from commun.dessin import f
 from commun.journal import depuis_page
 from pieces.chambre import piece
-from pieces.chambre.amenagement import dessin, document
+from pieces.chambre.amenagement import dessin, document, vues
 from tests.outils import RACINE, balises
 
 ANCIENNE = (RACINE / "tests/fixtures/chambre/chambre-amenagement.html").read_text(encoding="utf-8")
@@ -231,3 +233,110 @@ def test_marqueurs_definis_dans_chaque_dessin():
         assert all(r.endswith("-" + k) for r in refs), k
         vus |= refs
     assert vus >= {"tk-plan", "ar-plan", "tk-est", "ar-est", "tk-sud"}   # l'élévation ouest n'a ni cote ni flèche
+
+
+# ------------------------------------------------------------------ vues et document
+V = lambda: vues.vues("")
+
+def test_document():
+    d = document.DOCUMENT
+    assert (d.piece, d.id, d.nom, d.type) == ("chambre", "amenagement", "Aménagement", "amenagement")
+    (var,) = d.variantes
+    assert (var.id, var.version, len(var.changements), var.figees) == ("", "V2.1", 5, document.FIGEES_ANCIENNES)
+    modele.verifier(d, d.generer(""))
+    assert list(V()) == list(modele.VUES["amenagement"])
+
+def test_zones_confrontees_a_leur_meuble():
+    """Chaque zone : l'emprise de son meuble, sauf les bords qu'elle déclare ; sa fiche commence par sa longueur."""
+    (e,) = V()["plan"].elements
+    rects = balises(e.scene, "rect", classe="zone")
+    assert [r["data-meuble"] for r in rects] == ["lit", "chevet_ouest", "chevet_est", "commodes", "niche"]
+    for r, z in zip(rects, document.ZONES, strict=True):
+        m = getattr(document, z["meuble"])
+        x, y, l, h = (float(r[a]) for a in ("x", "y", "width", "height"))
+        assert (x, y, x + l, y + h) == tuple(z.get(c, m[c]) for c in ("x0", "y0", "x1", "y1"))
+        cotes = re.search(rf'<template data-meuble="{z["id"]}"[^>]*><p class="cotes">([^<]*)</p>', e.fiche)[1]
+        assert unescape(cotes).startswith(f'{max(m["x1"] - m["x0"], m["y1"] - m["y0"]):g} × ')
+
+def test_zone_suit_son_meuble(monkeypatch):
+    monkeypatch.setattr(document, "CHEVET_EST", {**document.CHEVET_EST, "x0": 319})
+    (e,) = V()["plan"].elements
+    assert balises(e.scene, "rect", classe="zone", **{"data-meuble": "chevet_est"})[0]["width"] == "40"
+
+def test_coupes():
+    v = V()["coupes"]
+    assert [(e.k, e.nom) for e in v.elements] == [("est", "Mur est"), ("sud", "Mur sud"), ("ouest", "Mur ouest")]
+    assert [t["data-k"] for t in balises(v.fiche, "line", classe="sec")] == ["est", "sud", "ouest"]
+    assert "Position" in v.fiche and v.outils == ("zoom", "mesure")
+    for e in v.elements:
+        assert balises(e.scene, "svg")[0]["aria-label"] == dessin.ALTS[e.k]
+
+def test_iso_et_camera_grisees():
+    for cle in ("iso", "camera"):
+        assert V()[cle].elements == [] and V()[cle].vide == "Pas encore rendu"
+
+def test_explication_reprend_la_page():
+    (e,) = V()["explication"].elements
+    cartes = re.findall(r'<div class="card"><h3>(.*?)</h3><p>(.*?)</p></div>', ANCIENNE)
+    assert vues.PRINCIPES == cartes and len(cartes) == 6
+    assert vues.POINTS == re.findall(r"<li>(.*?)</li>", ANCIENNE.split('<div class="hyp">')[1].split("</ul>")[0])
+    assert len(vues.POINTS) == 7
+    pitch = re.search(r'<p class="pitch">(.*?)</p>', ANCIENNE)[1]
+    attendu = (pitch.replace('href="#verifier"', 'href="#explication"')
+               .replace("L'historique est en fin de document (<a href=\"#changements\">",
+                        "L'historique est sur sa propre page (<a href=\"historique.html\">"))
+    assert vues.CHAPO == attendu
+    assert e.scene.count("Montrer sur le plan") == 5
+    for valeur, libelle in (("241 × 42", "plan sur 2 commodes, h 85"), ("3 + 6", "patères + pantalons"),
+                            ("75", "entre le lit et le plan (cm)"), ("47", "passage au pied du lit (cm)")):
+        assert valeur in e.scene and libelle in e.scene
+
+def test_liens_internes():
+    for cle, v in V().items():
+        for e in v.elements:
+            for a in balises(e.scene + e.fiche + v.fiche, "a"):
+                assert a["href"].startswith("#") or a["href"] == "historique.html", (cle, a["href"])
+
+def test_aucun_interdit():
+    tout = "".join(v.fiche + e.scene + e.fiche for v in V().values() for e in v.elements)
+    for interdit in ("·", 'type="checkbox"', "Copier la liste", "À venir", "Lecture du plan", "Lecture de la coupe"):
+        assert interdit not in tout
+    visible = re.sub(r'aria-label="[^"]*"', "", tout)
+    for texte in dessin.ALTS.values():
+        assert escape(texte, quote=True) not in visible and texte not in visible
+
+def test_ids_uniques_et_classes_du_site():
+    tout = "".join(v.fiche + e.scene + e.fiche for v in V().values() for e in v.elements)
+    ids = re.findall(r'\bid="([^"]+)"', tout)
+    assert len(ids) == len(set(ids)), sorted(i for i in ids if ids.count(i) > 1)
+    classes = {c for m in re.findall(r'class="([^"]+)"', tout) for c in m.split()}
+    assert not classes & {"app", "rail", "barre", "contenu", "vue", "scene", "fiche"}
+
+@pytest.mark.parametrize("cle", ["plan", "coupes"])
+def test_chaque_classe_a_sa_regle(cle):
+    """Chaque classe d'un dessin et de la légende a une règle dans dessins.css (filtré comme à la construction),
+    sauf `zone` (site.css) ; une règle de site.css qui ne fait que masquer un calque ne compte pas."""
+    from commun.construction import _dessins
+    from commun.css_dessins import css_dessins
+    css = css_dessins(document.DOCUMENT.css, _dessins(V()), ".d-chambre")
+    v = V()[cle]
+    # l'intérieur de chaque <svg> de scène, et la légende de la fiche (le reste de la fiche est au gabarit et aux blocs)
+    morceaux = [e.scene.split(">", 1)[1] for e in v.elements] + re.findall(r'<div class="legend">.*?</div>', v.fiche, re.S)
+    for html in morceaux:
+        classes = {c for m in re.findall(r'class="([^"]+)"', html) for c in m.split()} - {"zone"}
+        assert sorted(c for c in classes if not re.search(rf"\.{re.escape(c)}(?![\w-])", css)) == []
+
+def test_css_sur_les_jetons_du_site():
+    jetons = set(re.findall(r"(--[\w-]+):", (RACINE / "commun/site.css").read_text(encoding="utf-8")))
+    assert set(re.findall(r"var\((--[\w-]+)\)", dessin.CSS)) <= jetons
+    for interdit in ("font-family", "monospace", "Archivo", "JetBrains", "prefers-color-scheme", "--cook2"):
+        assert interdit not in dessin.CSS
+
+
+def test_trait_de_position_visible():
+    """Le trait du mur regardé, dans le mini-plan « Position » des coupes, n'a de couleur que par dessins.css
+    (site.css ne règle que son opacité) : sans règle `.sec`, il ne se voit pas."""
+    from commun.construction import _dessins
+    from commun.css_dessins import css_dessins
+    css = css_dessins(document.DOCUMENT.css, _dessins(V()), ".d-chambre")
+    assert re.search(r"\.sec\{[^}]*\bstroke:", css)
