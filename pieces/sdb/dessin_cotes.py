@@ -137,6 +137,6 @@ svg.cotes .ext{stroke:var(--muted);stroke-width:.12}
 svg.cotes .ct{font:600 2.5px var(--ui);font-variant-numeric:tabular-nums;fill:var(--ink)}
 svg.cotes .nt{font:600 2.4px var(--ui);font-variant-numeric:tabular-nums;fill:var(--ink)}
 svg.cotes .lt{font-size:2.5px;fill:var(--ink)}svg.cotes .lt.muted{fill:var(--muted)}
-svg.cotes .lead{stroke:var(--ink);stroke-width:.14}svg.cotes .pt{fill:var(--ink)}
+svg.cotes .lead{fill:none;stroke:var(--ink);stroke-width:.14}svg.cotes .pt{fill:var(--ink)}
 .niv{fill:var(--ink)}
 """
