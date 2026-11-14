@@ -89,6 +89,13 @@ POINTS = [
 ]
 
 
+def _cotes(z, m):
+    """Cotes de la fiche : `cotes_meuble` (grand côté d'abord), ou largeur (x) × profondeur (y) si la zone le déclare."""
+    if z.get("cotes") != "largeur":
+        return cotes_meuble(m)
+    return f'{nombre(m["x1"] - m["x0"])} × {nombre(m["y1"] - m["y0"])}, h {nombre(m["z1"] - m.get("z0", 0))}'
+
+
 def _zones(M):
     """Meubles touchables du plan, un par zone de `M.ZONES` ; un bord donné par la zone remplace celui du meuble."""
     zones = []
@@ -96,7 +103,7 @@ def _zones(M):
         m = getattr(M, z["meuble"])
         titre, texte = PRINCIPES[z["carte"]]
         zones.append(Zone(id=z["id"], titre=titre + SUFFIXES.get(z["id"], ""),
-                          emprise=tuple(z.get(c, m[c]) for c in ("x0", "y0", "x1", "y1")), cotes=cotes_meuble(m),
+                          emprise=tuple(z.get(c, m[c]) for c in ("x0", "y0", "x1", "y1")), cotes=_cotes(z, m),
                           texte=texte, coupe=z["coupe"]))
     return zones
 

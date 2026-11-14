@@ -8,6 +8,7 @@ import pytest
 
 from commun import modele
 from commun.appartement import APPART, contours
+from commun.blocs import nombre
 from commun.dessin import f
 from commun.journal import depuis_page
 from pieces.chambre import piece
@@ -247,7 +248,8 @@ def test_document():
     assert list(V()) == list(modele.VUES["amenagement"])
 
 def test_zones_confrontees_a_leur_meuble():
-    """Chaque zone : l'emprise de son meuble, sauf les bords qu'elle déclare ; sa fiche commence par sa longueur."""
+    """Chaque zone : l'emprise de son meuble, sauf les bords qu'elle déclare ; sa fiche commence par sa longueur, ou
+    par sa largeur si la zone le déclare (`cotes="largeur"`)."""
     (e,) = V()["plan"].elements
     rects = balises(e.scene, "rect", classe="zone")
     assert [r["data-meuble"] for r in rects] == ["lit", "chevet_ouest", "chevet_est", "commodes", "niche"]
@@ -256,7 +258,18 @@ def test_zones_confrontees_a_leur_meuble():
         x, y, l, h = (float(r[a]) for a in ("x", "y", "width", "height"))
         assert (x, y, x + l, y + h) == tuple(z.get(c, m[c]) for c in ("x0", "y0", "x1", "y1"))
         cotes = re.search(rf'<template data-meuble="{z["id"]}"[^>]*><p class="cotes">([^<]*)</p>', e.fiche)[1]
-        assert unescape(cotes).startswith(f'{max(m["x1"] - m["x0"], m["y1"] - m["y0"]):g} × ')
+        dx, dy = m["x1"] - m["x0"], m["y1"] - m["y0"]
+        if z.get("cotes") == "largeur":   # chevets : largeur (x) × profondeur (y), comme la page
+            assert unescape(cotes) == f'{nombre(dx)} × {nombre(dy)}, h {nombre(m["z1"] - m.get("z0", 0))} cm'
+        else:
+            assert unescape(cotes).startswith(f'{nombre(max(dx, dy))} × ')
+
+def test_cotes_des_chevets():
+    """Page, carte ② : « Côté ouest, 40 × 35 », « Côté est, 30 × 35 » : largeur puis profondeur."""
+    (e,) = V()["plan"].elements
+    lues = {k: unescape(re.search(rf'<template data-meuble="{k}"[^>]*><p class="cotes">([^<]*)</p>', e.fiche)[1])
+            for k in ("chevet_ouest", "chevet_est")}
+    assert lues == {"chevet_ouest": "40 × 35, h 70 cm", "chevet_est": "30 × 35, h 70 cm"}   # « cm » : ajouté par la fiche
 
 def test_zone_suit_son_meuble(monkeypatch):
     monkeypatch.setattr(document, "CHEVET_EST", {**document.CHEVET_EST, "x0": 319})
