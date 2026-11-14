@@ -1,9 +1,11 @@
 # Vidéo de la cuisine V13 : tour à 360° en vue isométrique, mannequin debout au centre.
 #
-#   /Applications/Blender.app/Contents/MacOS/Blender -b --python 3d/v13/video.py -- [apercu]
-#   apercu : EEVEE, 960 × 540, pour valider le mouvement → 3d/sortie/v13-video-apercu-360.mp4
-#   sans   : Cycles, 1920 × 1080 (rendu définitif)       → 3d/sortie/v13-video-360.mp4
-# Sortie vidéo directe de Blender (FFmpeg intégré, H.264).
+#   blender -b --python-exit-code 1 --python pieces/cuisine/amenagement/video.py -- [apercu | échantillons]
+#   apercu : EEVEE, 960 × 540, pour valider le mouvement → <sortie>/cuisine-video-apercu-360.mp4
+#   sans   : Cycles, 1920 × 1080 (rendu définitif)       → <sortie>/cuisine-video-360.mp4
+# (just cuisine-amenagement-video-apercu, just cuisine-amenagement-video) ; <sortie> : celle de rendu.py
+# (CUISINE_SORTIE, défaut cache/cuisine), où se lit aussi le glb. Sortie vidéo directe de Blender (FFmpeg intégré,
+# H.264).
 #
 # Reprend la scène de rendu.py (matériaux, lumière du jour). Les murs entre la caméra et la pièce sont masqués à la
 # caméra image par image (keyframes de visible_camera) : ils portent toujours ombres et lumière.
@@ -76,7 +78,8 @@ def orbite(sc):
     cam = bpy.data.objects.new("cam_orbite", cam_data)
     sc.collection.objects.link(cam)
     sc.camera = cam
-    a0 = math.atan2(700 - 120, -380 - 250)      # départ : la vue iso (sud-ouest)
+    iso = V.VIEWS["iso_so"]                     # départ : la vue iso (sud-ouest)
+    a0 = math.atan2(iso["loc"][1] - iso["target"][1], iso["loc"][0] - iso["target"][0])
     n = FPS * DUREE
     cam_h = CAM_R * math.tan(math.radians(ELEVATION))
     visibles = [o for o in sc.objects if o.type == "MESH" and not (re.match(TOUJOURS, o.name) or V.exterieur(o))]
@@ -119,7 +122,7 @@ def sortie_video(sc, fichier):
     ff.format, ff.codec = "MPEG4", "H264"
     ff.constant_rate_factor = "HIGH"
     ff.ffmpeg_preset = "GOOD"
-    sc.render.filepath = os.path.join(R.OUT, fichier)
+    sc.render.filepath = os.path.join(V.OUT, fichier)
 
 
 if __name__ == "__main__":
@@ -131,6 +134,6 @@ if __name__ == "__main__":
     if APERCU:
         sc.render.engine = "BLENDER_EEVEE"
         sc.eevee.taa_render_samples = 16
-    sortie_video(sc, "v13-video-apercu-360.mp4" if APERCU else "v13-video-360.mp4")
+    sortie_video(sc, "cuisine-video-apercu-360.mp4" if APERCU else "cuisine-video-360.mp4")
     bpy.ops.render.render(animation=True)
     print("Vidéo :", sc.render.filepath)

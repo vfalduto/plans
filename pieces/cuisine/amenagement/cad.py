@@ -1,8 +1,9 @@
-# Construit le modèle FreeCAD de la cuisine V13 depuis modele.py.
+# Construit le modèle FreeCAD de la cuisine V13 depuis pieces/cuisine/modele.py.
 #
-#   /Applications/FreeCAD.app/Contents/Resources/bin/freecadcmd 3d/v13/cad.py
+#   freecadcmd pieces/cuisine/amenagement/cad.py      (just cuisine-amenagement-cad)
 #
-# Produit 3d/sortie/cuisine-v13.FCStd et .glb. Dans FreeCAD : X = x, Y = -y (nord en haut), Z = z, en mm.
+# Produit <sortie>/cuisine-v13.FCStd et .glb, avec <sortie> = cache/cuisine (CUISINE_SORTIE=<dossier> pour un autre) ;
+# le glb est l'entrée de rendu.py. Python de FreeCAD (3.11) : ce que ce script importe reste lisible en 3.11. Dans FreeCAD : X = x, Y = -y (nord en haut), Z = z, en mm.
 # Chaque objet s'appelle « rôle__nom » : le rendu Blender choisira le matériau d'après le préfixe.
 
 import math
@@ -14,11 +15,11 @@ import Import
 import Part
 from FreeCAD import Vector as V
 
-HERE = os.path.dirname(os.path.abspath(__file__))
-sys.path.insert(0, HERE)
-import modele as M  # noqa: E402
+RACINE = os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
+sys.path.insert(0, RACINE)
+from pieces.cuisine import modele as M  # noqa: E402
 
-OUT = os.path.join(HERE, "..", "sortie")
+OUT = os.environ.get("CUISINE_SORTIE", os.path.join(RACINE, "cache", "cuisine"))
 os.makedirs(OUT, exist_ok=True)
 
 doc = FreeCAD.newDocument("cuisine_v13")

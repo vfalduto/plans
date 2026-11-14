@@ -1,16 +1,19 @@
-# Rendu Blender (Cycles) de la cuisine V13, à partir de 3d/sortie/cuisine-v13.glb (just v13).
+# Rendu Blender (Cycles) de la cuisine V13, à partir de <sortie>/cuisine-v13.glb (cad.py, just cuisine-amenagement-cad).
 #
-#   /Applications/Blender.app/Contents/MacOS/Blender -b --python 3d/v13/rendu.py -- [échantillons] [vue ...]
-#   ex. : ... -- 16 apercu iso   (aperçu : demi-résolution, 3d/sortie/v13-apercu-<vue>.png, page non touchée)
+#   blender -b --python-exit-code 1 --python pieces/cuisine/amenagement/rendu.py -- [échantillons] [caméra ...]
+# Lancé par `just cuisine-amenagement-rendu` (cache des empreintes : commun/rendu_cache.py) et
+# `just cuisine-amenagement-apercu`. Caméras : celles de piece.CAMERAS (toutes sans argument) ; rendus temporaires,
+# hors page, par leur nom : zellige, fume, coussins.
+# Produit <sortie>/cuisine-<caméra>.png (et cuisine-v13.blend après un rendu complet), avec <sortie> = cache/cuisine
+# (CUISINE_SORTIE=<dossier> pour un autre, CUISINE_APERCU=1 pour 800 x 600 au lieu de 1600 x 1200).
 # Le temps est proportionnel aux échantillons (~0,5 s/échantillon par vue sur M1 Pro) ; avec le débruiteur OIDN,
-# 64 est indiscernable de 256 (mesuré le 2026-10-09), d'où le défaut de `just v13-rendu`.
-# Vues : iso (isométrique, murs ouest et sud coupés), entree, fenetre, banquette, cellier.
-# Produit 3d/sortie/v13-rendu-<vue>.png et cuisine-v13.blend.
+# 64 est indiscernable de 256 (mesuré le 2026-10-09), d'où le défaut de `just cuisine-amenagement-rendu`.
 #
 # Réutilise 3d/rendu.py (matériaux, textures, soleil, réglages Cycles). Les matériaux suivent le rôle des objets
 # (« rôle__nom ») et la section Matériaux de modele.py ; ce que le modèle ne dessine pas encore (poignées, crédence,
 # plafond, fenêtre, coussins de la banquette) est construit ici depuis ses cotes.
 
+import importlib.util
 import math
 import os
 import re
@@ -20,15 +23,23 @@ import bmesh
 import bpy
 from mathutils import Matrix, Vector
 
-HERE = os.path.dirname(os.path.abspath(__file__))
-sys.path.insert(0, HERE)
-sys.path.insert(0, os.path.dirname(HERE))
-import modele as M  # noqa: E402
-import rendu as R  # noqa: E402
+RACINE = os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
+sys.path.insert(0, RACINE)
+R = sys.modules.get("rendu_3d")   # déjà chargé quand video.py et maquette.py chargent aussi ce script : le même objet
+if R is None:
+    _spec = importlib.util.spec_from_file_location("rendu_3d", os.path.join(RACINE, "3d", "rendu.py"))
+    R = importlib.util.module_from_spec(_spec)
+    sys.modules["rendu_3d"] = R
+    _spec.loader.exec_module(R)
 
-OUT = R.OUT
-APERCU = "apercu" in R.args
-VUES_DEMANDEES = [a for a in R.args if not a.isdigit() and a != "apercu"]
+from commun.modele import Camera  # noqa: E402
+from pieces.cuisine import modele as M  # noqa: E402
+from pieces.cuisine import piece  # noqa: E402
+
+OUT = os.environ.get("CUISINE_SORTIE", os.path.join(RACINE, "cache", "cuisine"))
+os.makedirs(OUT, exist_ok=True)
+APERCU = os.environ.get("CUISINE_APERCU") == "1"
+VUES_DEMANDEES = [a for a in R.args if not a.isdigit()]
 
 # ------------------------------------------------------------------ matériaux V11 (section Matériaux de modele.py)
 MUR = "#EFE9DC"            # blanc légèrement chaud (piste Wimborne White) : murs et plinthes
@@ -126,7 +137,7 @@ def papier_peint(key):
     bsdf = nt.nodes["Principled BSDF"]
     bsdf.inputs["Roughness"].default_value = 0.8
     img = nt.nodes.new("ShaderNodeTexImage")
-    img.image = bpy.data.images.load(os.path.join(os.path.dirname(os.path.dirname(HERE)), pp["image"]), check_existing=True)
+    img.image = bpy.data.images.load(os.path.join(RACINE, M.PAPIER_PEINT["image"]), check_existing=True)
     img.extension = "REPEAT"
     w, h = img.image.size
     tc = nt.nodes.new("ShaderNodeTexCoord")
@@ -417,7 +428,7 @@ def build_scene():
 
     sc.render.engine = "CYCLES"
     R.reglages_cycles(sc)
-    sc.render.resolution_x, sc.render.resolution_y = 1600, 1200
+    sc.render.resolution_x, sc.render.resolution_y = (800, 600) if APERCU else (1600, 1200)
     sc.view_settings.view_transform = "AgX"
     sc.view_settings.look = "AgX - Base Contrast"
     sc.view_settings.exposure = R.EXPOSITION
@@ -460,42 +471,25 @@ def nuit(sc, oui):
     sc.view_settings.exposure = 1.0 if oui else R.EXPOSITION
 
 
-# Vues : yeux à 163 debout, 120 assis ; visée horizontale et décentrement vertical (verticales droites).
-DEBOUT, ASSIS = R.DEBOUT, R.ASSIS
-COUPES_ISO = (r"^(mur__(ouest_nord|ouest_sud|sud_ouest|sud_est)|allege__|linteau__(linteau_fenetre|linteau_entree|"
-              r"linteau_galandage)|cloison__galandage|porte__entree|ardoise__|aimant__|peinture__|joue__bas_de_mur|socle__plinthe_|"
-              r"plafond__|verre__|alu__|ext_)")   # V13.20 : bas de mur du mur sud coupé avec le mur
-# isométrique depuis le nord-ouest : murs nord et ouest, plafond ET rangée nord coupés (vue de dos, elle masquait la
-# pièce ; elle se voit dans la vue A)
-# V13.27 : cloison et linteau du cellier gardés (la porte, fermée, reste dans son mur), machine à café coupée avec B6
-COUPES_ISO_NO = (r"^(mur__(nord|nord_alcove|ouest_nord|ouest_sud)|allege__|socle__plinthe_fenetre|linteau__linteau_fenetre|"
-                 r"cafetiere__|plafond__|verre__|alu__|ext_|caisson__|caisson_haut__|plan__|plaque__|evier__|"
-                 r"cuve__|mitigeur__|egouttoir__|hotte__|led__|credence__|four__facade_b|facade__facade_b|facade_haut__|"
-                 r"socle__socle_(b|fileur)|joue__(joue_h|fileur_ouest|fileur_est|fileur_h_est)|fileur__fileur_hauts|etagere_haute__etagere_mur|"
-                 r"tech__coffre_reseaux|poignee_(inox|bois)__facade_(b|h)|aspiration__)")
-ISO = dict(ortho=6.0, loc=(-380, 700, 640), target=(250, 120, 60), coupes=COUPES_ISO)
-VIEWS = {
-    # A — isométrique depuis le sud-ouest, murs ouest et sud et plafond coupés (ils portent toujours ombres et lumière)
-    "iso":         ISO,
-    # B — depuis la baie d'entrée, vers la rangée nord et la fenêtre
-    "entree":      dict(loc=(268, 236, DEBOUT), target=(105, 40, DEBOUT), lens=18, shift=-0.12),
-    # C — depuis la fenêtre, vers les colonnes et le cellier
-    "fenetre":     dict(loc=(12, 105, DEBOUT), target=(330, 140, DEBOUT), lens=18, shift=-0.12),
-    # D — assis sur la banquette (une place, mur ouest), vers l'est : chaise, colonnes, porte du cellier
-    "banquette":   dict(loc=(28, 217, ASSIS), target=(320, 150, ASSIS), lens=20, shift=0.02),   # V13.17
-    # E — entré dans le cellier, porte refermée derrière soi : dans l'axe du passage vers le ballon (V13.2), rayonnage nord à
-    # gauche, balais à droite (V13.6)
-    "cellier":     dict(loc=(336, 72, DEBOUT), target=(470, 60, DEBOUT), lens=14, shift=-0.15, porte_fermee=True),
-    # F — dos à la porte du cellier (fermée), vers la table et la banquette
-    "dos_cellier": dict(loc=(312, (M.BAIE_Y0 + M.BAIE_Y1) / 2, DEBOUT), target=(40, 215, DEBOUT), lens=18, shift=-0.15, porte_fermee=True),
-    # G — isométrique de nuit, tous les éclairages allumés
-    "iso_nuit":    dict(ISO, nuit=True),
-    # A' — isométrique depuis le nord-ouest
-    "iso_no":      dict(ortho=6.0, loc=(-400, -470, 700), target=(220, 140, 60), coupes=COUPES_ISO_NO,
-                        porte_fermee=True),
-}
+# ------------------------------------------------------------------ vues
+def vue_de(c):
+    """Dictionnaire de vue d'une Camera : position, visée, ortho ou focale, puis ses réglages (coupes, decentrement,
+    porte = "fermee", nuit). Yeux à 163 debout, 120 assis ; visée horizontale et décentrement vertical (verticales
+    droites)."""
+    g = c.reglages
+    v = dict(loc=c.loc, target=c.cible, coupes=g.get("coupes"), porte_fermee=g.get("porte") == "fermee",
+             nuit=bool(g.get("nuit")))
+    if c.ortho:
+        v["ortho"] = c.ortho
+    else:
+        v["lens"], v["shift"] = c.focale, g.get("decentrement", 0.0)
+    return v
+
+
+# caméras de la pièce (pieces/cuisine/piece.py), dans leur ordre
+VIEWS = {c.id: vue_de(c) for c in piece.CAMERAS}
 # Rendus temporaires (hors page) : crédence zellige chaud (3 teintes empilées), hauts en chêne fumé
-CREDENCE = dict(loc=(152, 235, 135), target=(152, 0, 135), lens=22, shift=0.0)
+CREDENCE = vue_de(Camera("credence", "Crédence", (152, 235, 135), (152, 0, 135), focale=22))
 COUSSINS = [("ocre-moutarde", "#C08A2E"), ("vieux-rose", "#C49690")]
 ZELLIGES = ["v11_zellige_blanc_casse", "v11_zellige_gris_chaud", "v11_zellige_greige"]
 
@@ -557,23 +551,26 @@ def materiau_de(sc, motif, mat):
             o.data.materials.append(mat)
 
 
+TEMPORAIRES = ("zellige", "fume", "coussins")
+
 if __name__ == "__main__":
-    sc = build_scene()
-    if APERCU:
-        sc.render.resolution_percentage = 50
-    temporaires = [a for a in VUES_DEMANDEES if a in ("zellige", "fume", "coussins")]
+    inconnues = [a for a in VUES_DEMANDEES if a not in VIEWS and a not in TEMPORAIRES]
+    if inconnues:
+        raise SystemExit(f"caméra inconnue : {', '.join(inconnues)}")
+    temporaires = [a for a in VUES_DEMANDEES if a in TEMPORAIRES]
     vues = [a for a in VUES_DEMANDEES if a not in temporaires]
-    if not temporaires or vues:
-        for name, v in VIEWS.items():
-            if not vues or name in vues:
-                rendre(sc, name, v, f"v13-{'apercu' if APERCU else 'rendu'}-{name}.png")
+    rendues = [n for n in VIEWS if not vues or n in vues] if not temporaires or vues else []
+    sc = build_scene()
+    hauteur = sc.render.resolution_y
+    for name in rendues:
+        rendre(sc, name, VIEWS[name], f"cuisine-{name}.png")
     if "zellige" in temporaires:
-        sc.render.resolution_y = 800
+        sc.render.resolution_y = hauteur * 2 // 3
         for k, z in enumerate(ZELLIGES):
             materiau_de(sc, r"^credence__", materiau(z))
-            rendre(sc, "credence", CREDENCE, f"v13-tmp-zellige-{k + 1}.png")
-        empiler([f"v13-tmp-zellige-{k + 1}.png" for k in range(3)], "v13-tmp-zellige.png")
-        sc.render.resolution_y = 1200
+            rendre(sc, "credence", CREDENCE, f"cuisine-tmp-zellige-{k + 1}.png")
+        empiler([f"cuisine-tmp-zellige-{k + 1}.png" for k in range(3)], "cuisine-tmp-zellige.png")
+        sc.render.resolution_y = hauteur
         materiau_de(sc, r"^credence__", materiau("v11_zellige"))
     if "fume" in temporaires:
         fume = materiau("v11_chene_fume")
@@ -582,13 +579,17 @@ if __name__ == "__main__":
             if o.type == "MESH" and re.match(motif, o.name):
                 o.data.materials.clear()
                 o.data.materials.append(fume)
-        rendre(sc, "banquette", VIEWS["banquette"], "v13-tmp-hauts-fume.png")
+        rendre(sc, "banquette", VIEWS["banquette"], "cuisine-tmp-hauts-fume.png")
     if "coussins" in temporaires:   # coussins de la banquette : autres teintes de velours, vue dos au cellier
         for nom, col in COUSSINS:
             materiau_de(sc, r"^coussin__", velours(f"v11_velours_{nom}", col))
-            rendre(sc, "dos_cellier", VIEWS["dos_cellier"], f"v13-tmp-coussins-{nom}.png")
+            rendre(sc, "dos_cellier", VIEWS["dos_cellier"], f"cuisine-tmp-coussins-{nom}.png")
     for o in sc.objects:
         if o.type in ("MESH", "CURVE"):
             o.visible_camera = True
     if not temporaires and not APERCU:
         bpy.ops.wm.save_as_mainfile(filepath=os.path.join(OUT, "cuisine-v13.blend"), compress=True)
+    # un rendu qui n'a pas écrit son fichier fait échouer le lancement (la recette ne note rien)
+    manquants = [f"cuisine-{n}.png" for n in rendues if not os.path.exists(os.path.join(OUT, f"cuisine-{n}.png"))]
+    if manquants:
+        raise SystemExit(f"rendus manquants : {', '.join(manquants)}")

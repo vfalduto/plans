@@ -1,9 +1,10 @@
-# Maquette 3D de la cuisine V13 pour la page web (three.js) : cuisine-v13-maquette.html.
+# Maquette 3D de la cuisine V13 pour la page web (three.js).
 #
-#   /Applications/Blender.app/Contents/MacOS/Blender -b --python 3d/v13/maquette.py
+#   blender -b --python-exit-code 1 --python pieces/cuisine/amenagement/maquette.py   (just cuisine-amenagement-maquette)
 # Reprend la scène de rendu.py (pièces complémentaires, chaises, mannequin de video.py), remplace chaque matériau par
 # sa couleur unie (glTF ne porte pas les matériaux procéduraux de Cycles), retire plafond, extérieur et lumières, et
-# exporte un glb encodé en base64 dans cuisine-v13-maquette/modele.js (chargé par <script>, donc lisible en file://).
+# exporte un glb encodé en base64 dans CUISINE_MAQUETTE (défaut site/cuisine/amenagement/maquette-3d/modele.js ; chargé
+# par <script>, donc lisible en file://). Le glb lu et le glb écrit sont dans la sortie de rendu.py (CUISINE_SORTIE).
 
 import base64
 import importlib.util
@@ -13,7 +14,6 @@ import re
 import bpy
 
 HERE = os.path.dirname(os.path.abspath(__file__))
-ROOT = os.path.dirname(os.path.dirname(HERE))
 
 
 def charger(nom, fichier):
@@ -26,6 +26,8 @@ def charger(nom, fichier):
 V = charger("rendu_v13", "rendu.py")
 VID = charger("video_v13", "video.py")
 R = V.R
+MAQUETTE = os.environ.get("CUISINE_MAQUETTE",
+                          os.path.join(V.RACINE, "site", "cuisine", "amenagement", "maquette-3d", "modele.js"))
 RETIRES = r"^(plafond__|ext_|cam_)"
 
 
@@ -84,11 +86,10 @@ if __name__ == "__main__":
                 slot.material = m
     if sans:
         print("Matériaux gardés tels quels :", sorted(sans))
-    glb = os.path.join(R.OUT, "cuisine-v13-maquette.glb")
+    glb = os.path.join(V.OUT, "cuisine-v13-maquette.glb")
     bpy.ops.export_scene.gltf(filepath=glb, export_format="GLB", export_apply=True, export_lights=False,
                               export_cameras=False, export_image_format="JPEG", export_jpeg_quality=80)
-    dossier = os.path.join(ROOT, "cuisine-v13-maquette")
-    os.makedirs(dossier, exist_ok=True)
-    with open(glb, "rb") as f, open(os.path.join(dossier, "modele.js"), "w") as js:
+    os.makedirs(os.path.dirname(MAQUETTE), exist_ok=True)
+    with open(glb, "rb") as f, open(MAQUETTE, "w") as js:
         js.write("window.MODELE_GLB = \"" + base64.b64encode(f.read()).decode() + "\";\n")
-    print("Maquette :", os.path.join(dossier, "modele.js"), os.path.getsize(glb) // 1024, "ko (glb)")
+    print("Maquette :", MAQUETTE, os.path.getsize(glb) // 1024, "ko (glb)")
