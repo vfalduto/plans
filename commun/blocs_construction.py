@@ -2,8 +2,9 @@
 
 Plans est une vue de scène (`vue_plans`) ; Découpe, Montage, Achats et Explication se font par
 `vue_lecture(id, <blocs concaténés>)`. Un bloc de section (`tableau_debit`, `calepinage`, `etapes`, `rendus_meuble`)
-écrit son `<h2>` depuis `titre`, et ne rend rien (`""`) quand sa séquence est vide : `vue_lecture` grise alors l'onglet. Titres, noms, cotes et cellules de débit sont échappés ; les textes longs (`corps`
-d'une étape, `outils`, légende, SVG) sont insérés tels quels, à la charge de l'appelant.
+écrit son `<h2>` depuis `titre`, et ne rend rien (`""`) quand sa séquence est vide : `vue_lecture` grise alors
+l'onglet. Titres, noms, cotes et cellules de débit sont échappés ; les textes longs (`corps` d'une étape, `outils`,
+légende, SVG) sont insérés tels quels, à la charge de l'appelant.
 """
 from dataclasses import dataclass
 from html import escape
@@ -12,7 +13,7 @@ from typing import Sequence
 
 from commun.blocs import nombre, rendu
 from commun.gabarit import icone
-from commun.modele import NOMS_VUES, Element, Vue
+from commun.modele import NOMS_VUES, VUES, Element, Vue
 
 
 def _e(texte):
@@ -49,6 +50,10 @@ def vue_plans(dessins: Sequence[DessinMeuble], titre: str, formule: str = "",
     """Un élément par dessin, même `titre` de fiche ; la fiche : cotes (`formule`), liens vers d'autres vues, légende."""
     if not dessins:
         return Vue("plans", [], vide=vide)
+    for i in liens:
+        if not isinstance(i, str) or i not in VUES["construction"]:
+            raise ValueError(f"vue_plans, liens : {i!r} n'est pas un id de vue ; ids acceptés : "
+                             + ", ".join(VUES["construction"]))
     elements = [Element(k=d.k, nom=d.nom, titre=titre, scene=_scene(d)) for d in dessins]
     fiche = f'<p class="cotes">{_e(formule)}</p>' if formule else ""
     if liens:
@@ -145,7 +150,8 @@ def etapes(liste: Sequence[Etape], titre: str = "Montage", outils: str = "", deb
     if not liste:
         return ""
     reunir = f'<details class="reunir"><summary>Outils à réunir</summary>{outils}</details>' if outils else ""
-    style = f' style="--debut:{debut - 1}"' if debut != 1 else ""
+    # `start` pour la lecture sans CSS, `--debut` pour le compteur des pastilles
+    style = f' start="{debut}" style="--debut:{debut - 1}"' if debut != 1 else ""
     items = []
     for x in liste:
         h3 = f"<h3>{_e(x.titre)}</h3>" if x.titre else ""

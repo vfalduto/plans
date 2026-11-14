@@ -81,6 +81,9 @@ def test_vue_plans_liens_et_legende():
     assert vue.fiche.endswith("<h3>Légende</h3><p>Traits fins : chants.</p>")
     sans = vue_plans([ELEVATION], "A", liens=())
     assert '<div class="actions">' not in sans.fiche and sans.fiche == ""
+    for faux in (("plans", "atelier"), (("#decoupe", "Découpe"),), ("Découpe",)):
+        with pytest.raises(ValueError, match=r"ids acceptés : plans, decoupe, montage, achats, explication"):
+            vue_plans([ELEVATION], "A", liens=faux)
     vide = vue_plans([], "A")
     assert vide.id == "plans" and vide.elements == [] and vide.vide == "Sans objet"
 
@@ -155,7 +158,8 @@ def test_etapes():
     avec = etapes(liste, titre="Suite", outils="<p>Visseuse.</p>", debut=8)
     assert balises(avec, "details", classe="reunir")
     assert '<details class="reunir"><summary>Outils à réunir</summary><p>Visseuse.</p></details>' in avec
-    assert '<ol class="etapes" style="--debut:7">' in avec
+    assert '<ol class="etapes" start="8" style="--debut:7">' in avec
+    assert balises(avec, "ol")[0]["start"] == "8"
 
 
 def test_sequence_vide_rien(tmp_path):

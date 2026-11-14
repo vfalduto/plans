@@ -9,6 +9,7 @@ Nommage des rendus : `rendu(dossier, variante, cle)` est la seule fonction qui s
 `<variante>-<cle>.jpg` (ou `<cle>.jpg` pour un document sans variante, d'id vide), son masque `<…>-masque.png`, et la
 page les lit sous `rendus/`.
 """
+import re
 from dataclasses import dataclass
 from html import escape
 from pathlib import Path
@@ -79,7 +80,7 @@ def _modeles(zones):
     """Un `<template data-meuble>` par zone : le JS le recopie dans la fiche quand on touche le meuble."""
     modeles = []
     for z in zones:
-        cotes = z.cotes + (" cm" if z.cotes[:1].isdigit() else "")
+        cotes = z.cotes + (" cm" if z.cotes[:1].isdigit() and not re.search(r"[\d\s](mm|cm|m|m²)$", z.cotes) else "")
         liens = ""
         if z.coupe:
             liens += f'<a class="btn" href="#coupes?k={_e(z.coupe)}">Coupe {_e(z.coupe)}</a>'
@@ -95,8 +96,8 @@ def vue_plan(svg: str, zones: Sequence[Zone], legende: str,
     """Vue Plan : le SVG (qui porte déjà `zones_svg(zones)`), une fiche par zone, calques et légende."""
     boutons = "".join(f'<button type="button" data-calque="{_e(k)}" aria-pressed="true">{_e(n)}</button>'
                       for k, n in calques)
-    fiche = (f'<div class="fiche-meuble"><p>{INVITE}</p></div>'
-             f'<h3>Calques</h3><div class="calques">{boutons}</div>'
+    invite = f'<div class="fiche-meuble"><p>{INVITE}</p></div>' if zones else ""
+    fiche = (f'{invite}<h3>Calques</h3><div class="calques">{boutons}</div>'
              f'<h3>Légende</h3>{legende}')
     element = Element(k="", nom="Plan", titre="Plan", scene=svg, fiche=_modeles(zones))
     return Vue("plan", [element], fiche=fiche, outils=("zoom", "mesure"))
@@ -138,11 +139,13 @@ def vue_coupes(coupes: Sequence[Coupe], lieu: Lieu, vide: str = "Sans objet") ->
 # ------------------------------------------------------------------ Rendus, Iso, Caméra
 @dataclass(frozen=True)
 class Rendu:
-    """`image` et `masque` : adresses relatives à la page ; `fichier` : le jpg dans le dossier des rendus."""
+    """`image` et `masque` : adresses relatives à la page ; `fichier` : le jpg dans le dossier des rendus ; `existe`,
+    `masque_existe` : le jpg, le png du masque sont dans ce dossier."""
     image: str
     masque: str
     fichier: Path
     existe: bool
+    masque_existe: bool = False
 
 
 def rendu(dossier: Path, variante: str, cle: str) -> Rendu:
@@ -150,16 +153,16 @@ def rendu(dossier: Path, variante: str, cle: str) -> Rendu:
     nom = f"{variante}-{cle}" if variante else cle
     fichier = dossier / f"{nom}.jpg"
     return Rendu(image=f"rendus/{nom}.jpg", masque=f"rendus/{nom}-masque.png", fichier=fichier,
-                 existe=fichier.exists())
+                 existe=fichier.exists(), masque_existe=(dossier / f"{nom}-masque.png").exists())
 
 
 def figure_rendu(r: Rendu, alt: str, filtre: str = "") -> str:
-    """Le rendu et, si `filtre`, par-dessus sa copie recolorée par `#filtre-<filtre>` à travers son masque ; rien si
-    le rendu n'existe pas."""
+    """Le rendu et, si `filtre` et que son masque existe, par-dessus sa copie recolorée par `#filtre-<filtre>` à travers
+    ce masque ; rien si le rendu n'existe pas."""
     if not r.existe:
         return ""
     calque = ""
-    if filtre:
+    if filtre and r.masque_existe:
         masque = f"url({r.masque})"
         calque = (f'<img class="calque" src="{r.image}" alt="" aria-hidden="true" draggable="false"'
                   f' style="filter:url(#filtre-{filtre});-webkit-mask-image:{masque};mask-image:{masque}">')

@@ -1,8 +1,9 @@
 from pathlib import Path
 
-from commun.blocs import (CALQUES, INVITE, Achat, Carte, Coupe, Lieu, SectionAchats, Zone, a_verifier, achats, chiffres,
-                          cotes_meuble, euros, figure_rendu, materiaux, points_iso, principes, rendu, tableau_achats, tete,
-                          total_achats, vue_camera, vue_coupes, vue_iso, vue_lecture, vue_plan, zones_svg)
+from commun.blocs import (CALQUES, INVITE, Achat, Carte, Coupe, Lieu, SectionAchats, Zone, a_verifier, achats,
+                          chiffres, cotes_meuble, euros, figure_rendu, materiaux, points_iso, principes, rendu,
+                          tableau_achats, tete, total_achats, vue_camera, vue_coupes, vue_iso, vue_lecture, vue_plan,
+                          zones_svg)
 from commun.modele import Camera
 from tests.outils import RACINE, balises
 
@@ -52,6 +53,22 @@ def test_vue_plan():
     assert "<input" not in vue.fiche + el.fiche
 
 
+def test_vue_plan_sans_zone_sans_invite():
+    vue = vue_plan("<svg></svg>", [], "<p>légende</p>")
+    assert INVITE not in vue.fiche and "fiche-meuble" not in vue.fiche
+    assert vue.fiche.startswith("<h3>Calques</h3>")
+
+
+def test_cotes_sans_unite_en_double():
+    def cotes(texte):
+        vue = vue_plan("<svg></svg>", [Zone("z", "Z", (0, 0, 1, 1), texte, "")], "")
+        return balises(vue.elements[0].fiche, "template")[0], vue.elements[0].fiche
+    for texte, attendu in (("95 × 38, h 45", "95 × 38, h 45 cm"), ("120 × 45 cm", "120 × 45 cm"),
+                           ("40 mm", "40 mm"), ("2,5 m", "2,5 m"), ("8,1 m²", "8,1 m²"),
+                           ("vantail de 80", "vantail de 80")):
+        assert f'<p class="cotes">{attendu}</p>' in cotes(texte)[1], texte
+
+
 def test_vue_coupes_position():
     coupes = [Coupe("A", "A mur", "Coupe A-A : mur", "<svg>a</svg>", ((0, 60), (100, 60))),
               Coupe("nord", "Nord", "Élévation nord", "<svg>n</svg>", ((0, 0), (100, 0)))]
@@ -84,7 +101,11 @@ def test_figure_rendu(tmp_path):
     simple = figure_rendu(r, "Vue & coin")
     assert [i["src"] for i in balises(simple, "img")] == ["rendus/a-iso_so.jpg"]
     assert 'alt="Vue &amp; coin"' in simple
-    images = balises(figure_rendu(r, "Vue", filtre="teinte"), "img")
+    # sans son masque, pas de calque (il ferait un 404 et recolorerait tout le rendu)
+    sans_masque = figure_rendu(r, "Vue", filtre="teinte")
+    assert len(balises(sans_masque, "img")) == 1 and "masque" not in sans_masque
+    (tmp_path / "a-iso_so-masque.png").write_bytes(b"")
+    images = balises(figure_rendu(rendu(tmp_path, "a", "iso_so"), "Vue", filtre="teinte"), "img")
     assert len(images) == 2
     calque = images[1]
     assert calque["class"] == "calque" and calque["alt"] == ""
