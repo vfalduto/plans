@@ -10,10 +10,11 @@ from commun import modele
 from commun.appartement import APPART, contours
 from commun.blocs import nombre
 from commun.dessin import f
-from commun.journal import depuis_page
+from commun.journal import depuis_page, entrees
 from pieces.chambre import piece
 from pieces.chambre.amenagement import dessin, document, vues
-from tests.outils import RACINE, balises
+from tests.outils import RACINE, balises, charger_site
+from tests.test_redirections import _traduire
 
 ANCIENNE = (RACINE / "tests/fixtures/chambre/chambre-amenagement.html").read_text(encoding="utf-8")
 
@@ -353,3 +354,22 @@ def test_trait_de_position_visible():
     from commun.css_dessins import css_dessins
     css = css_dessins(document.DOCUMENT.css, _dessins(V()), ".d-chambre")
     assert re.search(r"\.sec\{[^}]*\bstroke:", css)
+
+
+# ------------------------------------------------------------------ bascule
+def test_bascule():
+    module = charger_site()
+    (chambre,) = [p for p in module.SITE.pieces if p.id == "chambre"]
+    assert chambre.documents == (document.DOCUMENT,)
+    assert not (RACINE / "chambre-amenagement.html").exists()
+    (r,) = [r for r in module.REDIRECTIONS if r.ancienne == "chambre-amenagement.html"]
+    assert r.cible == "chambre/amenagement/"
+    assert r.pages == {"changements": "chambre/amenagement/historique.html"}
+    for ancre, fragment in (("verifier", "explication"), ("plan-a-l-echelle", "plan"), ("elevations", "coupes"),
+                            ("principe", "explication"), ("inconnue", ""), ("", "")):
+        assert _traduire(r, ancre) == fragment
+
+def test_journal_apres_la_bascule():
+    lignes = [e for e in entrees(charger_site().SITE, RACINE) if e.piece == "Chambre"]
+    assert [(e.version, e.texte) for e in lignes] == [(c.version, c.texte) for c in depuis_page(ANCIENNE)]
+    assert {e.lien for e in lignes} == {"chambre/amenagement/"} and {e.variante for e in lignes} == {None}

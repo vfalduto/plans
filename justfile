@@ -101,6 +101,10 @@ v13-figer:
 entree:
     python3 site.py entree/amenagement
 
+# Chambre : reconstruit la page (site/chambre/amenagement/) depuis pieces/chambre/
+chambre:
+    python3 site.py chambre/amenagement
+
 # Modèle des deux recettes de rendu d'un autre document (déclaration CACHE_RENDU dans son document.py) :
 #   <piece>-<document>-rendu echantillons="64" *vues : pour chaque variante de
 #     `rendu_cache variantes <piece>/<document>` (`-` : sans variante), cams=$(rendu_cache liste <piece>/<document>
