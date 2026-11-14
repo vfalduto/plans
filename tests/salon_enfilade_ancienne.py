@@ -1,12 +1,13 @@
-"""Aide des tests de salon/enfilade : l'ancienne page, générée en mémoire par 3d/salon/enfilade.py, et son texte.
+"""Aide des tests de salon/enfilade : l'ancienne page (tests/fixtures/salon/salon-enfilade.html, sortie de l'ancien
+générateur 3d/salon/enfilade.py au moment de sa suppression) et son texte.
 
-`page()` saute (skip) quand l'ancien générateur n'existe plus. `corrige` applique les quatre corrections d'affichage
+`corrige` applique les quatre corrections d'affichage
 du ruling 13 (« Six portes », « 3.8 », « 18.3 », « 1361 kg ») à un texte de l'ancienne page.
 """
 import re
 from html import unescape
 
-from tests.salon_anciens import ancien
+from tests.outils import RACINE
 
 _page = []
 
@@ -14,9 +15,9 @@ CORRECTIONS = {"Six portes": "Quatre portes", "3.8": "3,8", "18.3": "18,3", "136
 
 
 def page() -> str:
-    """L'ancienne page salon-enfilade.html, générée une fois."""
+    """L'ancienne page salon-enfilade.html, lue une fois."""
     if not _page:
-        _page.append(ancien("enfilade").page()[0])
+        _page.append((RACINE / "tests/fixtures/salon/salon-enfilade.html").read_text(encoding="utf-8"))
     return _page[0]
 
 

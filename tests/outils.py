@@ -1,5 +1,9 @@
 """Outils communs aux tests."""
+import importlib
 import importlib.util
+import json
+import subprocess
+import sys
 from html.parser import HTMLParser
 from pathlib import Path
 
@@ -42,3 +46,17 @@ def charger_site():
     module = importlib.util.module_from_spec(spec)
     spec.loader.exec_module(module)
     return module
+
+
+def verifier_empreinte(*noms):
+    """commun.rendu_cache.donnees_variante accepte les modules `noms` et deux processus les écrivent pareil."""
+    from commun import rendu_cache
+    code = ("import importlib, json, sys; from commun import rendu_cache as r; "
+            "ms = [importlib.import_module(n) for n in sys.argv[1:]]; "
+            "print(json.dumps(r.donnees_variante(*ms), sort_keys=True, default=r._json))")
+    ms = [importlib.import_module(n) for n in noms]
+    ici = json.dumps(rendu_cache.donnees_variante(*ms), sort_keys=True, default=rendu_cache._json)
+    ailleurs = [subprocess.run([sys.executable, "-c", code, *noms], cwd=RACINE, capture_output=True, text=True,
+                               check=True, env={"PYTHONHASHSEED": str(graine), "PATH": ""}).stdout.strip()
+                for graine in (1, 2)]
+    assert ailleurs == [ici, ici]

@@ -12,6 +12,7 @@
 import math
 
 from commun.modele import Camera
+from commun.rendu_cache import CacheRendu
 from pieces.salon.enfilade.document import ENFILADE
 from pieces.salon.piece import Bloc
 
@@ -212,8 +213,8 @@ SOURCES_TENUE = [
     ("https://forums.futura-sciences.com/attachments/physique/104861d1268375997-coefficient-de-frottement-beton-humide-polyurethane-coefficients-de-frottement.pdf", "tableau de coefficients de frottement (bois sur métal 0,2 à 0,6)"),
 ]
 
-# ------------------------------------------------------------------ rendus 3D (3d/salon/rendu_meubles.py)
-# Caméras du document, dans le repère du salon ; fichiers salon-meubles-3d/etageres-<id>.jpg. Disposition actuelle
+# ------------------------------------------------------------------ rendus 3D (pieces/salon/rendu_meubles.py)
+# Caméras du document, dans le repère du salon ; fichiers rendus/actuelle-<id>.jpg. Disposition actuelle
 # seulement (les autres se rendent sur demande).
 # coupes : objets Blender cachés à la caméra ; l'ancien rendu des meubles cachait le plafond à toutes les vues
 SANS_PLAFOND = r"^plafond__"
@@ -223,6 +224,15 @@ CAMERAS = (
     Camera("detail", "Détail d'une entaille", (62, 292, 131), (4, 236, 120.5), focale=50,
            reglages=dict(coupes=SANS_PLAFOND)),   # montant M5, tablette T1
 )
+# Empreinte des rendus (commun/rendu_cache.py) : la pièce, les deux meubles de la scène (l'enfilade est sous les étagères),
+# puis le script de rendu et ses volumes. Les quatre dispositions sont déclarées (une variante oubliée ne serait jamais
+# rendue), mais seule Actuelle a des rendus : la recette salon-etageres-rendu ne lance qu'elle, rendus/actuelle-<caméra>.jpg.
+_DONNEES = ("pieces.salon.piece", "pieces.salon.enfilade.document", "pieces.salon.etageres.document")
+CACHE_RENDU = CacheRendu(variantes={"actuelle": _DONNEES, "rangs": _DONNEES, "decalee": _DONNEES, "escalier": _DONNEES},
+                         code=("pieces/salon/rendu_meubles.py", "pieces/salon/amenagement/rendu.py",
+                               "pieces/salon/etageres/volumes.py", "pieces/salon/enfilade/volumes.py",
+                               "pieces/salon/meubles.py", "3d/rendu.py"),
+                         cameras="pieces.salon.etageres.document")
 # (caméra, texte de la page) : section Rendus 3D de salon-etageres.html
 RENDUS = [
     ("iso", "Le mur ouest en trois quarts depuis la pièce : les étagères au-dessus de l'enfilade."),

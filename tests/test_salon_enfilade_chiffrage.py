@@ -1,17 +1,7 @@
 from pieces.salon.enfilade import chiffrage as C
 from pieces.salon.enfilade import document as D
-from tests.salon_anciens import ancien
 
 TOTAUX = {"A": 901.36, "B": 723.95, "C": 1027.95, "D": 1274.36, "E": 595.45, "F": 1221.86}
-
-def test_comme_l_ancien_generateur():
-    EN = ancien("enfilade")
-    for nouveau, vieux in zip(D.VARIANTES, EN.VARIANTES):
-        assert C.pieces(nouveau) == EN.pieces(vieux)
-        a, b = C.chiffrage(nouveau), EN.chiffrage(vieux)
-        for cle in ("lignes", "cal", "total", "releve", "estime", "c"):
-            assert a[cle] == b[cle], (nouveau["cle"], cle)
-        assert C.debit(a["ps"]) == EN.debit(b["ps"])
 
 def test_totaux_des_six_compositions():
     assert {ch["v"]["cle"]: ch["total"] for ch in C.chiffrages()} == TOTAUX

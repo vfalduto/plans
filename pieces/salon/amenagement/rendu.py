@@ -1,7 +1,7 @@
 # Rendu Blender (Cycles) du salon/aménagement, construit directement depuis les volumes de pieces/salon/ (pas de FreeCAD).
-# Copie adaptée de 3d/salon/rendu.py (qui reste en place pour rendu_meubles.py) : les données viennent de
+# Repris de l'ancien 3d/salon/rendu.py (supprimé, l'historique git le garde) : les données viennent de
 # pieces/salon/piece.py (caméras), pieces/salon/amenagement/document.py (meubles) et pieces/salon/etageres/volumes.py
-# (étagères), les matériaux de pieces/salon/meubles.py.
+# (étagères), les matériaux de pieces/salon/meubles.py. pieces/salon/rendu_meubles.py le charge pour ses matériaux et ses boîtes.
 #
 #   [SALON_ESSENCE=chene|noyer] blender -b --python-exit-code 1 --python pieces/salon/amenagement/rendu.py -- [échantillons] [caméra ...]
 # Lancé par `just salon-amenagement-rendu` (cache des empreintes : commun/rendu_cache.py, une passe par essence, car

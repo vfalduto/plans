@@ -1,7 +1,7 @@
 # Géométrie de l'enfilade (caissons, façades, pieds, étagères intérieures) et ses volumes 3D, repris de geometrie()
 # et pieces_3d() de 3d/salon/enfilade.py.
 #
-# Calcul pur, sans HTML, SVG ni Blender : la vue iso de la page et le rendu des meubles (3d/salon/rendu_meubles.py)
+# Calcul pur, sans HTML, SVG ni Blender : la vue iso de la page et le rendu des meubles (pieces/salon/rendu_meubles.py)
 # lisent la même liste de Piece (pieces.salon.meubles). Le débit et le chiffrage, qui partent de geometrie(), restent
 # au générateur de la page. Cotes en cm, repère du salon.
 

@@ -359,7 +359,7 @@ def test_cache_declare():
 
 
 def test_empreinte_des_rendus():
-    from tests.salon_anciens import verifier_empreinte
+    from tests.outils import verifier_empreinte
     verifier_empreinte("pieces.salon.piece", "pieces.salon.etageres.document", "pieces.salon.amenagement.document")
 
 

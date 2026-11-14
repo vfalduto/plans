@@ -1,7 +1,7 @@
 # Volumes 3D des étagères (montants, tablettes entaillées, chevilles), repris de pieces_3d() de 3d/salon/etageres.py.
 #
-# Calcul pur, sans HTML, SVG ni Blender : la vue iso de la page, le rendu de l'aménagement (3d/salon/rendu.py) et
-# celui des meubles (3d/salon/rendu_meubles.py) lisent la même liste de Piece (pieces.salon.meubles).
+# Calcul pur, sans HTML, SVG ni Blender : la vue iso de la page, le rendu de l'aménagement (pieces/salon/amenagement/rendu.py) et
+# celui des meubles (pieces/salon/rendu_meubles.py) lisent la même liste de Piece (pieces.salon.meubles).
 # Cotes en cm, repère du salon.
 
 import copy

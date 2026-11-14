@@ -21,8 +21,7 @@ apercu:
     ( sleep 1; open http://127.0.0.1:8800/ ) &
     python3 -m http.server 8800 --bind 127.0.0.1 --directory site
 
-# Construit site/ (la passerelle recopie les pages que les anciens générateurs viennent de réécrire à la racine),
-# commit tout, pull --rebase, push puis attend la publication par GitHub Action
+# Construit site/, commit tout, pull --rebase, push puis attend la publication par GitHub Action
 sync message="Mise à jour des plans":
     python3 site.py
     git add -A
@@ -226,30 +225,64 @@ salon-amenagement-apercu *vues:
 salon-etageres:
     python3 site.py salon/etageres
 
-# Salon V4 : régénère salon-v4.html et les pages des meubles (étagères, enfilade) depuis 3d/salon/modele.py
-salon:
-    python3 3d/salon/plan.py
-    python3 3d/salon/etageres.py
-    python3 3d/salon/enfilade.py
+# Salon, étagères : rendus 3D (Blender) → site/salon/etageres/rendus/actuelle-<caméra>.jpg (la disposition Actuelle seule),
+# puis les pages. Ne rend que les caméras dont l'empreinte a changé (cache/empreintes.json, commun/rendu_cache.py) ;
+# avec des noms de caméras (just salon-etageres-rendu 64 iso), rend celles-là. Scène : pieces/salon/rendu_meubles.py.
+salon-etageres-rendu echantillons="64" *vues:
+    #!/usr/bin/env bash
+    set -euo pipefail
+    dest=site/salon/etageres/rendus
+    sortie="${SALON_SORTIE:-3d/sortie}"   # le dossier où rendu_meubles.py écrit
+    mkdir -p "$dest"
+    cams=$(python3 -m commun.rendu_cache liste salon/etageres actuelle {{echantillons}} {{vues}})
+    if [ -z "$cams" ]; then echo "salon/etageres : rien à rendre"; exit 0; fi
+    echo "salon/etageres : $cams"
+    for c in $cams; do rm -f "$sortie/salon-meuble-etageres-$c.png"; done   # aucun reste d'un ancien rendu à copier
+    "${BLENDER:-/opt/homebrew/bin/blender}" -b --python-exit-code 1 --python pieces/salon/rendu_meubles.py -- {{echantillons}} $(for c in $cams; do echo "etageres-$c"; done)
+    for c in $cams; do
+      sips -s format jpeg -s formatOptions 85 "$sortie/salon-meuble-etageres-$c.png" --out "$dest/actuelle-$c.jpg" >/dev/null
+    done
+    python3 -m commun.rendu_cache noter salon/etageres actuelle {{echantillons}} $cams
+    python3 site.py salon/etageres
 
-# Salon V4 : rendus 3D (Blender) depuis 3d/salon/modele.py → salon-v4-3d/*.jpg, puis regénère la page
-salon-rendu echantillons="64" *vues:
-    /Applications/Blender.app/Contents/MacOS/Blender -b --python 3d/salon/rendu.py -- {{echantillons}} {{vues}}
-    mkdir -p salon-v4-3d
-    for f in 3d/sortie/salon-v4-rendu-*.png; do sips -s format jpeg -s formatOptions 85 "$f" --out "salon-v4-3d/$(basename "$f" .png | sed 's/salon-v4-rendu-//').jpg" >/dev/null; done
-    python3 3d/salon/plan.py
+# Salon, étagères : aperçu rapide (16 échantillons, 800 × 600) → cache/apercu/salon-meuble-etageres-<caméra>.png, sans cache
+# ni copie dans site/
+salon-etageres-apercu *vues:
+    #!/usr/bin/env bash
+    set -euo pipefail
+    mkdir -p cache/apercu
+    cams="{{vues}}"; [ -n "$cams" ] || cams=$(python3 -c "from pieces.salon.etageres import document; print(*(c.id for c in document.CAMERAS))")
+    SALON_APERCU=1 SALON_SORTIE="$PWD/cache/apercu" "${BLENDER:-/opt/homebrew/bin/blender}" -b --python-exit-code 1 --python pieces/salon/rendu_meubles.py -- 16 $(for c in $cams; do echo "etageres-$c"; done)
+    ls cache/apercu/salon-meuble-etageres-*.png
 
-# Salon : rendus 3D des meubles à fabriquer (étagères, enfilade) → salon-meubles-3d/*.jpg, puis regénère leurs pages
-salon-meubles-rendu echantillons="128" *vues:
-    /Applications/Blender.app/Contents/MacOS/Blender -b --python 3d/salon/rendu_meubles.py -- {{echantillons}} {{vues}}
-    mkdir -p salon-meubles-3d
-    for f in 3d/sortie/salon-meuble-*.png; do sips -s format jpeg -s formatOptions 85 "$f" --out "salon-meubles-3d/$(basename "$f" .png | sed 's/salon-meuble-//').jpg" >/dev/null; done
-    python3 3d/salon/etageres.py
-    python3 3d/salon/enfilade.py
+# Salon, enfilade : rendus 3D (Blender) → site/salon/enfilade/rendus/<caméra>.jpg, puis la page. Ne rend que les caméras dont
+# l'empreinte a changé ; avec des noms de caméras (just salon-enfilade-rendu 64 ouverte), rend celles-là.
+salon-enfilade-rendu echantillons="64" *vues:
+    #!/usr/bin/env bash
+    set -euo pipefail
+    dest=site/salon/enfilade/rendus
+    sortie="${SALON_SORTIE:-3d/sortie}"   # le dossier où rendu_meubles.py écrit
+    mkdir -p "$dest"
+    cams=$(python3 -m commun.rendu_cache liste salon/enfilade - {{echantillons}} {{vues}})   # sans variante : -
+    if [ -z "$cams" ]; then echo "salon/enfilade : rien à rendre"; exit 0; fi
+    echo "salon/enfilade : $cams"
+    for c in $cams; do rm -f "$sortie/salon-meuble-enfilade-$c.png"; done   # aucun reste d'un ancien rendu à copier
+    "${BLENDER:-/opt/homebrew/bin/blender}" -b --python-exit-code 1 --python pieces/salon/rendu_meubles.py -- {{echantillons}} $(for c in $cams; do echo "enfilade-$c"; done)
+    for c in $cams; do
+      sips -s format jpeg -s formatOptions 85 "$sortie/salon-meuble-enfilade-$c.png" --out "$dest/$c.jpg" >/dev/null
+    done
+    python3 -m commun.rendu_cache noter salon/enfilade - {{echantillons}} $cams
+    python3 site.py salon/enfilade
 
-# Fige la version courante du salon (bouton de comparaison + archive/salon-v4.x.html)
-salon-figer:
-    python3 3d/salon/plan.py --figer
+# Salon, enfilade : aperçu rapide (16 échantillons, 800 × 600) → cache/apercu/salon-meuble-enfilade-<caméra>.png, sans cache
+# ni copie dans site/
+salon-enfilade-apercu *vues:
+    #!/usr/bin/env bash
+    set -euo pipefail
+    mkdir -p cache/apercu
+    cams="{{vues}}"; [ -n "$cams" ] || cams=$(python3 -c "from pieces.salon.enfilade import document; print(*(c.id for c in document.CAMERAS))")
+    SALON_APERCU=1 SALON_SORTIE="$PWD/cache/apercu" "${BLENDER:-/opt/homebrew/bin/blender}" -b --python-exit-code 1 --python pieces/salon/rendu_meubles.py -- 16 $(for c in $cams; do echo "enfilade-$c"; done)
+    ls cache/apercu/salon-meuble-enfilade-*.png
 
 # Salle de bain, meuble bas : reconstruit sa page (site/sdb/meuble-bas/) depuis pieces/sdb/meuble_bas/
 sdb-meuble-bas:

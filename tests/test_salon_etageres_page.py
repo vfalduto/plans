@@ -506,7 +506,7 @@ def test_document():
     for c, vs in TOUT.items():
         modele.verifier(D, vs)
         assert list(vs) == list(modele.VUES["construction"]) and all(v.elements for v in vs.values()), c
-    assert not hasattr(document, "CACHE_RENDU")
+    assert set(document.CACHE_RENDU.variantes) == set(calculs.CLES)   # le cache déclare les quatre dispositions
 
 
 @pytest.mark.parametrize("cle", calculs.CLES)

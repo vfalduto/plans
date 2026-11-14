@@ -1,18 +1,22 @@
-# Rendus Blender (Cycles) des meubles à fabriquer du salon, pour leurs pages dédiées :
+# Rendus Blender (Cycles) des deux meubles à fabriquer du salon, étagères et enfilade, dans une même scène (mur ouest,
+# sol, plinthe) :
 #
-#   /Applications/Blender.app/Contents/MacOS/Blender -b --python 3d/salon/rendu_meubles.py -- [échantillons] [vue ...]
-#   ex. : just salon-meubles-rendu 16 etageres-iso    (aperçu rapide)
+#   blender -b --python-exit-code 1 --python pieces/salon/rendu_meubles.py -- [échantillons] [vue ...]
+#   ex. : just salon-etageres-apercu iso    (aperçu rapide)
 #
-# Vues (fichier 3d/sortie/salon-meuble-<vue>.png, copié en salon-meubles-3d/<vue>.jpg) :
+# Lancé par `just salon-etageres-rendu` et `just salon-enfilade-rendu` (cache des empreintes : commun/rendu_cache.py),
+# et leurs recettes d'aperçu. Vues (fichier <sortie>/salon-meuble-<vue>.png, avec <sortie> = 3d/sortie, SALON_SORTIE=<dossier>
+# pour un autre, SALON_APERCU=1 pour 800 x 600 au lieu de 1600 x 1200) : les caméras de pieces/salon/etageres/document.py
+# et de pieces/salon/enfilade/document.py (CAMERAS), préfixées par le document :
 #   etageres-iso      tout le mur ouest en 3/4 depuis la pièce, étagères et enfilade
 #   etageres-detail   gros plan d'une entaille et de ses deux chevilles
 #   enfilade-iso      enfilade fermée en 3/4, étagères au-dessus
 #   enfilade-ouverte  la même, portes et tiroir du haut ouverts
 #
-# Les volumes viennent de pieces_3d() de etageres.py et enfilade.py (mêmes boîtes que les vues iso des pages) ;
-# matières → matériaux par commun.MATIERES. Matériaux, sol et soleil repris du rendu du salon (3d/salon/rendu.py).
+# Les volumes viennent de pieces_3d() de pieces/salon/etageres/volumes.py et de pieces/salon/enfilade/volumes.py (mêmes
+# boîtes que les vues iso des pages) ; matières → matériaux par pieces.salon.meubles.MATIERES. Matériaux, sol et soleil
+# repris du rendu de l'aménagement (pieces/salon/amenagement/rendu.py, dont le main ne tourne pas ici).
 
-import importlib.util
 import math
 import os
 import re
@@ -21,29 +25,31 @@ import sys
 import bpy
 from mathutils import Vector
 
-HERE = os.path.dirname(os.path.abspath(__file__))
-sys.path.insert(0, HERE)
-_spec = importlib.util.spec_from_file_location("rendu_salon", os.path.join(HERE, "rendu.py"))
-RS = importlib.util.module_from_spec(_spec)
-_spec.loader.exec_module(RS)          # rendu du salon : matériaux, boîtes, sol carrelé (son main ne tourne pas)
-R, M = RS.R, RS.M
-import commun as C  # noqa: E402
-import etageres as ET  # noqa: E402
-import enfilade as EN  # noqa: E402
+RACINE = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+sys.path.insert(0, RACINE)
 
+from pieces.salon import piece as M  # noqa: E402
+from pieces.salon.amenagement import rendu as RS  # noqa: E402
+from pieces.salon.enfilade import document as EN_DOC  # noqa: E402
+from pieces.salon.enfilade import volumes as EN  # noqa: E402
+from pieces.salon.etageres import document as ET_DOC  # noqa: E402
+from pieces.salon.etageres import volumes as ET  # noqa: E402
+from pieces.salon.meubles import MATIERES  # noqa: E402
+
+R = RS.R
+OUT = os.environ.get("SALON_SORTIE", R.OUT)
+os.makedirs(OUT, exist_ok=True)
+APERCU = os.environ.get("SALON_APERCU") == "1"
 R.MATS.update({
     "s_melamine": ("#F1EFEA", 0.55, {}),     # mélaminé blanc, légèrement satiné
     "s_fibre":    ("#7E6047", 0.8, {}),      # panneau de fibres dures (dos)
 })
 VUES_DEMANDEES = [a for a in R.args if not a.isdigit()]
-E = M.ENFILADE
+E = EN_DOC.ENFILADE
 
-VIEWS = {
-    "etageres-iso": dict(ortho=3.3, loc=(15 + 520, 129 + 330, 165 + 260), target=(15, 129, 160)),
-    "etageres-detail": dict(lens=50, loc=(62, 292, 131), target=(4, 236, 120.5)),   # montant M5, tablette T1
-    "enfilade-iso": dict(ortho=3.0, loc=(22 + 520, 129 + 330, 60 + 260), target=(22, 129, 75)),
-    "enfilade-ouverte": dict(ortho=3.0, loc=(22 + 520, 129 + 330, 60 + 260), target=(22, 129, 75), ouvert=True),
-}
+# les caméras des deux documents, sous le nom <document>-<caméra> ; réglages : ouvert, coupes
+VIEWS = {f"{doc}-{c.id}": dict(ortho=c.ortho, lens=c.focale, loc=c.loc, target=c.cible, **c.reglages)
+         for doc, cameras in (("etageres", ET_DOC.CAMERAS), ("enfilade", EN_DOC.CAMERAS)) for c in cameras}
 
 
 def build_scene(ouvert):
@@ -61,15 +67,15 @@ def build_scene(ouvert):
     pieces = ET.pieces_3d() + EN.pieces_3d(ouvert=ouvert)
     for p in pieces:
         if p.forme == "cyl_y":
-            RS.rond_y(f"meuble__{p.nom}", p, C.MATIERES[p.matiere][1])
+            RS.rond_y(f"meuble__{p.nom}", p, MATIERES[p.matiere][1])
         elif not p.groupe:
-            b(f"meuble__{p.nom}", p.x0, p.x1, p.y0, p.y1, p.z0, p.z1, C.MATIERES[p.matiere][1])
+            b(f"meuble__{p.nom}", p.x0, p.x1, p.y0, p.y1, p.z0, p.z1, MATIERES[p.matiere][1])
     for g in dict.fromkeys(p.groupe for p in pieces if p.groupe):
         RS.planche(g, [p for p in pieces if p.groupe == g])
 
     sc.render.engine = "CYCLES"
     R.reglages_cycles(sc)
-    sc.render.resolution_x, sc.render.resolution_y = 1600, 1200
+    sc.render.resolution_x, sc.render.resolution_y = (800, 600) if APERCU else (1600, 1200)
     sc.view_settings.view_transform = "AgX"
     sc.view_settings.look = "AgX - Base Contrast"
     sc.view_settings.exposure = -0.3
@@ -87,7 +93,7 @@ def build_scene(ouvert):
 
 def camera(sc, name, v):
     cd = bpy.data.cameras.new(name)
-    if "ortho" in v:
+    if v["ortho"]:
         cd.type, cd.ortho_scale = "ORTHO", v["ortho"]
     else:
         cd.lens = v["lens"]
@@ -99,6 +105,9 @@ def camera(sc, name, v):
 
 
 if __name__ == "__main__":
+    inconnues = [a for a in VUES_DEMANDEES if a not in VIEWS]
+    if inconnues:
+        raise SystemExit(f"caméra inconnue : {', '.join(inconnues)}")
     vues = {n: v for n, v in VIEWS.items() if not VUES_DEMANDEES or n in VUES_DEMANDEES}
     for ouvert in dict.fromkeys(v.get("ouvert", False) for v in vues.values()):
         sc = build_scene(ouvert)
@@ -109,7 +118,11 @@ if __name__ == "__main__":
             # plafond caché aux vues en plongée (il masquerait le haut des étagères)
             for o in sc.objects:
                 if o.type == "MESH":
-                    o.visible_camera = not re.match(r"^plafond__", o.name)
-            sc.render.filepath = os.path.join(R.OUT, f"salon-meuble-{name}.png")
+                    o.visible_camera = not re.match(v["coupes"], o.name)
+            sc.render.filepath = os.path.join(OUT, f"salon-meuble-{name}.png")
             bpy.ops.render.render(write_still=True)
             print("Rendu :", sc.render.filepath)
+    # un rendu qui n'a pas écrit son fichier fait échouer le lancement (la recette ne note rien)
+    manquants = [n for n in vues if not os.path.exists(os.path.join(OUT, f"salon-meuble-{n}.png"))]
+    if manquants:
+        raise SystemExit(f"rendus manquants : {', '.join(manquants)}")

@@ -13,6 +13,7 @@
 import math
 
 from commun.modele import Camera
+from commun.rendu_cache import CacheRendu
 from pieces.salon.meubles import cote
 from pieces.salon.piece import PASSAGE, Bloc, Cyl
 
@@ -311,8 +312,8 @@ NOIRS = [  # façades noires ou presque pour METOD, porte 40 × 80 (ikea.com/fr,
     ("BODBYN noir", 76, "à cadre (style classique)", "bodbyn-porte-noir-00568587/"),
 ]
 
-# ------------------------------------------------------------------ rendus 3D (3d/salon/rendu_meubles.py)
-# Caméras du document, dans le repère du salon ; fichiers salon-meubles-3d/enfilade-<id>.jpg. ouvert : la porte nord
+# ------------------------------------------------------------------ rendus 3D (pieces/salon/rendu_meubles.py)
+# Caméras du document, dans le repère du salon ; fichiers rendus/<id>.jpg. ouvert : la porte nord
 # de M1, la porte sud de M3 et le tiroir du haut de M2 ouverts (pieces_3d(ouvert=True) de l'ancien générateur).
 # coupes : objets Blender cachés à la caméra ; l'ancien rendu des meubles cachait le plafond à toutes les vues
 SANS_PLAFOND = r"^plafond__"
@@ -322,6 +323,13 @@ CAMERAS = (
     Camera("ouverte", "Enfilade ouverte", (22 + 520, 129 + 330, 60 + 260), (22, 129, 75), ortho=3.0,
            reglages=dict(ouvert=True, coupes=SANS_PLAFOND)),
 )
+# Empreinte des rendus (commun/rendu_cache.py) : la pièce, les deux meubles de la scène (les étagères sont au-dessus),
+# puis le script de rendu et ses volumes. Document sans variante : rendus/<caméra>.jpg.
+CACHE_RENDU = CacheRendu(variantes={"": ("pieces.salon.piece", "pieces.salon.etageres.document",
+                                         "pieces.salon.enfilade.document")},
+                         code=("pieces/salon/rendu_meubles.py", "pieces/salon/amenagement/rendu.py", "pieces/salon/etageres/volumes.py",
+                               "pieces/salon/enfilade/volumes.py", "pieces/salon/meubles.py", "3d/rendu.py"),
+                         cameras="pieces.salon.enfilade.document")
 # (caméra, texte de la page) : section Rendus 3D de salon-enfilade.html
 RENDUS = [
     ("iso", "L'enfilade fermée en trois quarts depuis la pièce, sous les étagères du mur ouest."),

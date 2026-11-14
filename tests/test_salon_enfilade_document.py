@@ -37,8 +37,7 @@ def test_journal_garde_sept_changements():
 
 
 def test_ancienne_page_retiree():
-    # git ne la suit plus ; `just salon` la réécrit encore à la racine, ignorée par .gitignore
     suivis = subprocess.run(["git", "ls-files", "salon-enfilade.html"], cwd=RACINE, capture_output=True, text=True,
                             check=True).stdout
     assert suivis == ""
-    assert "/salon-enfilade.html" in (RACINE / ".gitignore").read_text(encoding="utf-8").split()
+    assert not (RACINE / "3d" / "salon").exists()
