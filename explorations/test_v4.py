@@ -367,6 +367,8 @@ def test_page_achats_liens_existent():
     for v in re.findall(r'\b(?:href|src)="([^"]*)"', h):
         if not v or v.startswith(("http", "data:", "#")):
             continue
+        if v == "sdb-meuble-bas.html":      # redirigée vers sdb/meuble-bas/ depuis sa migration (site.py)
+            continue
         assert os.path.exists(os.path.join(RACINE, v.split("#")[0])), v
     for ancre in re.findall(r'href="#([^"]+)"', h):
         assert f'id="{ancre}"' in h, ancre

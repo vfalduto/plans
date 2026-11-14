@@ -31,3 +31,17 @@ FIGEES = (
     ("Niveaux de finition V1.0", "archive/sdb-meuble-niveaux.html"),
     ("Revue V1.0", "archive/sdb-meuble-bas-revue.html"),
 ) + FIGEES_COMMUNES
+
+
+def _document():
+    from commun.modele import Changement, Document, Variante
+    from pieces.sdb.meuble_bas import dessins, vues
+    variante = Variante("", "Meuble bas", VERSION, tuple(Changement(*c) for c in CHANGEMENTS), FIGEES)
+    return Document("sdb", "meuble-bas", "Meuble bas", "construction", (variante,), vues.vues, css=dessins.CSS_DOCUMENT)
+
+
+def __getattr__(nom):
+    if nom == "DOCUMENT":
+        globals()["DOCUMENT"] = _document()
+        return globals()["DOCUMENT"]
+    raise AttributeError(f"module {__name__!r} has no attribute {nom!r}")

@@ -17,6 +17,7 @@ from commun.redirections import Redirection
 from pieces.chambre.amenagement import document as chambre_amenagement
 from pieces.entree.amenagement import document as entree_amenagement
 from pieces.salon.enfilade import document as salon_enfilade
+from pieces.sdb.meuble_bas import document as sdb_meuble_bas
 
 RACINE = Path(__file__).resolve().parent
 
@@ -26,7 +27,7 @@ SITE = Site((
         Passerelle("cuisine", "porte-cellier", "Porte du cellier", "construction", "cuisine-v13-porte-cellier.html"),
     )),
     Piece("sdb", "Salle de bain", (
-        Passerelle("sdb", "meuble-bas", "Meuble bas", "construction", "sdb-meuble-bas.html"),
+        sdb_meuble_bas.DOCUMENT,
         Passerelle("sdb", "meuble-haut", "Meuble haut", "construction", "sdb-meuble-haut.html"),
     )),
     Piece("entree", "Entrée", (
@@ -58,6 +59,13 @@ ANCRES_ENFILADE = {"iso": "plans?k=iso", "meuble": "plans?k=elevation", "rendus"
 # slugs de ses titres, au cas où un lien les cite
 ANCRES_CHAMBRE = {"verifier": "explication", "plan-a-l-echelle": "plan", "elevations": "coupes",
                   "principe": "explication"}
+# anciennes ancres de sdb-meuble-bas.html : ses titres h2 et h3, et ses figures (f-…)
+ANCRES_SDB_BAS = {"iso": "plans?k=iso", "structure": "explication", "placard": "explication",
+                  "f-placard": "plans?k=placard", "porte": "explication", "f-porte": "plans?k=porte",
+                  "pieds": "explication", "f-joue": "plans?k=joue", "finition": "decoupe", "colonne": "explication",
+                  "f-colonne": "plans?k=colonne", "f-colonne-dessus": "plans?k=colonne-dessus", "plan": "plans?k=plan",
+                  "f-plan": "plans?k=plan", "elevation": "plans?k=elevation", "f-face": "plans?k=elevation",
+                  "coupe": "plans?k=coupe", "f-coupe": "plans?k=coupe", "mesures": "explication"}
 
 REDIRECTIONS = (
     Redirection("entree-amenagement.html", "entree/amenagement/", ANCRES_ENTREE, COUPES, HISTORIQUE_ENTREE),
@@ -68,6 +76,8 @@ REDIRECTIONS = (
                 {"changements": "salon/enfilade/historique.html"}),
     Redirection("chambre-amenagement.html", "chambre/amenagement/", ANCRES_CHAMBRE, (),
                 {"changements": "chambre/amenagement/historique.html"}),
+    Redirection("sdb-meuble-bas.html", "sdb/meuble-bas/", ANCRES_SDB_BAS, (),
+                {"changements": "sdb/meuble-bas/historique.html"}),
 )
 
 
