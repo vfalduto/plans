@@ -23,8 +23,8 @@ def test_reference_complete():
     assert len(leg) == 22 and len(tab) == 9
     assert sorted(p.stem for p in (FIXTURES / "dessins").glob("*.svg")) == sorted(
         ["plan", "coupe-a", "hauteur-pt", "coupe-b", "coupe-c", "plan-elec", "elevation-elec"])
-    assert len(_texte(leg["plan"])) == 8439          # texte sans balises, entités décodées
-    assert tab["changements"].count("<tr") == 91     # en-tête + 90 changements
+    assert len(_texte(leg["plan"])) == 8487          # texte sans balises, entités décodées
+    assert tab["changements"].count("<tr") == 92     # en-tête + 91 changements
 
 
 def test_ancres():

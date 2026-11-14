@@ -1,5 +1,5 @@
 """Document de la cuisine/aménagement (pieces/cuisine/amenagement/document.py, vues.py) : les cinq vues et leurs
-éléments, textes alternatifs repris des légendes, 90 changements, versions figées, page construite, et chaque section
+éléments, textes alternatifs repris des légendes, 91 changements, versions figées, page construite, et chaque section
 de l'ancienne page à sa destination (tableau de contenu du plan)."""
 import html
 import json
@@ -80,7 +80,7 @@ def test_cone_de_nuit_au_coin_so():
 def test_document():
     assert (DOC.piece, DOC.id, DOC.nom, DOC.type) == ("cuisine", "amenagement", "Aménagement", "amenagement")
     (v,) = DOC.variantes
-    assert (v.id, v.nom, v.version) == ("", "Principale", "V13.30")
+    assert (v.id, v.nom, v.version) == ("", "Principale", "V13.31")
     assert DOC.css == dessins.CSS_DESSINS
     assert document.DOCUMENT.variantes == DOC.variantes   # exposé à la bascule (tâche 11)
 
@@ -118,14 +118,14 @@ def test_alt_est_la_legende():
 
 def test_changements():
     (v,) = DOC.variantes
-    assert len(v.changements) == 90 and v.changements[0].version == "V13.30"
+    assert len(v.changements) == 91 and v.changements[0].version == "V13.31"
     reference = re.findall(r'<tr><td class="mono">([^<]+)</td>', TABLEAUX["changements"])
     assert [c.version for c in v.changements] == reference
     # un changement est de l'histoire : texte d'origine, seul le point médian devient une virgule
     for c, (_, _, origine) in zip(v.changements, M.CHANGEMENTS, strict=True):
         assert c.texte == origine.replace(" · ", ", "), c.version
         assert "·" not in c.texte
-    assert v.changements[0].texte.endswith("Lien dans le sommaire : #hauteur-du-plan-de-travail-etude.")
+    assert v.changements[1].texte.endswith("Lien dans le sommaire : #hauteur-du-plan-de-travail-etude.")
 
 
 def test_figees():
@@ -139,7 +139,7 @@ def test_figees():
 def test_journal_compte():
     site = Site((Piece("cuisine", "Cuisine", (DOC,)),))
     lignes = [e for e in entrees(site, RACINE) if (e.piece, e.document) == ("Cuisine", "Aménagement")]
-    assert len(lignes) == 90
+    assert len(lignes) == 91
     assert all(e.variante is None for e in lignes)
 
 

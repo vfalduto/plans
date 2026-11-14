@@ -27,7 +27,7 @@ def text(x, y, s, cls="lbl", anchor="middle", extra=""):
 
 def cote_h(x0, x1, y, label=None, t=3):
     """Cote horizontale, texte au-dessus."""
-    label = label or f(x1 - x0)
+    label = label or virg(x1 - x0)
     return "".join([
         f'<line class="dim" x1="{f(x0)}" y1="{f(y)}" x2="{f(x1)}" y2="{f(y)}"/>',
         f'<line class="dim" x1="{f(x0)}" y1="{f(y - t)}" x2="{f(x0)}" y2="{f(y + t)}"/>',
@@ -51,7 +51,7 @@ def cote_d(a, b, t=0.5, dt=(0, 0)):
 
 def cote_v(y0, y1, x, label=None, t=3):
     """Cote verticale, texte à gauche, tourné."""
-    label = label or f(abs(y1 - y0))
+    label = label or virg(abs(y1 - y0))
     ym = (y0 + y1) / 2
     return "".join([
         f'<line class="dim" x1="{f(x)}" y1="{f(y0)}" x2="{f(x)}" y2="{f(y1)}"/>',

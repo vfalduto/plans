@@ -17,7 +17,7 @@ def test_aides_identiques():
     # entrées reprises de plan_svg() (les valeurs du brief, cote_h(0, 327, -40) etc., ne figurent pas dans les dessins)
     evier = modele.sur_bas(modele.B_EVIER)[1]
     for rendu in (dessin.cote_h(0, 434, -66), dessin.cote_v(0, 252, -52),
-                  dessin.cote_d((evier, 62), (modele.COL_X, modele.JOUE_C2), 0.5, (-7, 4)),
+                  dessin.cote_d((evier, modele.P_PLAN), (modele.COL_X, modele.JOUE_C2), 0.5, (-7, 4)),
                   dessin.pts(modele.SOL_PARQUET)):
         assert rendu in ensemble
     assert dessin.virg(68.7) == "68,7"

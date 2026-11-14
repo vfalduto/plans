@@ -56,9 +56,10 @@ def morceaux() -> list[Morceau]:
         carte("Mur nord",
               f"<b>Mur nord</b> : {len(caissons)} meubles bas de {' + '.join(f(w) for w in M.LARGEURS_BAS)} "
               f"(x {f(x0)} → {f(x1)}), à {f(M.ECART_OUEST)} du mur ouest et {f(M.FILEUR_EST)} du retour de cloison du "
-              f"cellier (fileurs Canopée) : plan de travail de mur à mur ; caisson P{M.P_CAISSON} + façade {M.FACADE}, "
-              f"profondeur {M.P_CAISSON + M.FACADE}, sous un plan de travail de 4 (P62, débord de 2), sauf "
-              f"B{M.B_ETROIT} (P{M.P_ETROIT} + façade, profondeur {M.P_ETROIT + M.FACADE}, plan P{M.P_PLAN_ETROIT}) "
+              f"cellier (fileurs Canopée) : plan de travail de mur à mur ; caisson METOD P{virg(M.P_CAISSON)} (rail de 1 compris) + "
+              f"façade {M.FACADE}, profondeur {virg(M.P_CAISSON + M.FACADE)}, sous un plan de travail de 4 (P{virg(M.P_PLAN)}, "
+              f"débord de {virg(M.DEBORD_PLAN)}), sauf B{M.B_ETROIT} (P{virg(M.P_ETROIT)} + façade, profondeur "
+              f"{virg(M.P_ETROIT + M.FACADE)}, plan P{virg(M.P_PLAN_ETROIT)}) "
               f"qui laisse se replier la porte du cellier.", nomme=tous_bas),
         carte("Induction",
               f"<b>Induction</b> 60 classique, four encastré dessous et hotte intégrée dans H1 au-dessus, sur "
@@ -68,7 +69,7 @@ def morceaux() -> list[Morceau]:
               f"mitigeur derrière le bac, égouttoir à gauche au-dessus de B4.", _bas(M.B_EVIER), ("b4",)),
         carte("Mur est",
               f"<b>Mur est</b> : colonnes C1 (lave-vaisselle en hauteur, micro-ondes au-dessus, y {f(M.JOUE_C2)} → "
-              f"{f(M.COL_Y0)}) et C2 (frigo, y {f(M.COL_Y0)} → {f(M.COL_Y0 + 60)}) de 60, P60, fileur chêne de "
+              f"{f(M.COL_Y0)}) et C2 (frigo, y {f(M.COL_Y0)} → {f(M.COL_Y0 + 60)}) de 60, P{virg(M.P_CAISSON + M.FACADE)}, fileur chêne de "
               f"{M.FILEUR_C2} entre C2 et le décroché (la porte du frigo s'ouvre à 90° sans toucher le fileur de "
               f"l'entrée), contre le mur du WC (x {f(M.X_MUR_EST)}), du décroché vers le nord, façades vers l'ouest "
               f"(x {f(M.COL_X)}). Le mur sud est libre entre la table et le caisson du galandage.",
@@ -90,8 +91,8 @@ def morceaux() -> list[Morceau]:
               f"<b>Triangle d'activité</b> (rouge ; centres de la plaque et de l'évier, milieu de la façade du frigo) : "
               f"{tri}, total {f(round(sum(cotes_tri)))} cm."),
         carte("Passage",
-              f"<b>Passage</b> (cote oblique) : {M.ACCES_CELLIER:.0f} du coin du plan de travail P62 (B{M.B_EVIER}, "
-              f"x {f(evier[1])}, y 62) au coin nord-ouest de C1 (y {M.JOUE_C2}), devant la porte du cellier."),
+              f"<b>Passage</b> (cote oblique) : {M.ACCES_CELLIER:.0f} du coin du plan de travail P{virg(M.P_PLAN)} (B{M.B_EVIER}, "
+              f"x {f(evier[1])}, y {virg(M.P_PLAN)}) au coin nord-ouest de C1 (y {M.JOUE_C2}), devant la porte du cellier."),
         carte("Réseaux",
               "<b>Réseaux</b> (bleu ; pose type IKEA METOD, sans vide technique : 1 cm de jeu derrière les caissons)."),
         carte("Réseaux",
@@ -128,7 +129,7 @@ def morceaux() -> list[Morceau]:
               f"sous le linteau, pas de rail au sol), deux panneaux de {virg(a['l'])} × "
               f"{virg(round(a['z1'] - a['z0'], 1))} × {virg(a['ep'])} à faire découper, pivot au nord : en s'ouvrant, "
               f"les vantaux se replient l'un contre l'autre et se rangent côté cuisine contre le retour de cloison, à "
-              f"{f(M.JEU_B6_PORTE)} du plan de B{M.B_ETROIT} (P{f(M.P_PLAN_ETROIT)} : c'est ce qui fixe sa "
+              f"{virg(M.JEU_B6_PORTE)} du plan de B{M.B_ETROIT} (P{virg(M.P_PLAN_ETROIT)} : c'est ce qui fixe sa "
               f"profondeur ; côté cellier, ils heurteraient le rayonnage nord) ; le vantail du pivot balaie "
               f"{virg(a['l'])} côté cuisine. Poignée au sud, côté C1 ; le bouton au-dessus du plan la montre ouverte, "
               f"mi-ouverte (vantaux en V, pivot à {a['mi']}°) ou fermée.", "porte-cellier"),
@@ -170,7 +171,7 @@ def morceaux() -> list[Morceau]:
               f"Table type Véra {T['cote']} × {T['cote']} aux angles arrondis (rose poudré, chant noir), sur un pied "
               f"central à embase, à 10 de l'assise et à 10 du bas de mur sud (x {f(T['x0'])} → {f(T['x1'])}, y "
               f"{f(T['y0'])} → {f(T['y1'])}) : son bord nord est à {f(T['y0'] - M.P_CAISSON - M.FACADE - 52)} de la "
-              f"porte du four ouverte (y {f(M.P_CAISSON + M.FACADE + 52)}) et à {f(T['y0'] - 62)} du plan de "
+              f"porte du four ouverte (y {virg(M.P_CAISSON + M.FACADE + 52)}) et à {virg(T['y0'] - M.P_PLAN)} du plan de "
               f"travail.", "table"),
         carte("Coin repas",
               f"Une <b>chaise</b> {M.CHAISE['l']} × {M.CHAISE['p']} en face, côté est, dossier à l'est.", "chaise"),
@@ -205,7 +206,7 @@ def morceaux() -> list[Morceau]:
               f"<b>Meubles hauts</b> (tireté) : {len(hauts)} de {' + '.join(f(w) for w in M.LARGEURS_HAUTS)}, x "
               f"{f(hauts[0].x0)} → {f(hauts[-1].x1)}, joints au droit de ceux des bas, fileur de {f(M.FILEUR_EST)} "
               f"jusqu'au retour de cloison ; à leur gauche, étagères ouvertes jusqu'au mur ouest ; caisson "
-              f"P{M.P_HAUT} + façade {M.FACADE} (H5 compris, comme H4).",
+              f"P{virg(M.P_HAUT)} + façade {M.FACADE} (H5 compris, comme H4).",
               nomme=tuple(b.nom.removeprefix("caisson_") for b in hauts) + ("etageres",)),
     ]
 

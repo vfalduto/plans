@@ -8,7 +8,7 @@ from html import escape
 
 from commun.gabarit import relatif
 from pieces.cuisine import modele as M
-from pieces.cuisine.dessin import cote_h, cote_v, f, pts, rect, text
+from pieces.cuisine.dessin import cote_h, cote_v, f, pts, rect, text, virg
 
 DEPUIS = "cuisine/amenagement/imprimable.html"
 MM = 0.5                         # 1:20 → 1 cm réel = 0,5 mm sur le papier
@@ -139,7 +139,7 @@ def dessin(m, dx=0, dy=0):
         else:
             o.append(rect(d.x0 + dx, d.y0 + dy, d.x1 + dx, d.y1 + dy, "plaque" if d.role == "plaque" else "det"))
     cx, cy = (x0 + x1) / 2, (y0 + y1) / 2
-    dim = f"{f(w)} × {f(h)}"
+    dim = f"{virg(w)} × {virg(h)}"
     if w < 30:   # meuble étroit : texte tourné
         o.append(text(cx + 2, cy, f"{nom}, {dim}", "lbln", extra=f' transform="rotate(-90 {f(cx + 2)} {f(cy)})"'))
     elif h < 25:  # meuble peu profond : une ligne
@@ -270,8 +270,8 @@ def page(depuis: str = DEPUIS) -> str:
          pied + "Murs en noir, cloisons neuves hachurées (doublage du galandage, retour de cloison du cellier), "
          "fenêtre et porte du cellier fermées. Poser les meubles découpés de la feuille 3.")}
 {feuille("Meubles à découper", sous, decoupe,
-         pied + "Découper au trait plein. Meubles bas avec leur plan de travail (P62), colonnes avec façade (P60), "
-         "meubles hauts en tireté (P35, au-dessus du plan), table, banquette, rayonnages du cellier et une chaise 42 × 42.")}
+         pied + "Découper au trait plein. Meubles bas avec leur plan de travail (P63,5), colonnes avec façade (P62), "
+         "meubles hauts en tireté (P39,6, au-dessus du plan), table, banquette, rayonnages du cellier et une chaise 42 × 42.")}
 </main>
 </body>
 </html>

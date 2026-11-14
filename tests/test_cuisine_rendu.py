@@ -126,7 +126,7 @@ def test_recette_apercu_a_sec():
 
 
 def test_rendus_repris():
-    """Les huit rendus V13.26 (iso_no V13.27) repris octet pour octet, sous le nom de leur caméra."""
+    """Les huit rendus V13.31 repris octet pour octet, sous le nom de leur caméra."""
     hashes = json.loads((FIXTURES / "rendus.json").read_text(encoding="utf-8"))
     assert len(hashes) == 8
     ids = [c.id for c in piece.CAMERAS]

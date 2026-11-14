@@ -8,7 +8,7 @@
      dessin, « Valeurs d'origine » revient, le choix tient au rechargement ; sans localStorage, les défauts.
    - Anciennes adresses (cuisine-v13.html et ses ancres, imprimable, maquette : modele.js sans 404 ; three.js, chargé
      depuis jsdelivr, est remplacé par des modules vides : la maquette ne tourne pas, seules les réponses comptent).
-   - Historique (versions figées V11.49 et V12.7, 90 changements) et la page sans JavaScript. */
+   - Historique (versions figées V11.49 et V12.7, 91 changements) et la page sans JavaScript. */
 async page => {
   const BASE = new URL(page.url()).origin;
   const DOC = `${BASE}/cuisine/amenagement/`;
@@ -310,7 +310,7 @@ async page => {
       journaux: [...document.querySelectorAll("ol.fil")].map(o => o.children.length),
     }));
     verifier(egal(h.figees, ["V12.7", "V11.49"]), `historique : versions figées ${JSON.stringify(h.figees)}`);
-    verifier(egal(h.journaux, [90]), `historique : changements ${JSON.stringify(h.journaux)}`);
+    verifier(egal(h.journaux, [91]), `historique : changements ${JSON.stringify(h.journaux)}`);
     const statuts = await page.evaluate(liens => Promise.all(liens.map(l => fetch(l).then(x => x.status))), h.liens);
     verifier(statuts.length === 2 && statuts.every(s => s === 200), `historique : versions figées introuvables ${JSON.stringify(statuts)}`);
   });

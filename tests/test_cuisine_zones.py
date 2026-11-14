@@ -204,16 +204,17 @@ def test_chaque_zone_garde_une_surface_touchable():
     for id_, (part, carre) in surfaces_libres(zs).items():
         e = emprises[id_]
         cote = min(COTE, e["x1"] - e["x0"], e["y1"] - e["y0"])
-        if part < PART or carre < cote - PAS:
+        # une rangée de cases de tolérance : B6 (P39,6) sous la demi-zone de H5 (19,8) garde exactement la moitié
+        if part < PART - PAS / (e["y1"] - e["y0"]) or carre < cote - PAS:
             trop_peu[id_] = (round(part, 2), carre)
     assert trop_peu == {}
 
 
 def test_recouvrement_vu():
-    """Le critère voit un recouvrement : B6 sous la zone pleine de H5 n'aurait que 5 cm (constat de la relecture)."""
+    """Le critère voit un recouvrement : sous la zone pleine de H5, B6 (même profondeur depuis V13.31) disparaîtrait."""
     zs = [z for z in Z.zones({}) if z.id in ("b6", "h5")]
     b6, h5 = zs
     plein = Z.emprise(next(m[2] for m in Z.MEUBLES_PLAN if m[0] == "h5"))
     h5 = type(h5)(**{**h5.__dict__, "emprise": (plein["x0"], plein["y0"], plein["x1"], plein["y1"])})
     part, carre = surfaces_libres([b6, h5])["b6"]
-    assert part < PART and carre == 5
+    assert part < PART and carre == 0
