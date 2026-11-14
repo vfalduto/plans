@@ -301,3 +301,37 @@ def test_erreur_sans_trace_en_ligne_de_commande():
                        cwd=RACINE, capture_output=True, text=True)
     assert r.returncode == 1
     assert r.stderr == "variante non déclarée pour entree/amenagement : inconnue\n"
+
+
+# ------------------------------------------------------------------ version de Blender (blender-seul.sh)
+def _faux_binaire(dossier, nom, corps):
+    f = dossier / nom
+    f.write_text("#!/bin/sh\n" + corps + "\n")
+    f.chmod(0o755)
+    return str(f)
+
+
+def test_version_lue_par_blender_reel(tmp_path, monkeypatch):
+    # BLENDER est le script d'attente (blender-seul.sh) ; la question de version va droit au Blender réel
+    monkeypatch.setattr(rendu_cache, "BLENDER", _faux_binaire(tmp_path, "attente", "exit 3"))
+    monkeypatch.setenv("BLENDER_REEL", _faux_binaire(tmp_path, "reel", 'echo "Blender 5.2.2"; echo "build x"'))
+    assert rendu_cache._version_blender() == "Blender 5.2.2"
+
+
+def test_version_sans_sortie_erreur_sans_trace(tmp_path, monkeypatch):
+    # attente du verrou expirée : code 3, rien sur stdout ; le message du script remonte, pas une IndexError
+    monkeypatch.delenv("BLENDER_REEL", raising=False)
+    monkeypatch.setattr(rendu_cache, "BLENDER", _faux_binaire(tmp_path, "attente", 'echo "verrou pris" >&2; exit 3'))
+    with pytest.raises(rendu_cache.Erreur, match=r"verrou pris"):
+        rendu_cache._version_blender()
+    monkeypatch.setenv("BLENDER_REEL", _faux_binaire(tmp_path, "muet", "exit 0"))
+    with pytest.raises(rendu_cache.Erreur, match=r"version de Blender"):
+        rendu_cache._version_blender()
+
+
+def test_conseil_de_nom_seulement(monkeypatch):
+    # EXCLUES est commune à tous les documents : le message ne conseille que le nom en _X
+    monkeypatch.setattr(victor, "GARDE", lambda c: c, raising=False)
+    with pytest.raises(TypeError) as e:
+        emp(cameras()["banc"], victor)
+    assert "_GARDE" in str(e.value) and "EXCLUES" not in str(e.value)

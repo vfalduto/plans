@@ -11,7 +11,8 @@ En ligne de commande (utilisé par les recettes `<piece>-<document>-rendu`) :
     python3 -m commun.rendu_cache variantes <piece>/<document>
     python3 -m commun.rendu_cache liste <piece>/<document> <variante> <échantillons> [caméra ...]
     python3 -m commun.rendu_cache noter <piece>/<document> <variante> <échantillons> <caméra> [caméra ...]
-La variante d'identifiant vide (document sans variante) s'écrit `-`.
+La variante d'identifiant vide (document sans variante) s'écrit `-`. La version de Blender, qui entre dans l'empreinte,
+est demandée à `BLENDER_REEL` s'il est défini, sinon à `BLENDER` (défaut /opt/homebrew/bin/blender).
 """
 import dataclasses
 import hashlib
@@ -79,8 +80,8 @@ def donnees_variante(*modules) -> dict:
         try:
             json.dumps(v, sort_keys=True, default=_json)
         except TypeError as e:
-            raise TypeError(f"empreinte des rendus, {nom} : {e} ; la renommer en _{nom.rsplit('.', 1)[1]} ou "
-                            "l'ajouter à EXCLUES si le rendu ne la lit pas") from None
+            raise TypeError(f"empreinte des rendus, {nom} : {e} ; la renommer en _{nom.rsplit('.', 1)[1]}"
+                            " (un nom en _X reste hors de l'empreinte)") from None
     return donnees
 
 
@@ -133,7 +134,19 @@ def declaration(document: str) -> CacheRendu:
 
 
 def _version_blender() -> str:
-    return subprocess.run([BLENDER, "--version"], capture_output=True, text=True).stdout.splitlines()[0]
+    """Première ligne de `--version`, demandée à `BLENDER_REEL` s'il est défini (le Blender que lance
+    blender-seul.sh : la question n'attend pas le verrou d'un rendu), sinon à `BLENDER`. Code non nul ou sortie vide
+    (attente du verrou expirée) : `Erreur`, avec la sortie d'erreur de la commande."""
+    binaire = os.environ.get("BLENDER_REEL") or BLENDER
+    try:
+        r = subprocess.run([binaire, "--version"], capture_output=True, text=True)
+    except OSError as e:
+        raise Erreur(f"version de Blender : {binaire} ne se lance pas ({e})") from None
+    lignes = r.stdout.splitlines()
+    if r.returncode != 0 or not lignes:
+        raise Erreur(f"version de Blender : `{binaire} --version` sort en {r.returncode} sans version"
+                     + (f" ; {r.stderr.strip()}" if r.stderr.strip() else ""))
+    return lignes[0]
 
 
 def empreintes(document: str, variante: str, echantillons: str) -> dict:
