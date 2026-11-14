@@ -14,6 +14,7 @@ from pathlib import Path
 from commun.construction import commande
 from commun.modele import Passerelle, Piece, Site
 from commun.redirections import Redirection
+from pieces.chambre.amenagement import document as chambre_amenagement
 from pieces.entree.amenagement import document as entree_amenagement
 
 RACINE = Path(__file__).resolve().parent
@@ -36,7 +37,7 @@ SITE = Site((
         Passerelle("salon", "enfilade", "Enfilade", "construction", "salon-enfilade.html"),
     )),
     Piece("chambre", "Chambre", (
-        Passerelle("chambre", "amenagement", "Aménagement", "amenagement", "chambre-amenagement.html"),
+        chambre_amenagement.DOCUMENT,
     )),
 ))
 
@@ -47,12 +48,18 @@ ANCRES_ENTREE = {"plan": "plan", "vues-3d": "iso", "principe": "explication", "a
                  "materiaux": "explication", "points-a-verifier": "explication"}
 COUPES = ((r"^coupe-([a-d])-", "coupes?k={1}"),)
 HISTORIQUE_ENTREE = {"changements": "entree/amenagement/historique.html"}
+# la page de la chambre ne posait d'identifiant que sur « Points à vérifier » (verifier) ; les trois autres sont les
+# slugs de ses titres, au cas où un lien les cite
+ANCRES_CHAMBRE = {"verifier": "explication", "plan-a-l-echelle": "plan", "elevations": "coupes",
+                  "principe": "explication"}
 
 REDIRECTIONS = (
     Redirection("entree-amenagement.html", "entree/amenagement/", ANCRES_ENTREE, COUPES, HISTORIQUE_ENTREE),
     # la page de Victor avait en plus « Différences avec la V4.3 », passée dans son Explication
     Redirection("entree-amenagement-victor.html", "entree/amenagement/victor.html",
                 {**ANCRES_ENTREE, "differences-avec-la-v4-3": "explication"}, COUPES, HISTORIQUE_ENTREE),
+    Redirection("chambre-amenagement.html", "chambre/amenagement/", ANCRES_CHAMBRE, (),
+                {"changements": "chambre/amenagement/historique.html"}),
 )
 
 
