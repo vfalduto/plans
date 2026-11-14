@@ -410,4 +410,4 @@ def vue_explication(ch: dict, chs: list[dict], n_etapes: int) -> Vue:
         + a_verifier([escape(p) for p in _points(ch, chs)], titre="Points à valider")
         + note_source("Cotes et données du meuble : pieces/salon/enfilade/ (document.py, volumes.py), dans le repère "
                       "du salon (pieces/salon/piece.py). Plan du salon : "
-                      '<a href="../../salon-v4.html">Salon, aménagement</a>.')))
+                      '<a href="../amenagement/">Salon, aménagement</a>.')))

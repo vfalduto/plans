@@ -38,9 +38,11 @@ def test_contour_de_l_accueil_inchange():
 def test_cameras_de_la_piece():
     vues = vues_du_rendu("rendu.py")
     cams = {c.id: c for c in piece.CAMERAS}
-    assert set(cams) == {k for k, v in vues.items() if "essence" not in v}
+    # la vue « iso » de l'ancien rendu est la caméra `iso_se` : le nom du coin de la vue Iso du document
+    ancien = lambda k: "iso_se" if k.removesuffix("_noyer") == "iso" else k.removesuffix("_noyer")   # noqa: E731
+    assert set(cams) == {ancien(k) for k, v in vues.items() if "essence" not in v}
     for k, v in vues.items():
-        c = cams[k.removesuffix("_noyer")]
+        c = cams[ancien(k)]
         assert v == {**comme_vue(c), "coupes": c.reglages["coupes"], **({"essence": "noyer"} if "essence" in v else {})}
 
 

@@ -49,7 +49,7 @@ PLAN_CLS = {"mur": "w", "linteau": None, "cadre": "cadrep", "baie": "win", "cais
 def chaise_plan(x, y, a, cfg):
     """Chaise vue de dessus : assise 45 × 45 tournée, dossier côté extérieur."""
     h = M.CHAISE["l"] / 2
-    return (f'<g{O.si(O.JETON_TABLE[cfg])} transform="translate({f(x)} {f(y)}) rotate({f(a)})">'
+    return (f'<g transform="translate({f(x)} {f(y)}) rotate({f(a)})"{O.si(O.JETON_TABLE[cfg])}>'
             f'<rect class="stool" x="{f(-h)}" y="{f(-h)}" width="{f(2 * h)}" height="{f(2 * h)}" rx="4"/>'
             f'<rect class="stoold" x="{f(h - 5)}" y="{f(-h + 1)}" width="4" height="{f(2 * h - 2)}" rx="1.5"/></g>')
 
@@ -62,7 +62,7 @@ def volumes_plan():
             continue
         marque = O.marque_bloc(b)
         if isinstance(b, piece.Cyl):
-            o.append(f'<circle class="{cls}"{marque} cx="{f(b.cx)}" cy="{f(b.cy)}" r="{f(b.r)}"/>')
+            o.append(f'<circle class="{cls}" cx="{f(b.cx)}" cy="{f(b.cy)}" r="{f(b.r)}"{marque}/>')
         elif b.role == "table":
             o.append(avec(rect(b.x0, b.y0, b.x1, b.y1, cls, M.TABLE["r"]), marque))
         elif b.role == "fauteuil":

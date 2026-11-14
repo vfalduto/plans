@@ -66,6 +66,6 @@ def test_liens_externes_gardes():
 
 
 def test_remarque_finale_et_style():
-    assert 'href="../../salon-v4.html"' in S and "3d/salon" not in S
+    assert 'href="../amenagement/"' in S and "3d/salon" not in S
     for interdit in ("·", "mono", "badge", 'class="cap"'):
         assert interdit not in S

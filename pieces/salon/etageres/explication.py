@@ -24,7 +24,7 @@ from pieces.salon.piece import H
 
 PAS = MO["pas"]
 RA = ET["rainure"]
-SALON = "../../salon-v4.html"
+SALON = "../amenagement/"
 FIXATIONS = "../../archive/salon-bibliotheque-fixation.html"
 
 
