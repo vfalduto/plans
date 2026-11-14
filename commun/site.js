@@ -617,7 +617,8 @@ function blocOption(o) {
   const commande = [...new Set(o.valeurs.map(v => v.groupe))].map(g => (g ? `<h4>${echapper(g)}</h4>` : "") +
     `<div class="${grille}">${o.valeurs.filter(v => v.groupe === g).map(o.type === "choix" ? boutonChoix : bouton).join("")}</div>`).join("");
   // sous les boutons : la valeur choisie (nuancier) ou, pour un choix, la remarque d'une valeur que les rendus ne montrent pas
-  const sous = o.type === "choix" ? '<p class="remarque sans-rendu" hidden>Pas encore rendu : les rendus ne montrent pas ce choix.</p>'
+  // (dans une région role="status", présente dès l'ouverture, pour qu'un lecteur d'écran l'annonce quand elle paraît)
+  const sous = o.type === "choix" ? '<div role="status"><p class="remarque sans-rendu" hidden>Pas encore rendu : les rendus ne montrent pas ce choix.</p></div>'
                                   : '<p class="info"></p>';
   return `<section data-o="${echapper(o.id)}"><h3>${echapper(o.nom)}` +
     (o.surfaces.length ? ` <span>(${echapper(o.surfaces.join(", "))})</span>` : "") + `</h3>${commande}${sous}` +

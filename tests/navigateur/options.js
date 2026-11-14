@@ -256,6 +256,11 @@ async page => {
         portees: ["table", "bois"].map(id => [...s(id).querySelectorAll(".remarque:not(.sans-rendu)")]
           .filter(x => x.checkVisibility()).map(x => x.textContent)),
         grilles: ["table", "bois"].map(id => s(id).querySelectorAll(".choix-opt").length),
+        // la remarque « pas encore rendu » est dans une région annoncée, présente et montrée dès l'ouverture
+        annonces: ["table", "bois"].map(id => {
+          const r = s(id).querySelector(".sans-rendu"), z = r && r.parentElement;
+          return !!z && z.getAttribute("role") === "status" && z !== s(id) && z.checkVisibility();
+        }),
       };
     });
     verifier(JSON.stringify(pc.ordre) === '["teinte","table","bois"]', `choix, panneau : ordre ${pc.ordre}`);
@@ -263,6 +268,7 @@ async page => {
     verifier(JSON.stringify(pc.bois) === JSON.stringify(["chene:rgb(176, 122, 69):Chêne", "noyer:rgb(107, 70, 48):Noyer",
                                                          "frene:rgb(217, 191, 146):Frêne"]), `choix, panneau : bois ${pc.bois}`);
     verifier(pc.infos === 0 && JSON.stringify(pc.grilles) === "[1,1]", `choix, panneau : ${pc.infos} .info, grilles ${pc.grilles}`);
+    verifier(JSON.stringify(pc.annonces) === "[true,true]", `choix, panneau : remarque hors d'une région role="status" ${pc.annonces}`);
     verifier(JSON.stringify(pc.portees) === JSON.stringify([["Visible sur le plan et les coupes ; les rendus montrent la table du quotidien."],
                                                             ["Visible sur les rendus ; le plan et les coupes ne changent pas."]]),
              `choix, panneau : portées ${JSON.stringify(pc.portees)}`);
