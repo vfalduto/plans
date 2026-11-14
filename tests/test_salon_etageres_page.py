@@ -3,6 +3,7 @@ page V1.8 figée (tests/fixtures/salon/salon-etageres.html) et aux dessins de r�
 import json
 import math
 import re
+import subprocess
 from html import escape, unescape
 from html.parser import HTMLParser
 
@@ -10,9 +11,10 @@ import pytest
 
 from commun import modele
 from commun.blocs import euros, total_achats
-from commun.journal import depuis_page
+from commun.journal import depuis_page, entrees
 from pieces.salon.etageres import calculs, dessins, document, vues
-from tests.outils import RACINE, balises
+from tests.outils import RACINE, balises, charger_site
+from tests.test_redirections import _traduire
 
 ANCIENNE = (RACINE / "tests/fixtures/salon/salon-etageres.html").read_text(encoding="utf-8")
 INDEX = json.loads((RACINE / "tests/fixtures/salon/index.json").read_text(encoding="utf-8"))
@@ -535,3 +537,27 @@ def test_ids_uniques_et_classes_du_site():
         assert len(ids) == len(set(ids))
         dessinees = {k for svg in re.findall(r"<svg.*?</svg>", tout, re.S) for k in _classes(svg)}
         assert not dessinees & {"app", "rail", "barre", "contenu", "vue", "scene", "fiche", "element", "outils"}
+
+
+# ------------------------------------------------------------------ tâche 6 : bascule
+def test_bascule():
+    module = charger_site()
+    (salon,) = [p for p in module.SITE.pieces if p.id == "salon"]
+    assert document.DOCUMENT in salon.documents and [d.id for d in salon.documents] == ["amenagement", "etageres", "enfilade"]
+    suivis = subprocess.run(["git", "ls-files", "salon-etageres.html"], cwd=RACINE, capture_output=True, text=True).stdout
+    assert suivis == ""          # just salon peut réécrire la page à la racine : seul compte que git ne la suive plus
+    (r,) = [r for r in module.REDIRECTIONS if r.ancienne == "salon-etageres.html"]
+    assert (r.cible, r.pages) == ("salon/etageres/", {"changements": "salon/etageres/historique.html"})
+    for ancre, fragment in (("dispositions", "explication"), ("iso", "plans?k=iso"), ("meuble", "plans?k=elevation"),
+                            ("presentoir", "explication"), ("rendus", "explication"), ("materiaux", "explication"),
+                            ("debit", "decoupe"), ("charges", "explication"), ("achats", "achats"),
+                            ("montage", "montage"), ("valider", "explication"), ("inconnue", ""), ("", "")):
+        assert _traduire(r, ancre) == fragment
+    # chaque identifiant posé sur un titre de l'ancienne page est traduit (sauf changements, une autre page)
+    assert set(re.findall(r'<h2 id="([^"]+)"', ANCIENNE)) == set(r.ancres)
+
+
+def test_journal_apres_la_bascule():
+    lignes = [e for e in entrees(charger_site().SITE, RACINE) if e.piece == "Salon" and e.document == "Étagères"]
+    assert [(e.version, e.texte) for e in lignes] == [(c.version, c.texte) for c in depuis_page(ANCIENNE)]
+    assert len(lignes) == 9 and {e.lien for e in lignes} == {"salon/etageres/"} and {e.variante for e in lignes} == {"Actuelle"}

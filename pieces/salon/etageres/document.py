@@ -293,3 +293,10 @@ def _document():
                                tuple(Changement(*c) for c in CHANGEMENTS) if i == 0 else ())
                       for i, d in enumerate(DISPOSITIONS))
     return Document("salon", "etageres", "Étagères", "construction", variantes, vues.vues, css=dessins.CSS)
+
+
+def __getattr__(nom):
+    if nom == "DOCUMENT":
+        globals()["DOCUMENT"] = _document()
+        return globals()["DOCUMENT"]
+    raise AttributeError(f"module {__name__!r} has no attribute {nom!r}")
