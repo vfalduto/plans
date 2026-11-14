@@ -449,4 +449,5 @@ a:hover>.pl-piece,a:focus-visible>.pl-piece{fill:color-mix(in srgb,var(--repere)
   .cartes td,.cartes td.d{border:0;padding:1px 0}
   .cartes td[data-l]::before{content:attr(data-l) " ";color:var(--muted);font-size:13px}
   .cartes td.large{grid-column:1 / -1}
+  .cartes td.d{grid-row:1;grid-column:3}
 }

@@ -73,6 +73,22 @@ async page => {
       .map(e => `${e.tagName.toLowerCase()}.${[...e.classList].join(".")} : contenu de ${e.scrollWidth} px dans ${e.clientWidth}`);
   });
 
+  // Cartes du débit (390 px) : dans chaque carte, la quantité (td.d) est sur la rangée du repère (même haut, à deux
+  // pixels près) et à sa droite, au bout de la carte, quel que soit le rang de sa colonne.
+  const quantitesEnTete = p => p.evaluate(() => {
+    const res = [], lignes = [...document.querySelectorAll('section[data-vue="decoupe"] table.cartes tbody tr')];
+    if (!lignes.length) return ["aucune carte de débit"];
+    for (const [i, tr] of lignes.entries()) {
+      const rep = tr.querySelector("td:first-child"), qte = tr.querySelector("td.d");
+      if (!qte) { res.push(`carte ${i + 1} : pas de quantité`); continue; }
+      const a = rep.getBoundingClientRect(), b = qte.getBoundingClientRect(), t = tr.getBoundingClientRect();
+      if (Math.abs(a.top - b.top) > 2 || b.left < a.right || t.right - b.right > 2)
+        res.push(`carte ${i + 1} : repère ${Math.round(a.left)},${Math.round(a.top)}, quantité ${Math.round(b.left)},`
+                 + `${Math.round(b.top)} (bout de carte ${Math.round(t.right)}, quantité finit à ${Math.round(b.right)})`);
+    }
+    return res;
+  });
+
   // chaque partie est vérifiée même si une autre a levé une exception
   const partie = async (nom, f) => {
     lieu = nom;
@@ -256,6 +272,10 @@ async page => {
               verifier(d.length === 0, `${t} : déborde (${d.join(" ; ")})`);
               const caches = await debordementsCaches(page);
               verifier(caches.length === 0, `${t} : déborde dans un cadre défilant (${caches.join(" ; ")})`);
+              if (vue === "decoupe") {
+                const q = await quantitesEnTete(page);
+                verifier(q.length === 0, `${t} : quantité hors de la première rangée (${q.join(" ; ")})`);
+              }
             }
             else {
               const fiche = await page.evaluate(v => {

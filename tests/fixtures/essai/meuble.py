@@ -27,6 +27,8 @@ BOIS, TRAIT, ENCRE = "#D9BF94", "#6B5535", "#4A4038"
 
 COLONNES = (Colonne("Repère", "repere"), Colonne("Pièce"), Colonne("Nb", "nombre"),
             Colonne("Dimensions (cm)", "cote"), Colonne("Matière", "detail"), Colonne("Tirée de", "note"))
+# `escalier` déclare sa quantité après les dimensions (ordre de l'enfilade) : la carte mobile la garde en tête
+COLONNES_ESCALIER = COLONNES[:2] + (COLONNES[3], COLONNES[2]) + COLONNES[4:]
 
 CHAPOS = {
     "actuelle": "Une étagère de chêne sur tasseaux cachés, la tablette du haut plus longue que les deux autres.",
@@ -85,9 +87,14 @@ def _reperes(v):
 
 
 def _debit(v):
-    lignes = [(r, "Tablette", n, f"{nombre(l)} × {nombre(PROFONDEUR)} × {nombre(EPAISSEUR)}", "Chêne massif",
-               "Planche 1") for r, l, n in _reperes(v)]
-    return tableau_debit(COLONNES, lignes, sous_titre="Une ligne par longueur de tablette.")
+    dims = {r: f"{nombre(l)} × {nombre(PROFONDEUR)} × {nombre(EPAISSEUR)}" for r, l, _ in _reperes(v)}
+    if v == "escalier":
+        colonnes = COLONNES_ESCALIER
+        lignes = [(r, "Tablette", dims[r], n, "Chêne massif", "Planche 1") for r, _, n in _reperes(v)]
+    else:
+        colonnes = COLONNES
+        lignes = [(r, "Tablette", n, dims[r], "Chêne massif", "Planche 1") for r, _, n in _reperes(v)]
+    return tableau_debit(colonnes, lignes, sous_titre="Une ligne par longueur de tablette.")
 
 
 def _calepin(v):

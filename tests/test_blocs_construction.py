@@ -109,6 +109,30 @@ def test_tableau_debit():
     assert '<td class="num large" data-l="L &amp; l">3</td>' in amp
 
 
+def test_tableau_debit_une_seule_quantite_et_un_seul_repere():
+    with pytest.raises(ValueError, match=r"« nombre ».*« Qté », « Ép\. ».*cote"):
+        tableau_debit((Colonne("Rep.", "repere"), Colonne("Pièce"), Colonne("Qté", "nombre"),
+                       Colonne("Ép.", "nombre")), [])
+    with pytest.raises(ValueError, match=r"« repere ».*« Rep\. », « Panneau ».*cote"):
+        tableau_debit((Colonne("Rep.", "repere"), Colonne("Panneau", "repere"), Colonne("Pièce")), [])
+    # la quantité déclarée après une cote (Rep., Pièce, L × l, Ép., Qté) : permise, la carte la remet en tête
+    html = tableau_debit((Colonne("Rep.", "repere"), Colonne("Pièce"), Colonne("L × l", "cote"),
+                          Colonne("Ép.", "cote"), Colonne("Qté", "nombre")), [("A", "Joue", "80 × 40", 1.8, 2)])
+    assert html.count('data-l="×"') == 1
+
+
+def test_tableau_debit_cellule_vide():
+    html = tableau_debit((Colonne("Pièce"), Colonne("Matière", "detail"), Colonne("Note", "note")),
+                         [("Joue", None, None)])
+    assert "None" not in html
+    assert '<td class="large" data-l="Matière"></td><td class="large remarque" data-l="Note"></td>' in html
+
+
+def test_carte_de_debit_quantite_en_premiere_rangee():
+    # à 390 px la carte a trois pistes ; la quantité y reste en première rangée, à droite, quel que soit son rang
+    assert re.search(r"\.cartes td\.d\{grid-row:1;grid-column:3\}", CSS)
+
+
 def test_calepinage():
     html = calepinage([Calepin("Panneau 1 & 2", "<svg>1</svg>"), Calepin("Panneau 3", "<svg>3</svg>")])
     assert html.startswith("<h2>Calepinage</h2>")

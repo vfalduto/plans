@@ -73,6 +73,11 @@ def test_meuble_vues_remplies():
     assert '<a class="btn plein" href="#plans">Plans détaillés</a>' in explication
 
 
+def test_meuble_escalier_quantite_apres_les_dimensions():
+    entetes = re.findall(r"<th[^>]*>([^<]+)</th>", _scene(MEUBLE.vues("escalier")["decoupe"]))
+    assert entetes.index("Nb") == entetes.index("Dimensions (cm)") + 1
+
+
 def test_meuble_total_de_l_explication():
     vues = MEUBLE.vues("actuelle")
     total = re.search(r'<p class="total-achats"><span>Total</span><span class="num">([^<]+)</span>',

@@ -65,7 +65,9 @@ def vue_plans(dessins: Sequence[DessinMeuble], titre: str, formule: str = "",
 class Colonne:
     """`sorte` : « repere », « texte », « nombre », « cote », « detail » ou « note ». En carte (mobile), `repere`,
     `texte` (une seule colonne, le nom de la pièce) et `nombre` forment la première rangée ; `cote`, `detail` et `note`
-    prennent chacune une rangée entière, avec leur titre en étiquette."""
+    prennent chacune une rangée entière, avec leur titre en étiquette. `repere` : une seule colonne. `nombre` : la
+    quantité, une seule colonne, écrite « × 2 » en carte et gardée en première rangée quel que soit son rang ; les
+    autres nombres (épaisseur, longueur) sont des `cote`. Une cellule None s'écrit vide."""
     titre: str
     sorte: str = "texte"
 
@@ -74,7 +76,7 @@ SORTES = ("repere", "texte", "nombre", "cote", "detail", "note")
 
 
 def _cellule(colonne, v):
-    texte = nombre(v) if isinstance(v, (int, float)) else _e(v)
+    texte = "" if v is None else nombre(v) if isinstance(v, (int, float)) else _e(v)
     nom = _e(colonne.titre)
     return {
         "repere": f'<td class="num"><b>{texte}</b></td>',
@@ -92,11 +94,12 @@ def tableau_debit(colonnes: Sequence[Colonne], lignes: Sequence[Sequence[str | f
     for c in colonnes:
         if c.sorte not in SORTES:
             raise ValueError(f"colonne « {c.titre} » : sorte « {c.sorte} » inconnue")
-    textes = [c.titre for c in colonnes if c.sorte == "texte"]
-    if len(textes) > 1:
-        # la carte mobile n'a que trois pistes (repère, pièce, nombre) : une deuxième colonne texte la casserait
-        raise ValueError(f"une seule colonne « texte » : déclarer {', '.join(f'« {t} »' for t in textes[1:])}"
-                         " en « detail »")
+    # la carte mobile n'a que trois pistes (repère, pièce, quantité) : une deuxième colonne de ces sortes la casserait
+    for sorte, au_lieu in (("texte", "detail"), ("repere", "cote"), ("nombre", "cote")):
+        titres = [c.titre for c in colonnes if c.sorte == sorte]
+        if len(titres) > 1:
+            raise ValueError(f"une seule colonne « {sorte} » ({', '.join(f'« {t} »' for t in titres)}) : déclarer"
+                             f" {', '.join(f'« {t} »' for t in titres[1:])} en « {au_lieu} »")
     corps = []
     for ligne in lignes:
         if len(ligne) != len(colonnes):
