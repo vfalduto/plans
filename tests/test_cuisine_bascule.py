@@ -5,14 +5,14 @@ import re
 
 import pytest
 
-from commun.modele import Document, Passerelle
+from commun.modele import Document
 from pieces.cuisine.amenagement import document as cuisine_amenagement
 from tests.cuisine_anciens import FIXTURES, ancien
 from tests.outils import RACINE, charger_site
 
 ANCRES = json.loads((FIXTURES / "ancres.json").read_text(encoding="utf-8"))
 HISTORIQUE = "cuisine/amenagement/historique.html"
-ARCHIVES = {"V11.49": "archive/cuisine-v11.49.html", "V12.7": "archive/cuisine-v12.7.html"}
+ARCHIVES = {"V11.49": "archives/cuisine-v11.49.html", "V12.7": "archives/cuisine-v12.7.html"}
 
 
 def _redirections():
@@ -37,7 +37,6 @@ def test_document_dans_site():
     (cuisine,) = [p for p in charger_site().SITE.pieces if p.id == "cuisine"]
     (amenagement,) = cuisine.documents
     assert amenagement is cuisine_amenagement.DOCUMENT and isinstance(amenagement, Document)
-    assert not any(isinstance(d, Passerelle) for d in cuisine.documents)   # « Porte du cellier » : page non migrée
 
 
 def test_trois_redirections():
@@ -92,7 +91,7 @@ def test_porte_liens_reecrits():
     attendu = attendu.replace('de la <a href="cuisine-v13.html">', 'de la <a href="cuisine/amenagement/#explication">')
     page = ancien("porte").page()
     assert page == attendu and "cuisine-v13.html" not in page
-    assert (RACINE / "cuisine-v13-porte-cellier.html").read_text(encoding="utf-8") == page
+    assert (RACINE / "site/cuisine-v13-porte-cellier.html").read_text(encoding="utf-8") == page
 
 
 def test_anciens_fichiers_supprimes():
@@ -100,7 +99,12 @@ def test_anciens_fichiers_supprimes():
                    "cuisine-v13-maquette", "3d/v13/plan.py", "cuisine-v13-3d", "site/cuisine-v13-3d",
                    "site/cuisine-v13-maquette",
                    # ménage du 14/11/2026 : générateurs des versions figées et anciennes pages (redirigées)
-                   "3d/v11", "3d/v12", "3d/cuisine_a.py", "cuisine-plan.html", "cuisine-couleurs.html"):
+                   "3d/v11", "3d/v12", "3d/cuisine_a.py", "cuisine-plan.html", "cuisine-couleurs.html",
+                   # clôture : plus de page, d'images ni de dossier d'archives à la racine du dépôt
+                   "index.html", "archive", "archives", "images", "cuisine-3d", "cuisine-v13-porte-cellier.html"):
         assert not (RACINE / chemin).exists(), chemin
-    for chemin in ("cuisine-3d", "3d/v13/porte.py", "cuisine-v13-porte-cellier.html", "archive", "images"):
+    # la porte du cellier reste servie telle quelle à son ancienne adresse (site/), hors du menu ; les images des
+    # versions figées restent sous site/
+    for chemin in ("site/cuisine-3d", "3d/v13/porte.py", "site/cuisine-v13-porte-cellier.html", "site/archives",
+                   "site/images"):
         assert (RACINE / chemin).exists(), chemin

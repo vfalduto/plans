@@ -41,13 +41,11 @@ def test_construire_ecrit_la_redirection(tmp_path):
     racine = tmp_path / "racine"
     racine.mkdir()
     (racine / "ancienne.html").write_text("<p>ancienne page</p>")
-    (racine / "autre.html").write_text("<p>autre page</p>")
     site = Site(())
     sortie = racine / "site"
     construire(site, (R,), racine, sortie)
     page = (sortie / "ancienne.html").read_text()
     assert "ancienne page" not in page and 'http-equiv="refresh"' in page
-    assert (sortie / "autre.html").read_text() == "<p>autre page</p>"
     # une seconde construction ne change rien
     construire(site, (R,), racine, sortie)
     assert (sortie / "ancienne.html").read_text() == page
@@ -103,3 +101,21 @@ def test_redirections_de_l_entree():
         assert _traduire(r, "coupe-b-b-mur-de-la-salle-de-bain") == "coupes?k=B"
         assert _traduire(r, "coupe-d-d-mur-ouest-de-l-entree") == "coupes?k=D"
         assert _traduire(r, "inconnue") == ""
+
+
+def test_ancien_dossier_archive_redirige_vers_archives():
+    """Chaque page de site/archives/ garde son ancienne adresse archive/<nom>, fragment compris ; cuisine-plan et
+    cuisine-couleurs mènent à leur archive ; la porte du cellier n'est pas redirigée."""
+    from tests.outils import RACINE, charger_site
+    table = {r.ancienne: r for r in charger_site().REDIRECTIONS}
+    pages = sorted(p.name for p in (RACINE / "site" / "archives").glob("*.html"))
+    assert len(pages) > 50
+    for nom in pages:
+        r = table[f"archive/{nom}"]
+        assert r.cible == f"archives/{nom}" and r.garde_fragment
+    assert table["cuisine-plan.html"].cible == "archives/cuisine-plan.html"
+    assert table["cuisine-couleurs.html"].cible == "archives/cuisine-couleurs.html"
+    assert "cuisine-v13-porte-cellier.html" not in table
+    assert (RACINE / "site" / "cuisine-v13-porte-cellier.html").is_file()
+    html = page_redirection(table["archive/sdb-meuble-v4.html"], "archive/sdb-meuble-v4.html")
+    assert '"garde": true' in html and 'href="../archives/sdb-meuble-v4.html"' in html

@@ -19,10 +19,10 @@ from pieces.salon.piece import (BAIE, CLIM, COFFRE, DECROCHE, ENVELOPPE, EP, PAS
 
 VERSION = "V4.26"
 
-# versions figées de l'aménagement, déjà dans archive/ (une copie chacune) : (version affichée par la page, chemin
+# versions figées de l'aménagement, déjà dans archives/ (une copie chacune) : (version affichée par la page, chemin
 # sous site/). La V3.1 est celle que la V4.0 a archivée.
-FIGEES_ANCIENNES = (("V3.1", "archive/salon-amenagement-v3.1.html"), ("V2.1", "archive/salon-amenagement-v2.html"),
-                    ("V1", "archive/salon-amenagement-v1.html"))
+FIGEES_ANCIENNES = (("V3.1", "archives/salon-amenagement-v3.1.html"), ("V2.1", "archives/salon-amenagement-v2.html"),
+                    ("V1", "archives/salon-amenagement-v1.html"))
 
 # coupes de la page (plan.py) : position du plan de coupe
 COUPE_A = 70     # x, regard vers l'ouest : enfilade et étagères

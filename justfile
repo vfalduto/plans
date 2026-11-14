@@ -53,7 +53,7 @@ pages-wait:
 cuisine-amenagement:
     python3 site.py cuisine/amenagement
 
-# Porte du cellier : régénère cuisine-v13-porte-cellier.html depuis pieces/cuisine/modele.py
+# Porte du cellier : régénère site/cuisine-v13-porte-cellier.html (page figée hors du menu) depuis pieces/cuisine/modele.py
 v13-porte:
     python3 3d/v13/porte.py
 

@@ -34,7 +34,7 @@ def test_redirection():
 
 
 def test_journal_garde_seize_changements():
-    lignes = [e for e in entrees(charger_site().SITE, RACINE) if (e.piece, e.document) == ("Salle de bain", "Meuble bas")]
+    lignes = [e for e in entrees(charger_site().SITE) if (e.piece, e.document) == ("Salle de bain", "Meuble bas")]
     assert [e.version for e in lignes] == [c[0] for c in document.CHANGEMENTS]
 
 

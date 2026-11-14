@@ -1,6 +1,6 @@
 # Le modèle du meuble bas : les tests de 3d/sdb/test_bas.py (sauf ceux de l'ancienne page), puis la comparaison avec
 # l'ancien générateur, tant qu'il existe.
-from commun.journal import depuis_page
+from tests.outils import depuis_page
 from pieces.sdb import ancien, piece as P
 from pieces.sdb.meuble_bas import document, modele as B
 from tests.sdb_anciennes import ancien as vieux, page_bas

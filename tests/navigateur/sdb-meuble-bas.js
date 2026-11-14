@@ -240,7 +240,7 @@ async page => {
     const h = await page.evaluate(() => {
       const li = [...document.querySelectorAll("ol.fil li")];
       return {n: li.length, premiere: li.length ? li[0].textContent : "",
-              figees: [...document.querySelectorAll('a[href*="archive/"]')].map(a => a.href)};
+              figees: [...document.querySelectorAll('a[href*="archives/"]')].map(a => a.href)};
     });
     verifier(h.n === 16, `historique : ${h.n} entrées au lieu de 16`);
     verifier(h.premiere.includes("V8.5"), `historique : la première entrée n'est pas en V8.5 : « ${h.premiere.slice(0, 60)} »`);

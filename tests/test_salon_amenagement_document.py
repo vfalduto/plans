@@ -12,7 +12,7 @@ from commun import modele
 from commun.construction import _dessins
 from commun.css_dessins import css_dessins
 from commun.journal import entrees
-from commun.modele import Document, Passerelle, Piece, Site
+from commun.modele import Document, Piece, Site
 from pieces.salon import piece
 from pieces.salon.amenagement import dessins, document, explication, options, textes, vues, zones
 from tests.outils import RACINE, charger_site
@@ -278,15 +278,15 @@ def test_changements_et_journal():
     for c, (version, date, texte) in zip(v.changements, document.CHANGEMENTS, strict=True):
         assert (c.version, c.date, c.texte) == (version, date, texte.replace(" · ", ", "))
     site = Site((Piece("salon", "Salon", (DOC,)),))
-    lignes = [e for e in entrees(site, RACINE) if (e.piece, e.document) == ("Salon", "Aménagement")]
+    lignes = [e for e in entrees(site) if (e.piece, e.document) == ("Salon", "Aménagement")]
     assert len(lignes) == 28 and all(e.variante is None for e in lignes)
 
 
 def test_figees():
     (v,) = DOC.variantes
-    assert v.figees == document.FIGEES_ANCIENNES == (("V3.1", "archive/salon-amenagement-v3.1.html"),
-                                                      ("V2.1", "archive/salon-amenagement-v2.html"),
-                                                      ("V1", "archive/salon-amenagement-v1.html"))
+    assert v.figees == document.FIGEES_ANCIENNES == (("V3.1", "archives/salon-amenagement-v3.1.html"),
+                                                      ("V2.1", "archives/salon-amenagement-v2.html"),
+                                                      ("V1", "archives/salon-amenagement-v1.html"))
     for _, chemin in v.figees:
         assert (RACINE / "site" / chemin).exists(), chemin
 
@@ -392,7 +392,6 @@ def test_document_dans_site_et_ancienne_page_supprimee():
     (salon,) = [p for p in charger_site().SITE.pieces if p.id == "salon"]
     assert [d.id for d in salon.documents] == ["amenagement", "etageres", "enfilade"]
     assert salon.documents[0] is DOC and isinstance(DOC, Document)
-    assert not any(isinstance(d, Passerelle) for d in salon.documents)
     assert not (RACINE / "salon-v4.html").exists() and not (RACINE / "salon-v4-3d").exists()
 
 

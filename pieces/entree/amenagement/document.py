@@ -21,8 +21,8 @@ CACHE_RENDU = CacheRendu(variantes={"principale": ("pieces.entree.piece", "docum
 HUMAINS = {"iso_so": "couloir", "iso_no": "couloir", "iso_se": "entree"}
 
 # versions figées : (version, chemin sous site/)
-FIGEES_ANCIENNES = (("V3.3", "archive/entree-amenagement-v3.3.html"), ("V2", "archive/entree-amenagement-v2.html"),
-                    ("V1", "archive/entree-amenagement-v1.html"))
+FIGEES_ANCIENNES = (("V3.3", "archives/entree-amenagement-v3.3.html"), ("V2", "archives/entree-amenagement-v2.html"),
+                    ("V1", "archives/entree-amenagement-v1.html"))
 
 # Tableau électrique encastré dans le trumeau nord, entre la cuisine et le WC : position et taille à relever
 # (dessiné au milieu du banc, 60 × 80, bas à 95).

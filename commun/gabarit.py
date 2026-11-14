@@ -13,7 +13,7 @@ import posixpath
 from collections.abc import Sequence
 from html import escape
 
-from commun.modele import LECTURE, NOMS_VUES, VUES, Document, Option, Passerelle, Site, Variante, Vue
+from commun.modele import LECTURE, NOMS_VUES, VUES, Document, Option, Site, Variante, Vue
 
 POLICES = ("https://fonts.googleapis.com/css2?family=Fira+Sans:wght@400;500;600;700"
            "&family=Fira+Sans+Condensed:wght@500;600;700&display=swap")
@@ -105,10 +105,8 @@ def relatif(cible: str, depuis: str) -> str:
     return chemin
 
 
-def adresse(doc: Document | Passerelle, variante_id: str = "") -> str:
+def adresse(doc: Document, variante_id: str = "") -> str:
     """Adresse sous site/ : `<piece>/<doc>/` pour la première variante, `<piece>/<doc>/<id>.html` pour les autres."""
-    if isinstance(doc, Passerelle):
-        return doc.page
     ids = [v.id for v in doc.variantes]
     if variante_id and variante_id not in ids:
         raise ValueError(f"{doc.piece}/{doc.id} : variante « {variante_id} » inconnue")
@@ -133,8 +131,7 @@ def menu(site: Site, courant: tuple[str, str] | None, depuis: str) -> str:
             genre = GENRE[d.type]
             titre = d.nom if d.nom == genre else f"{d.nom} ({genre.lower()})"
             actuel = ' aria-current="page"' if ici and courant[1] == d.id else ""
-            version = (f'<span class="num txt">{_e(d.variantes[0].version)}</span>'
-                       if isinstance(d, Document) else "")
+            version = f'<span class="num txt">{_e(d.variantes[0].version)}</span>'
             docs.append(f'<li><a href="{_e(relatif(adresse(d), depuis))}" title="{_e(titre)}"{actuel}>'
                         f'{icone(d.type)}<span class="txt">{_e(d.nom)}</span>{version}</a></li>')
         arbre.append(

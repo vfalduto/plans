@@ -20,7 +20,7 @@ def test_changements():
 
 def test_versions_figees_dans_archive():
     for version, chemin in amenagement.FIGEES_ANCIENNES:
-        html = (RACINE / chemin).read_text(encoding="utf-8")
+        html = (RACINE / "site" / chemin).read_text(encoding="utf-8")
         assert f"Salon · {version} ·" in html
 
 

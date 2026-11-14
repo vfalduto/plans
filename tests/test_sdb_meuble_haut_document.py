@@ -19,7 +19,7 @@ def test_document():
         ("sdb", "meuble-haut", "Meuble haut", "construction", dessins.CSS_DOCUMENT, vues.vues, ())
     (v,) = d.variantes
     assert (v.id, v.nom, v.version, v.figees) == ("", "Meuble haut", "V6.4", document.FIGEES)
-    assert v.figees[0] == ("V6.2", "archive/sdb-meuble-v4-haut.html")
+    assert v.figees[0] == ("V6.2", "archives/sdb-meuble-v4-haut.html")
     assert len(v.changements) == 2 and v.changements[0].version == "V6.4"
 
 
@@ -31,7 +31,7 @@ def test_changements_comme_modele_py():
 
 def test_archives_existent():
     for _, chemin in document.FIGEES:
-        assert (RACINE / chemin).is_file(), chemin
+        assert (RACINE / "site" / chemin).is_file(), chemin
 
 
 def test_site_declare_le_meuble_haut():
@@ -54,7 +54,7 @@ def test_redirection_des_achats():
 
 
 def test_journal_garde_deux_changements():
-    lignes = [e for e in entrees(charger_site().SITE, RACINE) if (e.piece, e.document) == ("Salle de bain", "Meuble haut")]
+    lignes = [e for e in entrees(charger_site().SITE) if (e.piece, e.document) == ("Salle de bain", "Meuble haut")]
     assert [e.version for e in lignes] == ["V6.4", "V6.3"]
     assert [(e.version, e.texte) for e in lignes] == [(c.version, c.texte) for c in document.DOCUMENT.variantes[0].changements]
 

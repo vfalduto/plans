@@ -275,8 +275,8 @@ async page => {
     verifier(r.hash === "" && egal(r.vues, ["plan"]), `ancre inconnue : ${JSON.stringify(r)}`);
     r = await suivre("/cuisine-v13.html#changements", "/cuisine/amenagement/historique.html");
     verifier(r.hash === "", `ancienne ancre « changements » : ${JSON.stringify(r)}`);
-    r = await suivre("/cuisine-v13.html#V12.7", "/archive/cuisine-v12.7.html");
-    verifier(r.chemin === "/archive/cuisine-v12.7.html", `ancienne ancre V12.7 : ${JSON.stringify(r)}`);
+    r = await suivre("/cuisine-v13.html#V12.7", "/archives/cuisine-v12.7.html");
+    verifier(r.chemin === "/archives/cuisine-v12.7.html", `ancienne ancre V12.7 : ${JSON.stringify(r)}`);
     r = await suivre("/cuisine-v13-imprimable.html", "/cuisine/amenagement/imprimable.html");
     verifier(r.chemin === "/cuisine/amenagement/imprimable.html", `ancienne imprimable : ${JSON.stringify(r)}`);
   });

@@ -16,7 +16,7 @@ M, cm = H.M, H.cm
 def _chapo() -> str:
     return (f"Le caisson de {cm(M.Z_HAUT)} à {cm(M.Z_HAUT1)}, au-dessus de la niche : serviettes au nord, pharmacie au "
             f"sud, {H.lettres(H.N_PORTES)} portes coulissantes, fileur jusqu'au plafond. Chevillé au mur du fond, "
-            'au-dessus du carrelage. <a href="../../archive/sdb-meuble-v4-haut.html">La version précédente</a> reste dans '
+            'au-dessus du carrelage. <a href="../../archives/sdb-meuble-v4-haut.html">La version précédente</a> reste dans '
             "les archives.")
 
 

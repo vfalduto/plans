@@ -1,10 +1,10 @@
-"""Construction de site/ : pages des documents, historiques, journal, accueil, fichiers communs et passerelle.
+"""Construction de site/ : pages des documents, historiques, journal, accueil, fichiers communs et redirections.
 
 site.py déclare les pièces et les documents, puis appelle `commande`. Tout s'écrit dans `sortie` (site/), rien
 ailleurs. Un fichier n'est réécrit que si son contenu change.
 
-site/ n'est jamais vidé : il garde ce qui ne se régénère pas (versions figées et archive/figees.json, rendus copiés
-par les recettes de rendu).
+site/ n'est jamais vidé : il garde ce qui ne se régénère pas (archives/ : pages figées, versions figées et
+archives/figees.json ; rendus copiés par les recettes de rendu ; images des archives ; page de la porte du cellier).
 """
 import json
 import math
@@ -17,13 +17,12 @@ import zlib
 from collections import Counter
 from html import escape, unescape
 from pathlib import Path
-from urllib.parse import unquote
 
 from commun.appartement import plan_appartement
 from commun.css_dessins import css_dessins
 from commun.gabarit import MOIS, adresse, menu, page_document, page_simple, relatif
 from commun.journal import entrees
-from commun.modele import Document, Passerelle, Site, Variante, verifier
+from commun.modele import Document, Site, Variante, verifier
 from commun.redirections import page_redirection
 
 USAGE = """Construction de site/ :
@@ -33,10 +32,7 @@ USAGE = """Construction de site/ :
 
 COMMUNS = ("commun/site.css", "commun/site.js")
 
-# écrits par la construction : la passerelle ne les copie jamais depuis la racine
-GENERES = frozenset({"index.html", "journal.html", "favicon.svg", "apple-touch-icon.png", *COMMUNS})
-
-FIGEES = "archive/figees.json"
+FIGEES = "archives/figees.json"
 
 MOIS_COURTS = ("janv.", "févr.", "mars", "avr.", "mai", "juin", "juil.", "août", "sept.", "oct.", "nov.", "déc.")
 
@@ -100,53 +96,9 @@ def _pluriel(n: int, mot: str) -> str:
     return f"{n} {mot}{'' if n == 1 else 's'}"
 
 
-# ------------------------------------------------------------------ passerelle
+# ------------------------------------------------------------------ adresses
 
-ATTRIBUT = re.compile(r"""\b(?:src|href)\s*=\s*(["'])(.*?)\1""", re.S | re.I)
-SCHEMA = re.compile(r"^[a-z][a-z0-9+.-]*:", re.I)
-
-
-def _references(html: str) -> list[str]:
-    """Chemins relatifs des attributs src et href, sans fragment ni requête (ni #…, http…, data:…, /…)."""
-    res = []
-    for _, v in ATTRIBUT.findall(html):
-        v = unescape(v).strip()
-        if not v or v.startswith(("#", "/")) or SCHEMA.match(v):
-            continue
-        v = unquote(v.split("#", 1)[0].split("?", 1)[0])
-        if v:
-            res.append(v)
-    return res
-
-
-def copier_passerelle(racine: Path, sortie: Path, exclues: set[str]) -> list[str]:
-    """Recopie dans `sortie`, au même chemin, les pages pas encore migrées et les fichiers locaux qu'elles citent.
-
-    Pages : chaque *.html de la racine (sauf index.html) et de archive/. `exclues` : chemins (relatifs à la racine)
-    jamais copiés, ni comme page ni comme fichier cité. Renvoie les chemins de la passerelle, triés."""
-    racine, sortie = Path(racine).resolve(), Path(sortie).resolve()
-    hors = set(exclues) | {"index.html"}
-    pages = sorted(racine.glob("*.html")) + sorted((racine / "archive").glob("*.html"))
-    fichiers: dict[str, Path] = {}
-    for page in pages:
-        rel = page.relative_to(racine).as_posix()
-        if rel in hors:
-            continue
-        fichiers[rel] = page
-        dossier = posixpath.dirname(rel)
-        for ref in _references(page.read_text(encoding="utf-8", errors="replace")):
-            cible = posixpath.normpath(posixpath.join(dossier, ref))
-            if cible in hors or cible in fichiers or any(p.startswith(".") for p in cible.split("/")):
-                continue   # exclu, déjà vu, hors de la racine (« .. ») ou caché (.git)
-            source = racine / cible
-            if not source.is_file():
-                continue
-            vrai = source.resolve()
-            if vrai.is_relative_to(racine) and not vrai.is_relative_to(sortie):
-                fichiers[cible] = source
-    for rel, source in fichiers.items():
-        _copier(source, sortie / rel)
-    return sorted(fichiers)
+SCHEMA = re.compile(r"^[a-z][a-z0-9+.-]*:", re.I)   # « https: », « data: »…
 
 
 # ------------------------------------------------------------------ icônes
@@ -253,7 +205,7 @@ FILTRE = """<script>
 
 # ------------------------------------------------------------------ documents et historiques
 
-def _trouver(site: Site, chemin: str) -> Document | Passerelle:
+def _trouver(site: Site, chemin: str) -> Document:
     parties = chemin.strip("/").split("/")
     if len(parties) == 2:
         for piece in site.pieces:
@@ -292,7 +244,7 @@ def _cle(doc: Document, variante: Variante) -> str:
 
 
 def _figees(doc: Document, variante: Variante, table: dict) -> list[tuple[str, str]]:
-    """Versions figées d'une variante : celles qu'elle déclare, puis celles de archive/figees.json."""
+    """Versions figées d'une variante : celles qu'elle déclare, puis celles de archives/figees.json."""
     liste = list(variante.figees)
     for version, chemin in table.get(_cle(doc, variante), []):
         if version not in {v for v, _ in liste}:
@@ -333,7 +285,7 @@ def _rafraichir_menus(site: Site, sortie: Path, sauf: tuple[str, str]) -> None:
     """Remplace le menu des pages déjà construites des autres documents (version affichée, documents ajoutés)."""
     for piece in site.pieces:
         for doc in piece.documents:
-            if not isinstance(doc, Document) or (doc.piece, doc.id) == sauf:
+            if (doc.piece, doc.id) == sauf:
                 continue
             for depuis in [adresse(doc, v.id) for v in doc.variantes] + [_adresse_historique(doc)]:
                 f = _fichier(sortie, depuis)
@@ -344,8 +296,8 @@ def _rafraichir_menus(site: Site, sortie: Path, sauf: tuple[str, str]) -> None:
 
 # ------------------------------------------------------------------ journal et accueil
 
-def _ecrire_journal(site: Site, racine: Path, sortie: Path) -> None:
-    lignes = entrees(site, racine)
+def _ecrire_journal(site: Site, sortie: Path) -> None:
+    lignes = entrees(site)
     ids = {p.nom: p.id for p in site.pieces}
     comptes = Counter(ids[e.piece] for e in lignes)
     jours: dict[str, list] = {}
@@ -388,25 +340,18 @@ def _ecrire_annexe(doc: Document, annexe, sortie: Path) -> None:
 
 
 def construire(site: Site, redirections, racine: Path, sortie: Path, seulement: str | None = None) -> None:
-    """Écrit site/ : passerelle, fichiers communs, pages et historiques des documents, journal et accueil.
+    """Écrit site/ : redirections, fichiers communs, pages et historiques des documents, journal et accueil.
 
     `seulement` (« <piece>/<document> ») : ce document, le menu des autres pages déjà construites, l'accueil et le
-    journal. Chaque `Redirection` écrit une page à l'ancienne adresse, exclue de la passerelle."""
+    journal. Chaque `Redirection` écrit une page à l'ancienne adresse (reconstruites avec tout le site seulement)."""
     racine, sortie = Path(racine), Path(sortie)
-    exclues = {r.ancienne for r in redirections} | GENERES
     if seulement is None:
-        copier_passerelle(racine, sortie, exclues)
         _ecrire_redirections(redirections, sortie)
-        documents = [d for p in site.pieces for d in p.documents if isinstance(d, Document)]
+        documents = [d for p in site.pieces for d in p.documents]
     else:
         cible = _trouver(site, seulement)
-        if isinstance(cible, Passerelle):
-            copier_passerelle(racine, sortie, exclues)
-            _ecrire_redirections(redirections, sortie)
-            documents = []
-        else:
-            documents = [cible]
-            _rafraichir_menus(site, sortie, sauf=(cible.piece, cible.id))
+        documents = [cible]
+        _rafraichir_menus(site, sortie, sauf=(cible.piece, cible.id))
     _fichiers_communs(racine, sortie)
     table = _lire_figees(sortie)
     for doc in documents:
@@ -419,7 +364,7 @@ def construire(site: Site, redirections, racine: Path, sortie: Path, seulement: 
             _ecrire(_fichier(sortie, adresse(doc, doc.variantes[0].id)).parent / "dessins.css",
                     css_dessins(doc.css, dessins, f".d-{doc.piece}") + "\n")
         _ecrire_historique(site, doc, table, sortie)
-    _ecrire_journal(site, racine, sortie)
+    _ecrire_journal(site, sortie)
     _ecrire_accueil(site, sortie)
 
 
@@ -452,7 +397,7 @@ def _rebaser(url: str, depuis: str, vers: str) -> str:
 
 
 def _page_figee(site: Site, doc: Document, variante: Variante, html: str, depuis: str, vers: str) -> str:
-    """La page d'une variante, écrite pour `depuis`, telle qu'elle se lit dans archive/<nom>/ (`vers`).
+    """La page d'une variante, écrite pour `depuis`, telle qu'elle se lit dans archives/<nom>/ (`vers`).
 
     - `body` porte `data-figee="<version>"` ;
     - plus de choix de variante, de « Comparer » ni de « avec », et #variantes ne garde que cette variante ;
@@ -486,18 +431,18 @@ def _page_figee(site: Site, doc: Document, variante: Variante, html: str, depuis
 
 
 def figer(site: Site, racine: Path, sortie: Path, cible: str) -> Path:
-    """Copie la page en cours d'une variante et ses rendus/ dans archive/<piece>-<document>[-<variante>]-<version>/.
+    """Copie la page en cours d'une variante et ses rendus/ dans archives/<piece>-<document>[-<variante>]-<version>/.
 
     La variante est la première si `cible` ne la nomme pas ; son id n'entre dans le nom du dossier que si ce n'est
     pas la première (comme dans les adresses). La version est mise en minuscules, comme les archives existantes
-    (entree-amenagement-v3.3.html). L'entrée [version, chemin] s'ajoute à archive/figees.json, sous la clé
+    (entree-amenagement-v3.3.html). L'entrée [version, chemin] s'ajoute à archives/figees.json, sous la clé
     <piece>/<document>/<variante>, une seule fois par version. La page est d'abord régénérée depuis les sources, puis
     adaptée à l'archive par `_page_figee` (pas de comparaison, aucun lien mort)."""
     sortie = Path(sortie)
     parties = cible.strip("/").split("/")
-    doc = _trouver(site, "/".join(parties[:2])) if len(parties) in (2, 3) else None
-    if not isinstance(doc, Document):
-        raise CibleInconnue(f"« {cible} » : pas un document migré (attendu : <piece>/<document>[/<variante>])")
+    if len(parties) not in (2, 3):
+        raise CibleInconnue(f"« {cible} » : attendu <piece>/<document>[/<variante>]")
+    doc = _trouver(site, "/".join(parties[:2]))
     if len(parties) == 2:
         variante = doc.variantes[0]
     else:
@@ -507,9 +452,9 @@ def figer(site: Site, racine: Path, sortie: Path, cible: str) -> Path:
     page = _ecrire_variante(site, doc, variante, sortie)
     premiere = variante.id == doc.variantes[0].id
     nom = "-".join([doc.piece, doc.id] + ([] if premiere else [variante.id]) + [variante.version.lower()])
-    dossier = sortie / "archive" / nom
+    dossier = sortie / "archives" / nom
     html = _page_figee(site, doc, variante, page.read_text(encoding="utf-8"), adresse(doc, variante.id),
-                       f"archive/{nom}/")
+                       f"archives/{nom}/")
     _ecrire(dossier / "index.html", html)
     if doc.css:   # la copie figée est autonome : son propre dessins.css, filtré sur toutes les variantes
         scenes = [d for v in doc.variantes for d in _dessins(doc.generer(v.id))]
@@ -519,7 +464,7 @@ def figer(site: Site, racine: Path, sortie: Path, cible: str) -> Path:
         shutil.copytree(rendus, dossier / "rendus", dirs_exist_ok=True)
     table = _lire_figees(sortie)
     liste = [e for e in table.get(_cle(doc, variante), []) if e[0] != variante.version]
-    liste.append([variante.version, f"archive/{nom}/"])
+    liste.append([variante.version, f"archives/{nom}/"])
     table[_cle(doc, variante)] = sorted(liste, key=lambda e: _cle_version(e[0]), reverse=True)
     lignes = (f" {json.dumps(cle, ensure_ascii=False)}: {json.dumps(v, ensure_ascii=False)}"
               for cle, v in sorted(table.items()))

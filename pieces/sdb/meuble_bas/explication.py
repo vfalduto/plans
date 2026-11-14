@@ -144,7 +144,7 @@ def vue_explication() -> Vue:
              (prix(B.total()), "Meuble bas entier"),
              (str(sum(q for _, _, q, _, _ in B.PIECES_DEBIT)), "Panneaux à découper"),
              (str(len(etapes_montage())), "Étapes de montage")]
-    return vue_lecture("explication", tete(f"""Trois joues et un fond en mélaminé blanc de {B.cm(B.EP)}, levés sur des vérins, portent directement un plateau en chêne de {B.PLATEAU_P} de profondeur sur toute la longueur, sans aucune fixation au mur. À côté de la machine, un placard à deux étages reçoit deux bacs à linge, derrière une porte découpée en U pour jeter le linge sans l'ouvrir. Une colonne de prises en diagonale monte dans l'angle jusqu'au meuble haut. <a href="../../archive/sdb-meuble-v4-bas.html">L'ancien meuble bas</a> reste dans les archives.""") + chiffres(stats) + _structure() + _colonne() + _mesures()
+    return vue_lecture("explication", tete(f"""Trois joues et un fond en mélaminé blanc de {B.cm(B.EP)}, levés sur des vérins, portent directement un plateau en chêne de {B.PLATEAU_P} de profondeur sur toute la longueur, sans aucune fixation au mur. À côté de la machine, un placard à deux étages reçoit deux bacs à linge, derrière une porte découpée en U pour jeter le linge sans l'ouvrir. Une colonne de prises en diagonale monte dans l'angle jusqu'au meuble haut. <a href="../../archives/sdb-meuble-v4-bas.html">L'ancien meuble bas</a> reste dans les archives.""") + chiffres(stats) + _structure() + _colonne() + _mesures()
                        + _a_verifier()
                        + note_source("Repère : origine à l'angle nord-ouest intérieur, x vers l'est, y vers le sud, z "
                                      "depuis le sol, cotes en cm. Cotes et données : pieces/sdb/piece.py pour la pièce, "

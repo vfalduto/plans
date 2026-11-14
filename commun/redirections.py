@@ -25,6 +25,7 @@ class Redirection:
     ancres: dict[str, str] = field(default_factory=dict)
     motifs: tuple[tuple[str, str], ...] = ()
     pages: dict[str, str] = field(default_factory=dict)
+    garde_fragment: bool = False   # sans traduction, le fragment passe tel quel (page déplacée sans changer de contenu)
 
 
 SCRIPT = """\
@@ -34,6 +35,7 @@ SCRIPT = """\
   var a = function (table) { return Object.prototype.hasOwnProperty.call(table, id); };
   if (a(t.pages)) { location.replace(t.pages[id]); return; }
   if (a(t.ancres)) frag = t.ancres[id];
+  else if (t.garde) frag = location.hash.slice(1);
   else for (var i = 0; id && i < t.motifs.length; i++) {
     var m = new RegExp(t.motifs[i][0]).exec(id);
     if (m) { frag = t.motifs[i][1].replace(/\\{(\\d+)\\}/g, function (_, n) { return (m[n] || "").toUpperCase(); }); break; }
@@ -51,7 +53,7 @@ def page_redirection(r: Redirection, depuis: str) -> str:
     """Page écrite à `depuis` (chemin relatif à site/) : `meta refresh` vers la cible sans fragment, plus un script qui
     traduit `location.hash` (autre page, ancre exacte, puis motifs, sinon aucun fragment) et un lien visible."""
     cible = relatif(r.cible, depuis)
-    donnees = {"cible": cible, "ancres": r.ancres, "motifs": [list(m) for m in r.motifs],
+    donnees = {"cible": cible, "garde": r.garde_fragment, "ancres": r.ancres, "motifs": [list(m) for m in r.motifs],
                "pages": {ancre: relatif(page, depuis) for ancre, page in r.pages.items()}}
     return f"""<!doctype html>
 <html lang="fr">

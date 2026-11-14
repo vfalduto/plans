@@ -4,8 +4,12 @@ import importlib.util
 import json
 import subprocess
 import sys
+import re
+from html import unescape
 from html.parser import HTMLParser
 from pathlib import Path
+
+from commun.modele import Changement
 
 RACINE = Path(__file__).resolve().parent.parent
 
@@ -60,3 +64,39 @@ def verifier_empreinte(*noms):
                                check=True, env={"PYTHONHASHSEED": str(graine), "PATH": ""}).stdout.strip()
                 for graine in (1, 2)]
     assert ailleurs == [ici, ici]
+
+
+# lecture du tableau « Changements » d'une ancienne page (fixtures), pour le confronter au modèle
+def _texte(h):
+    return unescape(re.sub(r"\s+", " ", re.sub(r"<[^>]+>", "", h))).strip()
+
+
+def _section_changements(html):
+    """Contenu de la section <h2> « Changements », jusqu'au <h2> suivant."""
+    parts = re.split(r"<h2[^>]*>(.*?)</h2>", html, flags=re.S)
+    for i in range(1, len(parts), 2):
+        if _texte(parts[i]) == "Changements":
+            return parts[i + 1]
+    return ""
+
+
+def depuis_page(html: str) -> list[Changement]:
+    """Lignes datées jj/mm/aaaa du premier tableau de la section « Changements »."""
+    tables = re.findall(r"<table\b.*?</table>", _section_changements(html), flags=re.S)
+    if not tables:
+        return []
+    res = []
+    for tr in re.findall(r"<tr[^>]*>(.*?)</tr>", tables[0], flags=re.S):
+        cellules = [_texte(c) for c in re.findall(r"<t[dh][^>]*>(.*?)</t[dh]>", tr, flags=re.S)]
+        if len(cellules) >= 3 and re.match(r"\d\d/\d\d/\d{4}", cellules[1]):
+            res.append(Changement(cellules[0], cellules[1][:10], cellules[2]))
+    return res
+
+
+def version_depuis_page(html: str) -> str | None:
+    """Dernier morceau (après « · ») du premier `class="kicker"` qui commence par V."""
+    for m in re.finditer(r'class="kicker"[^>]*>(.*?)</div>', html, flags=re.S):
+        morceau = _texte(m.group(1)).split("·")[-1].strip()
+        if morceau.startswith("V"):
+            return morceau
+    return None

@@ -12,7 +12,8 @@ import pytest
 
 from commun import modele
 from commun.blocs import euros, total_achats
-from commun.journal import depuis_page, entrees
+from commun.journal import entrees
+from tests.outils import depuis_page
 from pieces.salon.etageres import calculs, dessins, document, vues
 from tests.outils import RACINE, balises, charger_site
 from tests.test_redirections import _traduire
@@ -488,7 +489,7 @@ def test_rien_ne_se_perd_chapo_et_remarque():
         assert _texte(_blocs(c)[0]) in s
         assert ("Repère : origine au coin nord-ouest du salon, y vers le sud, z depuis le sol, cotes en cm. Dimensions : "
                 "pieces/salon/etageres/document.py (DISPOSITIONS). Le reste du salon : plan du salon.") in s
-        assert 'href="../../archive/salon-bibliotheque-fixation.html"' in _explication(c)
+        assert 'href="../../archives/salon-bibliotheque-fixation.html"' in _explication(c)
 
 
 # ------------------------------------------------------------------ tâche 5 : document et contrôles de la page
@@ -536,7 +537,7 @@ def test_aucun_interdit():
 
 def test_liens():
     permis = {"./#explication", "rangs.html#explication", "decalee.html#explication", "escalier.html#explication",
-              "../amenagement/", "../../archive/salon-bibliotheque-fixation.html", "historique.html"}
+              "../amenagement/", "../../archives/salon-bibliotheque-fixation.html", "historique.html"}
     for c, vs in TOUT.items():
         for v in vs.values():
             for e in v.elements:
@@ -573,7 +574,7 @@ def test_bascule():
 
 
 def test_journal_apres_la_bascule():
-    lignes = [e for e in entrees(charger_site().SITE, RACINE) if e.piece == "Salon" and e.document == "Étagères"]
+    lignes = [e for e in entrees(charger_site().SITE) if e.piece == "Salon" and e.document == "Étagères"]
     assert [(e.version, e.texte) for e in lignes] == [(c.version, c.texte) for c in depuis_page(ANCIENNE)]
     assert len(lignes) == 9 and {e.lien for e in lignes} == {"salon/etageres/"} and {e.variante for e in lignes} == {"Actuelle"}
 

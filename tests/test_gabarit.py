@@ -8,7 +8,7 @@ from outils import RACINE, balises
 
 from commun.css_dessins import css_dessins
 from commun.gabarit import adresse, menu, page_document, page_simple, relatif
-from commun.modele import VUES, Option, Passerelle, Piece, Site, Valeur
+from commun.modele import VUES, Option, Piece, Site, Valeur
 
 
 def _charger_essai():
@@ -70,7 +70,6 @@ def test_adresses():
     assert adresse(DOC, "a") == "essai/amenagement/"
     assert adresse(DOC) == "essai/amenagement/"
     assert adresse(DOC, "b") == "essai/amenagement/b.html"
-    assert adresse(Passerelle("essai", "porte", "Porte", "construction", "essai-porte.html")) == "essai-porte.html"
 
     assert relatif("commun/site.css", "essai/amenagement/b.html") == "../../commun/site.css"
     assert relatif("commun/site.css", "essai/amenagement/") == "../../commun/site.css"
@@ -97,14 +96,14 @@ def test_menu_courant():
 
 def test_choix_du_document():
     assert not balises(_page(), "select", id="c-doc")
-    porte = Passerelle("essai", "porte", "Porte", "construction", "essai-porte.html")
+    porte = dataclasses.replace(DOC, id="porte", nom="Porte", type="construction")
     site = Site((Piece("essai", "Essai", (DOC, porte)),))
     v = DOC.variantes[1]
     page = page_document(site, DOC, v, DOC.generer(v.id))
     assert balises(page, "select", id="c-doc")
     assert [(o["value"], "selected" in o) for o in balises(_entre(page, 'id="c-doc"', "</select>"), "option")] == [
-        ("./", True), ("../../essai-porte.html", False)]
-    assert balises(menu(site, None, "index.html"), "a", href="essai-porte.html", title="Porte (construction)")
+        ("./", True), ("../porte/", False)]
+    assert balises(menu(site, None, "index.html"), "a", href="essai/porte/", title="Porte (construction)")
 
 
 def test_sans_js():

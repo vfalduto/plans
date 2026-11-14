@@ -10,8 +10,8 @@ CHANGEMENTS = [
     ("V6.3", "04/11/2026", "Meuble haut sorti en page autonome, avec sa propre découpe et ses propres achats ; les autres documents du meuble linge sont archivés."),
 ]
 
-# version figée du meuble haut (archive/), puis celles des deux meubles ; libellé : texte du lien de l'historique
-FIGEES = (("V6.2", "archive/sdb-meuble-v4-haut.html"),) + FIGEES_COMMUNES
+# version figée du meuble haut (archives/), puis celles des deux meubles ; libellé : texte du lien de l'historique
+FIGEES = (("V6.2", "archives/sdb-meuble-v4-haut.html"),) + FIGEES_COMMUNES
 
 
 def _document():

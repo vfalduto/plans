@@ -24,12 +24,12 @@ CHANGEMENTS = [
     ("V7.0", "04/11/2026", "Conception reprise de zéro : alcôve, mesures et machine en place. L'ancien meuble bas (V6.2) reste dans les archives."),
 ]
 
-# versions figées du meuble bas (archive/), puis celles des deux meubles ; libellé : texte du lien de l'historique
+# versions figées du meuble bas (archives/), puis celles des deux meubles ; libellé : texte du lien de l'historique
 FIGEES = (
-    ("V6.2", "archive/sdb-meuble-v4-bas.html"),
-    ("Variantes V1.0", "archive/sdb-meuble-variantes.html"),
-    ("Niveaux de finition V1.0", "archive/sdb-meuble-niveaux.html"),
-    ("Revue V1.0", "archive/sdb-meuble-bas-revue.html"),
+    ("V6.2", "archives/sdb-meuble-v4-bas.html"),
+    ("Variantes V1.0", "archives/sdb-meuble-variantes.html"),
+    ("Niveaux de finition V1.0", "archives/sdb-meuble-niveaux.html"),
+    ("Revue V1.0", "archives/sdb-meuble-bas-revue.html"),
 ) + FIGEES_COMMUNES
 
 

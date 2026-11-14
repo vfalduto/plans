@@ -17,7 +17,7 @@ CACHE_RENDU = CacheRendu(variantes={"": ("pieces.cuisine.piece", "pieces.cuisine
                                "3d/rendu.py"))
 
 # versions figées : (version, chemin sous site/)
-FIGEES = (("V11.49", "archive/cuisine-v11.49.html"), ("V12.7", "archive/cuisine-v12.7.html"))
+FIGEES = (("V11.49", "archives/cuisine-v11.49.html"), ("V12.7", "archives/cuisine-v12.7.html"))
 
 
 def _texte_changement(texte: str) -> str:

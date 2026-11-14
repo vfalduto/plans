@@ -15,7 +15,7 @@ from pieces.chambre.piece import (CAMERAS, CLIM, DECROCHE, EP, FENETRE, H, H_POR
 VERSION = "V2.1"
 
 # versions figées : (version, chemin sous site/)
-FIGEES_ANCIENNES = (("V1.2", "archive/chambre-amenagement-v1.2.html"),)
+FIGEES_ANCIENNES = (("V1.2", "archives/chambre-amenagement-v1.2.html"),)
 
 CHANGEMENTS = [
     ("V2.1", "04/10/2026", "Précisions du client. Lit sur sommier sans cadre : 160 × 200, pieds 22, sommier 25, matelas 35 (dessus à 82) ; tête de lit fixée au mur (168 × 4, de 50 à 140). Le pied du lit passe à 47 cm, 75 entre le lit et le plan. Chevets à 70 de haut, appliques à 140, prises à 85. Pas de radiateur ; ajout de la clim au plafond, mur nord, contre le décroché."),

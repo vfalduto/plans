@@ -10,7 +10,8 @@ from commun import modele
 from commun.appartement import APPART, contours
 from commun.blocs import nombre
 from commun.dessin import f
-from commun.journal import depuis_page, entrees
+from commun.journal import entrees
+from tests.outils import depuis_page
 from pieces.chambre import piece
 from pieces.chambre.amenagement import dessin, document, vues
 from tests.outils import RACINE, balises, charger_site
@@ -371,6 +372,6 @@ def test_bascule():
         assert _traduire(r, ancre) == fragment
 
 def test_journal_apres_la_bascule():
-    lignes = [e for e in entrees(charger_site().SITE, RACINE) if e.piece == "Chambre"]
+    lignes = [e for e in entrees(charger_site().SITE) if e.piece == "Chambre"]
     assert [(e.version, e.texte) for e in lignes] == [(c.version, c.texte) for c in depuis_page(ANCIENNE)]
     assert {e.lien for e in lignes} == {"chambre/amenagement/"} and {e.variante for e in lignes} == {None}

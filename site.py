@@ -4,9 +4,9 @@
   python3 site.py <piece>/<document>                       reconstruit ce document, le menu, l'accueil et le journal
   python3 site.py --figer <piece>/<document>[/<variante>]  fige la version en cours d'une variante
 
-Un document pas encore migré est une Passerelle vers sa page actuelle, recopiée telle quelle dans site/ ; un document
-migré est le Document de pieces/<piece>/<document>/document.py, et son ancienne page devient une Redirection. Toute la
-logique est dans commun/construction.py (`import site` donne le module standard de Python : ne rien importer d'ici).
+Chaque document est le Document de pieces/<piece>/<document>/document.py, et son ancienne page est une Redirection.
+Ce que la construction ne régénère pas vit dans site/ : archives/ (pages figées), la page de la porte du cellier
+(3d/v13/porte.py), les images des archives. Toute la logique est dans commun/construction.py (`import site` donne le module standard de Python : ne rien importer d'ici).
 """
 import sys
 from pathlib import Path
@@ -106,8 +106,8 @@ _FIGEES_V12_7 = (
     "contenu-des-rangements-v12-7", "capacite-v11-34-v12-7-et-proposition-9-a-v12-7", "changements-V12.7",
     "br-V12.7", "V12.7")
 PAGES_CUISINE = {"changements": "cuisine/amenagement/historique.html",
-                 **{a: "archive/cuisine-v11.49.html" for a in _FIGEES_V11_49},
-                 **{a: "archive/cuisine-v12.7.html" for a in _FIGEES_V12_7}}
+                 **{a: "archives/cuisine-v11.49.html" for a in _FIGEES_V11_49},
+                 **{a: "archives/cuisine-v12.7.html" for a in _FIGEES_V12_7}}
 
 REDIRECTIONS = (
     Redirection("entree-amenagement.html", "entree/amenagement/", ANCRES_ENTREE, COUPES, HISTORIQUE_ENTREE),
@@ -130,11 +130,14 @@ REDIRECTIONS = (
     Redirection("cuisine-v13.html", "cuisine/amenagement/", ANCRES_CUISINE, MOTIFS_CUISINE, PAGES_CUISINE),
     Redirection("cuisine-v13-imprimable.html", "cuisine/amenagement/imprimable.html"),
     Redirection("cuisine-v13-maquette.html", "cuisine/amenagement/maquette-3d.html"),
-    # anciennes pages de la cuisine (plan V3, couleurs), retirées de la racine au ménage du 14/11/2026 ; l'historique
+    # anciennes pages de la cuisine (plan V3, couleurs), retirées de la racine au ménage du 14/11/2026, gardées dans archives/ ; l'historique
     # git les garde
-    Redirection("cuisine-plan.html", "cuisine/amenagement/"),
-    Redirection("cuisine-couleurs.html", "cuisine/amenagement/"),
-)
+    Redirection("cuisine-plan.html", "archives/cuisine-plan.html", garde_fragment=True),
+    Redirection("cuisine-couleurs.html", "archives/cuisine-couleurs.html", garde_fragment=True),
+) + tuple(
+    # le dossier archive/ s'appelle archives/ : chaque page figée garde son ancienne adresse, fragment compris
+    Redirection(f"archive/{page.name}", f"archives/{page.name}", garde_fragment=True)
+    for page in sorted((RACINE / "site" / "archives").glob("*.html")))
 
 
 def main(argv: list[str] | None = None) -> int:

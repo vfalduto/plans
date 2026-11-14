@@ -1,4 +1,4 @@
-# Génère cuisine-v13-porte-cellier.html : plans détaillés de la porte du cellier (zone B6 / mur neuf / C1), placement
+# Génère site/cuisine-v13-porte-cellier.html (page figée, servie telle quelle, hors du menu) : plans détaillés de la porte du cellier (zone B6 / mur neuf / C1), placement
 # et ouverture de la porte pliante Mantion Tango.
 #
 #   python3 3d/v13/porte.py    (lancé par `just v13-porte`)
@@ -16,7 +16,7 @@ sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 import modele as M  # noqa: E402
 from pieces.cuisine.dessin import CSS, cote_d, cote_h, cote_v, fiche_tango, pts, rect, sources_tango, text, virg, volumes_plan  # noqa: E402
 
-OUT = os.path.join(ROOT, "cuisine-v13-porte-cellier.html")
+OUT = os.path.join(ROOT, "site", "cuisine-v13-porte-cellier.html")
 
 A = M.PLIANTE
 AXE = 323.5                                   # axe de la cloison (x 320 → 327)

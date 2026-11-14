@@ -130,15 +130,15 @@ def test_changements():
 
 def test_figees():
     (v,) = DOC.variantes
-    assert v.figees == document.FIGEES == (("V11.49", "archive/cuisine-v11.49.html"),
-                                           ("V12.7", "archive/cuisine-v12.7.html"))
+    assert v.figees == document.FIGEES == (("V11.49", "archives/cuisine-v11.49.html"),
+                                           ("V12.7", "archives/cuisine-v12.7.html"))
     for _, chemin in v.figees:
         assert (RACINE / "site" / chemin).exists(), chemin
 
 
 def test_journal_compte():
     site = Site((Piece("cuisine", "Cuisine", (DOC,)),))
-    lignes = [e for e in entrees(site, RACINE) if (e.piece, e.document) == ("Cuisine", "Aménagement")]
+    lignes = [e for e in entrees(site) if (e.piece, e.document) == ("Cuisine", "Aménagement")]
     assert len(lignes) == 91
     assert all(e.variante is None for e in lignes)
 
@@ -184,7 +184,7 @@ def test_page_construite(construit):
     assert "Touchez un meuble pour afficher sa fiche." in page
     assert 'type="checkbox"' not in page and "·" not in page
     assert 'id="c-comp"' not in page
-    assert "archive/cuisine-v11.49.html" in historique and "archive/cuisine-v12.7.html" in historique
+    assert "archives/cuisine-v11.49.html" in historique and "archives/cuisine-v12.7.html" in historique
     assert "·" not in historique
 
 

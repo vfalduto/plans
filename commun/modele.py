@@ -160,20 +160,10 @@ class Document:
 
 
 @dataclass
-class Passerelle:
-    """Document pas encore migré, désigné par sa page à la racine."""
-    piece: str
-    id: str
-    nom: str
-    type: str
-    page: str
-
-
-@dataclass
 class Piece:
     id: str
     nom: str
-    documents: tuple[Document | Passerelle, ...]
+    documents: tuple[Document, ...]
 
 
 @dataclass

@@ -87,8 +87,8 @@ def test_chapitre_paniers():
     assert '<h2 id="paniers">Variante : deux paniers à roulettes</h2>' in ens
     assert ens.index('id="budget"') < ens.index('id="paniers"') < ens.index('id="changements"')
     racine = os.path.join(os.path.dirname(__file__), "..")
-    # V6.3 : la photo est rangée avec les pages archivées (archive/sdb-meuble-photos/)
-    assert f'src="{M.CORNO["photo"]}"' in ens and os.path.exists(os.path.join(racine, "archive", M.CORNO["photo"]))
+    # V6.3 : la photo est rangée avec les pages archivées (site/archives/sdb-meuble-photos/)
+    assert f'src="{M.CORNO["photo"]}"' in ens and os.path.exists(os.path.join(racine, "site", "archives", M.CORNO["photo"]))
     eco = sum(q * px for _, _, q, px in pages.en_moins_paniers())
     assert abs(eco - 43.17) < 0.005
     assert pages.PL.euros(pages.prix()["total"] - eco + 2 * M.CORNO["prix"]) in ens
@@ -224,9 +224,9 @@ RACINE = os.path.join(os.path.dirname(__file__), "..")
 def test_archives_a_la_place():
     for nom in ("sdb-meuble-v4.html", "sdb-meuble-v4-bas.html", "sdb-meuble-v4-haut.html", "sdb-meuble-variantes.html",
                 "sdb-meuble-niveaux.html", "sdb-meuble-bas-revue.html"):
-        assert os.path.exists(os.path.join(RACINE, "archive", nom)), nom
+        assert os.path.exists(os.path.join(RACINE, "site", "archives", nom)), nom
         assert not os.path.exists(os.path.join(RACINE, nom)), nom
-    assert os.path.isdir(os.path.join(RACINE, "archive", "sdb-meuble-photos"))
+    assert os.path.isdir(os.path.join(RACINE, "site", "archives", "sdb-meuble-photos"))
     assert not os.path.exists(os.path.join(RACINE, "sdb-meuble-photos"))
 
 
@@ -250,9 +250,3 @@ def test_ancien_total_reste_celui_des_archives():
     lg = pages.lignes_achats()["lignes"]
     somme = sum(n * px for m in ("commun", "bas", "haut") for _, _, n, px, _ in lg[m]) + p["ailleurs"]
     assert abs(somme - p["total"]) < 0.005
-
-
-def test_index_liste_dachats():
-    idx = open(os.path.join(RACINE, "index.html"), encoding="utf-8").read()
-    assert 'href="sdb-meuble-achats.html"' in idx and 'href="sdb-meuble-haut.html"' in idx
-    assert idx.index('href="sdb-meuble-haut.html"') < idx.index('href="sdb-meuble-achats.html"')

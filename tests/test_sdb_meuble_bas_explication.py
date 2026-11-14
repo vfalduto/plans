@@ -23,7 +23,7 @@ def test_corrections_et_a_verifier():
 
 
 def test_liens_et_repere():
-    assert 'href="../../archive/sdb-meuble-v4-bas.html"' in S and "3d/sdb" not in S and "pieces/sdb/piece.py" in S
+    assert 'href="../../archives/sdb-meuble-v4-bas.html"' in S and "3d/sdb" not in S and "pieces/sdb/piece.py" in S
     assert "Repère : origine à l'angle nord-ouest intérieur, x vers l'est, y vers le sud, z depuis le sol, cotes en cm." \
         in texte(S)
 
@@ -52,8 +52,8 @@ def test_versions_figees():
     f = document.FIGEES
     assert len(f) == 11 and len({v for v, _ in f}) == 11 and len({c for _, c in f}) == 11
     for _, chemin in f:
-        assert (RACINE / chemin).is_file(), chemin
-    assert ("Liste d'achats V8.5", "archive/sdb-meuble-achats-v8.5.html") in f and ("V6.2", "archive/sdb-meuble-v4-bas.html") in f
+        assert (RACINE / "site" / chemin).is_file(), chemin
+    assert ("Liste d'achats V8.5", "archives/sdb-meuble-achats-v8.5.html") in f and ("V6.2", "archives/sdb-meuble-v4-bas.html") in f
 
 
 def test_sans_point_median_ni_chasse_fixe():
