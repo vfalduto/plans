@@ -365,3 +365,19 @@ CHANGEMENTS = [
      "3,6), élévation, coupes, vue de dessus, vue éclatée, débit repéré et plan de découpe, achats avec prix relevés "
      "et estimés, cinq variantes de matériau, montage, points à valider."),
 ]
+
+
+# ------------------------------------------------------------------ le document du site
+# Construit à la première lecture : vues importe amenagement/document.py, qui importe ce module (import circulaire).
+def _document():
+    from commun.modele import Changement, Document, Variante
+    from pieces.salon.enfilade import dessins, vues
+    variante = Variante("", "Enfilade", VERSION, tuple(Changement(*c) for c in CHANGEMENTS))
+    return Document("salon", "enfilade", "Enfilade", "construction", (variante,), vues.vues, css=dessins.CSS)
+
+
+def __getattr__(nom):
+    if nom == "DOCUMENT":
+        globals()["DOCUMENT"] = _document()
+        return globals()["DOCUMENT"]
+    raise AttributeError(f"module {__name__!r} has no attribute {nom!r}")

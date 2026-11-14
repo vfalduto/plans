@@ -455,8 +455,8 @@ def test_site_py_tient_documents_et_redirections():
                          dataclasses.replace(p, documents=p.documents + (modules[0][1].DOCUMENT,)) if p.id == "salon"
                          else p for p in site.pieces))
     assert _non_declares(deplace, modules) != []
-    assert _sans_redirection(site, ()) == ["entree/amenagement"]
-    assert _sans_redirection(site, (), {"entree/amenagement"}) == []
+    assert _sans_redirection(site, ()) == ["entree/amenagement", "salon/enfilade"]
+    assert _sans_redirection(site, (), {"entree/amenagement", "salon/enfilade"}) == []
     faute = (Redirection("vieux.html", "entree/amenagement/", {"plan": "plans"}, ((r"^c-(a)", "coupe?k={1}"),)),)
     assert _vues_inconnues(site, faute) == [("vieux.html", "plans"), ("vieux.html", "coupe?k={1}")]
     entree = next(d for d in _documents(site) if d.id == "amenagement" and d.piece == "entree")
