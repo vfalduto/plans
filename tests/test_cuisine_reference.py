@@ -1,14 +1,12 @@
-"""Fichiers de référence de l'ancienne page cuisine-v13.html (tests/fixtures/cuisine/) : ils sont complets, ils
-correspondent à ce que l'ancien générateur produit aujourd'hui, et les ancres suivent 3d/ancres.js."""
+"""Fichiers de référence de l'ancienne page cuisine-v13.html (tests/fixtures/cuisine/) : ils sont complets et les ancres
+suivent 3d/ancres.js. Ceux qui les confrontaient à l'ancien générateur (3d/v13/plan.py) et aux anciennes pages de la
+racine sont partis avec eux, à la bascule (tâche 11)."""
 import html
 import importlib.util
 import json
 import re
 
-import pytest
-
 from tests.cuisine_anciens import FIXTURES, ancien
-from tests.outils import RACINE
 
 _spec = importlib.util.spec_from_file_location("extraire_cuisine", FIXTURES / "extraire.py")
 extraire = importlib.util.module_from_spec(_spec)
@@ -29,26 +27,6 @@ def test_reference_complete():
     assert tab["changements"].count("<tr") == 91     # en-tête + 90 changements
 
 
-def _racine(nom):
-    """Texte d'un fichier de la racine ; saute si la bascule l'a supprimé."""
-    chemin = RACINE / nom
-    if not chemin.exists():
-        pytest.skip(f"{nom} n'existe plus")
-    return chemin.read_text(encoding="utf-8")
-
-
-def test_reference_a_jour():
-    plan = ancien("plan")                             # saute après la bascule
-    page = _racine("cuisine-v13.html")
-    assert plan.page(plan.lire_figees()) == page      # l'ancienne page se régénère à l'identique
-    assert extraire.extraire(page) == extraire.lire(FIXTURES)   # mêmes morceaux que sur disque
-
-
-def test_annexes_de_reference():
-    assert ancien("porte").page() == (FIXTURES / "porte-cellier.html").read_text(encoding="utf-8")
-    assert (FIXTURES / "imprimable.html").read_text(encoding="utf-8") == _racine("cuisine-v13-imprimable.html")
-
-
 def test_ancres():
     ids = [a["id"] for a in json.loads((FIXTURES / "ancres.json").read_text(encoding="utf-8"))]
     for a in ("plan", "coupe-a-a-mur-nord", "hauteur-du-plan-de-travail-etude", "coupe-b-b-mur-sud",
@@ -66,4 +44,3 @@ def test_modele_et_rendu_de_reference():
     assert sorted(rendu) == ["COUPES_ISO", "COUPES_ISO_NO"]
     if (extraire.ANCIEN / "rendu.py").exists():
         assert rendu == extraire.coupes_rendu()
-    assert (FIXTURES / "maquette.html").read_text(encoding="utf-8") == _racine("cuisine-v13-maquette.html")

@@ -377,8 +377,11 @@ def test_documents_declares(construit):
     connues = {d.page for d in _passerelles(site)} | {r.ancienne for r in module.REDIRECTIONS} | HORS_DOCUMENTS
     assert sorted(p.name for p in RACINE.glob("*.html") if p.name not in connues) == []
     # chaque redirection mène à une page qu'écrit la construction : celle d'un document ou son historique
+    # (ou, depuis la tâche 10 de la cuisine, une de ses annexes ; une version figée, sous site/archive/)
     construites = {a for d in _documents(site) for a in [adresse(d, v.id) for v in d.variantes]
-                   + [f"{d.piece}/{d.id}/historique.html"]}
+                   + [f"{d.piece}/{d.id}/historique.html"] + [adresse(d, d.variantes[0].id) + x.nom for x in d.annexes]}
+    construites |= {c for d in _documents(site) for v in d.variantes for _, c in v.figees
+                    if (RACINE / "site" / c).is_file()}
     for r in module.REDIRECTIONS:
         for cible in (r.cible, *r.pages.values()):
             assert cible in construites, (r.ancienne, cible)

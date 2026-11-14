@@ -82,7 +82,7 @@ def test_document():
     (v,) = DOC.variantes
     assert (v.id, v.nom, v.version) == ("", "Principale", "V13.30")
     assert DOC.css == dessins.CSS_DESSINS
-    assert not hasattr(document, "DOCUMENT")
+    assert document.DOCUMENT.variantes == DOC.variantes   # exposé à la bascule (tâche 11)
 
 
 def test_traits_et_fiches_des_coupes():

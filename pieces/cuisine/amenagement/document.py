@@ -52,3 +52,11 @@ def maquette(depuis: str = "cuisine/amenagement/maquette-3d.html") -> str:
     page = page.replace('src="cuisine-v13-maquette/modele.js"',
                         f'src="{relatif("cuisine/amenagement/maquette-3d/modele.js", depuis)}"')
     return page.replace(" · ", ", ")
+
+
+def __getattr__(nom):
+    # DOCUMENT construit au premier accès : le cache de rendu lit ce module sans charger les vues
+    if nom == "DOCUMENT":
+        globals()["DOCUMENT"] = construire_document()
+        return globals()["DOCUMENT"]
+    raise AttributeError(f"module {__name__!r} has no attribute {nom!r}")

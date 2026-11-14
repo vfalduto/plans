@@ -1,6 +1,6 @@
 """Outils des tests de la cuisine : les anciens modules de 3d/v13/, chargés à la demande.
 
-Chaque ancien module (modele, plan, imprimable, porte) est importé seul, au premier besoin, comme le font les anciens
+Chaque ancien module (modele, porte ; plan et imprimable sont partis) est importé seul, au premier besoin, comme le font les anciens
 générateurs (3d/v13/ en tête de sys.path). Un ancien module absent fait sauter (skip) les seuls tests qui le lisent ; une erreur d'import échoue.
 """
 import importlib
@@ -12,7 +12,7 @@ from tests.outils import RACINE
 
 ANCIEN = RACINE / "3d" / "v13"
 FIXTURES = RACINE / "tests" / "fixtures" / "cuisine"
-_NOMS = ("modele", "plan", "imprimable", "porte")
+_NOMS = ("modele", "porte")
 _cache = {}
 
 

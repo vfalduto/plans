@@ -137,7 +137,7 @@ def page():
 <style>{CSS}{CSS_PORTE}</style>
 </head>
 <body>
-<div class="vbar"><a class="back" href="cuisine-v13.html">← Cuisine V13</a></div>
+<div class="vbar"><a class="back" href="cuisine/amenagement/">← Cuisine V13</a></div>
 <main class="wrap">
 <div class="kicker">Cuisine · {M.VERSION} · porte du cellier</div>
 <h1>Porte du cellier : où elle se place</h1>
@@ -173,7 +173,7 @@ entre lui et le plan de B6. Côté cellier, rien ne dépasse (elle heurterait le
 <h2>3 · Le modèle : Mantion Tango</h2>
 <div class="fig">{fiche_tango()}
 <p class="txt">{sources_tango()} Explications (principe, pose, ce qui reste à vérifier) : section « Porte du cellier »
-de la <a href="cuisine-v13.html">page Cuisine V13</a>.</p></div>
+de la <a href="cuisine/amenagement/#explication">page Cuisine V13</a>.</p></div>
 </main>
 </body>
 </html>

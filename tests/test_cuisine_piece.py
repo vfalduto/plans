@@ -33,12 +33,6 @@ def test_relais():
     assert ancien("modele") is importlib.import_module("pieces.cuisine.modele")
 
 
-def test_anciens_generateurs_inchanges():
-    plan = ancien("plan")
-    assert plan.page(plan.lire_figees()) == (RACINE / "cuisine-v13.html").read_text(encoding="utf-8")
-    assert ancien("porte").page() == (FIXTURES / "porte-cellier.html").read_text(encoding="utf-8")
-
-
 def test_piece():
     assert (piece.ID, piece.NOM, piece.POSITION) == ("cuisine", "Cuisine", (-220, -262, 0))
     assert piece.SOL == SOL

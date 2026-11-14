@@ -64,14 +64,13 @@ rendu-salon echantillons="256":
     mkdir -p salon-3d
     for f in 3d/sortie/salon-biblio-*.png; do sips -s format jpeg -s formatOptions 85 "$f" --out "salon-3d/$(basename "$f" .png).jpg" >/dev/null; done
 
-# Cuisine V13 : régénère cuisine-v13.html, la version imprimable et le modèle FreeCAD depuis pieces/cuisine/modele.py (source unique)
-v13:
-    python3 3d/v13/plan.py
-    just cuisine-amenagement-cad
+# Cuisine, aménagement : reconstruit sa page (site/cuisine/amenagement/, annexes comprises) depuis pieces/cuisine/
+cuisine-amenagement:
+    python3 site.py cuisine/amenagement
 
-# Fige la version courante de la cuisine V13 (bouton de comparaison + archive/cuisine-v13.x.html)
-v13-figer:
-    python3 3d/v13/plan.py --figer
+# Porte du cellier : régénère cuisine-v13-porte-cellier.html depuis pieces/cuisine/modele.py
+v13-porte:
+    python3 3d/v13/porte.py
 
 # Entrée : reconstruit les pages des deux variantes (site/entree/amenagement/) depuis pieces/entree/
 entree:

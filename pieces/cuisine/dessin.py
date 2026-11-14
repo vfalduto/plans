@@ -1,7 +1,7 @@
 """Aides SVG de la cuisine : cotes, rectangles, textes, volumes du modèle vus de dessus, fiche de la porte pliante, CSS.
 
-Reprises de l'ancien générateur 3d/v13/plan.py, à l'identique ; la porte du cellier (3d/v13/porte.py) et la version
-imprimable (3d/v13/imprimable.py) les lisent ici. Elles diffèrent de celles de commun/dessin.py (leur `f` écrit
+Reprises de l'ancien générateur 3d/v13/plan.py (supprimé), à l'identique ; la porte du cellier (3d/v13/porte.py) et la
+version imprimable (pieces/cuisine/amenagement/imprimable.py) les lisent ici. Elles diffèrent de celles de commun/dessin.py (leur `f` écrit
 `{v:g}`), les dessins changeraient.
 """
 import math

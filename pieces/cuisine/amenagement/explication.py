@@ -4,8 +4,8 @@ du cellier Tango, électricité, rendus, matériaux, contenu des rangements, cap
 Textes et tableaux repris de l'ancien générateur 3d/v13/plan.py (`section_hauteur_pt`, `section_tango`, `tables_elec`,
 `table_materiaux`, `table_contenu`, `section_capacite`), calculés depuis le modèle, avec ces écarts seulement : virgule
 à la place du point médian, plus de chasse fixe (`mono`), légende sous un tableau en `<p class="remarque">`, légende
-d'un dessin en texte alternatif, chaque tableau dans un `<div class="defile">`. Les calculs (capacité, hauteur du plan)
-sont ici, et plan.py les réimporte ; ses fonctions de mise en page restent les siennes jusqu'à la bascule.
+d'un dessin en texte alternatif, chaque tableau dans un `<div class="defile">`. L'ancien générateur est supprimé
+depuis la bascule.
 """
 import re
 from html import escape, unescape
@@ -46,7 +46,7 @@ def _defile(table: str) -> str:
     return f'<div class="defile">{table}</div>'
 
 
-# ------------------------------------------------------------------ calculs, réimportés par 3d/v13/plan.py
+# ------------------------------------------------------------------ calculs
 def hors_fourchette(h, coude, regle=None):
     """Écart (cm) entre le plan h et la fourchette coude − hi → coude − lo ; > 0 trop haut, < 0 trop bas, 0 dedans."""
     lo_s, hi_s = regle or M.PT_SOUS_COUDE

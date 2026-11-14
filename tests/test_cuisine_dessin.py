@@ -1,9 +1,9 @@
 """Aides SVG de la cuisine (pieces/cuisine/dessin.py) : mêmes sorties que dans les dessins de référence, et les pages
-porte du cellier et imprimable n'importent plus plan.py."""
+porte du cellier et imprimable n'importent plus plan.py (supprimé à la bascule ; la page porte : test_cuisine_bascule)."""
 import json
 
 from pieces.cuisine import dessin, modele
-from tests.cuisine_anciens import FIXTURES, ancien
+from tests.cuisine_anciens import FIXTURES
 from tests.outils import RACINE
 
 
@@ -33,17 +33,6 @@ def test_volumes_et_tango():
     assert dessin.fiche_tango() == tab["tango"]
     assert "notice commerciale Mantion Tango" in dessin.sources_tango()
     assert dessin.CSS.lstrip().startswith(":root") and dessin.RACINE == RACINE
-
-
-def test_ancienne_page_reprend_les_aides():
-    plan = ancien("plan")
-    for nom in ("f", "rect", "text", "cote_h", "cote_d", "cote_v", "aire", "pts", "virg", "PLAN_CLS", "volumes_plan",
-                "fiche_tango", "sources_tango", "CSS"):
-        assert getattr(plan, nom) is getattr(dessin, nom), nom
-
-
-def test_porte_inchangee():
-    assert ancien("porte").page() == (FIXTURES / "porte-cellier.html").read_text(encoding="utf-8")
 
 
 def test_porte_et_imprimable_n_importent_plus_plan():

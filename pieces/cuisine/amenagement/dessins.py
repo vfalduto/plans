@@ -1,8 +1,7 @@
 """Les sept dessins de la cuisine/aménagement : plan meublé, coupes A, B et C, élévation et plan électriques, hauteur
 du plan de travail, et leur CSS.
 
-Code repris de l'ancien générateur 3d/v13/plan.py, qui les réimporte (sauf plan_svg et coupe_elec_nord, qu'il garde
-avec ses points médians). Écarts avec l'ancienne page, et seulement ceux-là : virgule à la place du point médian,
+Code repris de l'ancien générateur 3d/v13/plan.py (supprimé à la bascule). Écarts avec l'ancienne page, et seulement ceux-là : virgule à la place du point médian,
 aria-label donné par l'appelant, zones du plan insérées avant </svg>. Les portes restent dans les états par défaut de
 l'ancienne page (entrée fermée, cellier mi-ouvert), la règle des hauteurs à 1,75 m, la porte du cellier en
 transparence sur la coupe C.
@@ -274,7 +273,6 @@ COUPE_CLS = {"mur": ("bgwall", "w"), "allege": ("bgwall", "w"), "linteau": ("wal
 # nord : coupe en y, on regarde vers les y décroissants, l'ouest à gauche ; sud : l'est à gauche ;
 # est : coupe en x, on regarde vers les x croissants, le nord à gauche (u = y).
 REGARDS = {"nord": ("y", -1, False), "sud": ("y", 1, True), "est": ("x", 1, False)}
-VERS = {"nord": "le nord", "sud": "le sud", "est": "l'est"}
 
 
 def uv(b, axe):
@@ -292,10 +290,9 @@ def chaine(blocs, y, X, axe="y", origine=0):
     return "".join(o)
 
 
-def coupe_svg(cut, regard, umin, umax, chaines, hauteurs, xh, extra=None, origine=0, transparents=(), aria=None):
+def coupe_svg(cut, regard, umin, umax, chaines, hauteurs, xh, extra=None, origine=0, transparents=(), *, aria):
     """Coupe au plan cut (y pour nord/sud, x pour est). Vers le sud, l'est est à gauche : u écran = umin + umax - x.
-    aria : texte alternatif (par défaut, celui de l'ancienne page)."""
-    aria = aria or f"Coupe à {REGARDS[regard][0]} {f(cut)}, regard vers {VERS[regard]}"
+    aria : texte alternatif, donné par l'appelant."""
     axe, sens, miroir = REGARDS[regard]
     X = (lambda u: umin + umax - u) if miroir else (lambda u: u)
     o, etiquettes = [], []
@@ -410,22 +407,7 @@ def coupe_svg(cut, regard, umin, umax, chaines, hauteurs, xh, extra=None, origin
             f'aria-label="{_attr(aria)}">{"".join(o)}</svg>')
 
 
-def coupe_a_seule(aria=None):
-    """Coupe A-A sans la règle des hauteurs."""
-    bas = [b for b in M.MEUBLES if b.role == "caisson" and b.y0 == 0]
-    hauts = [b for b in M.MEUBLES if b.role == "caisson_haut"]
-    rn = M.RAYON_NORD
-
-    def sol(X):
-        xm = X((rn["x0"] + rn["x1"]) / 2)
-        return [text(xm, -30, rn["sol"].split(", ")[0] + ", " + rn["sol"].split(", ")[1], "lblc"),
-                text(xm, -25, ", ".join(rn["sol"].split(", ")[2:]), "lblc")]
-
-    return coupe_svg(COUPE_A, "nord", -20, 494, [(bas, 22), (hauts, -M.H - 8)],
-                     [M.SOCLE, M.CAISSON_H, M.PT_Z1, M.HAUT_Z0, M.HAUT_JOINT, M.HAUT_Z1], -50, sol, aria=aria)
-
-
-def coupe_b(aria: str | None = None) -> str:
+def coupe_b(aria: str) -> str:
     xmin, xmax = -20, 392
     en = M.ENTREE
     v = next(b for b in M.ENVELOPPE if b.nom == "entree_vantail")
@@ -444,18 +426,6 @@ def coupe_b(aria: str | None = None) -> str:
                 cote_v(-za.z0, -za.z1, p1 + 6), cote_v(-tn.z0, -tn.z1, p1 + 6)]
 
     return coupe_svg(COUPE_B, "sud", xmin, xmax, [], [45, 75, 85, en["h"], M.COL_Z1], xmin - 30, porte, aria=aria)
-
-
-def coupe_c_seule(aria=None):
-    """Coupe C-C sans la règle des hauteurs."""
-    cols = sorted([b for b in M.MEUBLES if b.role == "colonne"], key=lambda b: b.y0)
-    def cellier(X):
-        return [cote_h(X(M.BAIE_Y0), X(M.BAIE_Y1), -M.H - 8, f"baie {f(M.BAIE_Y1 - M.BAIE_Y0)}"),
-                cote_h(X(M.BAIE_Y1 - M.PASSAGE_CELLIER), X(M.BAIE_Y1), -204 - 6, f"passage {f(M.PASSAGE_CELLIER)}")]
-
-    return coupe_svg(COUPE_C, "est", -20, 262, [(cols, 22)],
-                     [M.SOCLE_COL, M.LV_Z0, M.MO_Z0, M.MO_Z1, M.FRIGO_Z1, M.COL_Z1], -50, cellier,
-                     transparents=("cellier_pliante", "linteau_cellier"), aria=aria)
 
 
 # ------------------------------------------------------------------ règle des hauteurs de rangement (V13.23)
@@ -500,14 +470,33 @@ def regle(svg, umin, umax):
     return svg.replace("</svg>", "".join(o) + "</svg>")
 
 
-def coupe_a(aria: str | None = None) -> str:
+def coupe_a(aria: str) -> str:
     """Coupe A-A avec la règle des hauteurs (les deux tailles dessinées, 1,75 m seule visible par le CSS)."""
-    return regle(coupe_a_seule(aria), -20, 494)
+    bas = [b for b in M.MEUBLES if b.role == "caisson" and b.y0 == 0]
+    hauts = [b for b in M.MEUBLES if b.role == "caisson_haut"]
+    rn = M.RAYON_NORD
+
+    def sol(X):
+        xm = X((rn["x0"] + rn["x1"]) / 2)
+        return [text(xm, -30, rn["sol"].split(", ")[0] + ", " + rn["sol"].split(", ")[1], "lblc"),
+                text(xm, -25, ", ".join(rn["sol"].split(", ")[2:]), "lblc")]
+
+    svg = coupe_svg(COUPE_A, "nord", -20, 494, [(bas, 22), (hauts, -M.H - 8)],
+                    [M.SOCLE, M.CAISSON_H, M.PT_Z1, M.HAUT_Z0, M.HAUT_JOINT, M.HAUT_Z1], -50, sol, aria=aria)
+    return regle(svg, -20, 494)
 
 
-def coupe_c(aria: str | None = None) -> str:
+def coupe_c(aria: str) -> str:
     """Coupe C-C avec la règle des hauteurs, la porte du cellier en transparence."""
-    return regle(coupe_c_seule(aria), -20, 262)
+    cols = sorted([b for b in M.MEUBLES if b.role == "colonne"], key=lambda b: b.y0)
+    def cellier(X):
+        return [cote_h(X(M.BAIE_Y0), X(M.BAIE_Y1), -M.H - 8, f"baie {f(M.BAIE_Y1 - M.BAIE_Y0)}"),
+                cote_h(X(M.BAIE_Y1 - M.PASSAGE_CELLIER), X(M.BAIE_Y1), -204 - 6, f"passage {f(M.PASSAGE_CELLIER)}")]
+
+    svg = coupe_svg(COUPE_C, "est", -20, 262, [(cols, 22)],
+                    [M.SOCLE_COL, M.LV_Z0, M.MO_Z0, M.MO_Z1, M.FRIGO_Z1, M.COL_Z1], -50, cellier,
+                    transparents=("cellier_pliante", "linteau_cellier"), aria=aria)
+    return regle(svg, -20, 262)
 
 
 # pastilles de la légende de la règle (ancien TAILLE_LEG)
@@ -517,8 +506,7 @@ REGLE_LEGENDE = ('<span class="leg"><i class="sw" style="background:#5B9E6A"></i
                  '<i class="sw" style="background:#D9826B"></i>escabeau</span>')
 
 
-def hauteur_pt_svg(aria: str | None = None) -> str:
-    aria = aria or "Hauteur du plan de travail selon le coude"
+def hauteur_pt_svg(aria: str) -> str:
     zmin, zmax, k, y0 = 78, 118, 8, 24
     Y = lambda z: y0 + (zmax - z) * k
     o = []
@@ -590,7 +578,7 @@ def sym_inter(x, y):
             f'<line class="elil" x1="{f(x + 2.2)}" y1="{f(y - 2.2)}" x2="{f(x + 6)}" y2="{f(y - 6)}"/>')
 
 
-def plan_elec_svg(aria: str | None = None) -> str:
+def plan_elec_svg(aria: str) -> str:
     o = [f'<polygon class="floorbg" points="{pts(M.SOL_PARQUET)}"/>', f'<polygon class="ciment" points="{pts(M.SOL_CIMENT)}"/>',
          f'<polygon class="wc" points="{pts(M.WC)}"/>', text(438, 185, "WC", "lbl muted"),
          '<g class="fade">'] + volumes_plan() + ["</g>"]
@@ -639,11 +627,10 @@ def plan_elec_svg(aria: str | None = None) -> str:
         x = k * 70
         o.append(f'<g transform="translate({x} 0)">{s}</g>' + text(x + 10, y + 2, t, "lbls", "start"))
     o.append(f'<path class="elk" d="M{6 * 70} {y}h18"/>' + text(6 * 70 + 22, y + 2, "commande", "lbls", "start"))
-    aria = aria or "Plan électrique : points lumineux, prises et interrupteurs"
     return f'<svg viewBox="-30 -15 545 320" role="img" aria-label="{_attr(aria)}">{"".join(o)}</svg>'
 
 
-def coupe_elec_nord(aria: str | None = None) -> str:
+def coupe_elec_nord(aria: str) -> str:
     """Élévation du mur nord (coupe A-A) avec les boîtiers posés sur ce mur ou au fond des meubles de la rangée."""
     def boitiers(X):
         o = []
@@ -671,11 +658,6 @@ def coupe_elec_nord(aria: str | None = None) -> str:
 # transparence sur la coupe C (étiquettes de derrière visibles). Le :root disparaît au filtre du socle
 # (commun/css_dessins.py) : --cement, --elec et --prise, absents de site.css, gardent leur valeur en repli.
 CSS_DESSINS = """
-:root{
-  --paper:#F7F8F6; --ink:#1D2A33; --muted:#5E6B73; --line:#C9D0D4; --wood:#B07A45;
-  --water:#2F7FB5; --tri:#C8412C; --panel:#FFFFFF; --cab:#ECE6DA; --tall:#D8CFBD;
-  --tech:#E1E6E9; --glass:#CFE4F2; --cement:#C9CBCA; --elec:#A86F00; --prise:#7B4FBF; color-scheme:light;
-}
 .z1{fill:#5B9E6A;opacity:.85}.z2{fill:#A9CF8F;opacity:.85}.z3{fill:#E8C26A;opacity:.85}.z4{fill:#D9826B;opacity:.85}
 .rep{stroke:#C8412C;stroke-width:.5;stroke-dasharray:3 2;opacity:.7}.rept{fill:#C8412C}
 .lblz{font-size:3.8px;fill:var(--ink)}.hsa{fill:#C98A1E;opacity:.45}.hsl{fill:#2F7FB5;opacity:.4}.hpb{opacity:.92}text.hph{fill:#C98A1E;font-weight:600;paint-order:stroke;stroke:var(--panel);stroke-width:4px}.hpg{stroke:var(--line);stroke-width:.6}.hpt{font-size:12px;fill:var(--muted)}.hpt.on{fill:#fff;font-weight:600}.hpt.rept{fill:#C8412C}.hpn{font-size:15px;font-weight:700;fill:var(--ink)}.hpp{stroke:#C98A1E;stroke-width:2}.hpc{stroke:var(--ink);stroke-width:1;stroke-dasharray:5 4;opacity:.7}.hpc.act{stroke-dasharray:none;stroke-width:2;opacity:1}.hpc.rec{stroke:#2F7FB5;opacity:1}text.hpc{stroke:none;fill:var(--ink);font-weight:600}text.hpc.rec{fill:#2F7FB5}.lblz.rept{fill:#C8412C}.regle{display:none}.regle[data-t="175"]{display:inline}

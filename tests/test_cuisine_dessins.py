@@ -89,3 +89,18 @@ def test_css_sans_chasse_fixe_ni_sombre():
         assert "font-variant-numeric:tabular-nums" in decl, cls
     for page in (".kicker", ".toc", ".vbar", ".pbar", ".impr", ".tog", ".mono", ".cap", ".fig"):
         assert not re.search(rf"{re.escape(page)}\b", css), page
+
+
+@pytest.mark.parametrize("nom", DESSINS)
+def test_aria_obligatoire(nom):
+    """Plus de texte alternatif par défaut (celui de l'ancien générateur) : l'appelant le donne toujours."""
+    fonction = {"plan": dessins.plan_svg, "coupe-a": dessins.coupe_a, "coupe-b": dessins.coupe_b,
+                "coupe-c": dessins.coupe_c, "elevation-elec": dessins.coupe_elec_nord,
+                "plan-elec": dessins.plan_elec_svg, "hauteur-pt": dessins.hauteur_pt_svg}[nom]
+    with pytest.raises(TypeError):
+        fonction()
+
+
+def test_reste_de_l_ancien_generateur_retire():
+    assert not hasattr(dessins, "coupe_a_seule") and not hasattr(dessins, "coupe_c_seule")
+    assert ":root" not in dessins.CSS_DESSINS   # les jetons sont ceux de commun/site.css
