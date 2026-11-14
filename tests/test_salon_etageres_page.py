@@ -388,7 +388,7 @@ def test_tete_et_chiffres(cle):
     for valeur, libelle in ((e.kit, "longueurs des tablettes (cm)"), (f"{len(calculs.pieces(e))} repères", "pièces à débiter"),
                             ("9 étapes", "de la cloison sondée au montage"), (euros(e.total), "matériaux TTC, sans livraison ni outillage")):
         assert escape(valeur) in s and libelle in s
-    assert [a["href"] for a in balises(s, "a", classe="btn")] == ["#plans", "#achats", "../../salon-v4.html"]
+    assert [a["href"] for a in balises(s, "a", classe="btn")] == ["#plans", "#achats", "../amenagement/"]
 
 
 @pytest.mark.parametrize("cle", calculs.CLES)
@@ -536,7 +536,7 @@ def test_aucun_interdit():
 
 def test_liens():
     permis = {"./#explication", "rangs.html#explication", "decalee.html#explication", "escalier.html#explication",
-              "../../salon-v4.html", "../../archive/salon-bibliotheque-fixation.html", "historique.html"}
+              "../amenagement/", "../../archive/salon-bibliotheque-fixation.html", "historique.html"}
     for c, vs in TOUT.items():
         for v in vs.values():
             for e in v.elements:

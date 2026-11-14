@@ -132,7 +132,7 @@ CX, CY = 272, 179
 CAMERAS = (
     # isométrique depuis le sud-est (murs sud et est et plafond coupés) : enfilade et étagères (ouest), canapé,
     # cadres et desserte (nord)
-    Camera("iso", "Isométrique sud-est", (CX + 640, CY + 600, 600), (CX, CY, 70), ortho=8.2,
+    Camera("iso_se", "Isométrique sud-est", (CX + 640, CY + 600, 600), (CX, CY, 70), ortho=8.2,
            reglages=dict(coupes=COUPES_ISO)),
     # vue opposée, depuis le nord-ouest (murs nord et ouest et plafond coupés) : écran et meuble bas (sud), baie et
     # rideau (est), table ronde ; le passage, les cadres du mur nord et le papier peint partent avec leurs murs

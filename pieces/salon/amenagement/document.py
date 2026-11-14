@@ -10,6 +10,7 @@
 
 import math
 
+from commun.rendu_cache import CacheRendu
 from pieces.salon.enfilade.document import BLOCS as BLOCS_ENFILADE, ENFILADE, MODULES, VOLUME_ENFILADE  # noqa: F401
 from pieces.salon.etageres.document import (BLOCS as BLOCS_ETAGERES, CHARGE_LIVRES, DISPOSITIONS,  # noqa: F401
                                             ETAGERES, METRES_ETAGERES, MONTANTS, NIVEAUX, TABLETTES)
@@ -533,3 +534,30 @@ CHANGEMENTS = [
      "120 × 45 avec la platine vinyle devant le vantail nord de la baie. Table ronde Ø 130 à trois allonges "
      "(295 × 130, 12 couverts), bouton 4 / 12 couverts sur le plan et les coupes. La V3.1 est archivée."),
 ]
+
+
+# ------------------------------------------------------------------ le document du site
+# Ce qui entre dans l'empreinte des rendus (commun/rendu_cache.py) : la pièce, les étagères (leurs volumes sont rendus
+# par rendu.py) et les données de ce module ; le script de rendu, ses volumes et 3d/rendu.py. Une seule variante,
+# d'id vide : rendus/<caméra>.jpg, et <caméra>-noyer.jpg pour l'option Bois.
+CACHE_RENDU = CacheRendu(variantes={"": ("pieces.salon.piece", "pieces.salon.etageres.document",
+                                         "pieces.salon.amenagement.document")},
+                         code=("pieces/salon/amenagement/rendu.py", "pieces/salon/etageres/volumes.py",
+                               "pieces/salon/meubles.py", "3d/rendu.py"))
+
+
+# Construit à la demande : vues importe ce module.
+def _document():
+    from commun.modele import Changement, Document, Variante
+    from pieces.salon.amenagement import dessins, options, vues
+    changements = tuple(Changement(v, d, t.replace(" · ", ", ")) for v, d, t in CHANGEMENTS)
+    return Document("salon", "amenagement", "Aménagement", "amenagement",
+                    (Variante("", "Principale", VERSION, changements, FIGEES_ANCIENNES),), vues.vues,
+                    options=options.OPTIONS, css=dessins.CSS_DESSINS)
+
+
+def __getattr__(nom):
+    if nom == "DOCUMENT":
+        globals()["DOCUMENT"] = _document()
+        return globals()["DOCUMENT"]
+    raise AttributeError(f"module {__name__!r} has no attribute {nom!r}")

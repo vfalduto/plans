@@ -7,8 +7,19 @@
 
 import math
 
-from commun.dessin import cote_h, cote_v, f, rect, text, virg  # noqa: F401
-from pieces.salon.meubles import MATIERES, aretes, ordre
+from commun import dessin as _commun
+from commun.dessin import f, rect, text, virg  # noqa: F401
+from pieces.salon.meubles import MATIERES, aretes, cote, ordre
+
+
+def cote_h(x0, x1, y, label=None, t=3):
+    """Cote horizontale de commun/dessin.py ; sans libellé, la longueur à la virgule (« 204,5 »)."""
+    return _commun.cote_h(x0, x1, y, label or cote(abs(x1 - x0)), t)
+
+
+def cote_v(y0, y1, x, label=None, t=3):
+    """Cote verticale de commun/dessin.py ; sans libellé, la longueur à la virgule (« 254,5 »)."""
+    return _commun.cote_v(y0, y1, x, label or cote(abs(y1 - y0)), t)
 
 
 def _rond_y(p, P, corps, bout):
