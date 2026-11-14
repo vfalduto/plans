@@ -1,10 +1,12 @@
 from pathlib import Path
 
+import pytest
+
 from commun.blocs import (CALQUES, INVITE, Achat, Carte, Coupe, Lieu, SectionAchats, Zone, a_verifier, achats,
-                          chiffres, cotes_meuble, euros, figure_rendu, materiaux, points_iso, principes, rendu,
-                          tableau_achats, tete, total_achats, vue_camera, vue_coupes, vue_iso, vue_lecture, vue_plan,
-                          zones_svg)
-from commun.modele import Camera
+                          chiffres, cotes_meuble, euros, figure_choix, figure_rendu, jeton, materiaux, points_iso,
+                          principes, rendu, rendus_choix, si, tableau_achats, tete, total_achats, vue_camera,
+                          vue_coupes, vue_iso, vue_lecture, vue_plan, zones_svg)
+from commun.modele import Camera, Option, Valeur
 from tests.outils import RACINE, balises
 
 SOL = [(0, 0), (100, 0), (100, 200), (0, 200)]
@@ -12,6 +14,9 @@ PORTES = [dict(nom="ouest", mur="o", face=0, a=20, b=100)]
 LIEU = Lieu(SOL, PORTES, "Position dans la chambre")
 BANC = Zone(id="banc", titre="Banc & coffre", emprise=(10, 20, 105, 58), cotes="95 × 38, h 45",
             texte="Un <b>banc</b>.", coupe="A", iso="so")
+BOIS = Option("bois", "Bois", ("meubles",), "choix", "chene",
+              (Valeur("chene", "Chêne"), Valeur("noyer", "Noyer"), Valeur("frene", "Frêne", rendue=False)),
+              "Visible sur les rendus.")
 PORTE = Zone(id="porte", titre="Porte", emprise=(0, 20, 14, 100), cotes="vantail de 80", texte="La porte.", iso="no")
 
 
@@ -329,3 +334,97 @@ def test_arrondi_demi_vers_le_haut():
                        SectionAchats("B", [Achat("Vis", "2", 1, 0.12)])], arrondi=False)
     assert _cellules(centimes, "total")[0] == ["Sous-total", "", "", "0,01 €"]   # 0,005
     assert '<span class="num">0,13 €</span>' in centimes                        # 0,125
+
+
+# ------------------------------------------------------------------ Selon la valeur d'une option « choix »
+def test_rendu_valeur(tmp_path):
+    r = rendu(tmp_path, "principale", "iso_se", "noyer")
+    assert r.image == "rendus/principale-iso_se-noyer.jpg"
+    assert r.masque == "rendus/principale-iso_se-noyer-masque.png"
+    assert r.fichier == tmp_path / "principale-iso_se-noyer.jpg"
+    assert rendu(tmp_path, "", "iso_se", "noyer").image == "rendus/iso_se-noyer.jpg"
+    assert rendu(tmp_path, "principale", "iso_se", "") == rendu(tmp_path, "principale", "iso_se")
+    assert rendu(tmp_path, "principale", "iso_se").image == "rendus/principale-iso_se.jpg"
+
+
+def test_jeton_et_si():
+    assert jeton(BOIS, "noyer") == "bois:noyer"
+    with pytest.raises(ValueError):
+        jeton(BOIS, "pin")
+    teinte = Option("india", "Teinte", ("murs",), "nuancier", "a", (Valeur("a", "A", "#112233"),), "Partout.")
+    with pytest.raises(ValueError):
+        jeton(teinte, "a")
+    assert si("a:b", "c:d") == ' data-si="a:b c:d"'
+    assert si() == ""
+
+
+def test_zone_selon_valeur():
+    ouverte = Zone(id="table", titre="Table", emprise=(0, 0, 80, 120), cotes="80 × 120", texte="Ouverte.",
+                   si="table:ouverte")
+    svg = zones_svg([ouverte])
+    assert balises(svg, "rect", classe="zone")[0]["data-si"] == "table:ouverte"
+    assert svg.startswith('<rect class="zone" data-meuble="table" data-si="table:ouverte" x="0"')
+    modele = vue_plan("<svg></svg>", [ouverte], "").elements[0].fiche
+    assert balises(modele, "template")[0]["data-si"] == "table:ouverte"
+    assert modele.startswith('<template data-meuble="table" data-si="table:ouverte" data-titre="Table">')
+    assert "data-si" not in zones_svg([BANC, PORTE])
+    assert "data-si" not in vue_plan("<svg></svg>", [BANC, PORTE], "").elements[0].fiche
+
+
+def test_rendus_choix(tmp_path):
+    for nom in ("principale-iso_se.jpg", "principale-iso_se-noyer.jpg"):
+        (tmp_path / nom).write_bytes(b"")
+    rendus = rendus_choix(tmp_path, "principale", "iso_se", BOIS)
+    assert list(rendus) == ["chene", "noyer", "frene"]
+    assert rendus["chene"].image == "rendus/principale-iso_se.jpg"
+    assert rendus["noyer"].image == "rendus/principale-iso_se-noyer.jpg"
+    assert rendus["frene"].image == "rendus/principale-iso_se-frene.jpg"
+    assert [r.existe for r in rendus.values()] == [True, True, False]
+
+
+def test_figure_choix(tmp_path):
+    for nom in ("a-iso_se.jpg", "a-iso_se-noyer.jpg", "a-iso_se-masque.png", "a-iso_se-noyer-masque.png"):
+        (tmp_path / nom).write_bytes(b"")
+    rendus = rendus_choix(tmp_path, "a", "iso_se", BOIS)
+    html = figure_choix(rendus, BOIS, "Vue & coin")
+    assert html.startswith('<figure class="cadre rendu">')
+    images = balises(html, "img")
+    assert len(images) == 3 and all("class" not in i for i in images)
+    assert [i["data-si"] for i in images] == ["bois:chene", "bois:noyer", "bois:frene"]
+    assert [i["src"] for i in images] == ["rendus/a-iso_se.jpg", "rendus/a-iso_se-noyer.jpg", "rendus/a-iso_se.jpg"]
+    assert [i["alt"] for i in images] == ["Vue & coin", "Vue & coin, Noyer", "Vue & coin"]
+    assert 'alt="Vue &amp; coin, Noyer"' in html
+    notes = balises(html, "p", classe="note-rendu")
+    assert notes == [{"class": "note-rendu", "data-si": "bois:frene"}]
+    assert html.endswith('</figure><p class="note-rendu" data-si="bois:frene">'
+                         'Frêne : pas encore rendu, image en Chêne</p>')
+    teinte = figure_choix(rendus, BOIS, "Vue", filtre="teinte")
+    calques = balises(teinte, "img", classe="calque")
+    assert [c["data-si"] for c in calques] == ["bois:chene", "bois:noyer", "bois:frene"]
+    assert '<img class="calque" data-si="bois:noyer" src="rendus/a-iso_se-noyer.jpg"' in teinte
+    assert "url(rendus/a-iso_se-noyer-masque.png)" in calques[1]["style"]
+    assert "url(rendus/a-iso_se-masque.png)" in calques[2]["style"]  # image reprise : masque d'origine
+    assert len(balises(teinte, "img")) == 6
+    # masque absent pour une valeur : pas de calque pour elle
+    (tmp_path / "a-iso_se-noyer-masque.png").unlink()
+    sans = figure_choix(rendus_choix(tmp_path, "a", "iso_se", BOIS), BOIS, "Vue", filtre="teinte")
+    assert [c["data-si"] for c in balises(sans, "img", classe="calque")] == ["bois:chene", "bois:frene"]
+    # rendu d'origine absent : rien
+    (tmp_path / "a-iso_se.jpg").unlink()
+    assert figure_choix(rendus_choix(tmp_path, "a", "iso_se", BOIS), BOIS, "Vue") == ""
+
+
+def test_vue_iso_option(tmp_path):
+    for nom in ("a-iso_se.jpg", "a-iso_se-noyer.jpg", "a-iso_no-noyer.jpg"):
+        (tmp_path / nom).write_bytes(b"")
+    points = points_iso((0, 0, 100, 200))
+    vue = vue_iso(tmp_path, "a", LIEU, points, option=BOIS)
+    se = vue.elements[3]
+    assert se.k == "se" and se.actif
+    assert 'data-si="bois:noyer"' in se.scene
+    assert balises(se.scene, "img", **{"data-si": "bois:chene"})[0]["alt"] == "Vue isométrique, coin SE"
+    # une image de valeur sans image d'origine n'active pas le coin
+    assert [e.k for e in vue.elements if e.actif] == ["se"] and vue.elements[0].scene == ""
+    sans = vue_iso(tmp_path, "a", LIEU, points)
+    assert sans.elements[3].scene == figure_rendu(rendu(tmp_path, "a", "iso_se"), "Vue isométrique, coin SE")
+    assert "data-si" not in sans.elements[3].scene
