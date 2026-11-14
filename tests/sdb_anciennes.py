@@ -73,7 +73,7 @@ def morceaux(html: str) -> list[str]:
 
 # erreurs d'affichage de l'ancienne page, corrigées depuis le modèle (ruling 15), et la phrase du stock (ruling 11)
 CORRECTIONS = {"2.5 GPa": "2,5 GPa", "≈ 4.1 kg": "≈ 4,1 kg", "B à F :": "B à G :",
-               "(« — » : non lu)": ", dans la note de l'article (sans note : non lu)"}
+               " (« — » : non lu)": ", dans la note de l'article (sans note : non lu)"}
 
 
 def corrige(t: str) -> str:
