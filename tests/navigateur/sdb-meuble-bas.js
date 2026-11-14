@@ -5,8 +5,8 @@
    - Mesurer : les deux bouts de la plus longue cote de l'élévation donnent « Mesuré : 115 cm » ; caché sur l'iso.
    - Fiche de Plans : les liens Découpe et Montage.
    - Dessins : aucun aplat noir, aucun texte hors du viewBox (exceptions dans GARDES).
-   - Achats : totaux, lien « Meuble haut » vers la liste d'achats encore en passerelle.
-   - Anciennes adresses, historique (seize entrées, V8.5 en tête, onze versions figées), passerelles, accueil, et la
+   - Achats : totaux, lien « Meuble haut » vers les achats du meuble haut.
+   - Anciennes adresses, historique (seize entrées, V8.5 en tête, onze versions figées), redirections, accueil, et la
      page sans JavaScript. */
 async page => {
   const BASE = new URL(page.url()).origin;
@@ -207,7 +207,7 @@ async page => {
     const lien = page.locator('section[data-vue="achats"] a:has-text("Meuble haut")').first();
     const [reponse] = await Promise.all([page.waitForNavigation(), lien.click()]);
     const ici = await page.evaluate(() => location.pathname + location.hash);
-    verifier(ici === "/sdb-meuble-achats.html#haut-seul" && reponse && reponse.status() === 200,
+    verifier(ici === "/sdb/meuble-haut/#achats" && reponse && reponse.status() === 200,
              `achats : « Meuble haut » mène à ${ici} (${reponse && reponse.status()})`);
   });
 
@@ -251,17 +251,14 @@ async page => {
     }
   });
 
-  // ------------------------------------------------------------------ 9. passerelles du meuble haut et des achats
-  await partie("passerelles", async () => {
+  // ------------------------------------------------------------------ 9. les pages du meuble haut et des achats : redirections
+  await partie("redirections", async () => {
     for (const adresse of ["/sdb-meuble-achats.html", "/sdb-meuble-haut.html"]) {
       await page.goto("about:blank");
       const r = await page.goto(BASE + adresse);
       verifier(r && r.status() === 200, `${adresse} : statut ${r && r.status()}`);
+      await attendre(page, () => location.pathname === "/sdb/meuble-haut/", null, `${adresse} : n'arrive pas sur /sdb/meuble-haut/`);
     }
-    await ouvrir(page, BASE + "/sdb-meuble-achats.html");
-    await page.locator('a.btn:has-text("Meuble bas")').first().click();
-    await attendre(page, () => location.pathname === "/sdb/meuble-bas/" && document.readyState === "complete", null,
-                   "passerelles : le lien « Meuble bas » de la liste d'achats n'arrive pas sur /sdb/meuble-bas/");
   });
 
   // ------------------------------------------------------------------ 10. accueil

@@ -395,7 +395,8 @@ def pose_en_coupe(label="Pose du caisson haut, en coupe") -> str:
     o.append(cote_v(0, -cr, M.X1 + 13, str(cr)))
     o.append(cote_v(-cr, -zs[0], M.X1 + 13, cm(zs[0] - cr)))
     o.append(text(x0, 6, "pièce ←   → mur du fond", "lblx muted", "start"))
-    return (f'<svg viewBox="{x0 - 2} {-M.H - 8} {M.X1 + 22 - x0} {M.H + 18}" role="img" '
+    # 2 de plus en haut que l'ancien dessin : la cote « 45 » y sortait du cadre
+    return (f'<svg viewBox="{x0 - 2} {-M.H - 10} {M.X1 + 22 - x0} {M.H + 20}" role="img" '
             f'aria-label="{escape(label)}">{"".join(o)}</svg>')
 
 
