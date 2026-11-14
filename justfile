@@ -175,6 +175,7 @@ cuisine-amenagement-apercu *vues: _cuisine-amenagement-glb
     #!/usr/bin/env bash
     set -euo pipefail
     mkdir -p cache/apercu
+    rm -f cache/apercu/cuisine-*.png   # la liste finale ne montre que les images de ce Blender
     cp "${CUISINE_SORTIE:-$PWD/cache/cuisine}/cuisine-v13.glb" cache/apercu/cuisine-v13.glb
     CUISINE_APERCU=1 CUISINE_SORTIE="$PWD/cache/apercu" "${BLENDER:-/opt/homebrew/bin/blender}" -b --python-exit-code 1 --python pieces/cuisine/amenagement/rendu.py -- 16 {{vues}}
     ls cache/apercu/cuisine-*.png

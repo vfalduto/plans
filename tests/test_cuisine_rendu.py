@@ -121,6 +121,8 @@ def test_recette_apercu_a_sec():
     assert "/Applications/Blender" not in sortie
     assert "pieces/cuisine/amenagement/rendu.py -- 16 iso_so" in sortie
     assert "CUISINE_APERCU=1" in sortie and 'CUISINE_SORTIE="$PWD/cache/apercu"' in sortie
+    # comme -rendu : aucun reste d'un ancien aperçu dans la liste finale, les PNG sont effacés avant Blender
+    assert 0 <= sortie.find("rm -f cache/apercu/cuisine-*.png") < sortie.find("CUISINE_APERCU=1")
 
 
 def test_rendus_repris():
