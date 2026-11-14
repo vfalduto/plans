@@ -426,7 +426,7 @@ a:hover>.pl-piece,a:focus-visible>.pl-piece{fill:color-mix(in srgb,var(--repere)
 .cartes td.d,.cartes th.d{padding-right:18px}
 .debit{overflow-x:auto}
 .etapes{list-style:none;margin:0;padding:0;counter-reset:e var(--debut,0)}
-.etapes li{display:grid;grid-template-columns:34px minmax(0,1fr);gap:0 12px;padding:14px 0;border-bottom:1px solid var(--line);counter-increment:e}
+.etapes li{display:grid;grid-template-columns:34px minmax(0,1fr);gap:0 12px;padding:14px 0;border-bottom:1px solid var(--line);counter-increment:e;max-width:none}
 .etapes li::before{content:counter(e);font:600 16px/1 var(--ui);width:30px;height:30px;border-radius:4px;background:var(--actif);color:var(--sur-actif);display:grid;place-items:center}
 .etapes h3{margin:3px 0 4px;font:600 18px var(--ui)}
 .etapes p{margin:0;font-size:15.5px}

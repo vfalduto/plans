@@ -208,3 +208,10 @@ def test_classes_des_blocs_ont_une_regle(tmp_path):
 def test_site_css_sans_interdit():
     for interdit in ("prefers-color-scheme", "monospace", "text-transform", "·"):
         assert interdit not in CSS
+
+
+def test_etapes_pleine_largeur():
+    # `.lecture li{max-width:80ch}` (l'entrée) raccourcirait les étapes et leurs filets : la règle des étapes l'annule
+    regle = re.search(r"\n\.etapes li\{([^}]*)\}", CSS).group(1)
+    assert "max-width:none" in regle
+    assert ".lecture p,.lecture li{max-width:80ch}" in CSS
