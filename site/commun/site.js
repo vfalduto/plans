@@ -81,7 +81,7 @@ const onglets = $$("nav.vues a[data-vue]");
 const vues = sections.map(s => s.dataset.vue);   // dans l'ordre des onglets : la première est la vue par défaut
 const variantes = donnees("variantes", []);      // [[id, nom, adresse relative]]
 const base = document.body.dataset.variante || "";
-const figee = document.body.hasAttribute("data-figee");   // version figée (archive/) : jamais comparée
+const figee = document.body.hasAttribute("data-figee");   // version figée (archives/) : jamais comparée
 let courant = null;                              // l'état montré
 const surMontrer = [];                           // fonctions (etat, section, k) appelées après chaque montrer()
 
