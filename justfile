@@ -77,6 +77,10 @@ v13-figer:
 entree:
     python3 site.py entree/amenagement
 
+# Chambre : reconstruit la page (site/chambre/amenagement/) depuis pieces/chambre/
+chambre:
+    python3 site.py chambre/amenagement
+
 # Modèle des deux recettes de rendu d'un autre document (déclaration CACHE_RENDU dans son document.py) :
 #   <piece>-<document>-rendu echantillons="64" *vues : pour chaque variante de
 #     `rendu_cache variantes <piece>/<document>` (`-` : sans variante), cams=$(rendu_cache liste <piece>/<document>
@@ -189,6 +193,10 @@ cuisine-amenagement-video-apercu: _cuisine-amenagement-glb
 # Cuisine, aménagement : la même vidéo en définitif (Cycles, 1920 × 1080) → cache/cuisine/cuisine-video-360.mp4
 cuisine-amenagement-video echantillons="64": _cuisine-amenagement-glb
     "${BLENDER:-/opt/homebrew/bin/blender}" -b --python-exit-code 1 --python pieces/cuisine/amenagement/video.py -- {{echantillons}}
+
+# Salon, enfilade : reconstruit sa page (site/salon/enfilade/) depuis pieces/salon/enfilade/
+salon-enfilade:
+    python3 site.py salon/enfilade
 
 # Salon V4 : régénère salon-v4.html et les pages des meubles (étagères, enfilade) depuis 3d/salon/modele.py
 salon:

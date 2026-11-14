@@ -121,7 +121,7 @@ async page => {
     await page.click("#c-comp");
     e = await lire(page, "plan");
     verifier(e.hash === "#plan" && egal(e.dessins, ["60"]) && e.clones === 0 && e.etiquettes.length === 0
-             && e.comparer === "false" && e.avec === "caché" && !e.deuxChoix && e.zones === 1,
+             && e.comparer === "false" && e.avec === "caché" && !e.deuxChoix && e.zones === 2,
              `Comparer une seconde fois : ${JSON.stringify(e)}`);
 
     // un meuble choisi sur le plan : la comparaison le referme (maquette : pas de meuble choisi en comparaison)
