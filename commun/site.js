@@ -316,7 +316,8 @@ function toucherMeuble(section, cible) {
   const k = z ? z.dataset.meuble : "";
   if (k !== courant.k) aller({...courant, k});
 }
-function montrerMeuble(section, n) {
+/* deplier faux (après un choix d'option) : le contenu suit, la fiche garde son état ouvert ou replié. */
+function montrerMeuble(section, n, deplier = true) {
   const zones = $$("rect.zone[data-meuble]", section), corps = $(".fiche-meuble", section);
   if (!zones.length || !corps) return;
   if (!meubleDefaut.has(section)) meubleDefaut.set(section, corps.innerHTML);
@@ -341,7 +342,7 @@ function montrerMeuble(section, n) {
   if (!actions) { actions = document.createElement("div"); actions.className = "actions"; corps.appendChild(actions); }
   actions.appendChild(fermer);
   if (nom) nom.textContent = modele.dataset.titre;
-  fiche.classList.add("ouverte"); majFiches();
+  if (deplier) { fiche.classList.add("ouverte"); majFiches(); }
   fiche.scrollTop = 0;
 }
 
@@ -649,14 +650,18 @@ function brancherOptions() {
     const o = options.find(x => x.id === b.closest("section").dataset.o);
     appliquer(o, b.dataset.v);
     afficher();
-    // la fiche d'un meuble ouverte suit son emprise dans le nouvel état ; un nuancier ne la touche pas
-    if (courant && o.type === "choix") montrer(courant);
+    // la fiche d'un meuble suit son emprise dans le nouvel état, sans se déplier ; un nuancier ne la touche pas
+    if (o.type === "choix") suivreMeuble();
   });
   $("#b-origine", panneau).addEventListener("click", () => {
     for (const o of options) appliquer(o, o.defaut);
     afficher();
-    if (courant && options.some(o => o.type === "choix")) montrer(courant);
+    if (options.some(o => o.type === "choix")) suivreMeuble();
   });
+  const suivreMeuble = () => {
+    const section = courant && sections.find(s => s.dataset.vue === courant.vue);
+    if (section) montrerMeuble(section, courant.k, false);
+  };
   const montrerPanneau = ouvert => {
     panneau.hidden = voile.hidden = !ouvert;
     if (ouvreur) ouvreur.setAttribute("aria-expanded", String(ouvert));

@@ -471,6 +471,35 @@ async page => {
              `stockage refusé, ouverte : ${JSON.stringify(v)}`);
     await refusee.close();
 
+    // 390 px : un choix met la fiche du meuble à jour sans la déplier ni la replier ; « Valeurs d'origine » de même
+    await page.setViewportSize({width: 390, height: 844});
+    await page.evaluate(() => localStorage.clear());
+    await ouvrir(page, DOC + "#plan?k=table");
+    const ficheMobile = p => p.evaluate(() => {
+      const f = document.querySelector('section[data-vue="plan"] .fiche');
+      return {ouverte: f.classList.contains("ouverte"), etendue: f.querySelector(".fiche-tete").getAttribute("aria-expanded"),
+              cotes: (f.querySelector(".fiche-meuble .cotes") || {}).textContent || ""};
+    });
+    const replier = async p => { await fermerPanneau(p); await p.click('section[data-vue="plan"] .fiche-tete'); };
+    let fi = await ficheMobile(page);
+    verifier(fi.ouverte && fi.cotes === "15 cm", `fiche à 390 px, au chargement : ${JSON.stringify(fi)}`);
+    await replier(page);
+    await cliquerValeur(page, "bois", "noyer");
+    fi = await ficheMobile(page);
+    verifier(!fi.ouverte && fi.etendue === "false", `fiche repliée, après « noyer » : ${JSON.stringify(fi)}`);
+    await cliquerValeur(page, "table", "ouverte");
+    fi = await ficheMobile(page);
+    verifier(!fi.ouverte && fi.etendue === "false" && fi.cotes === "25 cm", `fiche repliée, après « ouverte » : ${JSON.stringify(fi)}`);
+    await page.click("#panneau-options >> text=Valeurs d'origine");
+    fi = await ficheMobile(page);
+    verifier(!fi.ouverte && fi.cotes === "15 cm", `fiche repliée, après « Valeurs d'origine » : ${JSON.stringify(fi)}`);
+    await replier(page);   // la déplie
+    await cliquerValeur(page, "table", "ouverte");
+    fi = await ficheMobile(page);
+    verifier(fi.ouverte && fi.etendue === "true" && fi.cotes === "25 cm", `fiche ouverte, après « ouverte » : ${JSON.stringify(fi)}`);
+    await fermerPanneau(page);
+    await page.evaluate(() => localStorage.clear());
+
     // 390 px : le panneau a ses trois sections, sans défilement horizontal
     await page.setViewportSize({width: 390, height: 844});
     await ouvrir(page, DOC + "#plan");
