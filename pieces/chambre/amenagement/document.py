@@ -82,9 +82,10 @@ def passages(M):
 # Une zone par meuble, son id stable ; carte : rang de la carte « Principe » (vues.PRINCIPES) qui fait sa fiche ;
 # coupe : l'élévation où il se voit. Un bord donné ici remplace celui du meuble : la zone « commodes » part du nu nord
 # de la commode nord, la zone « niche » prend le plan qui la couvre. cotes="largeur" : la fiche donne largeur (x) ×
-# profondeur (y), comme la page pour les chevets (« 30 × 35 »), au lieu du grand côté d'abord.
+# profondeur (y), comme la page pour le lit (« 160 × 200 ») et les chevets (« 30 × 35 »), au lieu du grand côté
+# d'abord.
 ZONES = (
-    dict(id="lit", meuble="LIT", carte=0, coupe="sud"),
+    dict(id="lit", meuble="LIT", carte=0, coupe="sud", cotes="largeur"),
     dict(id="chevet_ouest", meuble="CHEVET_OUEST", carte=1, coupe="sud", cotes="largeur"),
     dict(id="chevet_est", meuble="CHEVET_EST", carte=1, coupe="sud", cotes="largeur"),
     dict(id="commodes", meuble="PLAN", y0=COMMODE_NORD["y0"], carte=2, coupe="est"),

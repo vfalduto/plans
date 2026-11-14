@@ -265,12 +265,13 @@ def test_zones_confrontees_a_leur_meuble():
         else:
             assert unescape(cotes).startswith(f'{nombre(max(dx, dy))} × ')
 
-def test_cotes_des_chevets():
-    """Page, carte ② : « Côté ouest, 40 × 35 », « Côté est, 30 × 35 » : largeur puis profondeur."""
+def test_cotes_largeur_d_abord():
+    """Page : lit « 160 × 200 », carte ② « Côté ouest, 40 × 35 », « Côté est, 30 × 35 » : largeur puis profondeur."""
     (e,) = V()["plan"].elements
     lues = {k: unescape(re.search(rf'<template data-meuble="{k}"[^>]*><p class="cotes">([^<]*)</p>', e.fiche)[1])
-            for k in ("chevet_ouest", "chevet_est")}
-    assert lues == {"chevet_ouest": "40 × 35, h 70 cm", "chevet_est": "30 × 35, h 70 cm"}   # « cm » : ajouté par la fiche
+            for k in ("lit", "chevet_ouest", "chevet_est")}
+    assert lues == {"lit": "160 × 200, h 82 cm",   # « cm » : ajouté par la fiche
+                    "chevet_ouest": "40 × 35, h 70 cm", "chevet_est": "30 × 35, h 70 cm"}
 
 def test_zone_suit_son_meuble(monkeypatch):
     monkeypatch.setattr(document, "CHEVET_EST", {**document.CHEVET_EST, "x0": 319})
