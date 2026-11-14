@@ -414,6 +414,21 @@ async page => {
     }, [NOTE, BNOTE]);
     let rangees = await notesRangees(page);
     verifier(rangees.base && rangees.clone && rangees.sousOutils && rangees.dedans, `comparaison, notes à 1440 px : ${JSON.stringify(rangees)}`);
+    // rideau poussé près d'un bord : chaque note garde la hauteur d'une ligne et reste dans son côté du rideau
+    const notesAuRideau = p => p.evaluate(([a, b]) => {
+      const scene = document.querySelector('section[data-vue="camera"] .scene'), s = scene.getBoundingClientRect();
+      const m = s.left + s.width * (parseFloat(scene.style.getPropertyValue("--pos")) || 50) / 100;
+      const ra = document.querySelector(a).getBoundingClientRect(), rb = document.querySelector(b).getBoundingClientRect();
+      return {pos: scene.style.getPropertyValue("--pos"), hauteurs: [ra.height, rb.height], base: ra.right <= m + 0.5, clone: rb.left >= m - 0.5};
+    }, [NOTE, BNOTE]);
+    const auMilieu = await notesAuRideau(page);
+    await page.focus('section[data-vue="camera"] .poignee');
+    for (const [touche, fois, bord] of [["ArrowLeft", 12, "gauche"], ["ArrowRight", 23, "droit"]]) {
+      for (let i = 0; i < fois; i++) await page.keyboard.press(touche);
+      const r = await notesAuRideau(page);
+      verifier(r.hauteurs.every((h, i) => Math.abs(h - auMilieu.hauteurs[i]) < 0.5) && r.base && r.clone,
+               `comparaison, rideau près du bord ${bord} : ${JSON.stringify(r)}, au milieu ${JSON.stringify(auMilieu.hauteurs)}`);
+    }
     await page.setViewportSize({width: 390, height: 844});
     await ouvrir(page, DOC + "#camera?c=b");
     await attendre(page, () => document.querySelector('section[data-vue="camera"] .element.b'), "comparaison à 390 px : pas de clone");

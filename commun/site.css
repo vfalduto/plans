@@ -487,3 +487,5 @@ a:hover>.pl-piece,a:focus-visible>.pl-piece{fill:color-mix(in srgb,var(--repere)
 /* l'en-tête collant de la feuille (titre, fermer) passe au-dessus de la ligne .info collante d'un nuancier, venue plus
    loin dans le document au même z-index, quand la feuille défile */
 .feuille .tete-feuille{z-index:2}
+/* en comparaison, la note du côté étroit du rideau reste sur une ligne, tronquée à la largeur de son côté */
+.compare > .element > .note-rendu{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
