@@ -64,8 +64,8 @@ def test_annexes_liens_locaux(tmp_path):
             assert (sortie / chemin).exists() or (RACINE / "site" / chemin).exists(), (depuis, lien)
 
 
-# SHA-256 de cuisine-v13-maquette/modele.js (V13.30), relevé avant la bascule qui le supprime
-SHA_MODELE_JS = "30b39a7ae5adbbe47d2218bfb963bffbf5223772c280805c43c04f6c59220387"
+# SHA-256 de site/cuisine/amenagement/maquette-3d/modele.js, régénéré en V13.31 (just cuisine-amenagement-maquette)
+SHA_MODELE_JS = "da1d7c94b64156672979e5de6d8c4273213ce867b06f00425a248cf69a3d1038"
 
 
 def test_modele_js_repris():

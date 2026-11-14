@@ -64,7 +64,7 @@ def test_ordre_et_titres():
     titres = re.findall(r"<h2>(.*?)</h2>", PAGE)
     assert titres == ["Principe", "Hauteur du plan de travail (étude)", "Porte du cellier, Mantion Tango",
                       "Électricité", "Rendus", "Matériaux", "Contenu des rangements",
-                      "Capacité : V11.34 → V13.30 et proposition 9 A"]
+                      "Capacité : V11.34 → V13.31 et proposition 9 A"]
     assert re.findall(r"<h3>([^<]*)</h3>", PAGE.split("<h2>Électricité</h2>")[1].split("<h2>")[0]) == [
         "Quel interrupteur allume quoi", "Points", "Circuits proposés"]
     assert PAGE.startswith('<div class="tete-doc">')

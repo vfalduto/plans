@@ -13,7 +13,7 @@ import math
 import os
 from dataclasses import dataclass
 
-VERSION = "V13.30"
+VERSION = "V13.31"
 H = 250  # hauteur sous plafond
 
 
@@ -172,10 +172,14 @@ ENTREE = dict(x0=228, x1=306, h=204, vantail=83, ferme=(225, 308), ouvert=(142, 
 
 # ------------------------------------------------------------------ meubles
 # Conventions : pieds et plinthe en retrait de 5 sous les façades, caisson P58, façade 2.
+# V13.31 : profondeurs METOD réelles, rail de suspension de 1 compris dans le caisson : bas et colonnes à 60 du mur
+# (59 + rail 1), hauts et B6 à 37,6 (36,6 + rail 1), façade 2, plan de travail 63,5 (standard IKEA : débord de 1,5).
 # V13.25 : meubles bas METOD : pieds et plinthe de 8, caisson de 80 (h 8 → 88), plan 4 → 92. Les colonnes gardent un
 # socle de 15 (SOCLE_COL) en attendant le choix de leur hauteur METOD.
 # V13.26 : colonnes METOD 220 sur les mêmes pieds de 8 (dessus à 228).
-SOCLE, CAISSON_H, P_CAISSON, FACADE = 8, 88, 58, 2
+SOCLE, CAISSON_H, P_CAISSON, FACADE = 8, 88, 60, 2
+DEBORD_PLAN = 1.5                               # plan de travail devant les façades (V13.31 : 2 → 1,5)
+P_PLAN = P_CAISSON + FACADE + DEBORD_PLAN       # 63,5
 SOCLE_COL = SOCLE
 
 MEUBLES = []
@@ -193,7 +197,7 @@ def meuble_bas_nord(nom, x0, largeur, p=P_CAISSON):
 # 60 × 40 superposées sur charnières latérales (pas de relevable), fileur de 15 jusqu'au plafond. Porte basse
 # (h 155 → 195) : le quotidien ; porte haute (h 195 → 235) : le rare et léger.
 FILEUR_HAUT = 15
-HAUT_Z1, P_HAUT = H - FILEUR_HAUT, 33
+HAUT_Z1, P_HAUT = H - FILEUR_HAUT, 37.6       # V13.31 : METOD mural 36,6 + rail 1 (33 avant)
 HAUT_Z0 = HAUT_Z1 - 80
 HAUT_JOINT = HAUT_Z0 + 40                       # joint des deux portes
 
@@ -227,7 +231,7 @@ ECART_OUEST = 10
 LARGEURS_BAS = [20, 60, 60, 60, 60, 40]
 N_BAS, N_HAUTS = len(LARGEURS_BAS), 5
 X_CLOISON = 320                                 # nu ouest du retour de cloison du cellier : fin de la rangée nord
-B_ETROIT, P_ETROIT = 6, 38                      # B6 : caisson P38 (façade 2 : P40)
+B_ETROIT, P_ETROIT = 6, 37.6                    # B6 : METOD 36,6 + rail 1 (façade 2 : P39,6 ; V13.31, P38 avant)
 P_BAS = {B_ETROIT: P_ETROIT}
 _X_BAS = [ECART_OUEST + sum(LARGEURS_BAS[:i]) for i in range(N_BAS + 1)]   # bords des meubles bas
 # V11.50 : le LV monte en colonne (C1) ; B4 devient un meuble à tiroirs ; four encastré sous la plaque (B2)
@@ -268,11 +272,11 @@ def sur_bas(n):
     return _X_BAS[n - 1], _X_BAS[n]
 
 
-# plan de travail 4, P62 (débord 2 devant les façades), sur toute la rangée basse
+# plan de travail 4, P63,5 (débord 1,5 devant les façades, V13.31 ; P62 avant), sur toute la rangée basse
 PT_Z1 = CAISSON_H + 4
-MEUBLES.append(Bloc("plan", "plan_nord", 0, sur_bas(B_EVIER)[1], 0, 62, CAISSON_H, PT_Z1))   # jusqu'au mur ouest
+MEUBLES.append(Bloc("plan", "plan_nord", 0, sur_bas(B_EVIER)[1], 0, P_PLAN, CAISSON_H, PT_Z1))   # jusqu'au mur ouest
 # V13.0 : plan P42 au-dessus de B6 et de son fileur, jusqu'au retour de cloison (plan de mur à mur)
-P_PLAN_ETROIT = P_ETROIT + FACADE + 2
+P_PLAN_ETROIT = P_ETROIT + FACADE + DEBORD_PLAN   # 41,1
 MEUBLES.append(Bloc("plan", "plan_b6", sur_bas(B_ETROIT)[0], X_CLOISON, 0, P_PLAN_ETROIT, CAISSON_H, PT_Z1))
 # fileur Canopée entre B6 et le retour de cloison (15 en V13.0, 10 en V13.2) (dans le plan des façades), socle prolongé dessous
 FILEUR_EST = X_CLOISON - sur_bas(B_ETROIT)[1]
@@ -347,7 +351,7 @@ ZONE_TECH = 30
 # dégagement sous H5
 # V13.20 : crédence en retour sur le mur ouest (y 0 → 58, jusqu'à la fenêtre) et sur la face ouest du retour de
 # cloison du cellier, à l'est de la machine à café (y 0 → 42, profondeur du plan de B6) ; même hauteur (plan → hauts)
-CREDENCE_RETOURS = dict(ouest=58, est=42)
+CREDENCE_RETOURS = dict(ouest=58, est=P_PLAN_ETROIT)   # V13.31 : est 42 → 41,1
 CAFE = dict(x0=sur_bas(B_ETROIT)[0] + 8, x1=sur_bas(B_ETROIT)[0] + 32, y0=3, y1=39, h=36)
 MEUBLES.append(Bloc("cafetiere", "machine_cafe", CAFE["x0"], CAFE["x1"], CAFE["y0"], CAFE["y1"], PT_Z1, PT_Z1 + CAFE["h"]))
 # V13.0 : plus de coffre des réseaux : B6 et son fileur les recouvrent jusqu'au retour de cloison (fond de B6 découpé)
@@ -389,7 +393,7 @@ MEUBLES.append(Bloc("fileur", "fileur_hauts", DEPART_HAUTS - 2, X_CLOISON, P_HAU
 Y_MUR_SUD = 252
 X_MUR_EST = 382
 COL_DOS = X_MUR_EST
-COL_X = COL_DOS - P_CAISSON - FACADE      # nu des façades, x 322
+COL_X = COL_DOS - P_CAISSON - FACADE      # nu des façades, x 320 (V13.31 ; 322 avant)
 COL_Z1 = SOCLE_COL + 220   # V13.26 : colonnes METOD 220 sur pieds de 8, dessus à 228 (fileur de 22) ; hauts à 235
 RAYON_Z1 = 243             # rayonnage du cellier, indépendant des colonnes
 FRIGO_Z1 = SOCLE_COL + 178  # niche du réfrigérateur intégrable (178), h 8 → 186
@@ -641,8 +645,8 @@ for v in CELLIER_VANTAUX:
 # passage libre : baie moins les deux vantaux repliés et leur ferrure (≈ 2 : jeu au pivot, charnières) ; à confirmer
 # avec le logiciel SLIDESOFT de Mantion
 PASSAGE_CELLIER = round(PLIANTE["y1"] - PLIANTE["y0"] - 2 * PLIANTE["ep"] - 2)
-# accès à la porte depuis la cuisine : du coin du plan de B5 (P62) à l'angle nord-ouest de C1
-ACCES_CELLIER = math.dist((sur_bas(B_EVIER)[1], 62), (COL_X, JOUE_C2))
+# accès à la porte depuis la cuisine : du coin du plan de B5 (P63,5) à l'angle nord-ouest de C1
+ACCES_CELLIER = math.dist((sur_bas(B_EVIER)[1], P_PLAN), (COL_X, JOUE_C2))
 # devant la porte, entre le plan de B6 (P42) et les vantaux repliés (y 48)
 JEU_B6_PORTE = BAIE_Y0 - P_PLAN_ETROIT
 # passages dans le cellier : entre le rayonnage nord (P40) et le flanc de C1, et entre le rayonnage nord et les balais
@@ -702,7 +706,7 @@ _tiroirs = [b for b in MEUBLES if b.role in ("facade", "facade_col") and b.poign
             and not b.nom.startswith("tiroir_banquette")]
 CAPACITE = dict(
     v11=dict(lin_bas=sum(LARGEURS_BAS), lin_hauts=sum(LARGEURS_HAUTS), lin_col=2 * 60 + C3_L,
-             modules=(N_BAS, N_HAUTS, 2), tiroirs=len(_tiroirs), plan=PLAN_SEGMENTS, prof_plan=62,
+             modules=(N_BAS, N_HAUTS, 2), tiroirs=len(_tiroirs), plan=PLAN_SEGMENTS, prof_plan=P_PLAN,
              cellier=(RAYON_NORD["x1"] - RAYON_NORD["x0"], len(RAYON_NORD["zs"]), L_NORD, RAYON_NORD["y1"]),
              cellier_sud=None,   # V13.6 : rayonnage sud retiré
              menage=None,
@@ -747,7 +751,7 @@ CONTENU = [
      "four, moules, saladiers (40 : le lourd en bas, à portée du four)"),
     ("B5, sous l'évier", "1 tiroir découpé autour du siphon : tri en 3 bacs (ordures, emballages, verre) ; bac "
      "avant : liquide vaisselle, éponges, brosse, produit évier"),
-    ("B6, P40, contre la porte du cellier", "placard, une étagère (les tuyaux passent dans le fond) : café et thé en "
+    ("B6, P39,6, contre la porte du cellier", "placard, une étagère (les tuyaux passent dans le fond) : café et thé en "
      "réserve, filtres, détartrant ; machine à café posée dessus"),
     ("Étagères à gauche de H1", ", ".join(ETAGERES_MUR["contenus"])),
     ("H1, au-dessus de la plaque", "porte basse : hotte intégrée (groupe filtrant), filtres de rechange ; porte "
@@ -935,6 +939,11 @@ PT_CANDIDATS = [
 
 # ------------------------------------------------------------------ historique (section Changements)
 CHANGEMENTS = [
+    ("V13.31", "14/11/2026",
+     "Profondeurs METOD réelles (point 4 de la relecture) : rail de suspension de 1 compris, meubles bas et colonnes "
+     "à 60 du mur (façade à 62 au lieu de 60), hauts et B6 à 37,6 (façade à 39,6 au lieu de 35 et 40), plan de "
+     "travail à 63,5 (standard IKEA, débord de 1,5 au lieu de 2) et 41,1 au-dessus de B6. Façades des colonnes à "
+     "x 320, au nu de la cloison du cellier. Passages recalculés. Rendus 3D et maquette 3D refaits."),
     ("V13.30", "13/11/2026",
      "Encart renommé « Hauteur du plan de travail (étude) », avec une mention en tête : rien n'est appliqué, plan "
      "toujours à 92. Lien dans le sommaire : #hauteur-du-plan-de-travail-etude."),

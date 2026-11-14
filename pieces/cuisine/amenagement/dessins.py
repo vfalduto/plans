@@ -127,7 +127,7 @@ def plan_svg(aria: str, zones: str = "") -> str:
     for b in M.MEUBLES:
         if b.role == "caisson":
             nom, _, equip = b.etiq.partition(" ")
-            y = 74 if b.y1 >= M.P_CAISSON else b.y1 / 2 + 3   # B6 (P40) : sur le caisson, la porte du cellier repliée devant
+            y = 74 if b.y1 >= M.P_CAISSON else b.y1 / 2 + 3   # B6 (P39,6) : sur le caisson, la porte du cellier repliée devant
             o.append(text((b.x0 + b.x1) / 2, y, nom, "lblb"))
             if equip:
                 o.append(text((b.x0 + b.x1) / 2, y + 8, equip, "lbls"))
@@ -230,7 +230,7 @@ def plan_svg(aria: str, zones: str = "") -> str:
     for y0, y1 in ((M.JOUE_C2, M.COL_Y0), (M.COL_Y0, M.COL_Y0 + 60), (M.COL_Y0 + 60, M.COL_Y1)):
         o.append(cote_v(y0, y1, 402))
     # passages depuis l'angle sud-est des façades des meubles bas : frigo, mur nord du WC
-    o.append(cote_d((M.sur_bas(M.B_EVIER)[1], 62), (M.COL_X, M.JOUE_C2), 0.5, (-7, 4)))
+    o.append(cote_d((M.sur_bas(M.B_EVIER)[1], M.P_PLAN), (M.COL_X, M.JOUE_C2), 0.5, (-7, 4)))
     # porte d'entrée à galandage : baie, poche
     o.append(cote_h(en["x0"], en["x1"], 282, f'baie {f(en["x1"] - en["x0"])}'))
     o.append(cote_h(*en["poche"], 282, f'poche {f(en["poche"][1] - en["poche"][0])}'))
