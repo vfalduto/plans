@@ -1,6 +1,8 @@
+import dataclasses
+
 import pytest
 
-from commun.modele import VUES, Document, Element, Variante, Vue, verifier
+from commun.modele import VUES, Document, Element, Option, Valeur, Variante, Vue, verifier
 
 
 def _doc(type="amenagement", variantes=None):
@@ -52,3 +54,86 @@ def test_verifier_refuse_deux_variantes_de_meme_id():
     v = Variante("a", "A", "1.0", ())
     with pytest.raises(ValueError):
         verifier(_doc(variantes=(v, v)), _toutes())
+
+
+def _choix(id="table", codes=("quotidien", "ouverte"), **kw):
+    valeurs = tuple(Valeur(c, c) for c in codes)
+    return Option(id, id, ("plan",), "choix", kw.pop("defaut", codes[0]), valeurs, "Visible sur le plan.", **kw)
+
+
+def _nuancier(id="teinte", couleurs=("#EEEBE3", "#a9b8a0")):
+    valeurs = tuple(Valeur(f"v{i}", f"v{i}", c) for i, c in enumerate(couleurs))
+    return Option(id, id, ("murs",), "nuancier", "v0", valeurs, "Visible sur le plan.", css="--teinte")
+
+
+def test_option_type_inconnu():
+    with pytest.raises(ValueError, match="liste"):
+        Option("table", "Table", ("plan",), "liste", "a", (Valeur("a", "A"),), "")
+
+
+def test_option_defaut_absent():
+    with pytest.raises(ValueError, match="pliee"):
+        _choix(defaut="pliee")
+
+
+def test_option_codes_en_double():
+    with pytest.raises(ValueError, match="ouverte"):
+        _choix(codes=("ouverte", "quotidien", "ouverte"))
+
+
+def test_option_choix_identifiants():
+    with pytest.raises(ValueError, match="Table"):
+        _choix(id="Table")
+    with pytest.raises(ValueError, match="a b"):
+        _choix(codes=("quotidien", "a b"))
+    with pytest.raises(ValueError, match="a:b"):
+        _choix(codes=("quotidien", "a:b"))
+    _choix(id="taille", codes=("175", "180"))
+
+
+def test_option_choix_sans_css_ni_filtre():
+    with pytest.raises(ValueError, match="table"):
+        _choix(css="--x")
+    with pytest.raises(ValueError, match="table"):
+        _choix(filtre=True)
+
+
+def test_nuancier_couleur():
+    with pytest.raises(ValueError, match="v1"):
+        _nuancier(couleurs=("#EEEBE3", ""))
+    with pytest.raises(ValueError, match="v1"):
+        _nuancier(couleurs=("#EEEBE3", "#abc"))
+    _nuancier()
+    assert _choix().valeurs[0].couleur == ""
+
+
+def _avec_options(*options):
+    return dataclasses.replace(_doc(), options=options)
+
+
+def test_verifier_options_en_double():
+    with pytest.raises(ValueError, match="table"):
+        verifier(_avec_options(_choix(), _choix()), _toutes())
+
+
+def test_verifier_jetons():
+    doc = _avec_options(_choix(), _choix("siege", ("dyvlinge", "chil")), _nuancier())
+
+    def scene(texte):
+        vues = _toutes()
+        vues["plan"] = Vue("plan", [Element("p", "p", "p", texte)])
+        return vues
+
+    with pytest.raises(ValueError, match="table:pliee"):
+        verifier(doc, scene('<svg><g data-si="table:pliee"></g></svg>'))
+    with pytest.raises(ValueError, match="teinte:v1"):
+        verifier(doc, scene('<g data-si="teinte:v1"></g>'))
+    vues = _toutes()
+    vues["coupes"] = Vue("coupes", [Element("A", "A", "A", "", fiche='<template data-si="table:pliee"></template>')])
+    with pytest.raises(ValueError, match="table:pliee"):
+        verifier(doc, vues)
+    vues = _toutes()
+    vues["coupes"] = Vue("coupes", [], fiche='<p data-si="table:ouverte siege:dyv">x</p>')
+    with pytest.raises(ValueError, match="siege:dyv"):
+        verifier(doc, vues)
+    verifier(doc, scene('<g data-si="table:ouverte siege:chil"></g>'))
