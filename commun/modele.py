@@ -103,7 +103,8 @@ class Option:
             raise ValueError(f"option « {self.id} » : un choix n'a ni css ni filtre")
 
 
-JETON = re.compile(r'\bdata-si="([^"]*)"')
+# attribut data-si, entre guillemets doubles ou simples : la valeur est le groupe 1 ou le groupe 2
+JETON = re.compile(r"""\bdata-si=(?:"([^"]*)"|'([^']*)')""")
 
 
 @dataclass
@@ -196,7 +197,15 @@ def verifier(doc: Document, vues: dict[str, Vue]) -> None:
     for cle, vue in vues.items():
         textes = [vue.fiche] + [t for e in vue.elements for t in (e.scene, e.fiche)]
         for texte in textes:
-            for attribut in JETON.findall(texte):
+            for doubles, simples in JETON.findall(texte):
+                attribut = doubles or simples
+                options = []
                 for jeton in attribut.split():
                     if jeton not in connus:
                         raise ValueError(f"{doc.piece}/{doc.id} : jeton « {jeton} » inconnu dans la vue {cle}")
+                    option = jeton.split(":")[0]
+                    if option in options:
+                        raise ValueError(f"{doc.piece}/{doc.id} : deux jetons de l'option « {option} » dans"
+                                         f" data-si=\"{attribut}\" de la vue {cle} : un élément ne porte qu'un jeton par"
+                                         " option")
+                    options.append(option)

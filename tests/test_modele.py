@@ -137,3 +137,26 @@ def test_verifier_jetons():
     with pytest.raises(ValueError, match="siege:dyv"):
         verifier(doc, vues)
     verifier(doc, scene('<g data-si="table:ouverte siege:chil"></g>'))
+
+
+def test_verifier_jetons_entre_guillemets_simples():
+    doc = _avec_options(_choix())
+    vues = _toutes()
+    vues["plan"] = Vue("plan", [Element("p", "p", "p", "<g data-si='table:pliee'></g>")])
+    with pytest.raises(ValueError, match="table:pliee"):
+        verifier(doc, vues)
+    vues["plan"] = Vue("plan", [Element("p", "p", "p", "<g data-si='table:ouverte'></g>")])
+    verifier(doc, vues)
+
+
+def test_verifier_deux_jetons_d_une_option():
+    doc = _avec_options(_choix(), _choix("siege", ("dyvlinge", "chil")))
+    vues = _toutes()
+    vues["coupes"] = Vue("coupes", [Element("A", "A", "A", '<g data-si="table:quotidien siege:chil table:ouverte"></g>')])
+    with pytest.raises(ValueError) as e:
+        verifier(doc, vues)
+    message = str(e.value)
+    assert "entree/amenagement" in message and "coupes" in message and "table:quotidien siege:chil table:ouverte" in message
+    vues["coupes"] = Vue("coupes", [], fiche="<p data-si='siege:chil siege:chil'>x</p>")
+    with pytest.raises(ValueError, match="siege:chil siege:chil"):
+        verifier(doc, vues)
