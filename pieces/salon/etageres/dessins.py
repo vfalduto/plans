@@ -581,4 +581,9 @@ CSS = """.bgwall{fill:var(--line);fill-opacity:.35}
 .lbl{fill:var(--ink);font-size:7.5px}
 .lbls{fill:var(--ink);font-size:6.5px}
 .muted{fill:var(--muted)}
+.dispos{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:10px;margin:14px 0}
+.dispo{display:flex;flex-direction:column;gap:4px;padding:10px;border:1px solid var(--line);border-radius:12px;background:var(--panel);color:var(--ink);text-decoration:none}
+.dispo[aria-current="page"]{border-color:var(--ink);box-shadow:0 0 0 1px var(--ink)}
+.dispo svg{display:block;width:100%;height:auto}
+.dispo span{font-size:13px;color:var(--muted)}
 """

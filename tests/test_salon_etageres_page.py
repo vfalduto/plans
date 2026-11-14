@@ -353,3 +353,120 @@ def test_apres_titre():
     assert vues._apres_titre("<h2>A</h2><p>b</p>", "<i>x</i>") == "<h2>A</h2><i>x</i><p>b</p>"
     with pytest.raises(ValueError):
         vues._apres_titre("<p>b</p>", "x")
+
+
+# ------------------------------------------------------------------ tâche 4 : Explication et rendus
+def _explication(cle):
+    (e,) = vues.vues(cle)["explication"].elements
+    return e.scene
+
+
+def test_ordre_de_l_explication():
+    for c in calculs.CLES:
+        assert re.findall(r"<h2>(.*?)</h2>", _explication(c)) == [
+            "Dispositions", "Le mécanisme", "Présentoir", "Rendus 3D", "Matériaux", "Tenue : poids et chute",
+            "À vérifier sur place"]
+
+
+@pytest.mark.parametrize("cle", calculs.CLES)
+def test_tete_et_chiffres(cle):
+    s, e = _explication(cle), calculs.etat(cle)
+    chapo = re.search(r'<p class="chapo">(.*?)</p>', s)[1]
+    assert chapo.startswith("<b>Étagères sur montants percés</b> : ")
+    assert _texte(chapo.split(" : ", 1)[1]) == _texte(_blocs(cle)[0])
+    for valeur, libelle in ((e.kit, "longueurs des tablettes (cm)"), (f"{len(calculs.pieces(e))} repères", "pièces à débiter"),
+                            ("9 étapes", "de la cloison sondée au montage"), (euros(e.total), "matériaux TTC, sans livraison ni outillage")):
+        assert escape(valeur) in s and libelle in s
+    assert [a["href"] for a in balises(s, "a", classe="btn")] == ["#plans", "#achats", "../../salon-v4.html"]
+
+
+@pytest.mark.parametrize("cle", calculs.CLES)
+def test_vignettes(cle):
+    liens = balises(_explication(cle), "a", classe="dispo")
+    assert [a["href"] for a in liens] == ["./#explication", "rangs.html#explication", "decalee.html#explication",
+                                          "escalier.html#explication"]
+    assert [a.get("aria-current") for a in liens] == [("page" if c == cle else None) for c in calculs.CLES]
+    for d in document.DISPOSITIONS:
+        assert escape(d["idee"]) in _explication(cle)
+
+
+def test_rendus():
+    assert [i["src"] for i in balises(_explication("actuelle"), "img")] == ["rendus/actuelle-iso.jpg", "rendus/actuelle-detail.jpg"]
+    assert [i["alt"] for i in balises(_explication("actuelle"), "img")] == [t for _, t in document.RENDUS]
+    for c in ("rangs", "decalee", "escalier"):
+        assert balises(_explication(c), "img") == [] and 'href="./#explication">les voir</a>' in _explication(c)
+
+
+def test_rendus_copies_tels_quels():
+    for k in ("iso", "detail"):
+        assert (vues.RENDUS_SITE / f"actuelle-{k}.jpg").read_bytes() == (RACINE / f"salon-meubles-3d/etageres-{k}.jpg").read_bytes()
+
+
+# sections de l'ancienne page → vue qui reprend leurs morceaux (p, li, td, th, h3)
+DESTINATION = {"dispositions": "explication", "meuble": "explication", "presentoir": "explication",
+               "rendus": "explication", "materiaux": "explication", "debit": "decoupe", "charges": "explication",
+               "achats": "achats", "montage": "montage", "valider": "explication"}
+# morceaux retirés ou réécrits par une décision de ce plan (décisions 5, 6 et 10, tableau « Ancienne page → vues »)
+ECARTS = ("Cliquer une vignette", "<b>Outils</b> :", "Total TTC (disposition", "Géométrie :")
+# en-têtes des tableaux refaits par un bloc du socle (décision 5 : achats ; matériaux : retenu, pourquoi, autres
+# possibilités dans une seule cellule), qui ont leurs propres en-têtes
+SANS_ENTETES = ("achats", "materiaux")
+# réécrit pour les trois variantes sans rendu (décisions, « Rendus 3D ») : une ligne qui renvoie à Actuelle
+RENDUS_AILLEURS = "Disposition actuelle seulement ; les autres dispositions se rendent sur demande."
+_MORCEAUX = re.compile(r"<(p|li|td|th|h3)(?:\s[^>]*)?>(.*?)</\1>", re.S)
+
+
+def _morceaux(html):
+    """(balise, morceau entier, intérieur) de chaque p, li, td, th, h3."""
+    return [(x.group(1), x.group(0), x.group(2)) for x in _MORCEAUX.finditer(html)]
+
+
+@pytest.mark.parametrize("cle", calculs.CLES)
+@pytest.mark.parametrize("ident", sorted(DESTINATION))
+def test_rien_ne_se_perd(cle, ident):
+    """Chaque paragraphe, point, cellule et intertitre de l'ancienne section, dans la version de la disposition `cle`
+    (blocs des autres dispositions ôtés, légendes ôtées : elles sont les textes alternatifs, testés en tâche 2), est
+    dans la vue qui la reprend, ou dans Montage pour la composition."""
+    vs = vues.vues(cle)
+    lu = {k: _texte(v.elements[0].scene) for k, v in vs.items() if k != "plans"}
+    html = _dispo(_section(ident), cle)
+    html = re.sub(r'<p class="cap">.*?</p>', "", html, flags=re.S)
+    html = re.sub(r'<button type="button" class="dmini".*?</button>', "", html, flags=re.S)
+    html = re.sub(r"<svg.*?</svg>", "", html, flags=re.S)
+    if ident == "achats":
+        html = re.sub(r'<td class="num">.*?</td>', "", html)        # montants au format du socle (tâche 3)
+    cibles = [lu[DESTINATION[ident]]] + ([lu["montage"]] if ident == "meuble" else [])
+    vus = 0
+    for balise, entier, corps in _morceaux(html):
+        if any(x in entier for x in ECARTS) or (balise == "th" and ident in SANS_ENTETES):
+            continue
+        if ident == "rendus" and cle != "actuelle" and _texte(corps) == RENDUS_AILLEURS:
+            continue
+        if ident == "montage" and balise == "li":                      # étape : titre en <h3>, texte en <p>
+            titre, texte = re.match(r"<b>(.*?)</b> : (.*)", corps, re.S).groups()
+            assert _texte(titre) in lu["montage"] and _texte(texte) in lu["montage"]
+            vus += 1
+            continue
+        if ident == "achats" and balise == "td" and "<br>" in corps:   # article, puis sa note dans la note du bloc
+            assert all(_texte(x) in lu["achats"] for x in corps.split("<br>"))
+            vus += 1
+            continue
+        t = _texte(corps)
+        assert any(t in c for c in cibles), (ident, balise, t)
+        vus += 1
+    assert vus > 0 or (ident == "rendus" and cle != "actuelle")
+    if ident == "dispositions":
+        assert ("Choisir une disposition change toute la page : élévation, vues de dessus, vue iso, composition, "
+                "débit, achats et prix.") in lu["explication"]
+    if ident == "rendus" and cle != "actuelle":
+        assert ("Rendus de la disposition Actuelle seulement ( les voir ) ; les autres dispositions se rendent sur "
+                "demande.").replace("( ", "(").replace(" )", ")") in lu["explication"]
+
+
+def test_rien_ne_se_perd_chapo_et_remarque():
+    for c in calculs.CLES:
+        s = _texte(_explication(c))
+        assert _texte(_blocs(c)[0]) in s
+        assert ("Repère : origine au coin nord-ouest du salon, y vers le sud, z depuis le sol, cotes en cm. Dimensions : "
+                "pieces/salon/etageres/document.py (DISPOSITIONS). Le reste du salon : plan du salon.") in s
+        assert 'href="../../archive/salon-bibliotheque-fixation.html"' in _explication(c)

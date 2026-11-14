@@ -189,11 +189,12 @@ def achats_vue(e) -> str:
 def vues(variante: str) -> dict[str, Vue]:
     if variante not in calculs.CLES:
         raise ValueError(f"salon/etageres : variante « {variante} » inconnue ; connues : {', '.join(calculs.CLES)}")
+    from pieces.salon.etageres.explication import explication   # explication.py importe ce module
     e = calculs.etat(variante)
     return {
         "plans": plans(e),
         "decoupe": vue_lecture("decoupe", decoupe(e)),
         "montage": vue_lecture("montage", montage(e)),
         "achats": vue_lecture("achats", achats_vue(e)),
-        "explication": vue_lecture("explication", ""),
+        "explication": vue_lecture("explication", explication(e)),
     }
