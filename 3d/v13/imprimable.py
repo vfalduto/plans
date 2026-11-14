@@ -9,9 +9,11 @@ import os
 import sys
 from html import escape
 
+ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", ".."))
+sys.path.insert(0, ROOT)
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 import modele as M  # noqa: E402
-from plan import ROOT, cote_h, cote_v, f, pts, rect, text  # noqa: E402
+from pieces.cuisine.dessin import cote_h, cote_v, f, pts, rect, text  # noqa: E402
 
 OUT = os.path.join(ROOT, "cuisine-v13-imprimable.html")
 MM = 0.5                         # 1:20 → 1 cm réel = 0,5 mm sur le papier
