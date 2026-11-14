@@ -100,7 +100,7 @@ def figure_montage(n: int) -> str:
     if not neuves:
         return ""
     blocs = [b for b in B.blocs() if b.nom in vus and not (b.nom.startswith("verin_") and f"joue_{b.nom[6]}" not in vus)]
-    return iso.dessin(blocs, neuves, murs=n == 1 or n >= 8, reperes=False, titre=f"Montage, étape {n}")
+    return iso.dessin(blocs, neuves, reperes=False, titre=f"Montage, étape {n}")
 
 
 def figure_colonne(n: int) -> str:
@@ -113,7 +113,7 @@ def figure_colonne(n: int) -> str:
         blocs = [b for b in B.blocs() if b.nom in neuves]
     else:
         blocs = B.blocs()
-    return iso.dessin(blocs, neuves, murs=n >= 3, reperes=False, titre=f"Pose de la colonne, étape {n}")
+    return iso.dessin(blocs, neuves, reperes=False, titre=f"Pose de la colonne, étape {n}")
 
 
 def _montage() -> str:
