@@ -4,6 +4,8 @@ Une seule variante (id vide), pas d'option. Les textes qui étaient sous les des
 texte alternatif (alts) : rien n'est écrit sous un dessin.
 """
 import re
+from dataclasses import replace
+from functools import lru_cache
 from html import escape, unescape
 
 from commun.blocs import Achat, euros, note_source, tableau_achats, vue_lecture
@@ -92,6 +94,40 @@ def pose_colonne() -> list[str]:
     ]
 
 
+VERIN_GROSSI = 3        # les vérins (1,6 de large, 2 de haut) sont trop petits pour se voir : dessinés trois fois plus gros
+
+
+def _grossir_verins(blocs):
+    """Les vérins agrandis autour de leur axe, vers le bas (le haut reste sous la joue)."""
+    res = []
+    for b in blocs:
+        if b.nom.startswith("verin_"):
+            cx, cy, d = (b.x0 + b.x1) / 2, (b.y0 + b.y1) / 2, (b.x1 - b.x0) * VERIN_GROSSI / 2
+            b = replace(b, x0=cx - d, x1=cx + d, y0=cy - d, y1=cy + d, z0=b.z1 - (b.z1 - b.z0) * VERIN_GROSSI)
+        res.append(b)
+    return res
+
+
+@lru_cache(maxsize=None)
+def _largeur_ref() -> float:
+    """Largeur (unités du dessin) du meuble monté, sans la machine : le schéma de référence, qui remplit la colonne.
+    Les autres sont dessinés à la même échelle : un schéma de pièce seule reste petit au lieu d'être agrandi jusqu'à
+    remplir la page (celui de la machine, plus large, est ramené à la colonne)."""
+    return _largeur(iso.dessin([b for b in _grossir_verins(B.blocs()) if b.role != "machine"], (), reperes=False))
+
+
+def _largeur(svg: str) -> float:
+    return float(re.search(r'viewBox="\S+ \S+ (\S+) ', svg).group(1))
+
+
+def _a_l_echelle(svg: str) -> str:
+    """Largeur du schéma proportionnelle à celle du dessin : même échelle de projection pour tous les schémas."""
+    if not svg:
+        return svg
+    pct = min(100.0, 100 * _largeur(svg) / _largeur_ref())
+    return svg.replace("<svg ", f'<svg style="width:{pct:.1f}%" ', 1)
+
+
 def figure_montage(n: int) -> str:
     """Schéma de l'étape n (1 à 13) : ce qui est déjà monté en gris, les pièces posées à l'étape ou sur lesquelles elle
     travaille en couleur. Chaîne vide quand l'étape n'a rien à montrer (couper, silicone) : le modèle n'a pas la pièce."""
@@ -99,8 +135,8 @@ def figure_montage(n: int) -> str:
     vus = {k for k, v in B.POSE.items() if v <= n} | neuves | set(B.CONTEXTE.get(n, ()))
     if not neuves:
         return ""
-    blocs = [b for b in B.blocs() if b.nom in vus and not (b.nom.startswith("verin_") and f"joue_{b.nom[6]}" not in vus)]
-    return iso.dessin(blocs, neuves, reperes=False, titre=f"Montage, étape {n}")
+    blocs = [b for b in _grossir_verins(B.blocs()) if b.nom in vus and not (b.nom.startswith("verin_") and f"joue_{b.nom[6]}" not in vus)]
+    return _a_l_echelle(iso.dessin(blocs, neuves, reperes=False, titre=f"Montage, étape {n}"))
 
 
 def figure_colonne(n: int) -> str:
@@ -109,11 +145,9 @@ def figure_colonne(n: int) -> str:
     neuves = {k for k, v in B.POSE_COLONNE.items() if v == n} | set(B.ACCENT_COLONNE.get(n, ()))
     if not neuves:
         return ""
-    if n == 2:
-        blocs = [b for b in B.blocs() if b.nom in neuves]
-    else:
-        blocs = B.blocs()
-    return iso.dessin(blocs, neuves, reperes=False, titre=f"Pose de la colonne, étape {n}")
+    tous = _grossir_verins(B.blocs())
+    blocs = [b for b in tous if b.nom in neuves] if n == 2 else tous
+    return _a_l_echelle(iso.dessin(blocs, neuves, reperes=False, titre=f"Pose de la colonne, étape {n}"))
 
 
 def _montage() -> str:

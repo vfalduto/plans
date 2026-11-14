@@ -80,3 +80,12 @@ def test_texte_des_etapes_inchange():
     assert attendu in sans_figure
     attendu = "".join(f"<li><div><p>{t}</p></div></li>" for t in vues.pose_colonne())
     assert attendu in sans_figure
+
+
+def test_schemas_du_montage_a_la_meme_echelle():
+    """La largeur d'un schéma est proportionnelle à celle de son dessin : la porte seule reste plus petite que le meuble."""
+    import re
+    larg = lambda s: float(re.search(r"width:([\d.]+)%", s).group(1))
+    assert larg(vues.figure_montage(3)) < 0.5 * larg(vues.figure_montage(12))
+    assert larg(vues.figure_colonne(2)) < 0.3 * larg(vues.figure_colonne(3))
+    assert all(larg(vues.figure_montage(i)) <= 100 for i in (1, 4, 13))
