@@ -41,5 +41,4 @@ def test_ancienne_page_retiree():
     suivis = subprocess.run(["git", "ls-files", "salon-enfilade.html"], cwd=RACINE, capture_output=True, text=True,
                             check=True).stdout
     assert suivis == ""
-    assert (RACINE / "3d/salon/enfilade.py").exists()     # l'ancien générateur reste (nettoyage commun)
     assert "/salon-enfilade.html" in (RACINE / ".gitignore").read_text(encoding="utf-8").split()

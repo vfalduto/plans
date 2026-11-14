@@ -7,17 +7,17 @@ volumes.py et chiffrage.py.
 from html import escape
 from pathlib import Path
 
-from commun.blocs import Achat, SectionAchats, achats, euros, note_source, total_achats, vue_lecture
+from commun.blocs import Achat, SectionAchats, achats, euros, note_source, vue_lecture
 from commun.blocs_construction import (Calepin, Colonne, DessinMeuble, Etape, calepinage, etapes, tableau_debit,
                                        vue_plans)
 from commun.modele import Vue
 from pieces.salon.enfilade import chiffrage
 from pieces.salon.enfilade.chiffrage import debit, degagements, format_de, lettre, poids_caisson, volume_utile
-from pieces.salon.enfilade.dessins import (ECHELLES, decoupe_svg, dessus_svg, eclate_svg, en_cm, face_svg, iso,
-                                           profil_svg)
+from pieces.salon.enfilade.dessins import (ECHELLES, decoupe_svg, dessus_svg, eclate_svg, en_cm, face_svg,
+                                           formule_longueur, iso, profil_svg)
 from pieces.salon.enfilade.document import (COULISSE, DESSUS, DOS, ETAGERES_CAISSONS, FAC, FORMATS, GROUPES, H_BOITE,
                                             HUILE, JEU, MAGASINS, NORD, ORDRE_MAG, OUTILLAGE, PC, PIEDS_X, PREFIXE,
-                                            RELEVE, TAMPON, TRAIT, L, N, P)
+                                            RELEVE, TAMPON, TRAIT, L, P)
 from pieces.salon.meubles import cote
 
 RENDUS_SITE = Path(__file__).resolve().parents[3] / "site" / "salon" / "enfilade" / "rendus"
@@ -80,8 +80,7 @@ def _plans(ch):
         DessinMeuble("dessus", "Dessus", en_cm(dessus_svg(g, a["dessus"]), ECHELLES["dessus"])),
         DessinMeuble("eclate", "Éclatée", en_cm(eclate_svg(g, a["eclate"]), ECHELLES["eclate"])),
     ]
-    formule = (f"{cote(L)} = {N} × {cote(g['W'][0])}, centré sur le mur ({cote(NORD)} libres de chaque côté)")
-    return vue_plans(dessins, titre="Enfilade du mur ouest", formule=formule)
+    return vue_plans(dessins, titre="Enfilade du mur ouest", formule=formule_longueur(g))
 
 
 # ------------------------------------------------------------------ Découpe
@@ -228,6 +227,5 @@ def vues(variante: str) -> dict[str, Vue]:
         "decoupe": vue_lecture("decoupe", _decoupe(ch)),
         "montage": vue_lecture("montage", _montage(ch)),
         "achats": vue_lecture("achats", _achats(ch, sections)),
-        "explication": vue_explication(ch, chs, len(etapes_montage(ch["g"])),
-                                       total_achats(sections, arrondi=False)),
+        "explication": vue_explication(ch, chs, len(etapes_montage(ch["g"]))),
     }

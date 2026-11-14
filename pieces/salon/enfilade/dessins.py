@@ -54,6 +54,10 @@ FLECHE = ('<defs><marker id="fleche" viewBox="0 0 10 10" refX="9" refY="5" marke
           'orient="auto-start-reverse"><path class="flm" d="M0,0 L10,5 L0,10 z"/></marker></defs>')
 
 
+def formule_longueur(g):
+    return f"{cote(L)} = {N} × {cote(g['W'][0])}, centré sur le mur ({cote(NORD)} libres de chaque côté)"
+
+
 def svg(vb, corps, label):
     return f'<svg class="enf" viewBox="{vb}" role="img" aria-label="{escape(label, quote=True)}">{corps}</svg>'
 
@@ -77,7 +81,7 @@ def cl_caisson():
 
 def face_svg(g=G, label="Élévation de face cotée de l'enfilade"):
     """Élévation de face, vue de la pièce (regard vers l'ouest : le nord, contre le mur, est à droite)."""
-    k = 3.4
+    k = ECHELLES["elevation"]
     U = lambda y: (L - y) * k  # noqa: E731
     V = lambda z: (Z1 - z) * k  # noqa: E731
     o = [rect(U(-NORD), V(Z1 + 10), U(-NORD - 5), V(0), "mur-h"),
@@ -105,7 +109,7 @@ def face_svg(g=G, label="Élévation de face cotée de l'enfilade"):
         ym = (g["Y"][k_] + g["Y"][k_ + 1]) / 2
         o.append(text(U(ym), V(0) + 15, f"M{k_ + 1}, {contenu}", "ts"))
         o.append(cote_h(U(g["Y"][k_ + 1]), U(g["Y"][k_]), V(0) + 36, f'caisson {cote(g["W"][k_])}'))
-    o.append(cote_h(U(L), U(0), V(0) + 58, f"{cote(L)} = {N} × {cote(g['W'][0])}, centré sur le mur ({cote(NORD)} libres de chaque côté)"))
+    o.append(cote_h(U(L), U(0), V(0) + 58, formule_longueur(g)))
     # largeurs des façades au-dessus
     yv = V(Z1) - 12
     for fc in g["facades"]:
@@ -127,7 +131,7 @@ def face_svg(g=G, label="Élévation de face cotée de l'enfilade"):
 
 def profil_svg(g=G, label="Coupes de profil de l'enfilade"):
     """Deux coupes de profil (mur à gauche, pièce à droite) : par un module à portes, par le module à tiroirs."""
-    k = 5
+    k = ECHELLES["profil"]
     V = lambda z: (Z1 - z) * k  # noqa: E731
     o = []
 
@@ -200,7 +204,7 @@ def profil_svg(g=G, label="Coupes de profil de l'enfilade"):
 
 def dessus_svg(g=G, label="Vue de dessus de l'enfilade avec les ouvertures"):
     """Vue de dessus, dessus enlevé : caissons, pieds (tireté), portes ouvertes à 90° et tiroir sorti dans l'allée."""
-    k, c = 3, CANAPE
+    k, c = ECHELLES["dessus"], CANAPE
     U = lambda y: (L - y) * k  # noqa: E731   vu de dessus, mur ouest en haut : le nord à droite
     rect = lambda x0, y0, x1, y1, cls: _rect(min(x0, x1), min(y0, y1), max(x0, x1), max(y0, y1), cls)  # noqa: E731
     V = lambda x: x * k  # noqa: E731
@@ -254,7 +258,7 @@ def dessus_svg(g=G, label="Vue de dessus de l'enfilade avec les ouvertures"):
 
 def eclate_svg(g=G, label="Vue éclatée de l'enfilade"):
     """Vue éclatée de face : trois caissons, vis de liaison, pieds, dessus (d'une pièce ou un par caisson)."""
-    k, gap, lev = 2.6, 22, 24
+    k, gap, lev = ECHELLES["eclate"], 22, 24
     V = lambda z: (Z1 + lev - z) * k  # noqa: E731
     o = [FLECHE]
     xs = {}

@@ -3,7 +3,7 @@ from html import escape
 
 import pytest
 
-from commun.blocs import euros
+from commun.blocs import euros, total_achats
 from commun.modele import Document, Variante, verifier
 from pieces.salon.enfilade import chiffrage, vues
 from tests.salon_enfilade_ancienne import corrige, morceaux, page, section, texte
@@ -108,3 +108,8 @@ def test_sans_point_median_ni_chasse_fixe():
     for cle, v in V.items():
         for e in v.elements:
             assert "·" not in e.scene + v.fiche and "mono" not in e.scene, cle
+
+
+def test_total_des_achats_egal_au_total_du_chiffrage():
+    ch = chiffrage.retenu(chiffrage.chiffrages())
+    assert total_achats(vues._sections_achats(ch), arrondi=False) == euros(ch["total"])

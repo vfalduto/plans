@@ -19,7 +19,7 @@ from pieces.salon.enfilade.document import (CASTO_PT, CASTO_PT26, DESSUS, DOS, E
                                             IKEA_FR, JEU_METOD, LM_PT25, LM_PT26, LM_T20, METOD, METOD_CAISSON,
                                             METOD_MIXTE, METOD_PLAN_LM, METOD_RELEVE, NOIRS, NORD, PC, PIEDS_X,
                                             PROF_ETAGERE, RENDUS, STOCKHOLM, TRAV, VRENA, ZP, COULISSE, L, N, P, Z1)
-from pieces.salon.enfilade.vues import RENDUS_SITE
+from pieces.salon.enfilade.vues import RENDUS_SITE, _poste
 from pieces.salon.enfilade.volumes import controle
 from pieces.salon.etageres.document import MONTANTS
 from pieces.salon.meubles import cote
@@ -46,10 +46,11 @@ def _tete(ch):
     return tete(chapo, figure=figure_rendu(rendu(RENDUS_SITE, "", "iso"), RENDUS[0][1]))
 
 
-def _chiffres(ch, n_etapes, total):
+def _chiffres(ch, n_etapes):
     g, ps = ch["g"], ch["ps"]
     d1, d2 = degagements(g)
-    return chiffres([(controle(g), "Cotes hors tout (cm)"), (total, f"Matériaux, composition {ch['v']['cle']}"),
+    return chiffres([(controle(g), "Cotes hors tout (cm)"),
+                     (prix(ch["total"]), f"Matériaux, composition {ch['v']['cle']}"),
                      (f"{volume_utile(g):.0f} L", "Volume utile"), (str(len(debit(ps))), "Repères"),
                      (str(len(ps)), "Pièces à débiter"), (str(n_etapes), "Étapes de montage"),
                      (f"{cote(d1)} cm", "Devant la porte ouverte de M1"), (f"{cote(d2)} cm", "Devant un tiroir sorti")])
@@ -369,7 +370,7 @@ def _metod(ch):
 
 # ------------------------------------------------------------------ points à valider
 def _points(ch, chs):
-    nc18 = next(li["q"] for li in ch["lignes"] if li["poste"] == FORMATS["C18"]["nom"])
+    nc18 = _poste(ch, lambda p: p == FORMATS["C18"]["nom"], FORMATS["C18"]["nom"])["q"]
     g = ch["g"]
     f_ = next(c for c in chs if c["v"]["cle"] == "F")
     p1 = [fc for fc in g["facades"] if fc["k"] == 0][0]
@@ -401,10 +402,9 @@ def _points(ch, chs):
 
 
 # ------------------------------------------------------------------ la vue
-def vue_explication(ch: dict, chs: list[dict], n_etapes: int, total: str) -> Vue:
-    """`total` : le total de la vue Achats (`total_achats(<ses sections>, arrondi=False)`), repris tel quel."""
+def vue_explication(ch: dict, chs: list[dict], n_etapes: int) -> Vue:
     return vue_lecture("explication", (
-        _tete(ch) + _chiffres(ch, n_etapes, total) + _meuble(ch)
+        _tete(ch) + _chiffres(ch, n_etapes) + _meuble(ch)
         + rendus_meuble(RENDUS_SITE, "", RENDUS, titre="Rendus 3D")
         + _construction(ch) + _materiaux(chs) + _comparaison(ch) + _metod(ch)
         + a_verifier([escape(p) for p in _points(ch, chs)], titre="Points à valider")

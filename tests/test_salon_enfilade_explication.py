@@ -1,7 +1,7 @@
 import re
 from html import escape
 
-from pieces.salon.enfilade import chiffrage, document, vues
+from pieces.salon.enfilade import document, vues
 from tests.salon_enfilade_ancienne import corrige, morceaux, page, section, texte
 
 S = vues.vues("")["explication"].elements[0].scene
@@ -13,7 +13,7 @@ def test_ordre_des_sections():
 
 
 def test_chiffres_cles():
-    assert re.findall(r"<dt>(.*?)</dt>", S) == ["240 × 60 × 80", "1027,95 €", "788 L", "13", "46", "11",
+    assert re.findall(r"<dt>(.*?)</dt>", S) == ["240 × 60 × 80", "1 027,95 €", "788 L", "13", "46", "11",
                                                "20,3 cm", "8,2 cm"]
 
 
