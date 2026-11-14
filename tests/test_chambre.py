@@ -182,3 +182,52 @@ def test_css_du_plan():
     assert classes - {"plan", "legend"} <= regles
     assert not re.search(r"font-family|Archivo|Mono|monospace|cook2|prefers-color-scheme", dessin.CSS)
     assert not re.search(r"#[0-9A-Fa-f]{3,8}\b|var\(--", dessin.plan_svg(document) + dessin.legende())
+
+
+@pytest.mark.parametrize("k", ["est", "sud", "ouest"])
+def test_elevation_regeneree(k):
+    _, dessiner = dessin.ELEVATIONS[k]
+    assert _elements(dessiner(document)) == _elements(_ancien(k))
+    assert dessin.ALTS[k] == _cap(k)
+
+
+def test_elevations_dans_l_ordre():
+    assert [(k, nom) for k, (nom, _) in dessin.ELEVATIONS.items()] == [
+        ("est", "Mur est"), ("sud", "Mur sud"), ("ouest", "Mur ouest")]
+
+
+def test_elevations_suivent_le_modele(monkeypatch):
+    monkeypatch.setattr(document, "PATERES", {**document.PATERES, "z": 170})
+    assert "3 patères h 170" in dessin.elevation_est(document)
+    monkeypatch.setattr(document, "CHEVET_OUEST", {**document.CHEVET_OUEST, "z1": 65})
+    assert ">② h 65<" in re.sub(r"<tspan[^>]*>|</tspan>", "", dessin.elevation_sud(document))
+
+
+@pytest.mark.parametrize("k", ["est", "sud", "ouest"])
+def test_elevation_svg(k):
+    _, dessiner = dessin.ELEVATIONS[k]
+    (svg,) = balises(dessiner(document), "svg")
+    assert (svg["class"], svg["role"], svg["aria-label"]) == ("coupe", "img", dessin.ALTS[k])
+    (svg,) = balises(dessiner(document, aria="Mur"), "svg")
+    assert svg["aria-label"] == "Mur"
+    assert "·" not in dessiner(document)
+
+
+def test_css_des_elevations():
+    svgs = "".join(d(document) for _, d in dessin.ELEVATIONS.values())
+    classes = {c for n in ("svg", "rect", "line", "path", "circle", "text", "tspan")
+               for b in balises(svgs, n) for c in b.get("class", "").split()}
+    assert classes - {"coupe"} <= set(re.findall(r"\.([\w-]+)", dessin.CSS))
+    assert not re.search(r"font-family|Archivo|Mono|monospace|cook2|prefers-color-scheme", dessin.CSS)
+    assert not re.search(r"#[0-9A-Fa-f]{3,8}\b|var\(--", svgs)
+
+
+def test_marqueurs_definis_dans_chaque_dessin():
+    dessins = {"plan": dessin.plan_svg(document), **{k: d(document) for k, (_, d) in dessin.ELEVATIONS.items()}}
+    vus = set()
+    for k, svg in dessins.items():
+        refs = set(re.findall(r"url\(#([\w-]+)\)", svg))
+        assert refs <= set(re.findall(r'\bid="([\w-]+)"', svg)), k
+        assert all(r.endswith("-" + k) for r in refs), k
+        vus |= refs
+    assert vus >= {"tk-plan", "ar-plan", "tk-est", "ar-est", "tk-sud"}   # l'élévation ouest n'a ni cote ni flèche

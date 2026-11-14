@@ -1,6 +1,6 @@
-"""Dessins de la chambre : plan vu de dessus, légende et styles des dessins.
+"""Dessins de la chambre : plan vu de dessus, élévations des murs est, sud et ouest, légende et styles des dessins.
 
-Repris du plan de l'ancienne page chambre-amenagement.html (V2.1, tests/fixtures/chambre/). Chaque fonction reçoit le
+Repris des dessins de l'ancienne page chambre-amenagement.html (V2.1, tests/fixtures/chambre/). Chaque fonction reçoit le
 module `M` (document.py) au lieu de le lire dans une variable globale. Étiquettes, cotes et passages sont calculés du
 modèle ; les textes de l'ancienne page sont repris tels quels (point médian remplacé par une virgule).
 
@@ -165,6 +165,194 @@ def plan_svg(M, aria="Plan de la chambre", zones=""):
             f'{_defs("plan")}{"".join(o)}{zones}</svg>')
 
 
+# ------------------------------------------------------------------ élévations
+# Repère d'une élévation : abscisse u le long du mur regardé, ordonnée SVG = H - z (sol à H, plafond à 0).
+# est : u = y (nord à gauche) ; sud : u = L - x (est à gauche) ; ouest : u = P - y (sud à gauche).
+# Constantes de dessin (tracés que la page ne cote pas) :
+_DEBORD = 12                                # sol et plafond dépassent de 12 le nu des murs de chaque côté
+_PANTALONS = ((28, 53, 67), (16, 41, 66))   # u des pantalons de la niche (mur est), barre du fond puis de devant
+_PANTALON = (22, 14)                        # largeur d'un pantalon, z de son bas
+_VETEMENT = (12, 2, 50)                     # vêtement sous une patère : largeur, écart sous la patère, hauteur
+_PIED = 4                                   # pied du sommier : largeur et retrait depuis le bout du lit
+_TIROIR_CHEVET = 55                         # z du filet du tiroir d'un chevet
+_FIL = 10                                   # fil sous une applique
+_POIGNEE_PORTE = (6, 105)                   # poignée de la porte du couloir : retrait depuis le bord, z
+
+
+def _rz(H, u0, u1, z0, z1, cls, rx=0):
+    """Rectangle d'élévation de u0 à u1 (dans un ordre ou l'autre) et de z0 à z1."""
+    return rect(min(u0, u1), H - z1, max(u0, u1), H - z0, cls, rx)
+
+
+def _ligne(cls, u0, y0, u1, y1):
+    return f'<line class="{cls}" x1="{f(u0)}" y1="{f(y0)}" x2="{f(u1)}" y2="{f(y1)}"/>'
+
+
+def _cadre(M, longueur, ep_gauche, ep_droite):
+    """Sol, plafond et murs coupés de part et d'autre d'une élévation de `longueur`."""
+    H = M.H
+    return [_ligne("floorl", -_DEBORD, H, longueur + _DEBORD, H),
+            _ligne("el-ceil", -_DEBORD, 0, longueur + _DEBORD, 0),
+            _texte(2, -3, f"plafond {H}", "lblx muted", "start"),
+            rect(-ep_gauche, 0, 0, H, "w"),
+            rect(longueur, 0, longueur + ep_droite, H, "w")]
+
+
+def _elevation(k, viewbox, o, aria):
+    return (f'<svg class="coupe" viewBox="{viewbox}" role="img" aria-label="{escape(aria or ALTS[k])}">'
+            f'{_defs(k)}{"".join(o)}</svg>')
+
+
+def elevation_est(M, aria=""):
+    """Mur est vu depuis le lit : niche à pantalons, commodes sous la fenêtre, patères ; lit et chevet en pointillés."""
+    H, P, EP, fe = M.H, M.P, M.EP, M.FENETRE
+    o = _cadre(M, P, EP["n"], EP["s"])
+    o.append(_rz(H, 0, M.DECROCHE["y1"], 0, H, "bgwall"))
+    # fenêtre coulissante : vantail fixe au nord, mobile au sud
+    o.append(_rz(H, fe["y0"], fe["y1"], fe["allege"], fe["linteau"], "win"))
+    c = fe["cadre"]
+    v = (fe["y1"] - fe["y0"] - 2 * c - fe["joint"]) / 2
+    fixe = fe["y0"] + c
+    mobile = fixe + v + fe["joint"]
+    for u in (fixe, mobile):
+        o.append(_rz(H, u, u + v, fe["allege"] + c, fe["linteau"] - c, "filet"))
+    o.append(f'<path class="slide" d="M{f(mobile + v - 11)} 90 L{f(mobile + 11)} 90" marker-end="url(#ar-est)"/>')
+    o.append(_texte(fixe + v / 2, 87, "fixe", "lblx muted"))
+    o.append(_texte(mobile + v / 2, 98, "coulisse vers le nord", "lblx muted"))
+    o.append(_texte((fe["y0"] + fe["y1"]) / 2, H - fe["linteau"] - 4,
+                    f'fenêtre coulissante {fe["y1"] - fe["y0"]}, allège {fe["allege"]}, linteau {fe["linteau"]}',
+                    "lblx muted"))
+    # ④ joue et niche à pantalons : la barre du fond (côté mur) d'abord, pantalons estompés
+    jo, ni = M.JOUE, M.NICHE
+    o.append(_rz(H, jo["y0"], jo["y1"], 0, jo["z1"], "cabcut"))
+    barres = sorted(ni["barres"], reverse=True)
+    for i, ((_, z), us) in enumerate(zip(barres, _PANTALONS)):
+        for u in us[:ni["pantalons"]]:
+            r = _rz(H, u, u + _PANTALON[0], _PANTALON[1], z, "cloth", 2)
+            o.append(r[:-2] + ' style="opacity:.45"/>' if i < len(barres) - 1 else r)
+        o.append(_ligne("tringle", ni["y0"], H - z, ni["y1"], H - z))
+    um = (ni["y0"] + ni["y1"]) / 2
+    o.append(_texte(um, H - max(z for _, z in barres) - 1, "barres h " + " / ".join(str(z) for _, z in barres),
+                    "lblx valett"))
+    o.append(_texte(um, 246, f'{_numero("④")} pantalons', "lblx valett"))
+    # ③ deux commodes : séparations des tiroirs et poignées, puis le plan
+    co = M.COMMODE
+    for cm in (M.COMMODE_NORD, M.COMMODE_SUD):
+        o.append(_rz(H, cm["y0"], cm["y1"], 0, cm["z1"], "cab"))
+        for z in sorted(co["separations"], reverse=True):
+            o.append(_ligne("filet", cm["y0"], H - z, cm["y1"], H - z))
+        uc = (cm["y0"] + cm["y1"]) / 2
+        for z in co["poignees"]:
+            o.append(_rz(H, uc - co["poignee_l"] / 2, uc + co["poignee_l"] / 2, z, z + co["poignee_h"], "dark"))
+    pn, cn, cs = M.PLAN, M.COMMODE_NORD, M.COMMODE_SUD
+    o.append(_rz(H, pn["y0"], pn["y1"], pn["z1"] - pn["ep"], pn["z1"], "head"))
+    lp, pp = _dims(pn)
+    lc, pc = _dims(cn)
+    o.append(_texte((cn["y0"] + cs["y1"]) / 2, H - pn["z1"] - 5,
+                    f'{_numero("③")} plan {pp} × {lp}, h {pn["z1"]}, 2 commodes {pc} × {lc} h {cn["z1"]}', "lblx"))
+    # ④ patères et vêtements
+    pa = M.PATERES
+    lv, ev, hv = _VETEMENT
+    for u in pa["y"]:
+        o.append(rect(u - lv / 2, H - pa["z"] + ev, u + lv / 2, H - pa["z"] + ev + hv, "cloth", 3))
+        o.append(f'<circle class="peg" cx="{f(u)}" cy="{f(H - pa["z"])}" r="1.8"/>')
+    o.append(_texte((pa["y"][0] + pa["y"][-1]) / 2, H - pa["z"] - 5,
+                    f'{_numero("④")} {len(pa["y"])} patères h {pa["z"]}', "lblx valett"))
+    # premier plan : chevet est, tête de lit, lit (sommier et matelas)
+    ch, te, li = M.CHEVET_EST, M.TETE, M.LIT
+    o.append(_rz(H, ch["y0"], ch["y1"], 0, ch["z1"], "ghost"))
+    o.append(_rz(H, te["y0"], te["y1"], te["z0"], te["z1"], "ghost"))
+    o.append(_rz(H, li["y0"], li["y1"], li["pieds"], li["z1"], "ghost"))
+    o.append(_texte(177, 242, "lit au premier plan", "lblx muted"))
+    cl = M.CLIM
+    o.append(_rz(H, cl["y0"], cl["y1"], cl["z0"], cl["z1"], "tech"))
+    o.append(_texte(cl["y1"] + 3, 14, "clim (mur nord)", "lblx muted", "start"))
+    # cotes : trumeau nord, fenêtre, trumeau sud
+    for a, b in ((0, fe["y0"]), (fe["y0"], fe["y1"]), (fe["y1"], P)):
+        o.append(_cote((a, -10), (b, -10), b - a, ((a + b) / 2, -12), "est"))
+    o.append(_texte(4, 262, "nord", "lblx muted", "start"))
+    o.append(_texte(P - 4, 262, "sud", "lblx muted", "end"))
+    return _elevation("est", "-35 -22 320 290", o, aria)
+
+
+def elevation_sud(M, aria=""):
+    """Mur sud vu depuis le pied du lit : bout du plan, chevets, tête de lit et lit, placard coupé."""
+    H, L, EP, pl = M.H, M.L, M.EP, M.PLACARD
+    o = _cadre(M, L, EP["e"], EP["o"])
+    o.append(_rz(H, L - pl["x0"], L - pl["x1"], 0, H, "closet"))
+    o.append(_rz(H, L - pl["x1"], L - pl["x1"] + pl["jambage"], 0, H, "wcut"))
+    xp, yp = L - (pl["x0"] + pl["x1"]) / 2, 120
+    o.append(_texte(xp, yp, "placard existant (coupe)", "lblx muted", extra=rot(xp, yp)))
+    # ③ bout de la commode sud et du plan
+    cs, pn = M.COMMODE_SUD, M.PLAN
+    o.append(_rz(H, L - cs["x0"], L - cs["x1"], 0, cs["z1"], "cab"))
+    o.append(_rz(H, L - pn["x0"], L - pn["x1"], pn["z1"] - pn["ep"], pn["z1"], "head"))
+    o.append(_texte(L - (pn["x0"] + pn["x1"]) / 2, H - pn["z1"] - 4, f'{_numero("③")} plan h {pn["z1"]}', "lblx"))
+    # ① tête de lit, pieds, sommier, matelas, oreillers
+    te, li = M.TETE, M.LIT
+    o.append(_rz(H, L - te["x0"], L - te["x1"], te["z0"], te["z1"], "head", 2))
+    for x in (li["x0"] + _PIED, li["x1"] - 2 * _PIED):
+        o.append(_rz(H, L - x, L - x - _PIED, 0, li["pieds"], "dark"))
+    z_sommier = li["pieds"] + li["sommier"]
+    o.append(_rz(H, L - li["x0"], L - li["x1"], li["pieds"], z_sommier, "bed", 2))
+    o.append(_rz(H, L - li["x0"], L - li["x1"], z_sommier, li["z1"], "mat", 4))
+    for r in reversed(M.OREILLERS):
+        o.append(_rz(H, L - r["x0"], L - r["x1"], r["z0"], r["z1"], "pil", 6))
+    o.append(_texte(L - (te["x0"] + te["x1"]) / 2, 128, f'{_numero("①")} Tête de lit murale h {te["z1"]}', "lbls"))
+    ul = L - (li["x0"] + li["x1"]) / 2
+    o.append(_texte(ul, 184, f'matelas {li["matelas"]}, dessus h {li["z1"]}', "lblx muted"))
+    o.append(_texte(ul, 214, f'sommier {li["sommier"]}', "lblx muted"))
+    o.append(_texte(ul, 240, f'pieds {li["pieds"]}', "lblx muted"))
+    # ② chevets, appliques, prises (chevet ouest d'abord)
+    ap, pr = M.APPLIQUES, M.PRISES
+    for ch, xa, xq in zip((M.CHEVET_OUEST, M.CHEVET_EST), ap["x"], pr["x"]):
+        o.append(_rz(H, L - ch["x0"], L - ch["x1"], 0, ch["z1"], "cab", 1.5))
+        o.append(_ligne("filet", L - ch["x1"], H - _TIROIR_CHEVET, L - ch["x0"], H - _TIROIR_CHEVET))
+        o.append(_texte(L - (ch["x0"] + ch["x1"]) / 2, 220, f'{_numero("②")} h {ch["z1"]}', "lblx"))
+        ua, uq = L - xa, L - xq
+        o.append(_rz(H, ua - ap["l"] / 2, ua + ap["l"] / 2, ap["z0"], ap["z1"], "lamp"))
+        o.append(_ligne("filet", ua, H - ap["z0"], ua, H - ap["z0"] + _FIL))
+        o.append(_texte(ua, H - ap["z1"] - 4, f'applique h {ap["h"]}', "lblx muted"))
+        o.append(_rz(H, uq - pr["l"] / 2, uq + pr["l"] / 2, pr["z0"], pr["z1"], "plug"))
+        o.append(_texte(uq, H - pr["z1"] - 5, f'prises h {pr["h"]}', "lblx muted"))
+    # cotes : largeur et haut de la tête de lit, dessus du matelas
+    o.append(_cote((L - te["x1"], -8), (L - te["x0"], -8), te["x1"] - te["x0"], (L - (te["x0"] + te["x1"]) / 2, -10),
+                   "sud"))
+    o.append(_cote((-30, H - te["z1"]), (-30, H), te["z1"], (-33, H - te["z1"] / 2), "sud"))
+    o.append(_cote((-20, H - li["z1"]), (-20, H), li["z1"], (-23, H - li["z1"] / 2), "sud"))
+    return _elevation("sud", "-45 -22 520 290", o, aria)
+
+
+def elevation_ouest(M, aria=""):
+    """Mur ouest vu depuis la fenêtre : placard existant, porte du couloir ; lit et chevet en pointillés."""
+    H, P, EP, pl, po = M.H, M.P, M.EP, M.PLACARD, M.PORTE
+    o = _cadre(M, P, EP["s"], EP["n"])
+    o.append(_rz(H, P - pl["y1"], P - pl["y0"], 0, H, "bgwall"))
+    a, b = pl["porte"]
+    o.append(_rz(H, P - b, P - a, 0, M.H_PORTE, "closet"))
+    um = P - (a + b) / 2
+    o.append(_ligne("filet", um, H - M.H_PORTE, um, H))
+    o.append(_texte(um, H - M.H_PORTE - 4, f"placard existant, porte {b - a}", "lblx muted"))
+    o.append(_rz(H, P - po["b"], P - po["a"], 0, M.H_PORTE, "appf"))
+    o.append(f'<circle class="dark" cx="{f(P - po["b"] + _POIGNEE_PORTE[0])}" cy="{f(H - _POIGNEE_PORTE[1])}" r="2"/>')
+    o.append(_texte(P - (po["a"] + po["b"]) / 2, H - M.H_PORTE - 4, "porte du couloir", "lblx muted"))
+    # premier plan : tête de lit, lit, chevet ouest
+    te, li, ch, cl = M.TETE, M.LIT, M.CHEVET_OUEST, M.CLIM
+    o.append(_rz(H, P - te["y1"], P - te["y0"], te["z0"], te["z1"], "ghost"))
+    o.append(_rz(H, P - li["y1"], P - li["y0"], li["pieds"], li["z1"], "ghost"))
+    o.append(_rz(H, P - ch["y1"], P - ch["y0"], 0, ch["z1"], "ghost"))
+    o.append(_rz(H, P - cl["y1"], P - cl["y0"], cl["z0"], cl["z1"], "tech"))
+    o.append(_texte(P - (li["y0"] + li["y1"]) / 2, 220, "lit et chevet au premier plan", "lblx muted"))
+    o.append(_texte(4, 262, "sud", "lblx muted", "start"))
+    o.append(_texte(P - 4, 262, "nord", "lblx muted", "end"))
+    return _elevation("ouest", "-35 -22 320 290", o, aria)
+
+
+# Élévations dans l'ordre de la page : repère → (nom, fonction).
+ELEVATIONS = {"est": ("Mur est", elevation_est), "sud": ("Mur sud", elevation_sud),
+              "ouest": ("Mur ouest", elevation_ouest)}
+
+
 # ------------------------------------------------------------------ légende et textes sous les dessins
 def legende():
     items = [('<rect x="0" y="0" width="26" height="14" class="bed"/>', "Lit"),
@@ -181,6 +369,13 @@ ALTS = {
     "plan": ("Plan vu de dessus, 1 unité = 1 cm, nord en haut. On entre par le couloir à l'ouest (en haut à gauche). "
              "Le plan du mur est est dessiné en transparence : on voit dessous la niche à pantalons (deux barres) et les "
              "deux commodes ; le pointillé montre un tiroir ouvert."),
+    "est": ("Mur est, vu depuis le lit : la niche à pantalons au nord, sous les trois patères, puis les deux commodes "
+            "sous la fenêtre coulissante. Le plan à 85 reste sous l'allège de 106. Le lit et le chevet, au premier "
+            "plan, sont en pointillés."),
+    "sud": ("Mur sud, vu depuis le pied du lit : à gauche, le bout du plan et de la commode sud ; le chevet est réduit "
+            "à 30 de large."),
+    "ouest": ("Mur ouest, vu depuis la fenêtre : le placard existant (porte de 155) à gauche, la porte du couloir à "
+              "droite. Le lit et le chevet, au premier plan, sont en pointillés."),
 }
 
 
@@ -228,4 +423,12 @@ CSS = """
 .lblx{font-size:5px}
 .lblb{font-size:9px;font-weight:700}
 .muted{fill:var(--muted)}
+.floorl{stroke:var(--ink);stroke-width:2}
+.el-ceil{stroke:var(--muted);stroke-width:.8;stroke-dasharray:6 4}
+.bgwall{fill:var(--line);fill-opacity:.35;stroke:none}
+.wcut{fill:var(--ink)}
+.dark{fill:var(--ink)}
+.tech{fill:var(--tech);stroke:var(--ink);stroke-width:.7;stroke-dasharray:3 2}
+.plug{fill:var(--tri)}
+.cloth{fill:#7B5EA7;fill-opacity:.18;stroke:#7B5EA7;stroke-width:.6}
 """
