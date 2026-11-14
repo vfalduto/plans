@@ -281,3 +281,22 @@ CHANGEMENTS = [
      "ronds, plan de perçage d'un montant, entaille ; charges et fixation ; achats chiffrés (393,28 €, dont 28,00 € "
      "estimés) ; outils et montage ; points à valider."),
 ]
+
+
+# ------------------------------------------------------------------ le document du site
+# Une variante par disposition : chacune ne déclare que ses tablettes et son idée (DISPOSITIONS) ; Actuelle porte la
+# version et les changements de l'ancienne page. Construit à la demande : vues importe ce module.
+def _document():
+    from commun.modele import Changement, Document, Variante
+    from pieces.salon.etageres import dessins, vues
+    variantes = tuple(Variante(d["cle"], d["nom"], VERSION,
+                               tuple(Changement(*c) for c in CHANGEMENTS) if i == 0 else ())
+                      for i, d in enumerate(DISPOSITIONS))
+    return Document("salon", "etageres", "Étagères", "construction", variantes, vues.vues, css=dessins.CSS)
+
+
+def __getattr__(nom):
+    if nom == "DOCUMENT":
+        globals()["DOCUMENT"] = _document()
+        return globals()["DOCUMENT"]
+    raise AttributeError(f"module {__name__!r} has no attribute {nom!r}")

@@ -156,6 +156,10 @@ entree-apercu *vues:
 salon-enfilade:
     python3 site.py salon/enfilade
 
+# Salon, étagères : reconstruit ses quatre pages (site/salon/etageres/) depuis pieces/salon/etageres/
+salon-etageres:
+    python3 site.py salon/etageres
+
 # Salon V4 : régénère salon-v4.html et les pages des meubles (étagères, enfilade) depuis 3d/salon/modele.py
 salon:
     python3 3d/salon/plan.py
