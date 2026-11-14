@@ -70,6 +70,13 @@ def test_vues_et_elements():
     modele.verifier(DOC, VUES)
 
 
+def test_cone_de_nuit_au_coin_so():
+    """Le cône `so-nuit` de « Position » est celui du coin SO (même point de vue, même visée), pas celui d'un autre."""
+    fiche = VUES["iso"].fiche
+    cone = {k: re.search(rf'<g class="pdv" data-k="{k}">(.*?)</g>', fiche).group(1) for k in ("no", "so", "so-nuit")}
+    assert cone["so-nuit"] == cone["so"] != cone["no"]
+
+
 def test_document():
     assert (DOC.piece, DOC.id, DOC.nom, DOC.type) == ("cuisine", "amenagement", "Aménagement", "amenagement")
     (v,) = DOC.variantes
