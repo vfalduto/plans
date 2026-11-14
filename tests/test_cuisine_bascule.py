@@ -98,8 +98,9 @@ def test_porte_liens_reecrits():
 def test_anciens_fichiers_supprimes():
     for chemin in ("cuisine-v13.html", "cuisine-v13-imprimable.html", "cuisine-v13-maquette.html",
                    "cuisine-v13-maquette", "3d/v13/plan.py", "cuisine-v13-3d", "site/cuisine-v13-3d",
-                   "site/cuisine-v13-maquette"):
+                   "site/cuisine-v13-maquette",
+                   # ménage du 14/11/2026 : générateurs des versions figées et anciennes pages (redirigées)
+                   "3d/v11", "3d/v12", "3d/cuisine_a.py", "cuisine-plan.html", "cuisine-couleurs.html"):
         assert not (RACINE / chemin).exists(), chemin
-    for chemin in ("3d/v11", "3d/v12", "3d/cuisine_a.py", "cuisine-plan.html", "cuisine-couleurs.html", "cuisine-3d",
-                   "3d/v13/porte.py", "cuisine-v13-porte-cellier.html", "archive", "images"):
+    for chemin in ("cuisine-3d", "3d/v13/porte.py", "cuisine-v13-porte-cellier.html", "archive", "images"):
         assert (RACINE / chemin).exists(), chemin

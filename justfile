@@ -50,20 +50,6 @@ pages-wait:
     gh run watch "$id" --repo {{repo}} --exit-status
     echo "En ligne : {{site}}"
 
-# Variante A (proposition 9 V2 A figée) : modèle 3D (FreeCAD) et rendus (Blender) → cuisine-3d/*.jpg
-rendu-3d echantillons="256":
-    python3 3d/textures.py
-    /Applications/FreeCAD.app/Contents/Resources/bin/freecadcmd 3d/cuisine_a.py
-    /Applications/Blender.app/Contents/MacOS/Blender -b --python 3d/rendu.py -- {{echantillons}}
-    mkdir -p cuisine-3d
-    for f in 3d/sortie/rendu-*.png; do sips -s format jpeg -s formatOptions 85 "$f" --out "cuisine-3d/$(basename "$f" .png).jpg" >/dev/null; done
-
-# Rendus 3D de la bibliothèque du salon (4 systèmes) → salon-3d/
-rendu-salon echantillons="256":
-    /Applications/Blender.app/Contents/MacOS/Blender -b --python 3d/salon_biblio.py -- {{echantillons}}
-    mkdir -p salon-3d
-    for f in 3d/sortie/salon-biblio-*.png; do sips -s format jpeg -s formatOptions 85 "$f" --out "salon-3d/$(basename "$f" .png).jpg" >/dev/null; done
-
 # Cuisine, aménagement : reconstruit sa page (site/cuisine/amenagement/, annexes comprises) depuis pieces/cuisine/
 cuisine-amenagement:
     python3 site.py cuisine/amenagement

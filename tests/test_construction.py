@@ -46,8 +46,7 @@ IMAGES = (".jpg", ".jpeg", ".png", ".svg", ".webp")
 
 # pages de la racine qui ne sont pas des documents (annexes, pages destinées aux archives, page de la porte du cellier
 # non migrée et retirée du menu) : permises si présentes
-HORS_DOCUMENTS = {"index.html", "cuisine-plan.html", "cuisine-couleurs.html", "sdb-meuble-achats.html",
-                  "cuisine-v13-porte-cellier.html"}
+HORS_DOCUMENTS = {"index.html", "sdb-meuble-achats.html", "cuisine-v13-porte-cellier.html"}
 
 
 def _instantane(racine, sauf=("site", "cache")):

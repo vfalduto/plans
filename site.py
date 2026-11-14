@@ -121,6 +121,10 @@ REDIRECTIONS = (
     Redirection("cuisine-v13.html", "cuisine/amenagement/", ANCRES_CUISINE, MOTIFS_CUISINE, PAGES_CUISINE),
     Redirection("cuisine-v13-imprimable.html", "cuisine/amenagement/imprimable.html"),
     Redirection("cuisine-v13-maquette.html", "cuisine/amenagement/maquette-3d.html"),
+    # anciennes pages de la cuisine (plan V3, couleurs), retirées de la racine au ménage du 14/11/2026 ; l'historique
+    # git les garde
+    Redirection("cuisine-plan.html", "cuisine/amenagement/"),
+    Redirection("cuisine-couleurs.html", "cuisine/amenagement/"),
 )
 
 
