@@ -1,7 +1,7 @@
 # Fonctions des pages du meuble linge SDB, depuis modele.py : achats, prix, gabarit, notice, découpe, matériaux.
 #
 # Les trois pages du document V4 (sdb-meuble-v4.html, sdb-meuble-v4-bas.html, sdb-meuble-v4-haut.html) sont archivées
-# dans archive/ et ne sont plus régénérées : ce module ne les écrit plus. La page courante du meuble haut, autonome,
+# dans site/archives/ et ne sont plus régénérées : ce module ne les écrit plus. La page courante du meuble haut, autonome,
 # est produite par haut.py (sdb-meuble-haut.html, just sdb), qui réutilise les fonctions d'ici.
 #
 # Les dessins sont les projections isométriques de montage.py ; les listes et le calepinage viennent de plan.py.
@@ -268,7 +268,7 @@ def variante_paniers(p):
 <div class="scroll"><table><thead><tr><th>Achat</th><th>Réf.</th><th>Quantité</th><th>Prix</th></tr></thead>
 <tbody>{t_prix}<tr class="tot"><td>Écart</td><td></td><td></td><td class="num">+ {PL.euros(paniers - eco)}</td></tr></tbody></table></div>
 <p>Avec les paniers, le total passe de {PL.euros(p["total"])} à <b>{PL.euros(p["total"] - eco + paniers)}</b>. Débit refait sans les pièces du L : la tablette mélaminée du meuble bas ne sert plus (le côté K1 du caisson haut tient dans ses propres panneaux), les tasseaux restent en deux lots et le chant en deux rouleaux ; le lot d'équerres et les boîtes de vis servent encore ailleurs.</p>
-<p class="note">Les dessins de la variante (plan, élévation, coupes) sont dans la version archivée <a href="archive/sdb-meuble-v5.24.html">V5.24</a>, bouton de la variante à roulettes, en haut de page ; le meuble a changé depuis (plan de travail, caisson haut), pas la place entre les échelles. Les pages des deux meubles décrivent le L.</p>"""
+<p class="note">Les dessins de la variante (plan, élévation, coupes) sont dans la version archivée <a href="archives/sdb-meuble-v5.24.html">V5.24</a>, bouton de la variante à roulettes, en haut de page ; le meuble a changé depuis (plan de travail, caisson haut), pas la place entre les échelles. Les pages des deux meubles décrivent le L.</p>"""
 
 
 def materiaux_communs():

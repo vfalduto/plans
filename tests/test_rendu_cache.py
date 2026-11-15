@@ -335,3 +335,29 @@ def test_conseil_de_nom_seulement(monkeypatch):
     with pytest.raises(TypeError) as e:
         emp(cameras()["banc"], victor)
     assert "_GARDE" in str(e.value) and "EXCLUES" not in str(e.value)
+
+
+def test_rendre_cameras_nommees_par_variante(monkeypatch, tmp_path):
+    """Une caméra nommée n'est refusée que si aucune variante ne l'a ; chaque variante rend celles qu'elle a."""
+    cache = rendu_cache.CacheRendu(variantes={"b": (), "a": ()}, code=(), script="x.py",
+                                   sortie=("SORTIE_ESSAI", str(tmp_path)))
+    emps = {"a": {"iso": "1", "banc": "2"}, "b": {"iso": "3"}}
+    monkeypatch.setattr(rendu_cache, "declaration", lambda document: cache)
+    monkeypatch.setattr(rendu_cache, "empreintes", lambda document, variante, echantillons: emps[variante])
+    monkeypatch.setattr(rendu_cache, "RACINE", tmp_path)
+    lances = []
+
+    class Arret(Exception):
+        pass
+
+    def lancer(cache, env, echantillons, cameras):
+        lances.append(list(cameras))
+        raise Arret
+
+    monkeypatch.setattr(rendu_cache, "_lancer_blender", lancer)
+    with pytest.raises(rendu_cache.Erreur, match="caméra inconnue : cote"):
+        rendu_cache.rendre("essai/doc", "16", ["banc", "cote"])
+    assert lances == []
+    with pytest.raises(Arret):
+        rendu_cache.rendre("essai/doc", "16", ["banc"])
+    assert lances == [["banc"]]

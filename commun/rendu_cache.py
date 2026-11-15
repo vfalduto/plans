@@ -277,13 +277,17 @@ def rendre(document: str, echantillons: str = "64", vues: list[str] | None = Non
     destination.mkdir(parents=True, exist_ok=True)
     env = {**os.environ, var_sortie: str(dossier)}
     rendues = [v for v in cache.variantes if not cache.rendues or v in cache.rendues]
+    par_variante = {v: empreintes(document, v, echantillons) for v in rendues}
+    # une caméra nommée n'est inconnue que si aucune variante ne l'a ; chaque variante rend celles qu'elle a
+    inconnues = [v for v in vues or [] if not any(v in emps for emps in par_variante.values())]
+    if inconnues:
+        raise Erreur(f"caméra inconnue : {', '.join(inconnues)}")
     fait = False
-    for variante in rendues:
-        emps = empreintes(document, variante, echantillons)
-        inconnues = [v for v in vues or [] if v not in emps]
-        if inconnues:
-            raise Erreur(f"caméra inconnue : {', '.join(inconnues)}")
-        cles = vues or [c for c, e in emps.items() if a_rendre(_cle(document, variante, c), e, FICHIER)]
+    for variante, emps in par_variante.items():
+        if vues:
+            cles = [c for c in vues if c in emps]
+        else:
+            cles = [c for c, e in emps.items() if a_rendre(_cle(document, variante, c), e, FICHIER)]
         if not cles:
             print(f"{document} {variante or '-'} : rien à rendre")
             continue
