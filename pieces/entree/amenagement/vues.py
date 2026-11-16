@@ -87,14 +87,14 @@ def _vue_coupes(M, D):
 def _vue_iso(variante, M):
     enveloppe = (min(b.x0 for b in piece.MURS), min(b.y0 for b in piece.MURS),
                  max(b.x1 for b in piece.MURS), max(b.y1 for b in piece.MURS))
-    return vue_iso(RENDUS_SITE, variante, LIEU, points_iso(enveloppe), alts=dict(M.RENDUS), filtre="teinte pax",
+    return vue_iso(RENDUS_SITE, variante, LIEU, points_iso(enveloppe), alts=dict(M.RENDUS), filtre="teinte pax plinthe",
                    option=_option_mh(variante))
 
 
 def _vue_camera(variante, M):
     cameras = {c.id: c for c in piece.CAMERAS}
     return vue_camera(RENDUS_SITE, variante, LIEU, [cameras[k] for k in CAMERAS_PRISES], alts=dict(M.RENDUS),
-                      filtre="teinte pax", option=_option_mh(variante))
+                      filtre="teinte pax plinthe", option=_option_mh(variante))
 
 
 def _option_mh(variante):
@@ -129,7 +129,7 @@ def _portes_caisson(M, note):
 def _article(M, D, cle, chapo, stats, achats, matieres, verifier, source, avant=""):
     # le premier rendu du coin sud-ouest, quand il existe, ouvre la page ; son texte est l'alt
     figure = figure_rendu(rendu(RENDUS_SITE, cle, "iso_so"),
-                          dict(M.RENDUS).get("iso_so", "Vue isométrique depuis le sud-ouest"), filtre="teinte pax")
+                          dict(M.RENDUS).get("iso_so", "Vue isométrique depuis le sud-ouest"), filtre="teinte pax plinthe")
     return (tete(chapo, [("#plan", "Ouvrir le plan"), ("#iso", "Voir en iso")], figure)
             + chiffres(stats) + avant + principes(_cartes(M, D)) + achats + materiaux(matieres)
             + a_verifier(verifier, titre="Points à vérifier")

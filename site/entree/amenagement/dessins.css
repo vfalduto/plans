@@ -31,6 +31,7 @@
 .d-entree .doorarc{fill:none;stroke:var(--ink);stroke-width:.8}
 .d-entree .doorleaf{stroke:var(--ink);stroke-width:3}
 .d-entree .slide{stroke:var(--ink);stroke-width:.8}
+.d-entree .plv{fill:var(--plinthe,#EBE7E4);stroke:var(--ink);stroke-width:.6}
 .d-entree .mhv{fill:var(--india);stroke:var(--ink);stroke-width:.8}
 .d-entree .mhc{fill:var(--india);stroke:var(--ink);stroke-width:1.4}
 .d-entree .swing{fill:none;stroke:var(--muted);stroke-width:.6;stroke-dasharray:2 2}

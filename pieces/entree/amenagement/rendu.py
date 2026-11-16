@@ -54,7 +54,10 @@ INDIA_COULEUR = NEUTRE if INDIA_MODE == "neutre" else INDIA_MODE
 # propre masque (-masque-pax.png) ; avec ENTREE_INDIA, sa teinte d'origine.
 PAX_MATS = ("s_pax",)
 PAX_COULEUR = NEUTRE if INDIA_MODE == "neutre" else "#F0F0EB"
-MASQUES = (("-masque.png", INDIA_MATS), ("-masque-pax.png", PAX_MATS))
+# Plinthes (meuble à chaussures, penderie ; socle de Victor) : gris neutre, troisième masque (-masque-plinthe.png)
+PLINTHE_MATS = ("s_plinthe",)
+PLINTHE_COULEUR = NEUTRE if INDIA_MODE == "neutre" else "#EBE7E4"
+MASQUES = (("-masque.png", INDIA_MATS), ("-masque-pax.png", PAX_MATS), ("-masque-plinthe.png", PLINTHE_MATS))
 # Option « meuble haut » (principale) : ENTREE_MEUBLE_HAUT=sans retire le meuble haut, sa poignée, son rail et sa déco
 SANS_MEUBLE_HAUT = os.environ.get("ENTREE_MEUBLE_HAUT", "avec") == "sans"
 SUFFIXE_MH = "-sans" if SANS_MEUBLE_HAUT else ""   # fichiers du rendu sans meuble haut (suffixe de meuble_haut_rendus)
@@ -70,14 +73,15 @@ R.MATS.update({
     "s_chene":   ("#A8743F", 0.5, CHENE),
     "s_chene_v": ("#A8743F", 0.5, dict(CHENE, sens="v")),
     "s_blanc":   (M.MUR_COULEUR, 0.45, {"laque": True}),      # laque blanche, couleur des murs
-    "s_pax":     (PAX_COULEUR, 0.45, {"laque": True}),        # penderie PAX (gris neutre recoloré dans la page)
+    "s_pax":     (PAX_COULEUR, 0.45, {"laque": True}),
+    "s_plinthe": (PLINTHE_COULEUR, 0.6, {"laque": True}),   # plinthes (gris neutre recoloré dans la page)        # penderie PAX (gris neutre recoloré dans la page)
     "s_miroir":  ("#F2F4F5", 0.02, {"metal": True}),
     "s_india":   (INDIA_COULEUR, 0.9, {"enduit": True}),   # India (ou gris neutre recoloré dans la page), entrée
     "s_india_l": (INDIA_COULEUR, 0.45, {"laque": True}),   # porte d'entrée
     "s_tapis":   ("#A88E6A", 0.98, {}),                         # tapis de couloir en jute
 })
 ROLES = {"mur": "s_mur", "linteau": "s_mur", "porte": "porte_peinte", "tableau": "electro_blanc", "banc": "s_chene",
-         "caisson": "s_chene", "plateau": "s_chene", "tall": "s_pax", "socle": "s_mur", "miroir": "s_miroir",
+         "caisson": "s_chene", "plateau": "s_chene", "tall": "s_pax", "socle": "s_plinthe", "miroir": "s_miroir",
          "applique": "globe", "patere": "s_chene", "facade": "s_chene_v", "facade_p": "s_pax",
          "haut": "s_india", "facade_h": "s_india_l", "india": "s_india", "india_plafond": "s_india", "india_l": "s_india_l", "interphone": "electro_blanc",
          "tapis": "s_tapis", "sac": "lin",

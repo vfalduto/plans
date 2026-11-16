@@ -125,7 +125,7 @@ def _zones_lues(variante):
 # ce que montrent aujourd'hui les zones et leurs fiches (les valeurs que la tâche 13 avait recopiées de la maquette)
 ZONES_ATTENDUES = {
     "principale": [((92, 0, 187, 38), "95 × 38, h 45 cm"), ((85, 170, 110, 291), "121 × 25, h 123 cm"),
-                   ((110, 170, 185, 208), "75 × 35, h 236 cm"),
+                   ((110, 170, 185, 208), "75 × 35, h 244 cm"),
                    ((0, 170, 85, 208), "110 × 38, h 46, dessous à 204 cm"), ((-10, 83, 14, 160), "vantail de 77")],
     "victor": [((73, 171, 194, 208), "121 × 37, h 53 cm"), ((73, 208, 110, 283), "75 × 35, h 236 cm"),
                ((82, 284, 110, 373), "89 × 28, h 25 cm"), ((0, 215, 9, 350), "mur ouest de l'entrée")],
@@ -214,7 +214,8 @@ def test_document():
     assert (d.piece, d.id, d.nom, d.type) == ("entree", "amenagement", "Aménagement", "amenagement")
     assert [x.id for x in d.variantes] == ["principale", "victor"]
     assert d.variantes[0].version == "V4.10" and d.variantes[1].version == "V1.5"
-    teinte, pax, mh = d.options
+    teinte, pax, plinthe, mh = d.options
+    assert (plinthe.id, plinthe.css, plinthe.defaut) == ("plinthe", "--plinthe", document.PLINTHE_TEINTE)
     assert (mh.id, mh.type, mh.defaut, [v.code for v in mh.valeurs]) == ("meuble-haut", "choix", "avec", ["avec", "sans"])
     assert (pax.id, pax.css, pax.filtre, pax.defaut) == ("pax", "--pax", True, document.PAX_TEINTE)
     assert all(x.groupe != "Peinture murale seulement" for x in pax.valeurs) and len(pax.valeurs) == 40

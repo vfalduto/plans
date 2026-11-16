@@ -176,7 +176,7 @@ def plan_svg(M, aria="Plan de l'entrée aménagée", zones=""):
     o.append(f'<path class="swing" d="M{pe["x1"]} {pe["y0"] - l1} A{l1} {l1} 0 0 0 {f(xj)} {pe["y0"]}"/>')
     xp = (pe["x0"] + pe["x1"]) / 2
     o.append(text(xp, 187, f'③ Penderie PAX {pe["x1"] - pe["x0"]} × {pe["caisson"]}', "lblx"))
-    o.append(text(xp, 194, f'h {pe["z1"]} + bandeau, cintres de face', "lblx"))
+    o.append(text(xp, 194, f'h {pe["h"]} sur plinthe {pe["socle"]}, cintres de face', "lblx"))
     # ④ meuble haut (au plafond, tireté) et peinture India (bande le long des murs peints, porte d'entrée)
     mh = M.MEUBLE_HAUT
     yd = mh["y0"] + mh["etagere"]
@@ -219,7 +219,7 @@ def plan_svg(M, aria="Plan de l'entrée aménagée", zones=""):
 # ------------------------------------------------------------------ coupes
 COUPE_CLS = {"mur": ("bgwall", "w"), "linteau": ("wallv", "w"), "porte": ("porte", "portec"), "tableau": ("tech", "tech"),
              "banc": ("cab", "cabc"), "angle": ("cab", "cabc"), "caisson": ("cab", "cabc"), "plateau": ("tbl", "tbl"),
-             "tall": ("tall", "tallc"), "socle": ("dark", "dark"), "miroir": ("mirror", "mirror"),
+             "tall": ("tall", "tallc"), "socle": ("plv", "plc"), "miroir": ("mirror", "mirror"),
              "applique": ("lamp", "lamp"), "patere": ("tbl", "tbl"), "facade": ("fac", "fac"), "facade_p": ("facp", "facp"),
              "haut": ("mhv", "mhc"), "facade_h": ("mhv", "mhc"), "india": ("india", "india"),
              "india_plafond": ("india", "india"), "india_l": ("india", "india"), "interphone": ("facp", "facp"), "cadre_mur": ("dark", "dark")}
@@ -386,6 +386,7 @@ svg text{font-family:Archivo,system-ui,sans-serif;fill:var(--ink)}
 .doorarc{fill:none;stroke:var(--ink);stroke-width:.8}
 .doorleaf{stroke:var(--ink);stroke-width:3}
 .slide{stroke:var(--ink);stroke-width:.8}
+.plv{fill:var(--plinthe,#EBE7E4);stroke:var(--ink);stroke-width:.6}.plc{fill:var(--plinthe,#EBE7E4);stroke:var(--ink);stroke-width:1.2}
 .mhv{fill:var(--india);stroke:var(--ink);stroke-width:.8}.mhc{fill:var(--india);stroke:var(--ink);stroke-width:1.4}
 .swing{fill:none;stroke:var(--muted);stroke-width:.6;stroke-dasharray:2 2}
 .plinthe{fill:none;stroke:var(--muted);stroke-width:.5;stroke-dasharray:1.5 1.5}
@@ -486,7 +487,7 @@ def principes(M):
          f'Côté porte, le sol reste libre sous {len(M.PATERES)} patères en bois (chevilles de chêne Ø '
          f'{virg(M.PATERE["d"])}, à {M.PATERE["z"]}) et leur applique : 110 de passage pour entrer avec un sac.'),
         ("③ Penderie PAX et angle arrondi",
-         f'Contre la face nord de la salle de bain : une penderie IKEA PAX de {lp} × {pe["caisson"]} × {pe["z1"]}, la seule largeur qui '
+         f'Contre la face nord de la salle de bain : une penderie IKEA PAX de {lp} × {pe["caisson"]} × {pe["h"]}, posée sur une plinthe de {pe["socle"]} comme le meuble à chaussures, la seule largeur qui '
          "tienne dans les 84 cm du mur (un caisson de 100 mangerait l'huisserie de la salle de bain), et un bandeau "
          f'jusqu\'au plafond. Portes FORSAND de {pe["portes"][0]} et {pe["portes"][1]}. À 35 cm, les cintres ne tiennent '
          f'pas en travers : la tringle KOMPLEMENT de ce caisson a deux barres d\'avant en arrière, cintres de face '

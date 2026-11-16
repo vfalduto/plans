@@ -70,8 +70,13 @@ ANGLE = dict(x0=CHAUSSURES["x0"], x1=CHAUSSURES["x1"], y0=NU_PENDERIE, y1=CHAUSS
 # au-dessus, deux étagères à chaussures en bas, lampe LED à détecteur sur pile sous la tablette. Bandeau blanc de 14
 # du caisson (236) au plafond. Montage debout possible dès 237 de hauteur sous plafond (fiche IKEA).
 # caisson : profondeur du caisson PAX (35 sur la fiche IKEA), celle des cotes ; l'emprise (38) compte la porte et le jeu.
-PENDERIE = dict(x0=110, x1=185, y0=NU_PENDERIE, y1=208, z1=236, facade=2, portes=(50, 25), porte_z=(4, 233.4),
-                tringle=195, barres=(129, 166), etageres=(200, 218), chaussures=(10, 32), manteaux=10, caisson=35)
+# V4.10 : posée sur une plinthe de 8 en retrait de 4, comme le meuble à chaussures (même hauteur, même teinte) : caisson
+# de 8 à 244, bandeau de 6 au-dessus ; hauteurs intérieures (tringle, tablettes, étagères) depuis le sol fini.
+PENDERIE = dict(x0=110, x1=185, y0=NU_PENDERIE, y1=208, h=236, socle=8, retrait=4, facade=2, portes=(50, 25),
+                barres=(129, 166), manteaux=10, caisson=35)
+PENDERIE.update(z1=PENDERIE["socle"] + PENDERIE["h"], porte_z=(PENDERIE["socle"] + 4, PENDERIE["socle"] + 233.4),
+                tringle=PENDERIE["socle"] + 195, etageres=(PENDERIE["socle"] + 200, PENDERIE["socle"] + 218),
+                chaussures=(PENDERIE["socle"] + 10, PENDERIE["socle"] + 32))
 IKEA = [   # IKEA France, fiches produit relevées le 13/11/2026, blanc
     ("PAX caisson d'armoire 75 × 35 × 236", "604.582.27", 1, 80),
     ("FORSAND porte avec charnières 50 × 229", "692.443.12", 1, 55),
@@ -142,8 +147,10 @@ MEUBLES = [
          CHAUSSURES["yb"], CHAUSSURES["socle"], CHAUSSURES["z1"], "② chaussures"),
     Bloc("plateau", "vide_poche", CHAUSSURES["x0"], CHAUSSURES["x1"], CHAUSSURES["y0"], CHAUSSURES["y1"], CHAUSSURES["z1"],
          CHAUSSURES["z1"] + CHAUSSURES["plateau"], arrondi=ANGLE["r"]),
+    Bloc("socle", "penderie_socle", PENDERIE["x0"] + PENDERIE["retrait"], PENDERIE["x1"] - PENDERIE["retrait"],
+         PENDERIE["y0"] + PENDERIE["facade"] + PENDERIE["retrait"], PENDERIE["y1"], 0, PENDERIE["socle"]),
     Bloc("tall", "penderie", PENDERIE["x0"], PENDERIE["x1"], PENDERIE["y0"] + PENDERIE["facade"], PENDERIE["y1"],
-         0, PENDERIE["z1"], "③ penderie PAX"),
+         PENDERIE["socle"], PENDERIE["z1"], "③ penderie PAX"),
     Bloc("tall", "bandeau", PENDERIE["x0"], PENDERIE["x1"], PENDERIE["y0"], PENDERIE["y1"], PENDERIE["z1"], H),
     Bloc("miroir", "miroir", 0, 0.6, MIROIR["y0"], MIROIR["y1"], MIROIR["z0"], MIROIR["z1"], mur="o"),
     Bloc("applique", "applique", 104, 110, APPLIQUE["y"] - 6, APPLIQUE["y"] + 6, APPLIQUE["z"] - 6, APPLIQUE["z"] + 6, mur="e"),
@@ -322,7 +329,8 @@ OUVERTURE["butoir"] = 5 * math.floor((OUVERTURE["max"] - 3) / 5)      # butoir d
 CARRELAGE = dict(taille=60, joint=0.3, couleur="#D9D2C6", nuance="#CFC7B9", couleur_joint="#BDB5A7",
                  nom="grès cérame 60 × 60 effet pierre claire, comme le salon")
 MUR_COULEUR = "#EFE9DC"
-PAX_TEINTE = "color_blanc_pur"   # teinte d'origine de la penderie (FORSAND blanc) dans le sélecteur Plum Living
+PAX_TEINTE = "color_blanc_pur"
+PLINTHE_TEINTE = "color_galet"   # plinthes du meuble à chaussures et de la penderie, proches du blanc des murs   # teinte d'origine de la penderie (FORSAND blanc) dans le sélecteur Plum Living
 
 # meubles touchables du plan : meuble = nom du dictionnaire dont la zone prend l'emprise et la fiche ses cotes
 # (vues.py) ; porte = nom de la porte de la pièce ; un bord donné ici (x0…y1) remplace celui du meuble.
@@ -349,7 +357,9 @@ CHANGEMENTS = [
      "peint en India comme les murs et le plafond qui l'entourent (plus de chêne) : tablette retirée côté couloir "
      "(une seule niche ouverte), placard côté entrée fermé par une seule porte coulissante qui glisse de gauche à "
      "droite, au lieu des portes battantes ; il se lit mieux sur les coupes (contour). Arrondi de l'angle réduit de "
-     "R 25 à R 12. Option « Meuble haut » (avec ou sans) dans « Personnaliser » : plan, coupes et rendus. "
+     "R 25 à R 12. Penderie PAX sur une plinthe de 8 en retrait de 4, comme le meuble à chaussures (caisson "
+     "de 8 à 244, bandeau de 6) ; teinte des plinthes au choix (sélecteur Plum Living, Galet par défaut). "
+     "Option « Meuble haut » (avec ou sans) dans « Personnaliser » : plan, coupes et rendus. "
      "Sélecteurs de teinte compacts : une pastille, qui ouvre la fenêtre des teintes. "
      "Teinte de la penderie PAX au choix dans « Personnaliser » : second sélecteur Plum Living (laques de façade), "
      "comme celui des murs ; plan, coupes et rendus suivent (un masque de rendu par surface). "
@@ -447,6 +457,8 @@ def _options():
     return (plum.selecteur("teinte", "Teinte de l'entrée", ("murs", "plafond", "porte", "meuble haut"), css="--india"),
             plum.selecteur("pax", "Teinte de la penderie PAX", ("caisson", "portes"), defaut=PAX_TEINTE, css="--pax",
                            laques=True, portee="Penderie de la variante principale : plan, coupes et rendus."),
+            plum.selecteur("plinthe", "Teinte des plinthes", ("meuble à chaussures", "penderie"), defaut=PLINTHE_TEINTE,
+                           css="--plinthe", portee="Coupes et rendus."),
             option_meuble_haut())
 
 
