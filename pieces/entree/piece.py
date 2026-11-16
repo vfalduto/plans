@@ -28,7 +28,8 @@ class Bloc:
     z0: float
     z1: float
     etiq: str = ""      # nom affiché sur les coupes
-    arrondi: float = 0  # rayon du coin nord-ouest arrondi (vu de dessus), 0 : angle vif
+    arrondi: float = 0  # rayon des coins arrondis (vus de dessus), 0 : angles vifs
+    coins: str = "no"   # coins arrondis : « no » (nord-ouest), « so » (sud-ouest) ou « no so »
     mur: str = ""       # mur qui le porte (n, s, e, o) : caché avec ce mur dans les vues 3D en coupe
 
 
@@ -37,6 +38,10 @@ class Bloc:
 # y 104 et 208 (salon, chambre, salle de bain), et branche d'entrée 110 × 166 le long de la salle de bain.
 SOL = [(0, 0), (264, 0), (264, 104), (354, 104), (354, 208), (110, 208), (110, 374), (0, 374)]
 SURFACE = 8.1           # m², relevé
+
+# Prise fibre (PTO) sur la cloison de la salle de bain (face ouest, x 110), en bas, au nord, près du coin de la salle de
+# bain (indiqué par le client le 16/11/2026 : « en bas à gauche » vue du couloir, à 26 du sol) ; y à relever.
+PRISE_FIBRE = dict(x=110, y0=210, y1=218, z0=22, z1=30, axe=26)
 
 # Portes : mur, ouverture (a → b le long du mur), côté des paumelles (a ou b), sens d'ouverture, type.
 #   mur n / s : a, b en x ; mur e / o : a, b en y ; face : coordonnée du nu du mur côté couloir.

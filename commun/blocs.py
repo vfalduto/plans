@@ -183,14 +183,26 @@ def rendu(dossier: Path, variante: str, cle: str, valeur: str = "") -> Rendu:
                  existe=fichier.exists(), masque_existe=(dossier / f"{nom}-masque.png").exists())
 
 
+def _ver(r, chemin):
+    """`chemin` (rendu ou masque de `r`) suivi de `?v=<date du fichier>` : un rendu refait change d'adresse, le
+    navigateur ne ressert pas l'ancienne image de son cache ; tel quel si le fichier manque."""
+    p = r.fichier.parent / Path(chemin).name
+    return f"{chemin}?v={p.stat().st_mtime_ns // 10 ** 9:x}" if p.exists() else chemin
+
+
 def _calque(r, filtre, marque=""):
-    """La copie de `r` recolorée par `#filtre-<filtre>` à travers son masque ; rien sans `filtre` ou sans masque.
+    """Les copies de `r` recolorées, une par filtre de `filtre` (ids séparés par des espaces) : la première à travers
+    `<rendu>-masque.png`, les suivantes à travers `<rendu>-masque-<id>.png` ; rien pour un masque absent.
     `marque` : attribut placé avant `src` (` data-si="…"`)."""
-    if not (filtre and r.masque_existe):
-        return ""
-    masque = f"url({r.masque})"
-    return (f'<img class="calque"{marque} src="{r.image}" alt="" aria-hidden="true" draggable="false"'
-            f' style="filter:url(#filtre-{filtre});-webkit-mask-image:{masque};mask-image:{masque}">')
+    calques = ""
+    for k, f in enumerate(filtre.split()):
+        chemin = r.masque if k == 0 else r.masque[:-len(".png")] + f"-{f}.png"
+        if not (r.masque_existe if k == 0 else (r.fichier.parent / Path(chemin).name).exists()):
+            continue
+        masque = f"url({_ver(r, chemin)})"
+        calques += (f'<img class="calque"{marque} src="{_ver(r, r.image)}" alt="" aria-hidden="true" draggable="false"'
+                    f' style="filter:url(#filtre-{f});-webkit-mask-image:{masque};mask-image:{masque}">')
+    return calques
 
 
 def figure_rendu(r: Rendu, alt: str, filtre: str = "") -> str:
@@ -198,7 +210,7 @@ def figure_rendu(r: Rendu, alt: str, filtre: str = "") -> str:
     ce masque ; rien si le rendu n'existe pas."""
     if not r.existe:
         return ""
-    return (f'<figure class="cadre rendu"><img src="{r.image}" alt="{_e(alt)}" draggable="false">'
+    return (f'<figure class="cadre rendu"><img src="{_ver(r, r.image)}" alt="{_e(alt)}" draggable="false">'
             f'{_calque(r, filtre)}</figure>')
 
 
@@ -238,7 +250,7 @@ def figure_choix(rendus: Mapping[str, Rendu], option: Option, alt: str, filtre: 
                 notes.append(f'<p class="note-rendu"{marque}>{_e(v.nom)} : pas encore rendu,'
                              f' image en {_e(nom_origine)}</p>')
         a = alt if r is origine else f"{alt}, {v.nom}"
-        images.append(f'<img{marque} src="{r.image}" alt="{_e(a)}" draggable="false">{_calque(r, filtre, marque)}')
+        images.append(f'<img{marque} src="{_ver(r, r.image)}" alt="{_e(a)}" draggable="false">{_calque(r, filtre, marque)}')
     return f'<figure class="cadre rendu">{"".join(images)}</figure>{"".join(notes)}'
 
 

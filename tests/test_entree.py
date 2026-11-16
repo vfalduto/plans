@@ -10,7 +10,7 @@ def test_piece():
 
 
 def test_versions():
-    assert document.VERSION == "V4.8"
+    assert document.VERSION == "V4.10"
     assert victor.VERSION == "V1.5"
     assert victor.CHANGEMENTS[0][0] == "V1.5"
 
@@ -40,11 +40,11 @@ import pytest  # noqa: E402
 
 from commun import modele  # noqa: E402
 from pieces.entree.amenagement import dessin_principale, dessin_victor, vues  # noqa: E402
-from tests.outils import RACINE, balises  # noqa: E402
+from tests.outils import sans_version, RACINE, balises  # noqa: E402
 
 FIXTURES = RACINE / "tests" / "fixtures" / "entree"
 DESSINS = {
-    "principale": (document, dessin_principale, ("plan", "coupe_a", "coupe_b", "coupe_c")),
+    "principale": (document, dessin_principale, ("plan", "coupe_a", "coupe_b", "coupe_c", "coupe_d")),
     "victor": (victor, dessin_victor, ("plan", "coupe_a", "coupe_b", "coupe_c", "coupe_d")),
 }
 
@@ -76,7 +76,7 @@ def test_dessins_sans_point_median(variante):
 
 
 def test_coupes():
-    assert [e.k for e in vues.vues("principale")["coupes"].elements] == ["A", "B", "C"]
+    assert [e.k for e in vues.vues("principale")["coupes"].elements] == ["A", "B", "C", "D"]
     assert [e.k for e in vues.vues("victor")["coupes"].elements] == ["A", "B", "C", "D"]
     premier = vues.vues("principale")["coupes"].elements[0]
     assert premier.nom == "A mur nord"
@@ -124,7 +124,7 @@ def _zones_lues(variante):
 
 # ce que montrent aujourd'hui les zones et leurs fiches (les valeurs que la tâche 13 avait recopiées de la maquette)
 ZONES_ATTENDUES = {
-    "principale": [((92, 0, 187, 38), "95 × 38, h 45 cm"), ((85, 208, 110, 374), "166 × 25, h 95 cm"),
+    "principale": [((92, 0, 187, 38), "95 × 38, h 45 cm"), ((85, 170, 110, 291), "121 × 25, h 123 cm"),
                    ((110, 170, 185, 208), "75 × 35, h 236 cm"),
                    ((0, 170, 85, 208), "110 × 38, h 46, dessous à 204 cm"), ((-10, 83, 14, 160), "vantail de 77")],
     "victor": [((73, 171, 194, 208), "121 × 37, h 53 cm"), ((73, 208, 110, 283), "75 × 35, h 236 cm"),
@@ -197,7 +197,7 @@ def test_coupes_fiche_position():
     v = vues.vues("principale")["coupes"]
     assert "Position" in v.fiche
     traits = balises(v.fiche, "line", classe="sec")
-    assert [t["data-k"] for t in traits] == ["A", "B", "C"]
+    assert [t["data-k"] for t in traits] == ["A", "B", "C", "D"]
     assert [t["data-k"] for t in balises(vues.vues("victor")["coupes"].fiche, "line", classe="sec")] == ["A", "B", "C", "D"]
 
 
@@ -213,8 +213,11 @@ def test_document():
     d = document.DOCUMENT
     assert (d.piece, d.id, d.nom, d.type) == ("entree", "amenagement", "Aménagement", "amenagement")
     assert [x.id for x in d.variantes] == ["principale", "victor"]
-    assert d.variantes[0].version == "V4.8" and d.variantes[1].version == "V1.5"
-    (teinte,) = d.options
+    assert d.variantes[0].version == "V4.10" and d.variantes[1].version == "V1.5"
+    teinte, pax, mh = d.options
+    assert (mh.id, mh.type, mh.defaut, [v.code for v in mh.valeurs]) == ("meuble-haut", "choix", "avec", ["avec", "sans"])
+    assert (pax.id, pax.css, pax.filtre, pax.defaut) == ("pax", "--pax", True, document.PAX_TEINTE)
+    assert all(x.groupe != "Peinture murale seulement" for x in pax.valeurs) and len(pax.valeurs) == 40
     assert (teinte.id, teinte.css, teinte.filtre, teinte.defaut) == ("teinte", "--india", True, plum.DEFAUT)
     assert len(teinte.valeurs) == 52
     india = next(x for x in teinte.valeurs if x.code == "color_india")
@@ -252,10 +255,13 @@ def test_iso():
         so = next(e for e in v.elements if e.k == "so")
         (fig,) = balises(so.scene, "figure")
         imgs = balises(so.scene, "img")
-        assert imgs[0]["src"] == f"rendus/{variante}-iso_so.jpg" and imgs[0]["alt"]
+        assert sans_version(imgs[0]["src"]) == f"rendus/{variante}-iso_so.jpg" and imgs[0]["alt"]
         assert imgs[1]["class"] == "calque" and imgs[1]["alt"] == ""
         assert f"rendus/{variante}-iso_so-masque.png" in imgs[1]["style"]
         assert "filter:url(#filtre-teinte)" in imgs[1]["style"]
+        if variante == "principale" and (RENDUS_SITE / "principale-iso_so-masque-pax.png").exists():
+            assert "rendus/principale-iso_so-masque-pax.png" in imgs[2]["style"]
+            assert "filter:url(#filtre-pax)" in imgs[2]["style"]
         assert "Position" in v.fiche
         # un cône par coin rendu (pas NE), repéré par son coin : le JS pose `ici` sur celui de l'élément affiché
         assert [g["data-k"] for g in balises(v.fiche, "g", classe="pdv")] == [e.k for e in v.elements if e.actif]
@@ -275,7 +281,7 @@ def test_camera_communes():
         banc = v.elements[0]
         assert "yeux à 112 cm, objectif 17 mm" in banc.fiche
         assert "yeux à 160 cm, objectif 17 mm" in v.elements[1].fiche
-        assert balises(banc.scene, "img")[0]["src"] == f"rendus/{variante}-banc.jpg"
+        assert sans_version(balises(banc.scene, "img")[0]["src"]) == f"rendus/{variante}-banc.jpg"
         assert "Position" in v.fiche
         assert [g["data-k"] for g in balises(v.fiche, "g", classe="pdv")] == ["banc", "couloir"]
 
@@ -292,7 +298,7 @@ def test_explication_complete():
     total = round(sum(q * p for _, _, q, p in document.IKEA))
     assert re.search(rf"Total.*?≈ {total},00 €", scene, re.S)
     (liste,) = re.findall(r'<ul class="liste">(.*?)</ul>', scene, re.S)
-    assert liste.count("<li>") == 10
+    assert liste.count("<li>") == 13
     assert "Portes pour ce caisson" in scene
     for variante in ("principale", "victor"):
         texte = _explication(variante)

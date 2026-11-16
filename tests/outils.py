@@ -100,3 +100,8 @@ def version_depuis_page(html: str) -> str | None:
         if morceau.startswith("V"):
             return morceau
     return None
+
+
+def sans_version(texte):
+    """`texte` sans les empreintes `?v=<date>` que la page ajoute aux adresses des rendus (cache du navigateur)."""
+    return re.sub(r"\?v=[0-9a-f]+", "", texte)

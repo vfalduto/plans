@@ -7,7 +7,7 @@ from commun.blocs import (CALQUES, INVITE, Achat, Carte, Coupe, Lieu, SectionAch
                           principes, rendu, rendus_choix, si, tableau_achats, tete, total_achats, vue_camera,
                           vue_coupes, vue_iso, vue_lecture, vue_plan, zones_svg)
 from commun.modele import Camera, Option, Valeur
-from tests.outils import RACINE, balises
+from tests.outils import sans_version, RACINE, balises
 
 SOL = [(0, 0), (100, 0), (100, 200), (0, 200)]
 PORTES = [dict(nom="ouest", mur="o", face=0, a=20, b=100)]
@@ -104,7 +104,7 @@ def test_figure_rendu(tmp_path):
     (tmp_path / "a-iso_so.jpg").write_bytes(b"")
     r = rendu(tmp_path, "a", "iso_so")
     simple = figure_rendu(r, "Vue & coin")
-    assert [i["src"] for i in balises(simple, "img")] == ["rendus/a-iso_so.jpg"]
+    assert [sans_version(i["src"]) for i in balises(simple, "img")] == ["rendus/a-iso_so.jpg"]
     assert 'alt="Vue &amp; coin"' in simple
     # sans son masque, pas de calque (il ferait un 404 et recolorerait tout le rendu)
     sans_masque = figure_rendu(r, "Vue", filtre="teinte")
@@ -115,7 +115,7 @@ def test_figure_rendu(tmp_path):
     calque = images[1]
     assert calque["class"] == "calque" and calque["alt"] == ""
     assert "filter:url(#filtre-teinte)" in calque["style"]
-    assert "url(rendus/a-iso_so-masque.png)" in calque["style"]
+    assert "url(rendus/a-iso_so-masque.png)" in sans_version(calque["style"])
     assert figure_rendu(rendu(tmp_path, "b", "iso_so"), "Vue") == ""
 
 
@@ -391,7 +391,7 @@ def test_figure_choix(tmp_path):
     images = balises(html, "img")
     assert len(images) == 3 and all("class" not in i for i in images)
     assert [i["data-si"] for i in images] == ["bois:chene", "bois:noyer", "bois:frene"]
-    assert [i["src"] for i in images] == ["rendus/a-iso_se.jpg", "rendus/a-iso_se-noyer.jpg", "rendus/a-iso_se.jpg"]
+    assert [sans_version(i["src"]) for i in images] == ["rendus/a-iso_se.jpg", "rendus/a-iso_se-noyer.jpg", "rendus/a-iso_se.jpg"]
     assert [i["alt"] for i in images] == ["Vue & coin", "Vue & coin, Noyer", "Vue & coin"]
     assert 'alt="Vue &amp; coin, Noyer"' in html
     notes = balises(html, "p", classe="note-rendu")
@@ -401,9 +401,9 @@ def test_figure_choix(tmp_path):
     teinte = figure_choix(rendus, BOIS, "Vue", filtre="teinte")
     calques = balises(teinte, "img", classe="calque")
     assert [c["data-si"] for c in calques] == ["bois:chene", "bois:noyer", "bois:frene"]
-    assert '<img class="calque" data-si="bois:noyer" src="rendus/a-iso_se-noyer.jpg"' in teinte
-    assert "url(rendus/a-iso_se-noyer-masque.png)" in calques[1]["style"]
-    assert "url(rendus/a-iso_se-masque.png)" in calques[2]["style"]  # image reprise : masque d'origine
+    assert '<img class="calque" data-si="bois:noyer" src="rendus/a-iso_se-noyer.jpg"' in sans_version(teinte)
+    assert "url(rendus/a-iso_se-noyer-masque.png)" in sans_version(calques[1]["style"])
+    assert "url(rendus/a-iso_se-masque.png)" in sans_version(calques[2]["style"])  # image reprise : masque d'origine
     assert len(balises(teinte, "img")) == 6
     # masque absent pour une valeur : pas de calque pour elle
     (tmp_path / "a-iso_se-noyer-masque.png").unlink()

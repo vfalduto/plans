@@ -15,7 +15,7 @@ from commun.journal import entrees
 from commun.modele import Document, Piece, Site
 from pieces.salon import piece
 from pieces.salon.amenagement import dessins, document, explication, options, textes, vues, zones
-from tests.outils import RACINE, charger_site
+from tests.outils import sans_version, RACINE, charger_site
 
 FIXTURES = RACINE / "tests" / "fixtures" / "salon"
 DOC = document.DOCUMENT
@@ -242,7 +242,7 @@ def test_coupes_alt_et_traits():
 def test_iso_une_image_par_bois():
     for k, nom in (("se", "iso_se"), ("no", "iso_no")):
         (e,) = [x for x in VUES["iso"].elements if x.k == k]
-        assert f'src="rendus/{nom}.jpg"' in e.scene and f'src="rendus/{nom}-noyer.jpg"' in e.scene
+        assert f'src="rendus/{nom}.jpg"' in sans_version(e.scene) and f'src="rendus/{nom}-noyer.jpg"' in sans_version(e.scene)
         assert 'data-si="bois:chene"' in e.scene and 'data-si="bois:noyer"' in e.scene
         assert "modèle V4." in e.scene
         assert "pas encore rendu" not in e.scene

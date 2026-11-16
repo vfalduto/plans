@@ -19,6 +19,7 @@ est demandée à `BLENDER_REEL` s'il est défini, sinon à `BLENDER` (défaut /o
 import dataclasses
 import hashlib
 import importlib
+import inspect
 import json
 import os
 import shutil
@@ -237,13 +238,15 @@ def _cameras(document: str) -> list[str]:
                                     f"module des caméras introuvable pour {document}").CAMERAS]
 
 
-def _reglages(cache: CacheRendu, apercu: bool = False) -> list[tuple]:
+def _reglages(cache: CacheRendu, apercu: bool = False, variante: str | None = None) -> list[tuple]:
     """[(variable, valeur, suffixe)] : un Blender par ligne ; un seul réglage vide sans déclaration, le premier
     seulement pour un aperçu (SALON_ESSENCE=… dans l'environnement pour un autre)."""
     if not cache.reglages:
         return [("", "", "")]
     module, fonction = cache.reglages.split(":")
-    lignes = list(getattr(importlib.import_module(module), fonction)())
+    f = getattr(importlib.import_module(module), fonction)
+    # une fonction qui prend un argument reçoit la variante : ses réglages peuvent en dépendre
+    lignes = list(f(variante) if variante is not None and inspect.signature(f).parameters else f())
     return lignes[:1] if apercu else lignes
 
 
@@ -259,8 +262,9 @@ def _png(cache: CacheRendu, dossier: Path, variante: str, camera: str, suffixe: 
     return dossier / (nom[:-len(".png")] + suffixe + ".png")
 
 
-def _masque(png: Path) -> Path:
-    return png.with_name(png.stem + "-masque.png")
+def _masques(png: Path) -> list[Path]:
+    """Les masques écrits à côté du rendu : <png>-masque.png et, un par surface recolorable en plus, <png>-masque-<id>.png."""
+    return sorted(png.parent.glob(png.stem + "-masque*.png"))
 
 
 def rendre(document: str, echantillons: str = "64", vues: list[str] | None = None) -> None:
@@ -296,11 +300,12 @@ def rendre(document: str, echantillons: str = "64", vues: list[str] | None = Non
         if cache.avant:
             subprocess.run(cache.avant, shell=True, cwd=RACINE, check=True, env=env)
         env_v = {**env, **({cache.variante_env: variante} if cache.variante_env else {})}
-        for var, valeur, suffixe in _reglages(cache):
+        for var, valeur, suffixe in _reglages(cache, variante=variante):
             for c in cles:   # aucun reste d'un ancien rendu à copier
                 png = _png(cache, dossier, variante, c, suffixe)
                 png.unlink(missing_ok=True)
-                _masque(png).unlink(missing_ok=True)
+                for m in _masques(png):
+                    m.unlink()
             _lancer_blender(cache, {**env_v, **({var: valeur} if var else {})}, echantillons, cles)
             for c in cles:
                 nom = (f"{variante}-{c}" if variante else c) + suffixe
@@ -310,7 +315,8 @@ def rendre(document: str, echantillons: str = "64", vues: list[str] | None = Non
                 subprocess.run(["sips", "-s", "format", "jpeg", "-s", "formatOptions", "85", str(source), "--out",
                                 str(destination / f"{nom}.jpg")], check=True, capture_output=True)
                 if cache.masque:
-                    shutil.copy(_masque(source), destination / f"{nom}-masque.png")
+                    for m in _masques(source):
+                        shutil.copy(m, destination / (nom + m.stem[len(source.stem):] + ".png"))
         for c in cles:
             noter(_cle(document, variante, c), emps[c], FICHIER)
     if fait:

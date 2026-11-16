@@ -60,3 +60,29 @@ PALETTE = [
 PAR_CODE = {c[0]: c for c in PALETTE}
 DEFAUT = "color_india"
 URL_PEINTURE = "https://plum-living.com/fr/products/"
+
+
+# ------------------------------------------------------------------ sélecteur Plum Living (V4.10)
+# Un nuancier Plum Living pour une surface du document : murs (toute la palette, groupée par gamme) ou façades de
+# meuble (laques seulement). Chaque sélecteur a sa variable CSS (dessins) et son filtre (rendus recolorés par masque).
+def _gamme(c):
+    if c[3] and c[4]:
+        return "laque de façade et peinture murale"
+    if c[3]:
+        return "laque de façade seulement, peinture à faire teinter"
+    return "peinture murale seulement, pas de laque de façade"
+
+
+def selecteur(id, nom, surfaces, defaut=DEFAUT, css="", laques=False,
+              portee="Visible sur le plan, les coupes et les rendus."):
+    """Option « nuancier » des teintes Plum Living : toute la palette (groupée selon la gamme), ou seulement les laques
+    de façade (`laques`)."""
+    from commun.modele import Option, Valeur
+    groupes = (("Laque et peinture murale", lambda c: c[3] and c[4]),
+               ("Laque de façade seulement", lambda c: c[3] and not c[4]),
+               ("Peinture murale seulement", lambda c: c[4] and not c[3] and not laques))
+    valeurs = tuple(Valeur(code=c[0], nom=c[1], couleur=c[2], groupe=titre, note=_gamme(c),
+                           lien=URL_PEINTURE + c[4] if c[4] else "")
+                    for titre, garde in groupes for c in PALETTE if garde(c))
+    return Option(id=id, nom=nom, surfaces=surfaces, type="nuancier", defaut=defaut, valeurs=valeurs, css=css,
+                  filtre=True, portee=portee)

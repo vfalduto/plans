@@ -9,6 +9,7 @@ Calques du plan (classes des éléments SVG, sans groupe en plus) :
   cotes .dim .dimt | passages .pass .passm .passt | coupes .sec .sect | voisines .room .roomt | annotations .lblx .lbls
 """
 
+import math
 from html import escape
 
 from commun.dessin import coin_arrondi, cote_h, cote_v, degage, f, rect, rot, text, virg  # noqa: F401
@@ -16,6 +17,15 @@ from commun.dessin import coin_arrondi, cote_h, cote_v, degage, f, rect, rot, te
 COUPE_A = 60     # y, regard vers le nord : banc et tableau électrique
 COUPE_B = 40     # x, regard vers l'est : meuble à chaussures, angle, flanc de la penderie
 COUPE_C = 130    # y, regard vers le sud : penderie, angle, porte d'entrée au fond
+COUPE_D = 60     # x, regard vers l'ouest : mur ouest de l'entrée, cadres, miroir, interphone
+
+
+def arrondi_svg(x0, x1, y0, y1, r, coins, cls):
+    """Rectangle vu de dessus, coins ouest nommés dans `coins` (« no », « so ») en quart de cercle de rayon r."""
+    d = f"M{f(x1)} {f(y0)} L{f(x1)} {f(y1)} "
+    d += f"L{f(x0 + r)} {f(y1)} A{f(r)} {f(r)} 0 0 1 {f(x0)} {f(y1 - r)} " if "so" in coins else f"L{f(x0)} {f(y1)} "
+    d += f"L{f(x0)} {f(y0 + r)} A{f(r)} {f(r)} 0 0 1 {f(x0 + r)} {f(y0)} " if "no" in coins else f"L{f(x0)} {f(y0)} "
+    return f'<path class="{cls}" d="{d}Z"/>'
 
 
 # ------------------------------------------------------------------ portes (plan)
@@ -60,6 +70,47 @@ def _jambages(M):
     return o
 
 
+def _si_mh(M, balise):
+    """`balise` (ouvrante, `<g>` ou `<rect …`) marquée pour l'option « meuble haut » : visible avec le meuble seulement ;
+    telle quelle pour une variante sans cette option."""
+    o = getattr(M, "MH_OPTION", None)
+    if not o:
+        return balise
+    nom = balise[1:].split(" ", 1)[0].rstrip(">/")
+    return balise.replace(f"<{nom}", f'<{nom} data-si="{o["id"]}:{o["defaut"]}"', 1)
+
+
+def _poly(pts, cls):
+    return f'<polygon class="{cls}" fill="none" stroke="currentColor" points="{" ".join(f"{f(x)},{f(y)}" for x, y in pts)}"/>'
+
+
+def _trait(pts, cls):
+    return f'<polyline class="{cls}" fill="none" stroke="currentColor" points="{" ".join(f"{f(x)},{f(y)}" for x, y in pts)}"/>'
+
+
+def _ouverture(M):
+    """Porte d'entrée : béquille à 90°, débattement au-delà de 90° jusqu'au contact, vantail et béquille à l'angle maximal,
+    jeu entre la béquille et le meuble à chaussures."""
+    if not hasattr(M, "OUVERTURE"):
+        return []
+    ov, v = M.OUVERTURE, M.VANTAIL
+    (px, py), l = v["pivot"], v["l"]
+    a = math.radians(ov["max"])
+    fin = (px - l * math.cos(a), py - l * math.sin(a))
+    o = [f'<path class="swing" d="M{f(px)} {f(py - l)} A{f(l)} {f(l)} 0 0 1 {f(fin[0])} {f(fin[1])}"/>',
+         _poly(M.vantail(ov["max"]), "leafmax"), _trait(M.bequille_trait(ov["max"]), "bqmax"),
+         _trait(M.bequille_trait(90), "bq")]
+    bx, by = M.bequille_trait(90)[2]
+    o.append(text(bx - 10, by + 2, "béquille", "lblx muted", "end"))
+    # jeu béquille ↔ bout du meuble : du coin de la béquille le plus proche au coin sud-ouest du meuble
+    c = M.CHAUSSURES
+    coin = min(M.bequille(90), key=lambda p: math.dist(p, (c["x0"], c["y1"])))
+    o.append(degage(coin, (c["x0"], c["y1"]), f'{ov["jeu_meuble"]:.0f}'))
+    o.append(text(127, 318, f'← porte d’entrée : {ov["max"]:.0f}° au plus, {ov["cause"]}', "lblx", "start"))
+    o.append(text(127, 325, f'   butoir de sol à {ov["butoir"]}° ; à 90°, béquille à {ov["jeu_meuble"]:.0f} du meuble', "lblx muted", "start"))
+    return o
+
+
 # ------------------------------------------------------------------ plan vu de dessus
 def plan_svg(M, aria="Plan de l'entrée aménagée", zones=""):
     b, c, an, pe, mi = M.BANC, M.CHAUSSURES, M.ANGLE, M.PENDERIE, M.MIROIR
@@ -82,6 +133,7 @@ def plan_svg(M, aria="Plan de l'entrée aménagée", zones=""):
     o += _jambages(M)
     for p in M.PORTES:
         o += _porte(M, p)
+    o += _ouverture(M)
     o.append(text(39, 392, "porte d’entrée", "lbls muted"))
     # ① banc et tableau électrique
     o.append(rect(M.TABLEAU["x0"], -6, M.TABLEAU["x1"], 0, "tech"))
@@ -89,25 +141,27 @@ def plan_svg(M, aria="Plan de l'entrée aménagée", zones=""):
     xm = (b["x0"] + b["x1"]) / 2
     o.append(text(xm, 18.5, f'① Banc {b["x1"] - b["x0"]} × {b["y1"] - b["y0"]}, h {b["z1"]}', "lbls"))
     o.append(text(xm, 26.5, "sous le tableau électrique", "lbls"))
-    # angle arrondi, meuble à chaussures, miroir, patères
-    o.append(coin_arrondi(an["x0"], an["x1"], an["y0"], an["y1"], an["r"], "cab"))
-    o.append(rect(c["x0"], c["y0"], c["x1"], c["y1"], "cab"))
-    for y0, _ in c["modules"][1:]:
-        o.append(f'<line class="app" x1="{c["x0"]}" y1="{y0}" x2="{c["x1"]}" y2="{y0}"/>')
-    o.append(f'<line class="app" x1="{an["x0"]}" y1="{an["y1"]}" x2="{an["x1"]}" y2="{an["y1"]}"/>')
-    o.append(rect(106.5, mi["y0"], 110, mi["y1"], "mirror"))
-    ym = (c["y0"] + c["y1"]) / 2
-    o.append(text(97.5, ym, f'② Chaussures {c["y1"] - c["y0"]} × {c["x1"] - c["x0"]}, h {c["z1"]}', "lbls", extra=rot(97.5, ym)))
-    ymi = (mi["y0"] + mi["y1"]) / 2
-    o.append(text(127, ymi, "← miroir au-dessus du meuble", "lblx muted", "start"))
-    o.append(text(127, 345, "← 4 patères à droite du miroir", "lblx muted", "start"))
+    # meuble à chaussures (angle arrondi au nord, bout sud droit), plinthe en retrait (tireté), prise fibre, patères
+    o.append(arrondi_svg(c["x0"], c["x1"], c["y0"], c["y1"], an["r"], "no", "cab"))
+    rt = c["retrait"]
+    o.append(arrondi_svg(c["x0"] + rt, c["x1"], c["y0"] + rt, c["y1"] - rt, an["r"] - rt, "no", "plinthe").replace("<path ", '<path fill="none" ', 1))
+    o.append(f'<line class="app" x1="{c["x0"]}" y1="{c["ya"]}" x2="{c["x1"]}" y2="{c["ya"]}"/>')
+    ym = (c["ya"] + c["yb"]) / 2
+    o.append(text(97.5, ym, f'② Chaussures, h {c["z1"]}', "lbls", extra=rot(97.5, ym)))
+    pf = M.PRISE_FIBRE
+    o.append(rect(pf["x"] - 2, pf["y0"], pf["x"], pf["y1"], "tech"))
+    o.append(text(127, (pf["y0"] + pf["y1"]) / 2 + 2, f'← prise fibre à {pf["axe"]} du sol, derrière le meuble', "lblx muted", "start"))
+    o.append(text(127, 345, "← 4 patères, sol libre dessous", "lblx muted", "start"))
     for y in M.PATERES:
         o.append(f'<circle class="hook" cx="108" cy="{y}" r="1.6"/>')
     o.append(text(79, 218, "angle arrondi", "lblx muted", "end"))
-    o.append(text(79, 225, f'étagères h {c["z1"]}', "lblx muted", "end"))
+    o.append(text(79, 225, f'plein, h {c["z1"]}', "lblx muted", "end"))
+    o.append(text(127, c["yb"] - 6, f'← plinthe {c["socle"]} en retrait de {rt} (tireté)', "lblx muted", "start"))
     it = M.INTERPHONE
     o.append(rect(0, it["y0"], 3, it["y1"], "facp"))
     o.append(text(6, (it["y0"] + it["y1"]) / 2 + 2, "interphone", "lblx", "start"))
+    o.append(rect(0, mi["y0"], 2, mi["y1"], "mirror"))
+    o.append(text(6, (mi["y0"] + mi["y1"]) / 2 + 2, f'miroir {mi["y1"] - mi["y0"]} × {mi["z1"] - mi["z0"]}', "lblx", "start"))
     cd = M.CADRES
     o.append(rect(0, cd["y0"], cd["ep"], cd["y1"], "dark"))
     o.append(text(6, (cd["y0"] + cd["y1"]) / 2 + 2, f'{cd["colonnes"] * cd["rangs"]} cadres', "lblx", "start"))
@@ -126,10 +180,18 @@ def plan_svg(M, aria="Plan de l'entrée aménagée", zones=""):
     # ④ meuble haut (au plafond, tireté) et peinture India (bande le long des murs peints, porte d'entrée)
     mh = M.MEUBLE_HAUT
     yd = mh["y0"] + mh["etagere"]
+    o.append(_si_mh(M, "<g>"))   # option « meuble haut » : ce groupe ne se voit qu'avec le meuble
     o.append(rect(mh["x0"], mh["y0"], mh["x1"], mh["y1"], "upperh"))
     o.append(f'<line class="upper" x1="{mh["x0"]}" y1="{yd}" x2="{mh["x1"]}" y2="{yd}"/>')
     o.append(text(42, mh["y0"] + 9, "④ meuble haut au plafond", "lblx"))
-    o.append(text(42, mh["y1"] - 4, f'étagères ↑, placard ↓, dessous à {mh["z0"]}', "lblx muted"))
+    o.append(text(42, mh["y1"] - 6, f'niche ↑, placard coulissant ↓, dessous à {mh["z0"]}', "lblx muted"))
+    # porte coulissante : fermée à l'ouest (trait plein), course vers l'est (flèche en tireté)
+    yf = mh["y1"] - mh["facade"] / 2
+    o.append(f'<line class="slide" x1="{f(mh["x0"] + 1)}" y1="{f(yf)}" x2="{f(mh["x0"] + mh["porte"] - 1)}" y2="{f(yf)}"/>')
+    xa, xb = mh["x0"] + mh["porte"] + 3, mh["x1"] - 6
+    o.append(f'<path class="swing" d="M{f(xa)} {f(yf + 3.5)} L{f(xb)} {f(yf + 3.5)} M{f(xb - 3)} {f(yf + 1.5)} '
+             f'L{f(xb)} {f(yf + 3.5)} L{f(xb - 3)} {f(yf + 5.5)}"/>')
+    o.append("</g>")
     yi = M.INDIA["y0"]
     for x0, y0, x1, y1 in ((0, yi, 2.5, 374), (107.5, pe["y1"], 110, 374), (0, 371.5, 110, 374)):
         o.append(rect(x0, y0, x1, y1, "indiap"))
@@ -149,6 +211,8 @@ def plan_svg(M, aria="Plan de l'entrée aménagée", zones=""):
     o.append(text(COUPE_B + 7, 368, "B", "sect", "start"))
     o.append(f'<line class="sec" x1="-6" y1="{COUPE_C}" x2="360" y2="{COUPE_C}"/>')
     o.append(text(-8, COUPE_C + 4, "C", "sect", "end"))
+    o.append(f'<line class="sec" x1="{COUPE_D}" y1="200" x2="{COUPE_D}" y2="380"/>')
+    o.append(text(COUPE_D + 7, 368, "D", "sect", "start"))
     return f'<svg class="plan" viewBox="-150 -130 595 560" role="{"group" if zones else "img"}" aria-label="{escape(aria)}">{"".join(o)}{zones}</svg>'
 
 
@@ -157,7 +221,7 @@ COUPE_CLS = {"mur": ("bgwall", "w"), "linteau": ("wallv", "w"), "porte": ("porte
              "banc": ("cab", "cabc"), "angle": ("cab", "cabc"), "caisson": ("cab", "cabc"), "plateau": ("tbl", "tbl"),
              "tall": ("tall", "tallc"), "socle": ("dark", "dark"), "miroir": ("mirror", "mirror"),
              "applique": ("lamp", "lamp"), "patere": ("tbl", "tbl"), "facade": ("fac", "fac"), "facade_p": ("facp", "facp"),
-             "haut": ("cab", "cabc"), "facade_h": ("fac", "fac"), "india": ("india", "india"),
+             "haut": ("mhv", "mhc"), "facade_h": ("mhv", "mhc"), "india": ("india", "india"),
              "india_plafond": ("india", "india"), "india_l": ("india", "india"), "interphone": ("facp", "facp"), "cadre_mur": ("dark", "dark")}
 
 # (axe coupé, sens du regard, miroir de l'axe horizontal)
@@ -184,10 +248,13 @@ def coupe_svg(M, cut, regard, umin, umax, hauteurs, extra=None, aria=None, class
         coupe = d0 < cut < d1
         u, v = sorted((X(max(u0, umin)), X(min(u1, umax))))
         cls = "india" if b.nom == "porte_entree" else (classes or COUPE_CLS)[b.role][1 if coupe else 0]
-        o.append(rect(u, -b.z1, v, -b.z0, cls, M.MIROIR["r"] if b.role == "miroir" and axe == "x" else 0))
+        mh = b.role in getattr(M, "MH_ROLES", ())
+        r = rect(u, -b.z1, v, -b.z0, cls, M.MIROIR["r"] if b.role == "miroir" and axe == "x" else 0)
+        o.append(_si_mh(M, r) if mh else r)
         if b.etiq and v - u > 8:
             xm = (u + v) / 2
-            etiq[(round(xm), round(b.z0 + b.z1))] = text(xm, -(b.z0 + b.z1) / 2 + 3, b.etiq, "lblb")
+            t = text(xm, -(b.z0 + b.z1) / 2 + 3, b.etiq, "lblb")
+            etiq[(round(xm), round(b.z0 + b.z1))] = _si_mh(M, t) if mh else t
     o += etiq.values()
     if extra:
         o += extra(X)
@@ -227,20 +294,21 @@ def coupe_a(M, aria=None):
 
 
 def coupe_b(M, aria=None):
-    c, an, pe, mi = M.CHAUSSURES, M.ANGLE, M.PENDERIE, M.MIROIR
+    c, an, pf = M.CHAUSSURES, M.ANGLE, M.PRISE_FIBRE
 
     def cotes(X):
         r = [cote_h(an["y0"], an["y1"], 12, f'angle {an["y1"] - an["y0"]}'),
-             cote_h(c["y0"], c["y1"], 12, f'chaussures {c["y1"] - c["y0"]}'),
-             text((mi["y0"] + mi["y1"]) / 2, -(mi["z0"] + mi["z1"]) / 2, f'miroir {mi["y1"] - mi["y0"]} × {mi["z1"] - mi["z0"]}', "lbls"),
+             cote_h(c["ya"], c["yb"], 12, f'abattants {c["yb"] - c["ya"]}'),
+             cote_h(c["y0"], c["y1"], 22, f'meuble {c["y1"] - c["y0"]}'),
              text((M.PATERES[0] + M.PATERES[-1]) / 2, -M.PATERE["z"] - 6, f'4 patères en bois h {M.PATERE["z"]}', "lblx muted"),
              text(M.APPLIQUE["y"] + 10, -M.APPLIQUE["z"] + 2, "applique", "lblx muted", "start"),
-             text((c["y0"] + c["y1"]) / 2, -c["z1"] - 6, f'plateau vide-poche h {c["z1"] + c["plateau"]}', "lblx muted")]
-        for z in an["etageres"]:
-            r.append(f'<line class="app" x1="{an["y0"]}" y1="{-z}" x2="{an["y1"]}" y2="{-z}"/>')
+             text((c["y0"] + c["y1"]) / 2, -c["z1"] - 6, f'plateau vide-poche h {c["z1"] + c["plateau"]}', "lblx muted"),
+             rect(pf["y0"], -pf["z1"], pf["y1"], -pf["z0"], "tech"),
+             text(pf["y1"] + 3, -pf["z1"] - 2, f'prise fibre h {pf["axe"]}, derrière', "lblx", "start"),
+             text(c["yb"] + 3, -2, f'plinthe {c["socle"]}, retrait {c["retrait"]}', "lblx muted", "start")]
         return r
 
-    return coupe_svg(M, COUPE_B, "est", -20, 394, [M.BANC["z1"], c["z1"], mi["z0"], M.H_PORTE, mi["z1"]], extra=cotes, aria=aria)
+    return coupe_svg(M, COUPE_B, "est", -20, 394, [c["socle"], M.BANC["z1"], c["z1"], M.PATERE["z"], M.H_PORTE], extra=cotes, aria=aria)
 
 
 def coupe_c(M, aria=None):
@@ -256,7 +324,7 @@ def coupe_c(M, aria=None):
               text(xm, -pe["chaussures"][1] - 3, "chaussures", "lblx muted"),
               f'<line class="app" x1="{f(u0)}" y1="{-pe["z1"]}" x2="{f(u1)}" y2="{-pe["z1"]}"/>',
               cote_h(u0, u1, 12, f'PAX {pe["x1"] - pe["x0"]}'),
-              cote_h(*sorted((X(M.ANGLE["x0"]), X(M.ANGLE["x1"]))), 12, "25")]
+              cote_h(*sorted((X(M.CHAUSSURES["x0"]), X(M.CHAUSSURES["x1"]))), 12, f'{M.CHAUSSURES["x1"] - M.CHAUSSURES["x0"]}')]
         for x in pe["barres"]:
             r.append(f'<line class="inner" x1="{f(X(x))}" y1="{-pe["tringle"]}" x2="{f(X(x))}" y2="{-pe["tringle"] + 4}"/>')
         r += portes_vues(M, X, "s")
@@ -264,6 +332,20 @@ def coupe_c(M, aria=None):
 
     return coupe_svg(M, COUPE_C, "sud", -20, 374, [M.CHAUSSURES["z1"], pe["tringle"], pe["etageres"][0], pe["z1"]], extra=cotes, aria=aria)
 
+
+
+def coupe_d(M, aria=None):
+    cd, mi, it = M.CADRES, M.MIROIR, M.INTERPHONE
+
+    def cotes(X):
+        u0, u1 = sorted((X(cd["y0"]), X(cd["y1"])))
+        v0, v1 = sorted((X(mi["y0"]), X(mi["y1"])))
+        return [cote_h(u0, u1, 12, f'{cd["colonnes"]} × {cd["rangs"]} cadres {cd["l"]} × {cd["h"]}'),
+                cote_h(v0, v1, 12, f'miroir {mi["y1"] - mi["y0"]}'),
+                text((v0 + v1) / 2, -mi["z1"] - 4, f'miroir {mi["y1"] - mi["y0"]} × {mi["z1"] - mi["z0"]}', "lblx muted"),
+                text(max(X(it["y0"]), X(it["y1"])), -it["z0"] + 8, "interphone", "lblx muted", "end")] + portes_vues(M, X, "o")
+
+    return coupe_svg(M, COUPE_D, "ouest", 160, 394, [mi["z0"], cd["z0"], cd["z1"], mi["z1"]], extra=cotes, aria=aria)
 
 
 # Styles des dessins (le reste de la page vient de commun/site.css).
@@ -282,8 +364,8 @@ svg text{font-family:Archivo,system-ui,sans-serif;fill:var(--ink)}
 .app{stroke:var(--ink);stroke-width:.8;fill:none}
 .cab{fill:var(--cab);stroke:var(--ink);stroke-width:.7}
 .cabc{fill:var(--tall);stroke:var(--ink);stroke-width:1.2}
-.tall{fill:var(--tall);stroke:var(--ink);stroke-width:.8}
-.tallc{fill:var(--tall);stroke:var(--ink);stroke-width:1.4}
+.tall{fill:var(--pax,var(--tall));stroke:var(--ink);stroke-width:.8}
+.tallc{fill:var(--pax,var(--tall));stroke:var(--ink);stroke-width:1.4}
 .fac{fill:var(--wood);fill-opacity:.35;stroke:var(--ink);stroke-width:.5}
 .facp{fill:var(--panel);stroke:var(--ink);stroke-width:.6}
 .tbl{fill:var(--wood);fill-opacity:.6;stroke:var(--ink);stroke-width:.6}
@@ -303,7 +385,13 @@ svg text{font-family:Archivo,system-ui,sans-serif;fill:var(--ink)}
 .doorzone{fill:var(--tri);fill-opacity:.06;stroke:none}
 .doorarc{fill:none;stroke:var(--ink);stroke-width:.8}
 .doorleaf{stroke:var(--ink);stroke-width:3}
+.slide{stroke:var(--ink);stroke-width:.8}
+.mhv{fill:var(--india);stroke:var(--ink);stroke-width:.8}.mhc{fill:var(--india);stroke:var(--ink);stroke-width:1.4}
 .swing{fill:none;stroke:var(--muted);stroke-width:.6;stroke-dasharray:2 2}
+.plinthe{fill:none;stroke:var(--muted);stroke-width:.5;stroke-dasharray:1.5 1.5}
+.leafmax{fill:none;stroke:var(--ink);stroke-width:.6;stroke-dasharray:3 1.5}
+.bq{fill:none;stroke:var(--ink);stroke-width:1.2;stroke-linecap:round;stroke-linejoin:round}
+.bqmax{fill:none;stroke:var(--ink);stroke-width:.7;stroke-linecap:round;stroke-linejoin:round}
 .sleafc{fill:none;stroke:var(--ink);stroke-width:.8;stroke-dasharray:3 2}
 .pass{stroke:var(--flow);stroke-width:.9}.passm{fill:var(--flow)}
 .passt{fill:var(--flow);font-family:"JetBrains Mono",ui-monospace,monospace !important;font-size:7px;font-weight:600}
@@ -334,7 +422,7 @@ def legende():
 
 # ------------------------------------------------------------------ textes sous les dessins et principes
 # Sujet de chaque coupe : nom de l'onglet « A mur nord » et titre de la fiche « Coupe A-A : mur nord ».
-SUJETS = {"A": "mur nord", "B": "mur de la salle de bain", "C": "penderie"}
+SUJETS = {"A": "mur nord", "B": "mur de la salle de bain", "C": "penderie", "D": "mur ouest de l'entrée"}
 
 
 def legendes(M):
@@ -343,27 +431,33 @@ def legendes(M):
     pp = pe["y1"] - pe["y0"]
     lp = pe["x1"] - pe["x0"]
     return {
-        "plan": (f"Plan vu de dessus, 1 unité = 1 cm ; nord en haut. Le vantail de la porte d'entrée ouvert à 90° vient "
-                 f"en butée contre le meuble à chaussures (②) : prévoir un butoir de sol. Avec {pp} cm de profondeur, la "
-                 f"penderie reste au sud du vantail de la pièce ouest ouvert à 90° (il s'arrête à y 160, la penderie "
-                 f"commence à y {pe['y0']}). Traits A, B, C : coupes."),
+        "plan": (f"Plan vu de dessus, 1 unité = 1 cm ; nord en haut. Le vantail de la porte d'entrée ouvert à 90° longe "
+                 f"le sol libre sous les patères et s'arrête à côté de l'arrondi sud du meuble à chaussures (②) : prévoir "
+                 f"un butoir de sol. Avec {pp} cm de profondeur, la penderie reste au sud du vantail de la pièce ouest "
+                 f"ouvert à 90° (il s'arrête à y 160, la penderie commence à y {pe['y0']}). Du coin nord-est de la "
+                 f"penderie au coin du mur qui sépare le salon du couloir et de la chambre : "
+                 f"{M.PAX_MUR['d']:.0f} cm en diagonale. Traits A, B, C, D : coupes."),
         "A": (f"Coupe à y {COUPE_A}, regard vers le nord : l'ouest est à gauche. Banc posé sous le tableau électrique "
               f"encastré, entre les portes de la cuisine (coulissante, côté cuisine) et du WC. Tableau dessiné au milieu "
               f"du trumeau, de {M.TABLEAU['z0']} à {M.TABLEAU['z1']} : position et taille à relever. À droite, le linteau "
               f"du passage vers le salon."),
         "B": (f"Coupe à x {COUPE_B}, regard vers l'est : le nord est à gauche. Le banc au fond à gauche, puis le flanc de "
-              f"la penderie, l'angle arrondi à étagères ouvertes, le meuble à chaussures (deux modules de "
-              f"{c['modules'][0][1] - c['modules'][0][0]}, deux abattants chacun) et son plateau vide-poche à "
-              f"{c['z1'] + c['plateau']} ; au-dessus, le miroir {mi['y1'] - mi['y0']} × {mi['z1'] - mi['z0']} (coins "
-              f"arrondis) et son applique, puis quatre patères en bois. En haut, le meuble haut ④ coupé (étagères au nord, "
-              f"placard au sud). En jaune, la peinture India de l'entrée. Coupées : la porte coulissante de la cuisine à "
-              f"gauche, la porte d'entrée à droite."),
+              f"la penderie, l'angle arrondi plein, le meuble à chaussures (un module de "
+              f"{c['yb'] - c['ya']}, trois abattants, sur une plinthe de {c['socle']}), sous un plateau vide-poche à "
+              f"{c['z1'] + c['plateau']} ; la prise fibre, derrière le bas du module, en tireté. Puis le sol libre sous "
+              f"les quatre patères en bois et leur applique. En haut, le meuble haut ④ coupé, en India (niche au nord, placard "
+              f"à porte coulissante au sud). En jaune, la peinture India de l'entrée. Coupées : la porte coulissante de la cuisine à gauche, la "
+              f"porte d'entrée à droite."),
         "C": (f"Coupe à y {COUPE_C}, regard vers le sud : l'est est à gauche. Au premier plan à droite, les étagères du "
               f"meuble haut ④, dessous à {M.MEUBLE_HAUT['z0']}. Penderie IKEA PAX de {lp} (caisson {pe['z1']} de haut, "
               f"bandeau jusqu'au plafond), portes de {pe['portes'][0]} et {pe['portes'][1]} ; dedans, tringle KOMPLEMENT à "
               f"{pe['tringle']} (deux barres d'avant en arrière, cintres de face), tablettes à {pe['etageres'][0]} et "
               f"{pe['etageres'][1]}, étagères à chaussures en bas. À droite, l'angle arrondi devant le meuble à chaussures, "
               f"la porte d'entrée au fond. Coupées : la porte de la chambre à gauche, celle de la pièce ouest à droite."),
+        "D": (f"Coupe à x {COUPE_D}, regard vers l'ouest : le sud est à gauche. Le mur ouest de l'entrée, peint en India : "
+              f"galerie de {M.CADRES['colonnes'] * M.CADRES['rangs']} cadres {M.CADRES['l']} × {M.CADRES['h']} sous le "
+              f"meuble haut ④ (coupé), miroir {mi['y1'] - mi['y0']} × {mi['z1'] - mi['z0']} à coins arrondis, puis "
+              f"l'interphone, {M.INTERPHONE['y0'] - mi['y1']} cm plus au sud."),
     }
 
 
@@ -380,11 +474,17 @@ def principes(M):
          "reste visible et à portée de main au-dessus : rien n'est rangé devant, ce que la NF C 15-100 interdit. On s'y "
          "assoit pour se chausser, face au meuble à chaussures."),
         ("② Meuble à chaussures dans la branche d'entrée",
-         f'Le long de la cloison de la salle de bain, {lc} cm de long et {pc} de profondeur seulement pour garder '
-         f'{c["x0"]} cm de passage. Quatre abattants (environ {M.PAIRES} paires), plateau vide-poche pour les clés ; '
-         f'au-dessus, miroir {mi["y1"] - mi["y0"]} × {mi["z1"] - mi["z0"]} et son applique, {len(M.PATERES)} patères en '
-         f'bois au sud, côté porte (chevilles de chêne Ø {virg(M.PATERE["d"])}, à {M.PATERE["z"]}). Miroir à coins '
-         f'arrondis (R {mi["r"]}). Il sert aussi de butée à la porte d\'entrée ouverte.'),
+         f'Le long de la cloison de la salle de bain, {lc} cm de long angle compris et {pc} de profondeur seulement '
+         f'pour garder {c["x0"]} cm de passage. Un module de {c["yb"] - c["ya"]} à trois abattants superposés (environ '
+         f'{M.PAIRES} paires), {c["z1"]} de haut, plateau vide-poche à {c["z1"] + c["plateau"]} pour les clés, sur une '
+         f'plinthe de {c["socle"]} en retrait de {c["retrait"]} peinte comme le mur : le meuble flotte. L\'angle arrondi '
+         'plein, en chêne, est au nord ; au sud, le meuble s\'arrête net pour laisser la porte d\'entrée s\'ouvrir : '
+         f'à 90°, sa béquille passe à {M.OUVERTURE["jeu_meuble"]:.0f} cm du bout du meuble, et la porte va jusqu\'à '
+         f'{M.OUVERTURE["max"]:.0f}°, où {M.OUVERTURE["cause"]} (butoir de sol à {M.OUVERTURE["butoir"]}°). La prise fibre ({M.PRISE_FIBRE["axe"]} du sol, sur la cloison) est derrière '
+         'le bas du module, côté nord : ce compartiment n\'a pas de dos, l\'abattant du bas y donne accès et '
+         'la box internet s\'y range, à côté de la prise (trous d\'aération dans la tablette du dessus). '
+         f'Côté porte, le sol reste libre sous {len(M.PATERES)} patères en bois (chevilles de chêne Ø '
+         f'{virg(M.PATERE["d"])}, à {M.PATERE["z"]}) et leur applique : 110 de passage pour entrer avec un sac.'),
         ("③ Penderie PAX et angle arrondi",
          f'Contre la face nord de la salle de bain : une penderie IKEA PAX de {lp} × {pe["caisson"]} × {pe["z1"]}, la seule largeur qui '
          "tienne dans les 84 cm du mur (un caisson de 100 mangerait l'huisserie de la salle de bain), et un bandeau "
@@ -392,15 +492,16 @@ def principes(M):
          f'pas en travers : la tringle KOMPLEMENT de ce caisson a deux barres d\'avant en arrière, cintres de face '
          f'(environ {pe["manteaux"]} manteaux) ; deux tablettes au-dessus (bonnets, sacs), deux étagères à chaussures '
          f'dessous, une lampe à détecteur qui s\'allume à l\'ouverture. Le meuble à chaussures se prolonge jusqu\'au nu '
-         f'de la penderie et s\'y termine par un quart de cercle ouvert de rayon {an["r"]}, à {c["z1"]} de haut '
-         f'(étagères pour les clés et le courrier) : pas d\'arête dans le passage. {banc_pend} cm restent entre le banc '
+         f'de la penderie et s\'y termine par un quart de cercle plein de rayon {an["r"]}, à {c["z1"]} de haut, '
+         'en chêne comme le meuble : pas d\'arête dans le passage. {banc_pend} cm restent entre le banc '
          "et la penderie fermée."),
         ("④ Meuble haut et entrée en India",
          f'Suspendu au plafond en travers de la branche d\'entrée, du mur ouest à la cloison de la salle de bain '
          f'({mh["x1"] - mh["x0"]} × {mh["y1"] - mh["y0"]}, {mh["z1"] - mh["z0"]} de haut, dessous à {mh["z0"]} comme le '
-         f'haut des portes) : il fait comme un linteau qui marque l\'entrée. Côté couloir, étagères ouvertes '
-         f'({mh["etagere"]} de profondeur, une tablette) ; côté porte d\'entrée, placard à deux portes de '
-         f'{(mh["x1"] - mh["x0"]) // 2} (bonnets, gants, sacs). Fixé au plafond et aux deux murs qui le bordent. Au sud du '
+         f'haut des portes) : il fait comme un linteau qui marque l\'entrée. Côté couloir, une niche ouverte '
+         f'({mh["etagere"]} de profondeur, {mh["z1"] - mh["z0"] - 2 * mh["ep"]} de haut) ; côté porte d\'entrée, placard '
+         f'fermé par une porte coulissante de {mh["porte"]:.0f} qui glisse de gauche à droite (bonnets, gants, sacs) : rien ne s\'ouvre au-dessus de la tête. Peint '
+         f'en India comme les murs et le plafond qui l\'entourent, il se fond dans l\'entrée. Fixé au plafond et aux deux murs qui le bordent. Au sud du '
          f'meuble, murs, plafond et porte d\'entrée (face intérieure) sont peints en {M.INDIA["nom"]}, ainsi que le flanc '
          "de la penderie qui prolonge l'angle arrondi : l'entrée devient une petite pièce de couleur, le reste du couloir "
          "reste blanc."),

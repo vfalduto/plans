@@ -3,6 +3,7 @@ from html import escape
 
 from pieces.salon.enfilade import document, vues
 from tests.salon_enfilade_ancienne import corrige, morceaux, page, section, texte
+from tests.outils import sans_version  # noqa: E402
 
 S = vues.vues("")["explication"].elements[0].scene
 
@@ -21,7 +22,7 @@ def test_rendus():
     for cle, alt in document.RENDUS:
         assert (vues.RENDUS_SITE / f"{cle}.jpg").is_file()
         assert f'src="rendus/{cle}.jpg" alt="{escape(alt, quote=True)}"' in S
-    assert S.count('src="rendus/iso.jpg"') == 2       # la tête et « Rendus 3D » (ruling 11)
+    assert sans_version(S).count('src="rendus/iso.jpg"') == 2       # la tête et « Rendus 3D » (ruling 11)
 
 
 def test_construction():

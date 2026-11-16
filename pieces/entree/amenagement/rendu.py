@@ -9,7 +9,7 @@
 # (ENTREE_SORTIE=<dossier> pour un autre, ENTREE_APERCU=1 pour 800 x 600).
 #
 # Réutilise 3d/rendu.py (matériaux, soleil, ciel, réglages Cycles). Portes fermées ; ce que le modèle ne dessine qu'en
-# emprise (angle arrondi à étagères, poignées) est construit ici.
+# emprise (angle arrondi plein, poignées) est construit ici.
 
 import math
 import os
@@ -50,6 +50,14 @@ INDIA_MODE = os.environ.get("ENTREE_INDIA", "neutre")
 NEUTRE = "#C8C8C8"            # gris des surfaces India dans le rendu neutre
 INDIA_MATS = ("s_india", "s_india_l")
 INDIA_COULEUR = NEUTRE if INDIA_MODE == "neutre" else INDIA_MODE
+# Penderie PAX (V4.10) : elle aussi en gris neutre, recolorée dans la page par son propre sélecteur, à travers son
+# propre masque (-masque-pax.png) ; avec ENTREE_INDIA, sa teinte d'origine.
+PAX_MATS = ("s_pax",)
+PAX_COULEUR = NEUTRE if INDIA_MODE == "neutre" else "#F0F0EB"
+MASQUES = (("-masque.png", INDIA_MATS), ("-masque-pax.png", PAX_MATS))
+# Option « meuble haut » (principale) : ENTREE_MEUBLE_HAUT=sans retire le meuble haut, sa poignée, son rail et sa déco
+SANS_MEUBLE_HAUT = os.environ.get("ENTREE_MEUBLE_HAUT", "avec") == "sans"
+SUFFIXE_MH = "-sans" if SANS_MEUBLE_HAUT else ""   # fichiers du rendu sans meuble haut (suffixe de meuble_haut_rendus)
 
 # ------------------------------------------------------------------ matériaux
 R.ESSENCE = "chene"
@@ -61,16 +69,17 @@ R.MATS.update({
     "s_coupe":   ("#D9D4CA", 0.95, {}),                       # tranche des cloisons coupées
     "s_chene":   ("#A8743F", 0.5, CHENE),
     "s_chene_v": ("#A8743F", 0.5, dict(CHENE, sens="v")),
-    "s_blanc":   (M.MUR_COULEUR, 0.45, {"laque": True}),      # penderie, couleur des murs
+    "s_blanc":   (M.MUR_COULEUR, 0.45, {"laque": True}),      # laque blanche, couleur des murs
+    "s_pax":     (PAX_COULEUR, 0.45, {"laque": True}),        # penderie PAX (gris neutre recoloré dans la page)
     "s_miroir":  ("#F2F4F5", 0.02, {"metal": True}),
     "s_india":   (INDIA_COULEUR, 0.9, {"enduit": True}),   # India (ou gris neutre recoloré dans la page), entrée
     "s_india_l": (INDIA_COULEUR, 0.45, {"laque": True}),   # porte d'entrée
     "s_tapis":   ("#A88E6A", 0.98, {}),                         # tapis de couloir en jute
 })
 ROLES = {"mur": "s_mur", "linteau": "s_mur", "porte": "porte_peinte", "tableau": "electro_blanc", "banc": "s_chene",
-         "caisson": "s_chene", "plateau": "s_chene", "tall": "s_blanc", "socle": "s_mur", "miroir": "s_miroir",
-         "applique": "globe", "patere": "s_chene", "facade": "s_chene_v", "facade_p": "s_blanc",
-         "haut": "s_chene", "facade_h": "s_chene_v", "india": "s_india", "india_plafond": "s_india", "india_l": "s_india_l", "interphone": "electro_blanc",
+         "caisson": "s_chene", "plateau": "s_chene", "tall": "s_pax", "socle": "s_mur", "miroir": "s_miroir",
+         "applique": "globe", "patere": "s_chene", "facade": "s_chene_v", "facade_p": "s_pax",
+         "haut": "s_india", "facade_h": "s_india_l", "india": "s_india", "india_plafond": "s_india", "india_l": "s_india_l", "interphone": "electro_blanc",
          "tapis": "s_tapis", "sac": "lin",
          "tall_i": "s_india_l", "facade_pi": "s_india_l"}   # penderie en laque India (variante Victor)
 
@@ -167,10 +176,19 @@ def prisme(nom, pts, z0, z1, key, chanfrein=True):
     return o
 
 
-def contour_arrondi(x0, x1, y0, y1, r, n=16):
-    """Contour vu de dessus, coin nord-ouest en quart de cercle de rayon r (sens des aiguilles du plan)."""
-    arc = [(x0 + r - r * math.cos(math.pi / 2 * k / n), y0 + r - r * math.sin(math.pi / 2 * k / n)) for k in range(n + 1)]
-    return [(x1, y1), (x0, y1)] + arc + [(x1, y0)]
+def contour_arrondi(x0, x1, y0, y1, r, coins="no", n=16):
+    """Contour vu de dessus, coins ouest nommés dans `coins` (« no », « so ») en quart de cercle de rayon r (sens des
+    aiguilles du plan)."""
+    pts = [(x1, y1)]
+    if "so" in coins:   # de (x0 + r, y1) à (x0, y1 - r)
+        pts += [(x0 + r - r * math.sin(math.pi / 2 * k / n), y1 - r + r * math.cos(math.pi / 2 * k / n)) for k in range(n + 1)]
+    else:
+        pts.append((x0, y1))
+    if "no" in coins:   # de (x0, y0 + r) à (x0 + r, y0)
+        pts += [(x0 + r - r * math.cos(math.pi / 2 * k / n), y0 + r - r * math.sin(math.pi / 2 * k / n)) for k in range(n + 1)]
+    else:
+        pts.append((x0, y0))
+    return pts + [(x1, y0)]
 
 
 def rect_arrondi(y0, y1, z0, z1, r, n=8):
@@ -210,6 +228,8 @@ def deco(sc):
     paniers = iter(["wicker_basket_01", "wicker_basket_02"])
     liste = []
     for b in getattr(M, "DECO", []):
+        if SANS_MEUBLE_HAUT and b.nom.endswith("_mh"):   # déco posée dans le meuble haut
+            continue
         if b.role in ("tapis", "sac"):
             boite(f"deco__{b.nom}", b.x0, b.x1, b.y0, b.y1, b.z0, b.z1, ROLES[b.role], chanfrein=b.role == "sac")
             continue
@@ -275,9 +295,12 @@ def poignees_v4():
     for dx in (-6, 5):
         boite(f"poignee__penderie_{dx}__-", xm + dx, xm + dx + 1, pe["y0"] - 1.5, pe["y0"], 116, 140, "noir")
     mh = M.MEUBLE_HAUT
-    for k in range(2):
-        xp = mh["x0"] + (mh["x1"] - mh["x0"]) * (0.5 + (k - 0.5) * 0.12)
-        boite(f"poignee__mh_{k}__-", xp - 0.5, xp + 0.5, mh["y1"], mh["y1"] + 1.5, mh["z0"] + 4, mh["z0"] + 14, "noir")
+    if SANS_MEUBLE_HAUT:
+        return
+    xp = mh["x0"] + 6                                         # cuvette de la porte coulissante, côté ouest
+    boite("poignee__mh_porte__-", xp - 1.5, xp + 1.5, mh["y1"] - 0.3, mh["y1"] + 0.1, mh["z0"] + 6, mh["z0"] + 18, "noir")
+    # rail haut, sur toute la largeur, devant le placard
+    boite("poignee__mh_rail__-", mh["x0"], mh["x1"], mh["y1"], mh["y1"] + 0.6, mh["z1"] - 1.5, mh["z1"], "noir")
 
 
 def portes_poignees():
@@ -306,15 +329,14 @@ def build_scene():
     prisme("plafond__couloir__p", piece.SOL, piece.H, piece.H + 2, "plafond", chanfrein=False)   # vue du banc seulement
 
     for b in piece.ENVELOPPE + M.MEUBLES:
-        nom = nom_de(b)
-        if b.role == "angle":                      # étagères ouvertes en quart de cercle (le plateau couvre le haut)
-            ct = contour_arrondi(b.x0, b.x1, b.y0, b.y1, b.arrondi)
-            prisme(nom + "_bas", ct, 0, 3, "s_chene")
-            for z in M.ANGLE["etageres"]:
-                prisme(f"{nom}_{z}", ct, z - 2, z, "s_chene")
+        if SANS_MEUBLE_HAUT and b.role in getattr(M, "MH_ROLES", ()):
             continue
-        if b.arrondi and b.role in ("plateau", "caisson", "socle"):   # volume plein à coin nord-ouest arrondi
-            prisme(nom, contour_arrondi(b.x0, b.x1, b.y0, b.y1, b.arrondi), b.z0, b.z1, ROLES[b.role])
+        nom = nom_de(b)
+        if b.role == "angle":                      # quart de cercle plein en chêne (le plateau couvre le haut)
+            prisme(nom, contour_arrondi(b.x0, b.x1, b.y0, b.y1, b.arrondi, b.coins), b.z0, b.z1, "s_chene")
+            continue
+        if b.arrondi and b.role in ("plateau", "caisson", "socle"):   # volume plein à coins ouest arrondis
+            prisme(nom, contour_arrondi(b.x0, b.x1, b.y0, b.y1, b.arrondi, b.coins), b.z0, b.z1, ROLES[b.role])
             continue
         if b.role == "applique":
             boite(nom + "_platine", 108, 110, b.y0 + 2, b.y1 - 2, b.z0, b.z1, "noir")
@@ -438,7 +460,8 @@ def rendre(sc, name, v, fichier):
     bpy.ops.render.render(write_still=True)
     print("Rendu :", sc.render.filepath)
     if INDIA_MODE == "neutre":
-        rendre_masque(sc, fichier.replace(".png", "-masque.png"))
+        for suffixe, blancs in MASQUES:
+            rendre_masque(sc, fichier.replace(".png", suffixe), blancs)
 
 
 def _mat_masque(nom, blanc=0.0, miroir=False, alpha=1.0):
@@ -468,8 +491,8 @@ def _mat_masque(nom, blanc=0.0, miroir=False, alpha=1.0):
     return m
 
 
-def rendre_masque(sc, fichier):
-    """Masque des surfaces India (blanc = India, noir ailleurs), vu par la même caméra : sert à recolorer le rendu
+def rendre_masque(sc, fichier, blancs=INDIA_MATS):
+    """Masque des surfaces aux matériaux `blancs` (blanc = surface recolorée, noir ailleurs), vu par la même caméra : sert à recolorer le rendu
     neutre dans la page. Émission seule, sans lumière ni ciel ; le miroir reste un miroir (il recolore aussi le reflet
     des murs India) ; la silhouette garde sa transparence."""
     mats = {"blanc": _mat_masque("masque_blanc", 1.0), "noir": _mat_masque("masque_noir"),
@@ -488,7 +511,7 @@ def rendre_masque(sc, fichier):
         for s in o.material_slots:
             n = s.material.name if s.material else ""
             gardes.append((s, s.material))
-            s.material = mats["blanc" if n.split(".")[0] in INDIA_MATS else "miroir" if n.startswith("s_miroir")
+            s.material = mats["blanc" if n.split(".")[0] in blancs else "miroir" if n.startswith("s_miroir")
                               else "humain" if n.startswith("humain") else "noir"]
     vs, cy, monde = sc.view_settings, sc.cycles, sc.world
     reglages = (vs.view_transform, vs.look, vs.exposure, cy.samples, cy.use_denoising, cy.use_adaptive_sampling)
@@ -533,10 +556,10 @@ if __name__ == "__main__":
     vues = {n: v for n, v in VIEWS.items() if not VUES_DEMANDEES or n in VUES_DEMANDEES}
     sc = build_scene()
     for name, v in vues.items():
-        rendre(sc, name, v, f"{PREFIXE}-{name}.png")
+        rendre(sc, name, v, f"{PREFIXE}-{name}{SUFFIXE_MH}.png")
     # un rendu qui n'a pas écrit son fichier fait échouer le lancement (la recette ne note rien)
-    attendus = [f"{PREFIXE}-{n}{suffixe}.png" for n in vues
-                for suffixe in ("", "-masque") if suffixe == "" or INDIA_MODE == "neutre"]   # sans masque si ENTREE_INDIA
+    attendus = [f"{PREFIXE}-{n}{SUFFIXE_MH}{suffixe}.png" for n in vues
+                for suffixe in ("", *(m[:-4] for m, _ in MASQUES)) if suffixe == "" or INDIA_MODE == "neutre"]   # sans masque si ENTREE_INDIA
     manquants = [f for f in attendus if not os.path.exists(os.path.join(OUT, f))]
     if manquants:
         raise SystemExit(f"rendus manquants : {', '.join(manquants)}")

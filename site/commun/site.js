@@ -614,8 +614,18 @@ function blocOption(o) {
   const boutonChoix = v => `<button type="button" data-v="${echapper(v.code)}" aria-pressed="false">` +
     (v.couleur ? `<i style="background:${echapper(v.couleur)}"></i>` : "") + `${echapper(v.nom)}</button>`;
   const grille = o.type === "nuancier" ? "nuances" : "choix-opt";
-  const commande = [...new Set(o.valeurs.map(v => v.groupe))].map(g => (g ? `<h4>${echapper(g)}</h4>` : "") +
+  const groupes = [...new Set(o.valeurs.map(v => v.groupe))].map(g => (g ? `<h4>${echapper(g)}</h4>` : "") +
     `<div class="${grille}">${o.valeurs.filter(v => v.groupe === g).map(o.type === "choix" ? boutonChoix : bouton).join("")}</div>`).join("");
+  // nuancier : une seule pastille, la teinte choisie ; elle ouvre une fenêtre (feuille basse sur mobile) avec toutes les
+  // teintes, refermée au choix d'une teinte, par la croix, Échap ou un clic hors d'elle
+  const commande = o.type !== "nuancier" ? groupes :
+    '<button type="button" class="teinte" aria-haspopup="dialog" aria-expanded="false"><i></i>' +
+    '<span class="nom"></span><span class="num"></span>' +
+    '<svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M7 10l5 5 5-5"/></svg></button>' +
+    `<div class="pop-nuances" role="dialog" aria-label="${echapper(o.nom)}" hidden><div class="tete-pop">` +
+    `<b>${echapper(o.nom)}</b><button type="button" class="fermer-pop" aria-label="Fermer">` +
+    '<svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg></button></div>' +
+    `${groupes}</div>`;
   // sous les boutons : la valeur choisie (nuancier) ou, pour un choix, la remarque d'une valeur que les rendus ne montrent pas
   // (dans une région role="status", présente dès l'ouverture, pour qu'un lecteur d'écran l'annonce quand elle paraît)
   const sous = o.type === "choix" ? '<div role="status"><p class="remarque sans-rendu" hidden>Pas encore rendu : les rendus ne montrent pas ce choix.</p></div>'
@@ -635,8 +645,11 @@ function brancherOptions() {
       const v = valeurDe(o, choix[o.id]), bloc = $(`section[data-o="${o.id}"]`, panneau);
       for (const b of $$("[data-v]", bloc)) b.setAttribute("aria-pressed", String(b.dataset.v === v.code));
       if (o.type === "choix") { $(".sans-rendu", bloc).hidden = v.rendue !== false; continue; }
-      $(".info", bloc).innerHTML = `<b>${echapper(v.nom)}</b> <span class="num">${echapper(v.couleur)}</span>` +
-        (v.note ? `, ${echapper(v.note)}` : "") +
+      const t = $(".teinte", bloc);
+      $("i", t).style.background = v.couleur;
+      $(".nom", t).textContent = v.nom;
+      $(".num", t).textContent = v.couleur;
+      $(".info", bloc).innerHTML = (v.note ? echapper(v.note.charAt(0).toUpperCase() + v.note.slice(1)) + "." : "") +
         (v.lien ? ` <a href="${echapper(v.lien)}" target="_blank" rel="noopener">Voir la fiche</a>` : "");
     }
     const n = nbChangees(), pastille = $("#n-options");
@@ -647,10 +660,34 @@ function brancherOptions() {
       pastille.setAttribute("aria-label", `${n} option${n > 1 ? "s" : ""} modifiée${n > 1 ? "s" : ""}`);
     }
   };
+  const popOuvert = () => $$(".pop-nuances", panneau).find(p => !p.hidden);
+  const montrerPop = (bloc, ouvert) => {
+    for (const p of $$(".pop-nuances", panneau)) if (p !== $(".pop-nuances", bloc)) fermerPop(p.closest("section"), false);
+    const pop = $(".pop-nuances", bloc), t = $(".teinte", bloc);
+    pop.hidden = !ouvert;
+    t.setAttribute("aria-expanded", String(ouvert));
+    if (ouvert) ($('[aria-pressed="true"]', pop) || $(".fermer-pop", pop)).focus();
+  };
+  const fermerPop = (bloc, rendre = true) => {
+    const pop = $(".pop-nuances", bloc);
+    if (!pop || pop.hidden) return;
+    montrerPop(bloc, false);
+    if (rendre) $(".teinte", bloc).focus();
+  };
+  for (const t of $$(".teinte", panneau)) t.addEventListener("click", () => {
+    const bloc = t.closest("section");
+    montrerPop(bloc, $(".pop-nuances", bloc).hidden);
+  });
+  for (const b of $$(".fermer-pop", panneau)) b.addEventListener("click", () => fermerPop(b.closest("section")));
+  document.addEventListener("click", e => {   // clic hors de la fenêtre ouverte et de sa pastille : elle se ferme
+    const p = popOuvert();
+    if (p && !p.contains(e.target) && !p.closest("section").querySelector(".teinte").contains(e.target)) fermerPop(p.closest("section"), false);
+  });
   for (const b of $$("[data-v]", panneau)) b.addEventListener("click", () => {
     const o = options.find(x => x.id === b.closest("section").dataset.o);
     appliquer(o, b.dataset.v);
     afficher();
+    if (o.type === "nuancier") fermerPop(b.closest("section"));
     // la fiche d'un meuble suit son emprise dans le nouvel état, sans se déplier ; un nuancier ne la touche pas
     if (o.type === "choix") suivreMeuble();
   });
@@ -664,6 +701,7 @@ function brancherOptions() {
     if (section) montrerMeuble(section, courant.k, false);
   };
   const montrerPanneau = ouvert => {
+    if (!ouvert) for (const p of $$(".pop-nuances", panneau)) fermerPop(p.closest("section"), false);
     panneau.hidden = voile.hidden = !ouvert;
     if (ouvreur) ouvreur.setAttribute("aria-expanded", String(ouvert));
     if (ouvert) $(".fermer", panneau).focus();
@@ -672,7 +710,12 @@ function brancherOptions() {
   if (ouvreur) { ouvreur.setAttribute("aria-haspopup", "dialog"); ouvreur.addEventListener("click", () => montrerPanneau(panneau.hidden)); }
   $(".fermer", panneau).addEventListener("click", () => montrerPanneau(false));
   voile.addEventListener("click", () => montrerPanneau(false));
-  document.addEventListener("keydown", e => { if (e.key === "Escape" && !panneau.hidden) montrerPanneau(false); });
+  document.addEventListener("keydown", e => {
+    if (e.key !== "Escape" || panneau.hidden) return;
+    const p = popOuvert();   // Échap ferme d'abord la fenêtre des teintes, puis le panneau
+    if (p) fermerPop(p.closest("section"));
+    else montrerPanneau(false);
+  });
   for (const o of options) appliquer(o, choix[o.id], false);
   afficher();
 }

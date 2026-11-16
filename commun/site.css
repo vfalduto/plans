@@ -238,6 +238,20 @@ a.b-case[aria-current="page"] > .ico{color:inherit}
 .feuille .info{position:sticky;bottom:-18px;z-index:1;margin:10px -18px 0;padding:8px 18px 10px;background:var(--panel);border-top:1px solid var(--line);font-size:15px}
 .feuille .actions{margin:16px 0 0}
 .feuille .btn:disabled{opacity:.45}
+/* nuancier : la pastille de la teinte choisie, et la fenêtre de toutes les teintes qu'elle ouvre (à gauche du panneau ;
+   feuille basse sur mobile, par-dessus le panneau) */
+.feuille .teinte{display:flex;align-items:center;gap:10px;width:100%;min-height:48px;padding:6px 8px 6px 6px;border:1px solid var(--line);border-radius:6px;background:var(--panel);font:500 15.5px var(--ui);text-align:left}
+.feuille .teinte:hover{border-color:var(--ink)}
+.feuille .teinte i{flex:none;width:36px;height:34px;border-radius:4px;border:1px solid var(--line)}
+.feuille .teinte .nom{flex:1;min-width:0}
+.feuille .teinte .num{color:var(--muted);font-size:13.5px}
+.feuille .teinte .ico{flex:none;width:20px;height:20px}
+.feuille .teinte[aria-expanded="true"]{border-color:var(--actif);box-shadow:0 0 0 1px var(--actif)}
+.pop-nuances{position:fixed;z-index:42;right:416px;top:96px;width:400px;max-height:calc(100dvh - 116px);overflow-y:auto;background:var(--panel);border:1px solid var(--ink);border-radius:6px;padding:0 16px 16px;box-shadow:0 8px 24px rgb(10 16 20 / .14)}
+.pop-nuances .tete-pop{position:sticky;top:0;z-index:1;display:flex;align-items:center;justify-content:space-between;margin:0 -16px;padding:10px 8px 6px 16px;background:var(--panel);font:600 16.5px var(--ui)}
+.pop-nuances .fermer-pop{border:0;background:none;display:grid;place-items:center;width:36px;height:36px;border-radius:4px}
+.pop-nuances .fermer-pop:hover{background:var(--paper)}
+.feuille .info{position:static;margin:8px 0 0;padding:0;border:0;color:var(--muted);font-size:14.5px}
 .nuances{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px}
 .nuances button{border:1px solid var(--line);border-radius:4px;background:var(--panel);padding:0 0 5px;font:500 13.5px/1.2 var(--ui);overflow:hidden}
 .nuances button i{display:block;height:38px;background:var(--c);margin-bottom:5px}
@@ -294,7 +308,8 @@ a.b-case[aria-current="page"] > .ico{color:inherit}
   .lecture{padding:18px 16px 48px}
   .lecture h2{font-size:21px;margin-top:32px}
   .feuille{left:0;right:0;top:auto;bottom:0;width:auto;max-height:58dvh;border-radius:8px 8px 0 0;border-width:1px 0 0;padding-bottom:calc(18px + env(safe-area-inset-bottom))}
-  .feuille .info{bottom:calc(-18px - env(safe-area-inset-bottom));padding-bottom:calc(10px + env(safe-area-inset-bottom))}
+  .pop-nuances{left:0;right:0;top:auto;bottom:0;width:auto;max-height:72dvh;border-radius:8px 8px 0 0;border-width:1px 0 0;padding-bottom:calc(16px + env(safe-area-inset-bottom))}
+  .pop-nuances .nuances{grid-template-columns:repeat(auto-fill,minmax(76px,1fr))}
   .outils{left:8px;top:8px}
   .bandeau{left:8px;right:8px;bottom:8px}
 }
