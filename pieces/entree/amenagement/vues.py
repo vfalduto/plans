@@ -172,8 +172,11 @@ def _explication_principale(M, D):
         "de la salle de bain (vérifier la nature de la cloison). Hauteur sous plafond d'au moins 237 pour le monter debout.",
         f'<b>Prise fibre</b> : dessinée sur la cloison de la salle de bain à {M.PRISE_FIBRE["axe"]} du sol, '
         f'{M.PRISE_FIBRE["y0"] - 208} cm au sud du coin de la salle de bain : relever sa position exacte pour placer la '
-        "découpe du dos ; vérifier que la box tient dans le compartiment du bas (37 de haut, 23 de profondeur) "
-        "et qu'une prise de courant est à portée, et percer la tablette pour l'aération.",
+        "passe-câble ; la colonne technique de l'angle fait 34 × 22 × 108 à l'intérieur : vérifier que la box et les "
+        "futures box domotique y tiennent, faire poser une prise de courant (multiprise) dans la colonne, et garder "
+        "l'aération (plinthe en retrait, fentes sous le plateau).",
+        "<b>Chaussures</b> : deux de vos chaussures les plus larges posées côte à côte doivent tenir dans 22 cm (sinon "
+        "tête-bêche) ; régler les tablettes selon les paires réelles du foyer.",
         f'<b>Cadres et miroir</b> : galerie de {M.CADRES["colonnes"] * M.CADRES["rangs"]} cadres {M.CADRES["l"]} × '
         f'{M.CADRES["h"]} (grille {M.CADRES["colonnes"]} × {M.CADRES["rangs"]}, {M.CADRES["ecart"]} d\'écart, centre à '
         f'{virg(M.CADRES["zc"])}) entre l\'alignement du coin de la salle de bain et le miroir, '

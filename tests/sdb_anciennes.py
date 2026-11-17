@@ -76,7 +76,24 @@ CORRECTIONS = {"2.5 GPa": "2,5 GPa", "≈ 4.1 kg": "≈ 4,1 kg", "B à F :": "B 
                " (« — » : non lu)": ", dans la note de l'article (sans note : non lu)"}
 
 
+# V8.7 : plan de travail remonté de 88,8 à 92 ; les cotes qui en dépendent changent, le texte reste le même
+PLAN_A_92 = {"étages égaux de 40,7": "étages égaux de 42,3", "3/4 de 40,7, soit 30,5": "3/4 de 42,3, soit 31,7",
+             "61,4 % de l'étage": "59,1 % de l'étage", "Fond. 85 × 47,5": "Fond. 88,2 × 47,5",
+             "Dimensions. 84,8 × 50,7": "Dimensions. 88 × 50,7", "38,7 de large et 10 de haut": "38,7 de large et 10,4 de haut",
+             "à 34,3 et à 76,8 du sol": "à 35,5 et à 79,6 du sol", "2 cornes de 6 × 10.": "2 cornes de 6 × 10,4.",
+             "et 32,5 entre les deux": "et 33,7 entre les deux", "soit 7,4 m.": "soit 7,6 m.",
+             "B (85) + B (85)": "B (88,2) + B (88,2)", "B (85) + E (84,8)": "B (88,2) + E (88)", "C (85) + G (69)": "C (88,2) + G (65,8)",
+             "cales de 40,7": "cales de 42,3", "18 de large et 69 de haut": "18 de large et 65,8 de haut",
+             "Chaque étage, hauteur : 40,7": "Chaque étage, hauteur : 42,3",
+             "dessous du meuble haut : 69,2": "dessous du meuble haut : 66", "Chant : 7,4 m": "Chant : 7,6 m",
+             "à 100, 110 et 120 du sol": "à 103, 113 et 123 du sol",
+             "Masse du meuble ≈ 41 kg, dont ≈ 4,1 kg": "Masse du meuble ≈ 42 kg, dont ≈ 4,3 kg"}
+CHIFFRES_A_92 = {"84,8": "88", "85": "88,2", "69": "65,8"}      # cellules isolées des tableaux
+
+
 def corrige(t: str) -> str:
     for a, b in CORRECTIONS.items():
         t = t.replace(a, b)
-    return t
+    for a, b in PLAN_A_92.items():
+        t = t.replace(a, b)
+    return CHIFFRES_A_92.get(t, t)

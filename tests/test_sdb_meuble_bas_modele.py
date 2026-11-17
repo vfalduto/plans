@@ -142,7 +142,7 @@ def test_epaisseur_demandee():
 def test_machine_au_jeu_et_sur_tapis():
     m, t = _b("lave_linge"), _b("tapis")
     assert m.y0 - _b("joue_c").y1 >= B.JEU_MACHINE - EPS and _b("joue_s").y0 - m.y1 >= B.JEU_MACHINE - EPS
-    assert m.z0 == t.z1 == B.TAPIS["ep"] and B.Z_DESSOUS - m.z1 == B.JEU_MACHINE
+    assert m.z0 == t.z1 == B.TAPIS["ep"] and B.Z_DESSOUS - m.z1 >= B.JEU_MACHINE
     assert _b("joue_c").y1 < t.y0 and t.y1 < _b("joue_s").y0 and t.x0 >= m.x0 - 0.5
     assert P.X1 - m.x1 == B.JEU_FOND and m.x0 == _b("joue_c").x0     # joues au nu de la façade : la porte passe
 
@@ -217,9 +217,9 @@ def test_tenue():
 
 
 def test_valeurs():
-    assert round(B.total(), 2) == 296.82 and B.rouleaux_chant() == 2 and B.cm(B.chant_vu() / 100) == "7,4"
+    assert round(B.total(), 2) == 296.82 and B.rouleaux_chant() == 2 and B.cm(B.chant_vu() / 100) == "7,6"
     assert (B.cm(B.NIV_H), B.cm(B.Z_DESSUS), B.cm(B.PY1 - B.PY0), B.cm(B.BAIE), B.cm(B.COL_H)) == \
-           ("40,7", "88,8", "114,4", "47,5", "69")
+           ("42,3", "92", "114,4", "47,5", "65,8")
     assert len(B.prix()) == 16
     assert sum(q for _, _, q, _, _ in B.PIECES_DEBIT) == 9
 
@@ -235,7 +235,8 @@ def test_lit_le_meuble_haut():
 
 
 def test_changements_comme_l_ancienne_page():
-    # les seize changements de l'ancienne page à l'identique, sous la V8.6 (onglet Iso) ajoutée en tête
-    assert document.VERSION == "V8.6" and len(document.CHANGEMENTS) == 17
-    assert document.CHANGEMENTS[0][:2] == ("V8.6", "17/11/2026") and "Iso" in document.CHANGEMENTS[0][2]
-    assert [(c.version, c.date, c.texte) for c in depuis_page(page_bas())] == [tuple(c) for c in document.CHANGEMENTS[1:]]
+    # les seize changements de l'ancienne page à l'identique, sous la V8.6 (onglet Iso) et la V8.7 (plan à 92) ajoutées en tête
+    assert document.VERSION == "V8.7" and len(document.CHANGEMENTS) == 18
+    assert document.CHANGEMENTS[0][:2] == ("V8.7", "17/11/2026") and "92" in document.CHANGEMENTS[0][2]
+    assert document.CHANGEMENTS[1][:2] == ("V8.6", "17/11/2026") and "Iso" in document.CHANGEMENTS[1][2]
+    assert [(c.version, c.date, c.texte) for c in depuis_page(page_bas())] == [tuple(c) for c in document.CHANGEMENTS[2:]]

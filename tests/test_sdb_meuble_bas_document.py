@@ -17,8 +17,8 @@ def test_document():
     assert (d.piece, d.id, d.nom, d.type, d.css, d.generer, d.options) == \
         ("sdb", "meuble-bas", "Meuble bas", "construction", dessins.CSS_DOCUMENT, vues.vues, ())
     (v,) = d.variantes
-    assert (v.id, v.nom, v.version, v.figees) == ("", "Meuble bas", "V8.6", document.FIGEES)
-    assert v.changements == tuple(Changement(*c) for c in document.CHANGEMENTS) and len(v.changements) == 17
+    assert (v.id, v.nom, v.version, v.figees) == ("", "Meuble bas", "V8.7", document.FIGEES)
+    assert v.changements == tuple(Changement(*c) for c in document.CHANGEMENTS) and len(v.changements) == 18
     assert not hasattr(document, "CACHE_RENDU")
 
 

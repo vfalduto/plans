@@ -4,8 +4,9 @@
 
 from pieces.sdb.archives import FIGEES_COMMUNES
 
-VERSION = "V8.6"
+VERSION = "V8.7"
 CHANGEMENTS = [
+    ("V8.7", "17/11/2026", "Plan de travail remonté à 92 (dessus du plateau), à la demande du client : 4,2 d'air au-dessus de la machine au lieu de 1. Joues, fond et porte rallongés de 3,2 (joues de 88,2, porte de 88), étages de 42,3, découpes de la porte recalées sur les 3/4 de chaque étage, colonne raccourcie à 65,8. Tout tient encore dans les mêmes tablettes : prix inchangé."),
     ("V8.6", "17/11/2026", "Plans séparés en deux onglets : Plans (dessins cotés, avec Mesurer) et Iso (vues axonométriques : iso, sans la porte, éclatée)."),
     ("V8.5", "05/11/2026", "Panneau perforé et ses deux montants retirés, à la demande du client. Le meuble bas revient à 296,82 €."),
     ("V8.4", "05/11/2026", "Colonne en diagonale : un seul panneau biseauté de 18 de large coupe l'angle à 45°, les prises regardent la pièce. Panneau perforé SKÅDIS de 36 × 56 sur le mur nord, au-dessus du plateau, porté par deux montants vissés au plateau et au meuble haut : rien n'est percé dans le carrelage. Le meuble bas passe à 306,82 €."),

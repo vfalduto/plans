@@ -11,7 +11,7 @@ import math
 
 from pieces.entree.piece import Bloc, EP, ENVELOPPE, H, H_PORTE, MURS, PORTES, PRISE_FIBRE, SOL, SURFACE  # noqa: F401
 
-VERSION = "V4.17"
+VERSION = "V4.18"
 
 # Empreinte des rendus (just rendu entree/amenagement) : la pièce puis le module de la variante, le code de rendu de l'entrée puis
 # celui de 3d/. Noms et ordre entrent dans l'empreinte : les changer refait tous les rendus.
@@ -49,20 +49,29 @@ BANC = dict(x0=92, x1=187, y0=0, y1=38, z1=45, ep=3)
 # (peinte comme le mur : le meuble flotte) ; abattants au-dessus, hauteur totale toujours 120. L'angle devient un
 # volume plein en chêne (quart de cercle R 12, de la plinthe au plateau, comme le meuble de Victor) : plus d'étagères
 # ouvertes ; la box fibre va dans le compartiment du bas, avec la prise, derrière l'abattant.
-# Dictionnaire : y0 → y1 l'emprise entière (arrondis compris), ya → yb le caisson à abattants.
+# V4.17 : à 25 de profondeur, un abattant ne prend qu'une rangée (≈ 3 paires sur 79, d'après les GULLABERG et STÄLL
+# d'IKEA) : les abattants sont remplacés par deux portes battantes, comme le meuble haut, et 5 tablettes (6 niveaux) ;
+# chaussures posées en long, la paire côte à côte dans les 22 de profondeur intérieure, 2 à 3 paires par niveau, bottines
+# en bas. L'angle n'est plus plein : c'est une colonne technique fermée par une porte de 26 (partie droite de la face
+# ouest, ouverture par poussoir), pour la box fibre et, à terme, les box domotique ; passe-câble dans la joue sud vers
+# la prise fibre, aération par la plinthe en retrait et sous le plateau.
+# Dictionnaire : y0 → y1 l'emprise entière (arrondis compris), ya → yb le caisson à portes.
 NU_PENDERIE = 170   # nu nord de la penderie PAX (V4.7) : caisson 35,5 + porte 1,6 + jeu ≈ 38 depuis la face nord de la SDB
-CHAUSSURES = dict(x0=85, x1=110, y0=NU_PENDERIE, ya=208, yb=291, y1=291, z1=120, facade=2, rangs=(8, 45, 83, 120),
-                  plateau=3, socle=8, retrait=4)
+CHAUSSURES = dict(x0=85, x1=110, y0=NU_PENDERIE, ya=208, yb=291, y1=291, z1=120, facade=2,
+                  plateau=3, socle=8, retrait=4, tablettes=(34, 51, 68, 85, 102), ep_tablette=1.8)
 CHAUSSURES["modules"] = [(CHAUSSURES["ya"], CHAUSSURES["yb"])]
+_yc = (CHAUSSURES["ya"] + CHAUSSURES["yb"]) / 2
+CHAUSSURES["portes"] = [(CHAUSSURES["ya"], _yc), (_yc, CHAUSSURES["yb"])]
 # V4.15 : le compte des paires prend aussi le bas de la PAX : deux étagères à chaussures KOMPLEMENT 75 × 35, 3 paires
 # chacune d'après la fiche IKEA (relevée le 17/11/2026).
-PAIRES_MEUBLE = 18
+PAIRES_MEUBLE = 14     # V4.17 : 5 niveaux de 2 à 3 paires en long + 2 paires de bottines en bas (au lieu de 18 annoncées)
 PAIRES_PAX = 2 * 3
 PAIRES = PAIRES_MEUBLE + PAIRES_PAX
 
 # ------------------------------------------------------------------ angle arrondi du meuble à chaussures (bout nord)
 # Quart de cercle plein (V4.10 : rayon réduit de 25 à 12), posé sur la plinthe (8) : pas d'arête dans le passage.
 ANGLE = dict(x0=CHAUSSURES["x0"], x1=CHAUSSURES["x1"], y0=NU_PENDERIE, y1=CHAUSSURES["ya"], r=12)
+ANGLE["porte"] = (ANGLE["y0"] + ANGLE["r"], ANGLE["y1"])    # V4.17 : colonne technique, porte sur la partie droite
 
 # ------------------------------------------------------------------ meuble haut au-dessus du meuble à chaussures (V4.12)
 # Même forme que le meuble à chaussures, vu de dessus (x 85 → 110, y 170 → 291, angle plein au coin R 12) : l'angle
@@ -151,8 +160,10 @@ MEUBLES = [
     Bloc("socle", "chaussures_socle_angle", CHAUSSURES["x0"] + CHAUSSURES["retrait"], CHAUSSURES["x1"],
          ANGLE["y0"] + CHAUSSURES["retrait"], CHAUSSURES["ya"], 0, CHAUSSURES["socle"],
          arrondi=ANGLE["r"] - CHAUSSURES["retrait"]),
-    Bloc("angle", "angle", ANGLE["x0"], ANGLE["x1"], ANGLE["y0"], ANGLE["y1"], CHAUSSURES["socle"], CHAUSSURES["z1"], "angle",
+    Bloc("angle", "angle", ANGLE["x0"], ANGLE["x1"], ANGLE["y0"], ANGLE["porte"][0], CHAUSSURES["socle"], CHAUSSURES["z1"],
          arrondi=ANGLE["r"]),
+    Bloc("caisson", "angle_technique", ANGLE["x0"] + CHAUSSURES["facade"], ANGLE["x1"], ANGLE["porte"][0], ANGLE["y1"],
+         CHAUSSURES["socle"], CHAUSSURES["z1"]),
     Bloc("caisson", "chaussures", CHAUSSURES["x0"] + CHAUSSURES["facade"], CHAUSSURES["x1"], CHAUSSURES["ya"],
          CHAUSSURES["yb"], CHAUSSURES["socle"], CHAUSSURES["z1"], "② chaussures"),
     Bloc("plateau", "vide_poche", CHAUSSURES["x0"], CHAUSSURES["x1"], CHAUSSURES["y0"], CHAUSSURES["y1"], CHAUSSURES["z1"],
@@ -208,11 +219,12 @@ MEUBLES += [
     Bloc("india_l", "india_penderie", PENDERIE["x0"] - 0.3, PENDERIE["x0"], PENDERIE["y0"], PENDERIE["y1"], PENDERIE["socle"], H),
 ]
 
-# façades : abattants du meuble à chaussures, portes de la penderie
-for k, (y0, y1) in enumerate(CHAUSSURES["modules"]):
-    for r, (z0, z1) in enumerate(zip(CHAUSSURES["rangs"], CHAUSSURES["rangs"][1:])):
-        MEUBLES.append(Bloc("facade", f"abattant_{k}{r}", CHAUSSURES["x0"], CHAUSSURES["x0"] + CHAUSSURES["facade"],
-                            y0 + 0.2, y1 - 0.2, z0 + 0.2, z1 - 0.2))
+# façades : portes du meuble à chaussures (V4.17) et de la colonne technique, portes de la penderie
+for k, (y0, y1) in enumerate(CHAUSSURES["portes"]):
+    MEUBLES.append(Bloc("facade", f"chaussures_porte_{k}", CHAUSSURES["x0"], CHAUSSURES["x0"] + CHAUSSURES["facade"],
+                        y0 + 0.2, y1 - 0.2, CHAUSSURES["socle"] + 0.2, CHAUSSURES["z1"] - 0.2))
+MEUBLES.append(Bloc("facade", "angle_porte", ANGLE["x0"], ANGLE["x0"] + CHAUSSURES["facade"], ANGLE["porte"][0] + 0.2,
+                    ANGLE["porte"][1] - 0.2, CHAUSSURES["socle"] + 0.2, CHAUSSURES["z1"] - 0.2))
 for k, (y0, y1) in enumerate(MEUBLE_HAUT["portes"]):     # portes de placard du meuble haut, face à l'ouest
     MEUBLES.append(Bloc("facade", f"mh_porte_{k}", MEUBLE_HAUT["x0"], MEUBLE_HAUT["x0"] + MEUBLE_HAUT["facade"],
                         y0 + 0.2, y1 - 0.2, MEUBLE_HAUT["z0"] + 0.2, MEUBLE_HAUT["z1"] - 0.2))
@@ -360,6 +372,10 @@ RENDUS = [("iso_so", "Isométrique depuis le sud-ouest : banc sous le tableau, m
           ("banc", "Assis sur le banc, vers la porte d'entrée : penderie, entrée en India")]
 
 CHANGEMENTS = [
+    ("V4.18", "17/11/2026", "Meuble à chaussures : les trois abattants (une seule rangée à 25 de profondeur, ≈ 8 paires "
+     "en réalité) sont remplacés par deux portes battantes et 5 tablettes, chaussures posées en long : ≈ 14 paires. "
+     "L'angle arrondi devient une colonne technique fermée (porte de 26 à poussoir) pour la box fibre et les futures "
+     "box domotique."),
     ("V4.17", "17/11/2026", "Zone « Porte de la pièce ouest » retirée du plan, avec sa carte Principe."),
     ("V4.16", "17/11/2026", "Meuble haut arrêté au haut du caisson de la PAX (244) au lieu du plafond, avec au-dessus un "
      "fileur de chêne de 6 jusqu'au plafond, d'aplomb avec les portes, comme le bandeau de la PAX."),

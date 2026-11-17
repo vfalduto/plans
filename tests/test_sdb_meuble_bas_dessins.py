@@ -12,9 +12,28 @@ ORDRE = ["elevation", "iso", "iso-ouvert", "eclate", "plan", "coupe", "placard",
 V = vues.vues("")
 
 
+# V8.7 : le plan de travail passe de 88,8 à 92 ; seuls le plan et la colonne vue de dessus n'en dépendent pas
+SANS_HAUTEUR = ("plan", "colonne-dessus")
+
+
+def _sans_nombres(svg):
+    """Sans les nombres ni les traits de rappel des niveaux : à 88,8, l'étiquette du plateau était écartée de celle de la machine."""
+    return re.sub(r"-?\d+(?:[.,]\d+)?", "#", re.sub(r'<polyline class="lead"[^>]*/>', "", svg))
+
+
 @pytest.mark.parametrize("k", ORDRE)
 def test_dessin_comme_l_ancienne_page(k):
-    assert D.DESSINS[k]() == dessin(page_bas(), D.ARIA[k])
+    """Identique à l'ancienne page ; pour les dessins qui dépendent de la hauteur du plan, mêmes éléments, cotes à part."""
+    neuf, vieux = D.DESSINS[k](), dessin(page_bas(), D.ARIA[k])
+    if k in SANS_HAUTEUR:
+        assert neuf == vieux
+    else:
+        assert neuf != vieux and _sans_nombres(neuf) == _sans_nombres(vieux)
+
+
+def test_plan_a_92():
+    for k in ("elevation", "coupe", "joue"):
+        assert ">92 " in D.DESSINS[k]() and "88,8" not in D.DESSINS[k](), k
 
 
 def test_cinq_vues_et_verifier():
@@ -37,7 +56,7 @@ def test_plans():
     for e in p.elements + i.elements:
         assert e.scene.startswith('<svg data-mesure="non"') == (e.k in ("iso", "iso-ouvert", "eclate"))
         assert sans_aria(e.scene).replace(' data-mesure="non"', "") == sans_aria(D.DESSINS[e.k]())
-    assert "114,4 × 60, dessus à 88,8" in p.fiche and 'href="#decoupe"' in p.fiche and 'href="#montage"' in p.fiche
+    assert "114,4 × 60, dessus à 92" in p.fiche and 'href="#decoupe"' in p.fiche and 'href="#montage"' in p.fiche
 
 
 def _caps():

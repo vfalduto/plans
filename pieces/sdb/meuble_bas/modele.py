@@ -1,4 +1,4 @@
-# Meuble bas de la salle de bain (V8.5) : le modèle. Trois joues, un fond et un bas en mélaminé blanc de 18, levés sur
+# Meuble bas de la salle de bain (V8.7) : le modèle. Trois joues, un fond et un bas en mélaminé blanc de 18, levés sur
 # des vérins, portent directement un plateau en chêne de 60 au-dessus de la machine. À côté de la machine, un placard à
 # une étagère, deux bacs à linge et une porte découpée en U à chaque étage pour jeter le linge porte fermée. Rien de fixé
 # au mur.
@@ -71,8 +71,9 @@ JEU_FOND = 5            # entre le dos de la machine et le mur du fond (coudes d
 TAPIS = dict(ep=1, l=60, p=54, brut=60, prix=13.50, ref="9161504", nom="Plaque anti-vibrations Noma Rub 60 × 60 × 1")
 
 Z_MACH = TAPIS["ep"] + P.MACHINE["h"]          # dessus de la machine, posée sur le tapis : 86
-Z_DESSOUS = Z_MACH + JEU_MACHINE          # dessous du plateau : 87
-Z_DESSUS = Z_DESSOUS + EP                 # dessus du plateau : 88,8
+Z_DESSUS = 92                             # dessus du plateau, demandé par le client (V8.7) : plan de travail à 92
+Z_DESSOUS = Z_DESSUS - EP                 # dessous du plateau : 90,2, soit 4,2 d'air au-dessus de la machine
+assert Z_DESSOUS - Z_MACH >= JEU_MACHINE
 
 PX0, PX1 = P.X1 - PLATEAU_P, P.X1         # plateau : 174 → 234
 PY0, PY1 = P.Y0 + JEU_MUR, P.Y1 - JEU_MUR # plateau : 0,3 → 114,7
@@ -81,7 +82,7 @@ MX0 = MX1 - P.MACHINE["p"]                     # façade de la machine : 176
 JX0, JX1 = MX0, P.X1 - JEU_MUR            # joues : au nu de la façade, le plateau dépasse de 2 devant
 JOUE_P = JX1 - JX0                        # 57,7
 JZ0 = VERIN["h"]                          # bas des panneaux, hors de l'eau : 2
-JOUE_H = Z_DESSOUS - JZ0                  # 85
+JOUE_H = Z_DESSOUS - JZ0                  # 88,2
 
 # du nord au sud : joue nord, placard, joue du milieu, machine, joue sud
 NY0, NY1 = PY0, PY0 + EP
@@ -101,12 +102,12 @@ PROF_LIBRE = DX0 - JX0                    # du plan des joues au fond : 55,9
 
 # bas du placard au ras du bas des joues ; deux étages égaux, du dessus du bas au dessous du plateau
 BZ0, BZ1 = JZ0, JZ0 + EP                  # bas : 2 → 3,8
-NIV_H = (Z_DESSOUS - BZ1 - EP) / 2        # hauteur de chaque étage : 40,7
+NIV_H = (Z_DESSOUS - BZ1 - EP) / 2        # hauteur de chaque étage : 42,3
 EZ0, EZ1 = BZ1 + NIV_H, BZ1 + NIV_H + EP  # étagère : 44,5 → 46,3
 ETAGES = (BZ1, EZ1)                       # bas de chaque étage
 EX0 = JX0 + 1                             # bas et étagère en retrait de 1 sur le plan des joues
 ETAGERE_P = DX0 - EX0                     # 54,9
-BAC_MAX = 0.75 * NIV_H                    # 3/4 de l'étage : 30,5
+BAC_MAX = 0.75 * NIV_H                    # 3/4 de l'étage : 31,7
 BX0, BX1 = EX0, EX0 + BAC["p"]            # bacs : au nu de l'étagère, 0,9 d'air devant le fond
 BY0, BY1 = (NY1 + CY0 - BAC["l"]) / 2, (NY1 + CY0 + BAC["l"]) / 2
 
@@ -116,7 +117,7 @@ PORTE_X0 = JX0 - JEU_PORTE - EP           # face avant : 174, au nu du plateau
 PORTE_X1 = PORTE_X0 + EP
 PORTE_Y0, PORTE_Y1 = NY0 + JEU_PORTE, CY1 - JEU_PORTE
 PORTE_Z0, PORTE_Z1 = JZ0, Z_DESSOUS - JEU_PORTE
-PORTE_L, PORTE_H = PORTE_Y1 - PORTE_Y0, PORTE_Z1 - PORTE_Z0   # 50,7 × 84,8
+PORTE_L, PORTE_H = PORTE_Y1 - PORTE_Y0, PORTE_Z1 - PORTE_Z0   # 50,7 × 88
 MONTANT = 6                               # bois gardé de chaque côté des découpes
 FEN_H = PORTE_Z1 - (ETAGES[1] + BAC_MAX)  # hauteur des découpes, du point le plus bas au bord de la porte : 10
 FEN_Y0, FEN_Y1 = PORTE_Y0 + MONTANT, PORTE_Y1 - MONTANT   # 38,7 de large
@@ -133,7 +134,7 @@ POI_Z0, POI_Z1 = 52, 52 + POIGNEE["L"]    # entre les deux découpes, à portée
 OUVERTURE = 85                            # angle dessiné : la poignée arrive contre la porte d'entrée fermée (estimation)
 
 # colonne : un panneau en diagonale dans l'angle du fond et du mur nord, posé sur le plateau, sous le meuble haut. Chants biseautés à 45°.
-COL_H = Z_HAUT - Z_DESSUS - JEU_PORTE   # 69 : 2 mm de moins que l'écart, à recouper à la mesure réelle
+COL_H = Z_HAUT - Z_DESSUS - JEU_PORTE   # 65,8 : 2 mm de moins que l'écart, à recouper à la mesure réelle
 COL_L = 18                                # largeur de la face avant, assez pour la boîte Ø 67 derrière
 COL_JAMBE = COL_L / math.sqrt(2)          # emprise le long de chaque mur : 12,7
 COL_XF, COL_YF = JX1, PY0                 # sommet de l'angle, à 0,3 des murs
@@ -144,7 +145,7 @@ COL_XY = [COL_A, COL_B, (COL_XF, COL_YF + COL_JAMBE - _ep_d), (COL_XF - COL_JAMB
 COL_U = (1 / math.sqrt(2), 1 / math.sqrt(2))     # le long de la face avant
 COL_N = (1 / math.sqrt(2), -1 / math.sqrt(2))    # vers l'angle
 COL_C = ((COL_A[0] + COL_B[0]) / 2, (COL_A[1] + COL_B[1]) / 2)    # milieu de la face avant
-PRISES_Z = (100, 110, 120)                # axes des 3 prises libres
+PRISES_Z = (103, 113, 123)                # axes des 3 prises libres (V8.7 : +3 avec le plateau, 7 sous la plaque la plus basse)
 PRISE_LED_Z = 146                         # axe du 4e poste, pour le transformateur des LED
 COL_TROU = dict(x=230, y=4, d=2)          # passage du câble dans le plateau, caché par la colonne, au-dessus du placard
 GOUL = 2                                  # goulotte du câble, et entaille de l'étagère dans l'angle arrière côté nord

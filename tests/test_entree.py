@@ -10,7 +10,7 @@ def test_piece():
 
 
 def test_versions():
-    assert document.VERSION == "V4.16"
+    assert document.VERSION == "V4.18"
     assert victor.VERSION == "V2.0"
     assert victor.CHANGEMENTS[0][0] == "V2.0"
 
@@ -93,9 +93,9 @@ def _plan(variante):
 def test_plan_zones():
     v, e = _plan("principale")
     assert e.k == ""
-    assert len(balises(e.scene, "rect", classe="zone")) == 4
+    assert len(balises(e.scene, "rect", classe="zone")) == 3
     modeles = balises(e.fiche + v.fiche, "template")
-    assert len(modeles) == 4 and all("data-meuble" in m for m in modeles)
+    assert len(modeles) == 3 and all("data-meuble" in m for m in modeles)
     for z in balises(e.scene, "rect", classe="zone"):
         assert {"data-meuble", "tabindex", "role", "aria-label"} <= set(z)
     assert [z["data-meuble"] for z in balises(e.scene, "rect", classe="zone")] == [m["data-meuble"] for m in modeles]
@@ -125,8 +125,7 @@ def _zones_lues(variante):
 # ce que montrent aujourd'hui les zones et leurs fiches (les valeurs que la tâche 13 avait recopiées de la maquette)
 ZONES_ATTENDUES = {
     "principale": [((92, 0, 187, 38), "95 × 38, h 45 cm"), ((85, 170, 110, 291), "121 × 25, h 123 cm"),
-                   ((110, 170, 185, 208), "75 × 35, h 244 cm"),
-                   ((-10, 83, 14, 160), "vantail de 77")],
+                   ((110, 170, 185, 208), "75 × 35, h 244 cm")],
     "victor": [((73, 171, 194, 208), "121 × 37, h 53 cm"), ((73, 208, 110, 283), "75 × 35, h 244 cm"),
                ((95, 0, 185, 30), "90 × 30, h 80 cm"), ((0, 215, 9, 350), "mur ouest de l'entrée")],
 }
@@ -213,7 +212,7 @@ def test_document():
     d = document.DOCUMENT
     assert (d.piece, d.id, d.nom, d.type) == ("entree", "amenagement", "Aménagement", "amenagement")
     assert [x.id for x in d.variantes] == ["principale", "victor"]
-    assert d.variantes[0].version == "V4.16" and d.variantes[1].version == "V2.0"
+    assert d.variantes[0].version == "V4.18" and d.variantes[1].version == "V2.0"
     teinte, pax, plinthe, murs, coussin = d.options
     assert (coussin.id, coussin.css, coussin.filtre, coussin.defaut) == ("coussin", "--coussin", True, victor.COUSSIN_DEFAUT)
     assert len(coussin.valeurs) == len(victor.COUSSIN_TEINTES)
@@ -234,7 +233,7 @@ def test_document():
 
 
 def test_plan_role_group():
-    for variante, n in (("principale", 4), ("victor", 4)):
+    for variante, n in (("principale", 3), ("victor", 4)):
         _, e = _plan(variante)
         (svg,) = balises(e.scene, "svg")
         assert svg["role"] == "group" and svg["aria-label"]
@@ -298,11 +297,11 @@ def _explication(variante):
 def test_explication_complete():
     scene = _explication("principale")
     (principes,) = re.findall(r'<ol class="principes">(.*?)</ol>', scene, re.S)
-    assert principes.count("<li>") == 5
+    assert principes.count("<li>") == 4
     total = round(sum(q * p for _, _, q, p in document.IKEA))
     assert re.search(rf"Total.*?≈ {total},00 €", scene, re.S)
     (liste,) = re.findall(r'<ul class="liste">(.*?)</ul>', scene, re.S)
-    assert liste.count("<li>") == 14
+    assert liste.count("<li>") == 15
     assert "Portes pour ce caisson" in scene
     for variante in ("principale", "victor"):
         texte = _explication(variante)

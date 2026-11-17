@@ -15,7 +15,7 @@ def test_ordre_et_chiffres():
 
 
 def test_corrections_et_a_verifier():
-    assert "2,5 GPa" in S and "≈ 4,1 kg" in S and "2.5" not in S and "4.1 kg" not in S
+    assert "2,5 GPa" in S and "≈ 4,3 kg" in S and "2.5" not in S and "4.1 kg" not in S
     a = S.split("<h2>À vérifier sur place</h2>", 1)[1]
     assert a.count("<li>") == 3 and "Ces 7 cm d'écart" in texte(a)
     assert "160 sur le plan du meuble, 156 sur le plan de l'appartement" in texte(a)

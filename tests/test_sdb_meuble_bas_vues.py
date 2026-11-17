@@ -11,7 +11,7 @@ def _s(cle): return V[cle].elements[0].scene
 def test_decoupe():
     s = _s("decoupe")
     assert s.startswith("<h2>Pièces</h2>") and s.split("<tbody>")[1].count("<tr>") == 7 and "<h2>Finition</h2>" in s
-    assert "B à G : trois tablettes" in texte(s) and "Tablette 3, 250 × 50 : C (85) + G (69)" in texte(s)
+    assert "B à G : trois tablettes" in texte(s) and "Tablette 3, 250 × 50 : C (88,2) + G (65,8)" in texte(s)
     for m in morceaux(entre(page_bas(), '<h3 id="finition">', "<h3>Montage</h3>")):
         assert corrige(m) in texte(s), m
 

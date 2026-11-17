@@ -144,8 +144,8 @@ def plan_svg(M, aria="Plan de l'entrée aménagée", zones=""):
     o.append(text(127, 345, "← 4 patères, sol libre dessous", "lblx muted", "start"))
     for y in M.PATERES:
         o.append(f'<circle class="hook" cx="108" cy="{y}" r="1.6"/>')
-    o.append(text(79, 218, "angle arrondi", "lblx muted", "end"))
-    o.append(text(79, 225, f'plein, h {c["z1"]}', "lblx muted", "end"))
+    o.append(text(79, 218, "2 portes, 6 niveaux", "lblx muted", "end"))
+    o.append(text(79, 225, "angle : colonne technique", "lblx muted", "end"))
     mh = M.MEUBLE_HAUT    # même emprise que le meuble à chaussures : seulement nommé
     o.append(text(79, 240, "meuble haut au-dessus,", "lblx muted", "end"))
     o.append(text(79, 247, f'{mh["z0"]} → {mh["z1"]} + fileur, 2 portes', "lblx muted", "end"))
@@ -276,14 +276,19 @@ def coupe_b(M, aria=None):
 
     def cotes(X):
         r = [cote_h(an["y0"], an["y1"], 12, f'angle {an["y1"] - an["y0"]}'),
-             cote_h(c["ya"], c["yb"], 12, f'abattants {c["yb"] - c["ya"]}'),
+             cote_h(c["ya"], c["yb"], 12, f'2 portes {c["yb"] - c["ya"]}'),
+             *[f'<line class="inner" x1="{c["ya"] + 2}" y1="{-z}" x2="{c["yb"] - 2}" y2="{-z}"/>' for z in c["tablettes"]],
+             text((c["ya"] + c["yb"]) / 2, -c["tablettes"][-1] - 3, "tablettes, chaussures en long", "lblx muted"),
+             text((an["y0"] + an["y1"]) / 2, -c["z1"] + 10, "colonne", "lblx muted"),
+             text((an["y0"] + an["y1"]) / 2, -c["z1"] + 16, "technique", "lblx muted"),
+             text((an["y0"] + an["y1"]) / 2, -c["z1"] + 22, "(box)", "lblx muted"),
              cote_h(c["y0"], c["y1"], 22, f'meuble {c["y1"] - c["y0"]}'),
              text((M.PATERES[0] + M.PATERES[-1]) / 2, -M.PATERE["z"] - 6, f'4 patères en bois h {M.PATERE["z"]}', "lblx muted"),
              text(M.APPLIQUE["y"] + 10, -M.APPLIQUE["z"] + 2, "applique", "lblx muted", "start"),
              text((c["y0"] + c["y1"]) / 2, -c["z1"] - 6, f'plateau vide-poche h {c["z1"] + c["plateau"]}', "lblx muted"),
              text((c["y0"] + c["y1"]) / 2, -M.MEUBLE_HAUT["z0"] + 6, "2 portes de placard", "lblx muted"),
              rect(pf["y0"], -pf["z1"], pf["y1"], -pf["z0"], "tech"),
-             text(pf["y1"] + 3, -pf["z1"] - 2, f'prise fibre h {pf["axe"]}, derrière', "lblx", "start"),
+             text(pf["y1"] + 3, -pf["z1"] - 2, f'prise fibre h {pf["axe"]}, derrière → colonne technique', "lblx", "start"),
              text(c["yb"] + 3, -2, f'plinthe {c["socle"]}, retrait {c["retrait"]}', "lblx muted", "start")]
         return r
 
@@ -421,9 +426,9 @@ def legendes(M):
               f"du trumeau, de {M.TABLEAU['z0']} à {M.TABLEAU['z1']} : position et taille à relever. À droite, le linteau "
               f"du passage vers le salon."),
         "B": (f"Coupe à x {COUPE_B}, regard vers l'est : le nord est à gauche. Le banc au fond à gauche, puis le flanc de "
-              f"la penderie, l'angle arrondi plein, le meuble à chaussures (un module de "
-              f"{c['yb'] - c['ya']}, trois abattants, sur une plinthe de {c['socle']}), sous un plateau vide-poche à "
-              f"{c['z1'] + c['plateau']} ; la prise fibre, derrière le bas du module, en tireté. Puis le sol libre sous "
+              f"la penderie, la colonne technique de l'angle arrondi (box), le meuble à chaussures (un module de "
+              f"{c['yb'] - c['ya']} à deux portes, tablettes en tireté, sur une plinthe de {c['socle']}), sous un plateau "
+              f"vide-poche à {c['z1'] + c['plateau']} ; la prise fibre, derrière le bas du module, câble vers la colonne. Puis le sol libre sous "
               f"les quatre patères en bois et leur applique. Au-dessus du meuble, de {M.MEUBLE_HAUT['z0']} à {M.MEUBLE_HAUT['z1']} puis un fileur jusqu'au plafond, le meuble "
               f"haut de même forme, à deux portes de placard. En jaune, la peinture India de l'entrée. Coupées : la porte coulissante de la cuisine à gauche, la "
               f"porte d'entrée à droite."),
@@ -452,18 +457,21 @@ def principes(M):
          "assoit pour se chausser, face au meuble à chaussures."),
         ("② Meuble à chaussures dans la branche d'entrée",
          f'Le long de la cloison de la salle de bain, {lc} cm de long angle compris et {pc} de profondeur seulement '
-         f'pour garder {c["x0"]} cm de passage. Un module de {c["yb"] - c["ya"]} à trois abattants superposés (environ '
-         f'{M.PAIRES_MEUBLE} paires), {c["z1"]} de haut, plateau vide-poche à {c["z1"] + c["plateau"]} pour les clés, sur une '
-         f'plinthe de {c["socle"]} en retrait de {c["retrait"]} peinte comme le mur : le meuble flotte. L\'angle arrondi '
-         'plein, en chêne, est au nord ; au sud, le meuble s\'arrête net pour laisser la porte d\'entrée s\'ouvrir : '
+         f'pour garder {c["x0"]} cm de passage. Un module de {c["yb"] - c["ya"]} fermé par deux portes battantes, avec '
+         f'{len(c["tablettes"])} tablettes réglables : les chaussures y sont posées en long, la paire côte à côte dans '
+         f'les 22 de profondeur, 2 à 3 paires par niveau et les bottines en bas (environ {M.PAIRES_MEUBLE} paires ; des '
+         'abattants n\'en prendraient qu\'une rangée à cette profondeur), {c["z1"]} de haut, plateau vide-poche à {c["z1"] + c["plateau"]} pour les clés, sur une '
+         f'plinthe de {c["socle"]} en retrait de {c["retrait"]} peinte comme le mur : le meuble flotte. L\'angle arrondi, '
+         'au nord, est une colonne technique fermée (porte de 26 à poussoir) pour les box ; au sud, le meuble s\'arrête net pour laisser la porte d\'entrée s\'ouvrir : '
          f'à 90°, sa béquille passe à {M.OUVERTURE["jeu_meuble"]:.0f} cm du bout du meuble, et la porte va jusqu\'à '
          f'{M.OUVERTURE["max"]:.0f}°, où {M.OUVERTURE["cause"]} (butoir de sol à {M.OUVERTURE["butoir"]}°). Au-dessus, '
          f'de {M.MEUBLE_HAUT["z0"]} ({M.MEUBLE_HAUT["z0"] - c["z1"] - c["plateau"]} au-dessus du plateau) à {M.MEUBLE_HAUT["z1"]}, '
          'aligné sur le caisson de la PAX et surmonté d\'un fileur jusqu\'au plafond comme elle, un '
          'meuble haut de la même forme, angle plein compris, fermé par deux portes de placard battantes (bonnets, gants, '
          f'sacs). La prise fibre ({M.PRISE_FIBRE["axe"]} du sol, sur la cloison) est derrière '
-         'le bas du module, côté nord : ce compartiment n\'a pas de dos, l\'abattant du bas y donne accès et '
-         'la box internet s\'y range, à côté de la prise (trous d\'aération dans la tablette du dessus). '
+         'le bas du module, côté nord : un passe-câble dans la joue mène la fibre à la colonne technique de l\'angle, '
+         'où vont la box internet et, à terme, les box domotique (aération par la plinthe en retrait et sous le '
+         'plateau ; prévoir une prise de courant dans la colonne). '
          f'Côté porte, le sol reste libre sous {len(M.PATERES)} patères en bois (chevilles de chêne Ø '
          f'{virg(M.PATERE["d"])}, à {M.PATERE["z"]}) et leur applique : 110 de passage pour entrer avec un sac.'),
         ("③ Penderie PAX et angle arrondi",
@@ -473,8 +481,8 @@ def principes(M):
          f'pas en travers : la tringle KOMPLEMENT de ce caisson a deux barres d\'avant en arrière, cintres de face '
          f'(environ {pe["manteaux"]} manteaux) ; deux tablettes au-dessus (bonnets, sacs), deux étagères à chaussures '
          f'dessous ({M.PAIRES_PAX} paires, 3 par étagère d\'après IKEA), une lampe à détecteur qui s\'allume à l\'ouverture. Le meuble à chaussures se prolonge jusqu\'au nu '
-         f'de la penderie et s\'y termine par un quart de cercle plein de rayon {an["r"]}, à {c["z1"]} de haut, '
-         'en chêne comme le meuble : pas d\'arête dans le passage. {banc_pend} cm restent entre le banc '
+         f'de la penderie et s\'y termine par un quart de cercle de rayon {an["r"]}, à {c["z1"]} de haut, '
+         'en chêne comme le meuble (la colonne technique) : pas d\'arête dans le passage. {banc_pend} cm restent entre le banc '
          "et la penderie fermée."),
         ("Entrée en India, couloir au choix",
          f'Au sud du nu de la penderie, murs, plafond et porte d\'entrée (face intérieure) sont peints en '

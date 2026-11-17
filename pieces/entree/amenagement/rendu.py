@@ -315,10 +315,16 @@ def poignees_v4():
     """Poignées de la V4 : abattants du meuble à chaussures, portes de la penderie, portes du meuble haut (V4.12 : barres
     verticales de part et d'autre du joint, en bas des portes)."""
     c = M.CHAUSSURES
-    for k, (y0, y1) in enumerate(c["modules"]):
-        ym = (y0 + y1) / 2
-        for z in c["rangs"][1:]:
-            boite(f"poignee__abattant_{k}_{z}__-", c["x0"] - 1.2, c["x0"], ym - 6, ym + 6, z - 8, z - 7, "noir")
+    if "rangs" in c:          # abattants (avant V4.17)
+        for k, (y0, y1) in enumerate(c["modules"]):
+            ym = (y0 + y1) / 2
+            for z in c["rangs"][1:]:
+                boite(f"poignee__abattant_{k}_{z}__-", c["x0"] - 1.2, c["x0"], ym - 6, ym + 6, z - 8, z - 7, "noir")
+    else:                     # V4.17 : deux portes, barres verticales en haut, de part et d'autre du joint
+        yj = c["portes"][0][1]
+        for dy in (-5, 4):
+            boite(f"poignee__chaussures_{dy}__-", c["x0"] - 1.5, c["x0"], yj + dy, yj + dy + 1, c["z1"] - 15, c["z1"] - 3,
+                  "noir")
     pe = M.PENDERIE
     xm = pe["x0"] + pe["portes"][0] if "portes" in pe else (pe["x0"] + pe["x1"]) / 2   # joint des portes
     for dx in (-6, 5):
