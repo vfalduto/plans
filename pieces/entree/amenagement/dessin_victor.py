@@ -62,7 +62,7 @@ def plan_svg(M, aria="Plan de l'entrée, version Victor", zones=""):
     xm = (b["xa"] + b["x1"]) / 2
     o.append(text(xm, b["y0"] + 7, f'① Banc à chaussures {b["x1"] - b["x0"]} × {b["y1"] - b["y0"]}, h {b["z1"] + b["plateau"]}', "lblx"))
     o.append(text(xm, b["y0"] + 13, f'{len(b["modules"])} abattants, coussin', "lblx"))
-    o.append(text(xm, b["y0"] + 22, f'étagère h {et["z"][0]}, meuble haut {mh["z0"]} → {mh["z1"]}', "lblx muted"))
+    o.append(text(xm, b["y0"] + 22, f'étagère h {et["z"][0]}, meuble haut {mh["z0"]} → {mh["z1"]} + fileur', "lblx muted"))
     o.append(text((b["x0"] + b["xa"]) / 2, b["y0"] + 22, "plein", "lblx muted"))
     o.append(text(b["x0"] + 2, b["y0"] - 3, f'R {b["r"]}', "lblx muted", "start"))
     # ③ penderie PAX : portes de 50 (nord) et 25 (sud) vers l'ouest, débattement en tireté ; tringle (cintres de face)
@@ -204,7 +204,7 @@ def legendes(M):
         "C": (f"Coupe à y {COUPE_C}, regard vers le sud : l'est est à gauche. Le meuble à chaussures, {pb} de profondeur, "
               f"plateau à {b['z1'] + b['plateau']} : deux abattants de {b['modules'][0][1] - b['modules'][0][0]} puis "
               f"le bout plein jusqu'à la façade du PAX, un coussin sur le plateau ; au-dessus, une étagère flottante de {le} × "
-              f"{et['y1'] - et['y0']} à {et['z'][0]}, puis le meuble haut de même forme, de {mh['z0']} au plafond. À droite, le flanc de la penderie PAX et son "
+              f"{et['y1'] - et['y0']} à {et['z'][0]}, puis le meuble haut de même forme, de {mh['z0']} à {mh['z1']}, et son fileur jusqu'au plafond. À droite, le flanc de la penderie PAX et son "
               f"bandeau, la porte d'entrée au fond."),
         "D": (f"Coupe à x {COUPE_D}, regard vers l'ouest : le sud est à gauche. Contre la porte d'entrée, l'interphone, "
               f"puis le miroir {mi['y1'] - mi['y0']} × {mi['z1'] - mi['z0']} à coins arrondis, puis la galerie de {ncd} "
@@ -224,13 +224,14 @@ def principes(M):
         ("① Banc à chaussures et meuble haut",
          f"À la place de la penderie, contre la face nord de la salle de bain : comme celui de la {M.BASE}, mais d'un seul "
          f"niveau d'abattants et plus profond. Deux abattants de {b['modules'][0][1] - b['modules'][0][0]} sur "
-         f"{b['z1'] - b['socle']} de haut (environ {M.PAIRES} paires), plateau vide-poche en chêne à "
+         f"{b['z1'] - b['socle']} de haut (environ {M.PAIRES_MEUBLE} paires), plateau vide-poche en chêne à "
          f"{b['z1'] + b['plateau']} sur lequel on s'assoit, avec un coussin de {M.COUSSIN['ep']} (teinte au choix dans "
          f"« Personnaliser »). À l'ouest, il se prolonge jusqu'à la façade du PAX par un volume plein en chêne, coin "
          f"arrondi R {b['r']} comme le meuble à chaussures de la principale ; plinthe de {b['socle']} en retrait de "
          f"{b['retrait']}, qui continue sous le PAX. Le meuble prend la profondeur du PAX porte comprise ({pb}). "
          f"Au-dessus, une étagère flottante de {le} × {et['y1'] - et['y0']} à {et['z'][0]} (fixations invisibles), puis un "
-         f"meuble haut de la même forme, de {mh['z0']} au plafond : bout plein, caisson fermé par deux portes de placard "
+         f"meuble haut de la même forme, de {mh['z0']} à {mh['z1']} comme le caisson de la PAX, avec un fileur de "
+         f"{mh['fileur'][1] - mh['fileur'][0]} jusqu'au plafond : bout plein, caisson fermé par deux portes de placard "
          f"de {mh['portes'][0][1] - mh['portes'][0][0]}. {b['y0'] - co['y1']} cm de passage jusqu'à la console, "
          f"{b['x0']} entre le bout du banc et le mur ouest, {M.BANC_MUR['d']:.0f} en diagonale du coin du banc au coin du "
          "mur qui sépare le salon de la chambre."),
@@ -239,7 +240,8 @@ def principes(M):
          f"caisson PAX de {lp} × {pp} × {pe['z1']}, fermé par une porte FORSAND de {pe['portes'][0]} et une de "
          f"{pe['portes'][1]} (229 de haut ; c'est la combinaison IKEA pour un caisson de 75), ouvertes vers l'ouest. À "
          f"{pp} de profondeur, les cintres se suspendent de face sur la tringle KOMPLEMENT à {pe['tringle']} (environ "
-         f"{pe['manteaux']} manteaux, 12 kg au plus) ; deux tablettes en haut, à {pe['etageres'][0]} et "
+         f"{pe['manteaux']} manteaux, 12 kg au plus) ; en bas, sous les manteaux, une rangée de chaussures sur le "
+         f"fond du caisson (environ {M.PAIRES_PAX} paires) ; deux tablettes en haut, à {pe['etageres'][0]} et "
          f"{pe['etageres'][1]} (bonnets, gants, sacs). Posé sur une plinthe de {pe['socle']} dans le prolongement de celle "
          f"du banc ; caisson, portes et bandeau sont peints en India comme les murs de l'entrée ; le bandeau ferme les "
          f"{M.H - pe['z1']} cm jusqu'au plafond. Passage restant : {pe['x0']} cm."),

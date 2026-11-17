@@ -23,7 +23,7 @@ from pieces.entree.piece import Bloc, EP, ENVELOPPE, H, H_PORTE, MURS, PORTES, S
 from pieces.entree.amenagement.document import (CARRELAGE, INDIA, INTERPHONE, MUR_COULEUR, MUR_TEINTE,  # noqa: F401
                                                 PATERE, PATERES, TABLEAU)
 
-VERSION = "V1.7"
+VERSION = "V2.0"
 BASE = "V4.3"           # version de la page principale dont cette variante est tirée
 
 # ------------------------------------------------------------------ ③ penderie IKEA PAX (V1.2)
@@ -80,9 +80,12 @@ ETAGERES = dict(x0=CHAUSSURES["x0"], x1=192, y0=CHAUSSURES["y1"] - 25, y1=CHAUSS
 
 # ------------------------------------------------------------------ ④ meuble haut au-dessus de l'étagère (V1.6)
 # Même forme que le meuble à chaussures, vu de dessus (x 73 → 194, 37 de profondeur, coin R 12) : bout ouest plein en
-# chêne, caisson de 84 fermé par deux portes de placard battantes de 42 (au lieu d'abattants), de 195 au plafond.
+# chêne, caisson de 84 fermé par deux portes de placard battantes de 42 (au lieu d'abattants), de 195 au plafond (V2.0 : à 244, fileur au-dessus).
 MEUBLE_HAUT = dict(x0=CHAUSSURES["x0"], xa=CHAUSSURES["xa"], x1=CHAUSSURES["x1"], y0=CHAUSSURES["y0"],
-                   y1=CHAUSSURES["y1"], z0=195, z1=H, facade=2, r=CHAUSSURES["r"], portes=CHAUSSURES["modules"])
+                   y1=CHAUSSURES["y1"], z0=195, z1=PENDERIE["z1"], facade=2, r=CHAUSSURES["r"], portes=CHAUSSURES["modules"])
+# V2.0 : caisson et portes arrêtés au haut du caisson PAX (244) ; au-dessus, un fileur de chêne jusqu'au plafond, en
+# retrait de l'épaisseur des portes comme le bandeau de la PAX (même forme, coin R 10).
+MEUBLE_HAUT["fileur"] = (MEUBLE_HAUT["z1"], H)
 
 # ------------------------------------------------------------------ ② console en face du banc (V1.6)
 # Sur le mur nord, sous le tableau électrique (centrée sur lui), en face du meuble à chaussures : plateau de chêne
@@ -103,7 +106,12 @@ CADRES["yc"] = (160 + MIROIR["y0"]) / 2
 CADRES["y0"], CADRES["y1"] = CADRES["yc"] - _lg / 2, CADRES["yc"] + _lg / 2
 CADRES["z0"], CADRES["z1"] = CADRES["zc"] - _hg / 2, CADRES["zc"] + _hg / 2
 APPLIQUE = dict(y=338, z=220)           # au-dessus des patères
-PAIRES = 8                               # V1.6 : planche à chaussures retirée, il reste le meuble
+# V1.6 : planche à chaussures retirée, il reste le banc. V1.9 : le bas de la PAX compte aussi : son fond, sous les
+# manteaux (tringle à 188, ≈ 80 libres au-dessus de la plinthe), reçoit une rangée de chaussures sur 75, autant qu'une
+# étagère KOMPLEMENT 75 × 35 (3 paires, fiche IKEA).
+PAIRES_MEUBLE = 8
+PAIRES_PAX = 3
+PAIRES = PAIRES_MEUBLE + PAIRES_PAX
 
 _c, _mh, _co = CHAUSSURES, MEUBLE_HAUT, CONSOLE
 MEUBLES = [
@@ -122,6 +130,8 @@ MEUBLES = [
     Bloc("angle", "mh_angle", _mh["x0"], _mh["xa"], _mh["y0"], _mh["y1"], _mh["z0"], _mh["z1"], arrondi=_mh["r"]),
     Bloc("caisson", "mh_caisson", _mh["xa"], _mh["x1"], _mh["y0"] + _mh["facade"], _mh["y1"], _mh["z0"], _mh["z1"],
          "④ meuble haut"),
+    Bloc("caisson", "mh_fileur", _mh["x0"], _mh["x1"], _mh["y0"] + _mh["facade"], _mh["y1"], *_mh["fileur"],
+         arrondi=_mh["r"] - _mh["facade"]),
     # console du mur nord : plateau, quatre pieds, traverse arrière
     Bloc("banc", "console", _co["x0"], _co["x1"], _co["y0"], _co["y1"], _co["z1"] - _co["ep"], _co["z1"], "② console", mur="n"),
 ] + [Bloc("banc", f"console_pied_{k}", x, x + _co["pied"], y, y + _co["pied"], 0, _co["z1"] - _co["ep"], mur="n")
@@ -231,6 +241,12 @@ RENDUS = [("iso_no", "Isométrique depuis le nord-ouest : banc à chaussures ave
                       "penderie PAX sur plinthe")]
 
 CHANGEMENTS = [
+    ("V2.0", "17/11/2026", "Meuble haut arrêté au haut du caisson de la PAX (244) au lieu du plafond, avec au-dessus un "
+     "fileur de chêne de 6 jusqu'au plafond, en retrait de l'épaisseur des portes comme le bandeau de la PAX."),
+    ("V1.9", "17/11/2026", "Compte des paires corrigé : il prend aussi le fond de la PAX, sous les manteaux (≈ 3 "
+     "paires), soit ≈ 11 paires au lieu de 8."),
+    ("V1.8", "17/11/2026", "Plan corrigé : la porte de la pièce ouest s'ouvre vers l'intérieur de cette pièce, pas dans "
+     "le couloir."),
     ("V1.7", "17/11/2026", "Plan : cote en diagonale du coin nord-est du banc à chaussures au coin du mur qui sépare le "
      f"salon de la chambre ({BANC_MUR['d']:.0f} cm). Console : un tiroir sous le plateau, entre les pieds (façade de "
      f"{CONSOLE['tiroir']}, {CONSOLE['prof_tiroir']} de profondeur). Plinthes murales le long des murs du couloir "

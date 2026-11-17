@@ -11,7 +11,7 @@ import math
 
 from pieces.entree.piece import Bloc, EP, ENVELOPPE, H, H_PORTE, MURS, PORTES, PRISE_FIBRE, SOL, SURFACE  # noqa: F401
 
-VERSION = "V4.13"
+VERSION = "V4.16"
 
 # Empreinte des rendus (just rendu entree/amenagement) : la pièce puis le module de la variante, le code de rendu de l'entrée puis
 # celui de 3d/. Noms et ordre entrent dans l'empreinte : les changer refait tous les rendus.
@@ -54,7 +54,11 @@ NU_PENDERIE = 170   # nu nord de la penderie PAX (V4.7) : caisson 35,5 + porte 1
 CHAUSSURES = dict(x0=85, x1=110, y0=NU_PENDERIE, ya=208, yb=291, y1=291, z1=120, facade=2, rangs=(8, 45, 83, 120),
                   plateau=3, socle=8, retrait=4)
 CHAUSSURES["modules"] = [(CHAUSSURES["ya"], CHAUSSURES["yb"])]
-PAIRES = 18
+# V4.15 : le compte des paires prend aussi le bas de la PAX : deux étagères à chaussures KOMPLEMENT 75 × 35, 3 paires
+# chacune d'après la fiche IKEA (relevée le 17/11/2026).
+PAIRES_MEUBLE = 18
+PAIRES_PAX = 2 * 3
+PAIRES = PAIRES_MEUBLE + PAIRES_PAX
 
 # ------------------------------------------------------------------ angle arrondi du meuble à chaussures (bout nord)
 # Quart de cercle plein (V4.10 : rayon réduit de 25 à 12), posé sur la plinthe (8) : pas d'arête dans le passage.
@@ -63,7 +67,7 @@ ANGLE = dict(x0=CHAUSSURES["x0"], x1=CHAUSSURES["x1"], y0=NU_PENDERIE, y1=CHAUSS
 # ------------------------------------------------------------------ meuble haut au-dessus du meuble à chaussures (V4.12)
 # Même forme que le meuble à chaussures, vu de dessus (x 85 → 110, y 170 → 291, angle plein au coin R 12) : l'angle
 # reste un volume plein en chêne, le module de 83 est un caisson fermé par deux portes de placard battantes (au lieu
-# d'abattants), de 180 (57 au-dessus du plateau vide-poche) au plafond. Rien à voir avec l'ancien meuble haut en travers
+# d'abattants), de 180 (57 au-dessus du plateau vide-poche) au plafond (V4.16 : à 244, fileur au-dessus). Rien à voir avec l'ancien meuble haut en travers
 # de l'entrée, retiré à la V4.11.
 MEUBLE_HAUT = dict(x0=CHAUSSURES["x0"], x1=CHAUSSURES["x1"], y0=CHAUSSURES["y0"], ya=CHAUSSURES["ya"],
                    yb=CHAUSSURES["yb"], y1=CHAUSSURES["y1"], z0=180, z1=H, facade=CHAUSSURES["facade"], r=ANGLE["r"])
@@ -89,6 +93,9 @@ PENDERIE = dict(x0=110, x1=185, y0=NU_PENDERIE, y1=208, h=236, socle=8, retrait=
 PENDERIE.update(z1=PENDERIE["socle"] + PENDERIE["h"], porte_z=(PENDERIE["socle"] + 4, PENDERIE["socle"] + 233.4),
                 tringle=PENDERIE["socle"] + 195, etageres=(PENDERIE["socle"] + 200, PENDERIE["socle"] + 218),
                 chaussures=(PENDERIE["socle"] + 10, PENDERIE["socle"] + 32))
+# V4.16 : le meuble haut s'arrête au haut du caisson PAX (244), comme la penderie ; au-dessus, un fileur de chêne
+# jusqu'au plafond, d'aplomb avec les portes comme le bandeau de la PAX, sur la même forme (angle R 12).
+MEUBLE_HAUT.update(z1=PENDERIE["z1"], fileur=(PENDERIE["z1"], H))
 IKEA = [   # IKEA France, fiches produit relevées le 13/11/2026, blanc
     ("PAX caisson d'armoire 75 × 35 × 236", "604.582.27", 1, 80),
     ("FORSAND porte avec charnières 50 × 229", "692.443.12", 1, 55),
@@ -155,6 +162,8 @@ MEUBLES = [
          MEUBLE_HAUT["z1"], arrondi=MEUBLE_HAUT["r"]),
     Bloc("caisson", "mh_caisson", MEUBLE_HAUT["x0"] + MEUBLE_HAUT["facade"], MEUBLE_HAUT["x1"], MEUBLE_HAUT["ya"],
          MEUBLE_HAUT["yb"], MEUBLE_HAUT["z0"], MEUBLE_HAUT["z1"], "meuble haut"),
+    Bloc("caisson", "mh_fileur", MEUBLE_HAUT["x0"], MEUBLE_HAUT["x1"], MEUBLE_HAUT["y0"], MEUBLE_HAUT["y1"],
+         *MEUBLE_HAUT["fileur"], arrondi=MEUBLE_HAUT["r"]),
     Bloc("socle", "penderie_socle", PENDERIE["x0"], PENDERIE["x1"] - PENDERIE["retrait"],
          PENDERIE["y0"] + PENDERIE["retrait"], PENDERIE["y1"], 0, PENDERIE["socle"]),
     Bloc("tall", "penderie", PENDERIE["x0"], PENDERIE["x1"], PENDERIE["y0"] + PENDERIE["facade"], PENDERIE["y1"],
@@ -352,6 +361,12 @@ RENDUS = [("iso_so", "Isométrique depuis le sud-ouest : banc sous le tableau, m
           ("banc", "Assis sur le banc, vers la porte d'entrée : penderie, entrée en India")]
 
 CHANGEMENTS = [
+    ("V4.16", "17/11/2026", "Meuble haut arrêté au haut du caisson de la PAX (244) au lieu du plafond, avec au-dessus un "
+     "fileur de chêne de 6 jusqu'au plafond, d'aplomb avec les portes, comme le bandeau de la PAX."),
+    ("V4.15", "17/11/2026", "Compte des paires corrigé : il prend aussi les deux étagères à chaussures du bas de la PAX "
+     "(3 paires chacune, fiche IKEA), soit ≈ 24 paires au lieu de 18."),
+    ("V4.14", "17/11/2026", "Plan corrigé : la porte de la pièce ouest s'ouvre vers l'intérieur de cette pièce, pas dans "
+     "le couloir."),
     ("V4.13", "17/11/2026", "Plinthes murales de 8 le long de tous les murs du couloir, arrêtées aux ouvertures, dans "
      "les rendus ; même teinte que les plinthes des meubles (option « Teinte des plinthes »). Rendus refaits."),
     ("V4.12", "17/11/2026", "Meuble haut au-dessus du meuble à chaussures, de la même forme vu de dessus (angle plein "

@@ -10,9 +10,9 @@ def test_piece():
 
 
 def test_versions():
-    assert document.VERSION == "V4.13"
-    assert victor.VERSION == "V1.7"
-    assert victor.CHANGEMENTS[0][0] == "V1.7"
+    assert document.VERSION == "V4.16"
+    assert victor.VERSION == "V2.0"
+    assert victor.CHANGEMENTS[0][0] == "V2.0"
 
 
 def test_cameras_communes():
@@ -213,7 +213,7 @@ def test_document():
     d = document.DOCUMENT
     assert (d.piece, d.id, d.nom, d.type) == ("entree", "amenagement", "Aménagement", "amenagement")
     assert [x.id for x in d.variantes] == ["principale", "victor"]
-    assert d.variantes[0].version == "V4.13" and d.variantes[1].version == "V1.7"
+    assert d.variantes[0].version == "V4.16" and d.variantes[1].version == "V2.0"
     teinte, pax, plinthe, murs, coussin = d.options
     assert (coussin.id, coussin.css, coussin.filtre, coussin.defaut) == ("coussin", "--coussin", True, victor.COUSSIN_DEFAUT)
     assert len(coussin.valeurs) == len(victor.COUSSIN_TEINTES)

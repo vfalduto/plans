@@ -56,7 +56,7 @@ PORTES = [
     dict(nom="chambre", piece="Chambre", mur="e", face=354, a=115, b=186, type="battante", gond="b", vers="piece"),
     dict(nom="sdb", piece="Salle de bain", mur="s", face=208, a=200, b=276, type="battante", gond="b", vers="piece"),
     dict(nom="entree", piece="Palier", mur="s", face=374, a=2, b=77, type="battante", gond="b", vers="couloir"),
-    dict(nom="ouest", piece="Pièce ouest", mur="o", face=0, a=83, b=160, type="battante", gond="b", vers="couloir"),
+    dict(nom="ouest", piece="Pièce ouest", mur="o", face=0, a=83, b=160, type="battante", gond="b", vers="piece"),   # vers l'intérieur de la pièce (corrigé le 17/11/2026)
 ]
 
 # Cloisons, ouvertures déduites ; « mur » : côté du couloir qu'elles bordent (pour les coupes 3D).

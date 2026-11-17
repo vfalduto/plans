@@ -141,7 +141,7 @@ def _explication_principale(M, D):
              "du sol libre, et en face un miroir à côté de l'interphone. Au-delà de la penderie, murs, plafond et porte "
              "sont peints en India ; le reste du couloir prend la teinte choisie.")
     total = total_achats(_sections(M), approx=True)   # « ≈ … € », le total du tableau des achats
-    stats = [(f"PAX {lp} × {pe['caisson']}", f"penderie IKEA, {total}"), (f"≈ {M.PAIRES} paires", "meuble à chaussures"),
+    stats = [(f"PAX {lp} × {pe['caisson']}", f"penderie IKEA, {total}"), (f"≈ {M.PAIRES} paires", "meuble à chaussures et bas de la PAX"),
              (f'{c["x0"]} cm', "passage le plus étroit"), (f"{virg(M.SURFACE)} m²", "surface du couloir")]
     achats = _achats(M, True, "Prix IKEA France relevés sur les fiches produit le 13/11/2026, en blanc ; les portes « avec "
                      "charnières » comprennent leurs 4 charnières KOMPLEMENT à fermeture silencieuse. Les deux tablettes "
@@ -191,7 +191,7 @@ def _explication_principale(M, D):
         f'{M.PAX_MUR["a"][1] - M.PAX_MUR["b"][1]} en y), d\'après le relevé : à vérifier au mètre.',
         f'<b>Interphone</b> : au mur ouest, à droite de la porte d\'entrée vue de l\'intérieur ; dessiné à '
         f'{M.INTERPHONE["y0"]} du mur nord, haut à {M.INTERPHONE["z1"]} : position et taille à relever.',
-        f'<b>Meuble haut</b> : de {M.MEUBLE_HAUT["z0"]} au plafond au-dessus du meuble à chaussures, fixé à la cloison '
+        f'<b>Meuble haut</b> : de {M.MEUBLE_HAUT["z0"]} à {M.MEUBLE_HAUT["z1"]} (fileur au-dessus) sur le meuble à chaussures, fixé à la cloison '
         "de la salle de bain (vérifier sa nature et la charge admise) ; ses portes battantes ouvrent au-dessus du "
         "passage, hors de portée de tête.",
         "<b>Carrelage</b> : texture des rendus tirée de la photo du sol en place ; les carreaux y sont dessinés en "
@@ -217,7 +217,7 @@ def _explication_victor(M, D):
              "dans la branche d'entrée ; sol libre sous les patères. En face, sur le mur ouest peint en India, des cadres "
              "et un miroir à côté de l'interphone.")
     total = total_achats(_sections(M), approx=True)
-    stats = [(f"PAX {lp} × {pp}", f"penderie IKEA, {total}"), (f"≈ {M.PAIRES} paires", "banc à abattants"),
+    stats = [(f"PAX {lp} × {pp}", f"penderie IKEA, {total}"), (f"≈ {M.PAIRES} paires", "banc et bas de la PAX"),
              (f'{pe["x0"]} cm', "passage le plus étroit"), (f'{b["y0"] - co["y1"]} cm', "entre la console et le banc")]
     achats = _achats(M, False, "Prix IKEA France relevés sur les fiches produit le 13/11/2026, en blanc. Charnières "
                      "KOMPLEMENT en plus (nombre et prix à lire sur la fiche des portes), bandeau et fixation murale non comptés.")
@@ -240,7 +240,7 @@ def _explication_victor(M, D):
         f'avec {M.H} sous plafond et la plinthe de {pe["socle"]}, il en reste {M.H - pe["z1"]}.',
         f'<b>Console</b> : sous le tableau électrique (bas dessiné à {M.TABLEAU["z0"]}, à relever), dessus à {co["z1"]} ; '
         "posée, pour la déplacer quand il faut ouvrir le tableau.",
-        f'<b>Meuble haut</b> : {mh["z1"] - mh["z0"]} de haut, de {mh["z0"]} au plafond, fixé à la cloison de la salle de '
+        f'<b>Meuble haut</b> : {mh["z1"] - mh["z0"]} de haut, de {mh["z0"]} à {mh["z1"]} et un fileur jusqu\'au plafond, fixé à la cloison de la salle de '
         "bain : vérifier sa nature (carreaux de plâtre, placo) et la charge admise, comme pour l'étagère flottante.",
         "<b>Porte d'entrée</b> : sans la planche, rien ne l'arrête ; poser un butoir de sol.",
         f'<b>Banc et salon</b> : {M.BANC_MUR["d"]:.0f} cm en diagonale du coin nord-est du banc (façade) au coin du mur '
@@ -261,7 +261,7 @@ def _explication_victor(M, D):
         ("Cloison de la salle de bain, côté porte", "Meuble à chaussures, second module (83), miroir",
          "Sol libre, les 4 patères, applique"),
         ("Meuble haut", "En travers de la branche d'entrée, 110 × 40",
-         f'Au-dessus du banc et de l\'étagère, de {mh["z0"]} au plafond, 2 portes de placard'),
+         f'Au-dessus du banc et de l\'étagère, de {mh["z0"]} à {mh["z1"]} + fileur, 2 portes de placard'),
         ("Mur ouest de l'entrée", "Interphone",
          f'{ncd} cadres, miroir {mi["y1"] - mi["y0"]} × {mi["z1"] - mi["z0"]}, interphone'),
         ("Chaussures", "≈ 24 paires", f"≈ {M.PAIRES} paires"),

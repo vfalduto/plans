@@ -148,7 +148,7 @@ def plan_svg(M, aria="Plan de l'entrée aménagée", zones=""):
     o.append(text(79, 225, f'plein, h {c["z1"]}', "lblx muted", "end"))
     mh = M.MEUBLE_HAUT    # même emprise que le meuble à chaussures : seulement nommé
     o.append(text(79, 240, "meuble haut au-dessus,", "lblx muted", "end"))
-    o.append(text(79, 247, f'{mh["z0"]} → {mh["z1"]}, 2 portes', "lblx muted", "end"))
+    o.append(text(79, 247, f'{mh["z0"]} → {mh["z1"]} + fileur, 2 portes', "lblx muted", "end"))
     o.append(text(127, c["yb"] - 6, f'← plinthe {c["socle"]} en retrait de {rt} (tireté)', "lblx muted", "start"))
     it = M.INTERPHONE
     o.append(rect(0, it["y0"], 3, it["y1"], "facp"))
@@ -287,7 +287,7 @@ def coupe_b(M, aria=None):
              text(c["yb"] + 3, -2, f'plinthe {c["socle"]}, retrait {c["retrait"]}', "lblx muted", "start")]
         return r
 
-    return coupe_svg(M, COUPE_B, "est", -20, 394, [c["socle"], M.BANC["z1"], c["z1"], M.MEUBLE_HAUT["z0"]],   # patères aussi à 180
+    return coupe_svg(M, COUPE_B, "est", -20, 394, [c["socle"], M.BANC["z1"], c["z1"], M.MEUBLE_HAUT["z0"], M.MEUBLE_HAUT["z1"]],   # patères aussi à 180
                      extra=cotes, aria=aria)
 
 
@@ -412,8 +412,8 @@ def legendes(M):
     return {
         "plan": (f"Plan vu de dessus, 1 unité = 1 cm ; nord en haut. Le vantail de la porte d'entrée ouvert à 90° longe "
                  f"le sol libre sous les patères et s'arrête à côté de l'arrondi sud du meuble à chaussures (②) : prévoir "
-                 f"un butoir de sol. Avec {pp} cm de profondeur, la penderie reste au sud du vantail de la pièce ouest "
-                 f"ouvert à 90° (il s'arrête à y 160, la penderie commence à y {pe['y0']}). Du coin nord-est de la "
+                 f"un butoir de sol. La porte de la pièce ouest s'ouvre vers l'intérieur de cette pièce : rien ne dépasse "
+                 f"dans le couloir. Du coin nord-est de la "
                  f"penderie au coin du mur qui sépare le salon du couloir et de la chambre : "
                  f"{M.PAX_MUR['d']:.0f} cm en diagonale. Traits A, B, C, D : coupes."),
         "A": (f"Coupe à y {COUPE_A}, regard vers le nord : l'ouest est à gauche. Banc posé sous le tableau électrique "
@@ -424,7 +424,7 @@ def legendes(M):
               f"la penderie, l'angle arrondi plein, le meuble à chaussures (un module de "
               f"{c['yb'] - c['ya']}, trois abattants, sur une plinthe de {c['socle']}), sous un plateau vide-poche à "
               f"{c['z1'] + c['plateau']} ; la prise fibre, derrière le bas du module, en tireté. Puis le sol libre sous "
-              f"les quatre patères en bois et leur applique. Au-dessus du meuble, de {M.MEUBLE_HAUT['z0']} au plafond, le meuble "
+              f"les quatre patères en bois et leur applique. Au-dessus du meuble, de {M.MEUBLE_HAUT['z0']} à {M.MEUBLE_HAUT['z1']} puis un fileur jusqu'au plafond, le meuble "
               f"haut de même forme, à deux portes de placard. En jaune, la peinture India de l'entrée. Coupées : la porte coulissante de la cuisine à gauche, la "
               f"porte d'entrée à droite."),
         "C": (f"Coupe à y {COUPE_C}, regard vers le sud : l'est est à gauche. Penderie IKEA PAX de {lp} (caisson {pe['z1']} de haut, "
@@ -453,12 +453,13 @@ def principes(M):
         ("② Meuble à chaussures dans la branche d'entrée",
          f'Le long de la cloison de la salle de bain, {lc} cm de long angle compris et {pc} de profondeur seulement '
          f'pour garder {c["x0"]} cm de passage. Un module de {c["yb"] - c["ya"]} à trois abattants superposés (environ '
-         f'{M.PAIRES} paires), {c["z1"]} de haut, plateau vide-poche à {c["z1"] + c["plateau"]} pour les clés, sur une '
+         f'{M.PAIRES_MEUBLE} paires), {c["z1"]} de haut, plateau vide-poche à {c["z1"] + c["plateau"]} pour les clés, sur une '
          f'plinthe de {c["socle"]} en retrait de {c["retrait"]} peinte comme le mur : le meuble flotte. L\'angle arrondi '
          'plein, en chêne, est au nord ; au sud, le meuble s\'arrête net pour laisser la porte d\'entrée s\'ouvrir : '
          f'à 90°, sa béquille passe à {M.OUVERTURE["jeu_meuble"]:.0f} cm du bout du meuble, et la porte va jusqu\'à '
          f'{M.OUVERTURE["max"]:.0f}°, où {M.OUVERTURE["cause"]} (butoir de sol à {M.OUVERTURE["butoir"]}°). Au-dessus, '
-         f'de {M.MEUBLE_HAUT["z0"]} ({M.MEUBLE_HAUT["z0"] - c["z1"] - c["plateau"]} au-dessus du plateau) au plafond, un '
+         f'de {M.MEUBLE_HAUT["z0"]} ({M.MEUBLE_HAUT["z0"] - c["z1"] - c["plateau"]} au-dessus du plateau) à {M.MEUBLE_HAUT["z1"]}, '
+         'aligné sur le caisson de la PAX et surmonté d\'un fileur jusqu\'au plafond comme elle, un '
          'meuble haut de la même forme, angle plein compris, fermé par deux portes de placard battantes (bonnets, gants, '
          f'sacs). La prise fibre ({M.PRISE_FIBRE["axe"]} du sol, sur la cloison) est derrière '
          'le bas du module, côté nord : ce compartiment n\'a pas de dos, l\'abattant du bas y donne accès et '
@@ -471,7 +472,7 @@ def principes(M):
          f'jusqu\'au plafond. Portes FORSAND de {pe["portes"][0]} et {pe["portes"][1]}. À 35 cm, les cintres ne tiennent '
          f'pas en travers : la tringle KOMPLEMENT de ce caisson a deux barres d\'avant en arrière, cintres de face '
          f'(environ {pe["manteaux"]} manteaux) ; deux tablettes au-dessus (bonnets, sacs), deux étagères à chaussures '
-         f'dessous, une lampe à détecteur qui s\'allume à l\'ouverture. Le meuble à chaussures se prolonge jusqu\'au nu '
+         f'dessous ({M.PAIRES_PAX} paires, 3 par étagère d\'après IKEA), une lampe à détecteur qui s\'allume à l\'ouverture. Le meuble à chaussures se prolonge jusqu\'au nu '
          f'de la penderie et s\'y termine par un quart de cercle plein de rayon {an["r"]}, à {c["z1"]} de haut, '
          'en chêne comme le meuble : pas d\'arête dans le passage. {banc_pend} cm restent entre le banc '
          "et la penderie fermée."),
@@ -481,6 +482,6 @@ def principes(M):
          "petite pièce de couleur. Le reste du couloir garde une teinte claire, Galet de Plum Living par défaut (la "
          "peinture murale la plus proche du blanc chaud de la cuisine et du salon), à choisir dans « Personnaliser »."),
         ("Porte de la pièce ouest",
-         f'Elle ouvre dans le couloir. Ouverte à 90°, son vantail s\'arrête à y 160 ; la penderie commence à y '
-         f'{pe["y0"]}. Elle peut donc s\'ouvrir normalement, sans gêner le passage.'),
+         'Elle s\'ouvre vers l\'intérieur de la pièce ouest : son vantail ne passe pas dans le couloir et ne gêne ni '
+         'le passage ni la penderie.'),
     ]
