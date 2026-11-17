@@ -481,7 +481,4 @@ def principes(M):
          f'{M.INDIA["nom"]}, ainsi que le flanc de la penderie qui prolonge l\'angle arrondi : l\'entrée devient une '
          "petite pièce de couleur. Le reste du couloir garde une teinte claire, Galet de Plum Living par défaut (la "
          "peinture murale la plus proche du blanc chaud de la cuisine et du salon), à choisir dans « Personnaliser »."),
-        ("Porte de la pièce ouest",
-         'Elle s\'ouvre vers l\'intérieur de la pièce ouest : son vantail ne passe pas dans le couloir et ne gêne ni '
-         'le passage ni la penderie.'),
     ]

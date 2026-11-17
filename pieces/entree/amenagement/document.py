@@ -11,7 +11,7 @@ import math
 
 from pieces.entree.piece import Bloc, EP, ENVELOPPE, H, H_PORTE, MURS, PORTES, PRISE_FIBRE, SOL, SURFACE  # noqa: F401
 
-VERSION = "V4.16"
+VERSION = "V4.17"
 
 # Empreinte des rendus (just rendu entree/amenagement) : la pièce puis le module de la variante, le code de rendu de l'entrée puis
 # celui de 3d/. Noms et ordre entrent dans l'empreinte : les changer refait tous les rendus.
@@ -352,7 +352,6 @@ ZONES = (
     dict(meuble="BANC", principe=0, coupe="A", iso="so"),
     dict(meuble="CHAUSSURES", plateau=True, principe=1, coupe="B", iso="so"),
     dict(meuble="PENDERIE", principe=2, coupe="C", iso="no"),
-    dict(porte="ouest", principe=4, coupe=None, iso="no"),
 )
 
 RENDUS = [("iso_so", "Isométrique depuis le sud-ouest : banc sous le tableau, meuble à chaussures sur plinthe, patères"),
@@ -361,6 +360,7 @@ RENDUS = [("iso_so", "Isométrique depuis le sud-ouest : banc sous le tableau, m
           ("banc", "Assis sur le banc, vers la porte d'entrée : penderie, entrée en India")]
 
 CHANGEMENTS = [
+    ("V4.17", "17/11/2026", "Zone « Porte de la pièce ouest » retirée du plan, avec sa carte Principe."),
     ("V4.16", "17/11/2026", "Meuble haut arrêté au haut du caisson de la PAX (244) au lieu du plafond, avec au-dessus un "
      "fileur de chêne de 6 jusqu'au plafond, d'aplomb avec les portes, comme le bandeau de la PAX."),
     ("V4.15", "17/11/2026", "Compte des paires corrigé : il prend aussi les deux étagères à chaussures du bas de la PAX "
