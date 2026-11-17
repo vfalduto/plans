@@ -1,24 +1,28 @@
 /* Document de construction : l'étagère d'essai (pièce « Atelier », tests/fixtures/essai/meuble.py), trois variantes.
-   « Actuelle » (atelier/etagere/) a ses cinq vues remplies et deux sections d'achats ; « Rangs » (rangs.html) n'a
-   pas de Montage (onglet grisé, « Sans objet ») ; « Escalier » (escalier.html) n'a pas de vue iso dans Plans.
+   Six vues : Plans (l'élévation, avec Mesurer), Iso (la vue iso, zoom seul), Découpe, Montage, Achats, Explication.
+   « Actuelle » (atelier/etagere/) a ses six vues remplies et deux sections d'achats ; « Rangs » (rangs.html) n'a
+   pas de Montage (onglet grisé, « Sans objet ») ; « Escalier » (escalier.html) n'a pas de vue iso (Iso vide,
+   « Sans objet », onglet actif).
    À 1440, 1100 et 390 px :
    - Onglets : ordre, Plans courant, un clic montre la vue et l'écrit dans l'adresse.
    - Variante : le choix de la variante garde la vue et le repère.
-   - Comparaison sur Plans (élévation face à Rangs, iso face à Escalier qui n'en a pas) ; pas de Comparer ailleurs.
-   - Onglet grisé de Rangs ; Mesurer caché et éteint sur la vue iso (SVG data-mesure="non").
-   - Largeur : chaque repère attendu de Plans, un à un ; à 390 px, rien ne déborde dans aucune vue et la quantité
-     reste en tête de chaque carte du débit ; à 1100 et 1440 px, ni la barre ni la fiche.
-   - Sans JavaScript (1440 et 390 px) : les cinq vues l'une sous l'autre ; aucune erreur de console ni 404.
+   - Comparaison sur Plans (élévation face à Rangs) et sur Iso (iso face à Escalier qui n'en a pas) ; pas de
+     Comparer ailleurs.
+   - Onglet grisé de Rangs ; Mesurer dans Plans, absent d'Iso ; l'ancienne adresse #plans?k=iso ouvre l'onglet Iso.
+   - Largeur : chaque repère attendu de Plans et d'Iso, un à un ; à 390 px, rien ne déborde dans aucune vue et la
+     quantité reste en tête de chaque carte du débit ; à 1100 et 1440 px, ni la barre ni la fiche.
+   - Sans JavaScript (1440 et 390 px) : les six vues l'une sous l'autre ; aucune erreur de console ni 404.
    Lancé par tests/navigateur/lancer.sh, qui ouvre la racine du site d'essai avant d'appeler ce script. */
 async page => {
   const BASE = new URL(page.url()).origin;
   const DOC = `${BASE}/atelier/etagere/`;
   const VARIANTES = {actuelle: DOC, rangs: DOC + "rangs.html", escalier: DOC + "escalier.html"};
-  const VUES = ["plans", "decoupe", "montage", "achats", "explication"];
-  const NOMS = ["Plans", "Découpe", "Montage", "Achats", "Explication"];
+  const VUES = ["plans", "iso", "decoupe", "montage", "achats", "explication"];
+  const NOMS = ["Plans", "Iso", "Découpe", "Montage", "Achats", "Explication"];
   const LARGEURS = [[1440, 900], [1100, 800], [390, 844]];
-  // repères de Plans attendus par variante (segments) ; les autres vues n'en ont pas
-  const REPERES = {actuelle: ["elevation", "iso"], rangs: ["elevation", "iso"], escalier: ["elevation"]};
+  // repères attendus par variante et par vue (segments, ou l'élément d'un dessin seul) ; les autres vues n'en ont pas
+  const REPERES = {actuelle: {plans: ["elevation"], iso: ["iso"]}, rangs: {plans: ["elevation"], iso: ["iso"]},
+                   escalier: {plans: ["elevation"], iso: []}};
   const echecs = [], erreurs = [];
   let lieu = "";   // la partie en cours, pour situer une erreur de console
   const verifier = (vrai, message) => { if (!vrai) echecs.push(message); };
@@ -117,12 +121,6 @@ async page => {
     const s = [...document.querySelectorAll("#contenu > section.vue")].filter(x => x.checkVisibility());
     return s.length === 1 && s[0].dataset.vue === v;
   }, vue, message);
-  // à 390 px, la fiche est une feuille basse fermée : on l'ouvre pour atteindre ses segments
-  const segment = async (p, k) => {
-    const b = p.locator(`section[data-vue="plans"] .segments button[data-k="${k}"]`);
-    if (!(await b.isVisible())) await p.click('section[data-vue="plans"] .fiche-tete');
-    await b.click();
-  };
 
   await sansPolices(page.context());
   await preparer(page);
@@ -153,7 +151,8 @@ async page => {
     // ---------------------------------------------------------------- 2. variante
     await partie(`2 variante, ${L}`, async () => {
       for (const [depart, choix, arrivee, vue] of [[DOC + "#decoupe", "rangs", DOC + "rangs.html#decoupe", "decoupe"],
-                                                   [DOC + "rangs.html#plans?k=iso", "actuelle", DOC + "#plans?k=iso", "plans"]]) {
+                                                   [DOC + "rangs.html#iso?k=iso", "actuelle", DOC + "#iso?k=iso", "iso"],
+                                                   [DOC + "rangs.html#plans?k=elevation", "actuelle", DOC + "#plans?k=elevation", "plans"]]) {
         const t = `2 variante, ${L}, de ${depart.slice(DOC.length) || "./"} vers ${choix}`;
         await ouvrir(page, depart);
         await page.selectOption("#c-variante", choix);
@@ -161,9 +160,11 @@ async page => {
         await vueVisible(page, vue, `${t} : la section ${vue} ne s'affiche pas`);
         const e = await page.evaluate(() => ({
           variante: document.body.dataset.variante, choix: document.querySelector("#c-variante").value,
-          elements: [...document.querySelectorAll('section[data-vue="plans"] .scene > .element')].filter(x => x.checkVisibility()).map(x => x.dataset.k),
+          elements: [...document.querySelectorAll('section[data-vue="plans"] .scene > .element, section[data-vue="iso"] .scene > .element')]
+            .filter(x => x.checkVisibility()).map(x => x.dataset.k),
         }));
-        verifier(e.variante === choix && e.choix === choix && (vue !== "plans" || egal(e.elements, ["iso"])),
+        const attendu = {decoupe: [], iso: ["iso"], plans: ["elevation"]}[vue];
+        verifier(e.variante === choix && e.choix === choix && egal(e.elements, attendu),
                  `${t} : ${JSON.stringify(e)}`);
       }
     });
@@ -178,8 +179,8 @@ async page => {
       verifier(egal(e.etiquettes, ["Actuelle", "Rangs"]) && e.clones === 1 && e.poignees === 1 && e.comparer && e.avec,
                `${t} : ${JSON.stringify(e)}`);
       t = `3 comparaison, ${L}, iso avec Escalier`;
-      await ouvrir(page, DOC + "#plans?k=iso&c=escalier");
-      await attendre(page, () => document.querySelectorAll('section[data-vue="plans"] .bandeau .etiq-var').length === 2,
+      await ouvrir(page, DOC + "#iso?k=iso&c=escalier");
+      await attendre(page, () => document.querySelectorAll('section[data-vue="iso"] .bandeau .etiq-var').length === 2,
                      null, `${t} : pas d'étiquettes`);
       e = await etat(page);
       const choixAvec = await page.evaluate(() => [...document.querySelectorAll("#c-autre option")].map(o => o.value));
@@ -188,9 +189,9 @@ async page => {
                `${t} : ${JSON.stringify(e)}, « avec » propose ${JSON.stringify(choixAvec)}`);
     });
 
-    // ---------------------------------------------------------------- 4. pas de Comparer hors de Plans
+    // ---------------------------------------------------------------- 4. pas de Comparer hors de Plans et d'Iso
     await partie(`4 pas de Comparer, ${L}`, async () => {
-      for (const vue of VUES.slice(1)) {
+      for (const vue of VUES.slice(2)) {
         for (const suite of ["", "?c=rangs"]) {
           const t = `4 pas de Comparer, ${L}, #${vue}${suite}`;
           await ouvrir(page, `${DOC}#${vue}${suite}`);
@@ -226,31 +227,34 @@ async page => {
       verifier(vide === "Sans objet", `${t} : rangs.html#montage montre « ${vide} »`);
     });
 
-    // ---------------------------------------------------------------- 6. Mesurer
+    // ---------------------------------------------------------------- 6. Mesurer, ancienne adresse de l'iso
     await partie(`6 Mesurer, ${L}`, async () => {
       const t = `6 Mesurer, ${L}`;
       const mesure = () => page.evaluate(() => {
         const s = document.querySelector('section[data-vue="plans"]'), b = s.querySelector(".b-mesure");
-        return {visible: b.checkVisibility(), presse: b.getAttribute("aria-pressed"),
+        const iso = document.querySelector('section[data-vue="iso"]');
+        return {visible: Boolean(b && b.checkVisibility()), presse: b && b.getAttribute("aria-pressed"),
                 scene: s.querySelector(".scene").classList.contains("mesure"),
-                element: [...s.querySelectorAll(".scene > .element")].filter(x => x.checkVisibility()).map(x => x.dataset.k)};
+                element: [...s.querySelectorAll(".scene > .element")].filter(x => x.checkVisibility()).map(x => x.dataset.k),
+                iso: {outils: iso.dataset.outils, bouton: iso.querySelectorAll(".b-mesure").length}};
       });
       await ouvrir(page, DOC + "#plans?k=elevation");
       let m = await mesure();
       verifier(m.visible && m.presse === "false" && egal(m.element, ["elevation"]), `${t} : sur l'élévation ${JSON.stringify(m)}`);
+      verifier(m.iso.bouton === 0 && !/mesure/.test(m.iso.outils || ""), `${t} : Mesurer présent dans Iso ${JSON.stringify(m.iso)}`);
       await page.click('section[data-vue="plans"] .b-mesure');
       m = await mesure();
       verifier(m.presse === "true" && m.scene, `${t} : Mesurer ne s'enfonce pas ${JSON.stringify(m)}`);
-      await segment(page, "iso");
-      await attendre(page, () => location.hash === "#plans?k=iso", null, `${t} : le segment « Vue iso » n'écrit pas k=iso`);
-      m = await mesure();
-      verifier(!m.visible && m.presse === "false" && !m.scene && egal(m.element, ["iso"]),
-               `${t} : sur la vue iso, Mesurer visible ou enfoncé ${JSON.stringify(m)}`);
-      await segment(page, "elevation");
-      await attendre(page, () => location.hash === "#plans?k=elevation", null, `${t} : le segment « Élévation » n'écrit pas k=elevation`);
-      m = await mesure();
-      verifier(m.visible && m.presse === "false" && !m.scene && egal(m.element, ["elevation"]),
-               `${t} : retour à l'élévation ${JSON.stringify(m)}`);
+      // ancienne adresse (l'iso était un repère de Plans) : l'onglet Iso s'ouvre, l'adresse est corrigée
+      await ouvrir(page, DOC + "#plans?k=iso");
+      await vueVisible(page, "iso", `${t} : #plans?k=iso n'ouvre pas Iso`);
+      await attendre(page, () => location.hash === "#iso?k=iso", null, `${t} : #plans?k=iso devient ${page.url()}, attendu #iso?k=iso`);
+      const iso = await page.evaluate(() => ({
+        courant: [...document.querySelectorAll("nav.vues a[aria-current='page']")].map(a => a.dataset.vue),
+        element: [...document.querySelectorAll('section[data-vue="iso"] .scene > .element')].filter(x => x.checkVisibility()).map(x => x.dataset.k),
+        mesure: [...document.querySelectorAll(".b-mesure")].filter(x => x.checkVisibility()).length,
+      }));
+      verifier(egal(iso, {courant: ["iso"], element: ["iso"], mesure: 0}), `${t} : #plans?k=iso montre ${JSON.stringify(iso)}`);
     });
 
     // ---------------------------------------------------------------- 7. largeur
@@ -266,7 +270,7 @@ async page => {
             const elements = [...document.querySelectorAll(`${s} .scene > .element:not(.b)`)];
             return (segments.length ? segments : elements).map(b => b.dataset.k).filter(k => k);
           }, vue);
-          const attendus = vue === "plans" ? REPERES[variante] : [];
+          const attendus = REPERES[variante][vue] || [];
           verifier(egal(ks, attendus), `7 largeur, ${L}, ${variante}, ${vue} : repères ${JSON.stringify(ks)}, `
                    + `attendu ${JSON.stringify(attendus)}`);
           for (const k of ks.length ? ks : [""]) {
@@ -293,7 +297,7 @@ async page => {
                 const f = document.querySelector(`section[data-vue="${v}"] .fiche`);
                 return Boolean(f && f.checkVisibility());
               }, vue);
-              verifier(vue !== "plans" || fiche, `${t} : la fiche n'est pas visible`);
+              verifier(!attendus.length || fiche, `${t} : la fiche n'est pas visible`);
               const barreFiche = d.filter(x => /^(barre|onglets|\.fiche) /.test(x));
               verifier(barreFiche.length === 0, `${t} : la barre ou la fiche déborde (${barreFiche.join(" ; ")})`);
             }

@@ -35,6 +35,7 @@ _spec.loader.exec_module(R)
 VARIANTE = os.environ.get("ENTREE_VARIANTE", "principale")
 M = importlib.import_module("pieces.entree.amenagement." + {"principale": "document", "victor": "victor"}[VARIANTE])
 from pieces.entree import piece  # noqa: E402
+from pieces.entree.amenagement import plum  # noqa: E402
 
 PREFIXE = f"entree-{VARIANTE}"
 APERCU = os.environ.get("ENTREE_APERCU") == "1"
@@ -54,13 +55,21 @@ INDIA_COULEUR = NEUTRE if INDIA_MODE == "neutre" else INDIA_MODE
 # propre masque (-masque-pax.png) ; avec ENTREE_INDIA, sa teinte d'origine.
 PAX_MATS = ("s_pax",)
 PAX_COULEUR = NEUTRE if INDIA_MODE == "neutre" else "#F0F0EB"
-# Plinthes (meuble à chaussures, penderie ; socle de Victor) : gris neutre, troisième masque (-masque-plinthe.png)
+# Plinthes (meuble à chaussures, penderie ; socle de Victor ; plinthes murales, V4.13) : gris neutre, troisième masque
+# (-masque-plinthe.png)
 PLINTHE_MATS = ("s_plinthe",)
 PLINTHE_COULEUR = NEUTRE if INDIA_MODE == "neutre" else "#EBE7E4"
-MASQUES = (("-masque.png", INDIA_MATS), ("-masque-pax.png", PAX_MATS), ("-masque-plinthe.png", PLINTHE_MATS))
-# Option « meuble haut » (principale) : ENTREE_MEUBLE_HAUT=sans retire le meuble haut, sa poignée, son rail et sa déco
-SANS_MEUBLE_HAUT = os.environ.get("ENTREE_MEUBLE_HAUT", "avec") == "sans"
-SUFFIXE_MH = "-sans" if SANS_MEUBLE_HAUT else ""   # fichiers du rendu sans meuble haut (suffixe de meuble_haut_rendus)
+# Murs du couloir hors de l'entrée India (V4.11) : gris neutre, quatrième masque (-masque-murs.png), recolorés dans la
+# page par le sélecteur « murs » ; avec ENTREE_INDIA, la teinte Plum Living par défaut.
+MUR_MATS = ("s_mur",)
+MUR_COULEUR = NEUTRE if INDIA_MODE == "neutre" else plum.PAR_CODE[M.MUR_TEINTE][2]
+# Coussin du banc de Victor (V1.6) : gris neutre, cinquième masque (-masque-coussin.png), recoloré par le sélecteur
+# « coussin » ; avec ENTREE_INDIA, sa teinte par défaut. Vide (noir) pour la principale, qui n'a pas de coussin.
+COUSSIN_MATS = ("s_coussin",)
+_v = importlib.import_module("pieces.entree.amenagement.victor")
+COUSSIN_COULEUR = NEUTRE if INDIA_MODE == "neutre" else dict((c, h) for c, _, h in _v.COUSSIN_TEINTES)[_v.COUSSIN_DEFAUT]
+MASQUES = (("-masque.png", INDIA_MATS), ("-masque-pax.png", PAX_MATS), ("-masque-plinthe.png", PLINTHE_MATS),
+           ("-masque-murs.png", MUR_MATS), ("-masque-coussin.png", COUSSIN_MATS))
 
 # ------------------------------------------------------------------ matériaux
 R.ESSENCE = "chene"
@@ -68,55 +77,72 @@ R.SUN_ALT, R.SUN_AZ = R.position_soleil(*R.LIEU, 2026, 6, 21, 13, 30, R.UTC_DECA
 R.EXPOSITION = -0.6
 CHENE = {"tex": "noyer", "sens": "h", "teinte": R.NOYER["teinte"]}   # remplacé par le chêne (ESSENCE)
 R.MATS.update({
-    "s_mur":     (M.MUR_COULEUR, 0.9, {"enduit": True}),
+    "s_mur":     (MUR_COULEUR, 0.9, {"enduit": True}),        # murs hors de l'entrée (gris neutre recoloré dans la page)
     "s_coupe":   ("#D9D4CA", 0.95, {}),                       # tranche des cloisons coupées
     "s_chene":   ("#A8743F", 0.5, CHENE),
     "s_chene_v": ("#A8743F", 0.5, dict(CHENE, sens="v")),
     "s_blanc":   (M.MUR_COULEUR, 0.45, {"laque": True}),      # laque blanche, couleur des murs
-    "s_pax":     (PAX_COULEUR, 0.45, {"laque": True}),
-    "s_plinthe": (PLINTHE_COULEUR, 0.6, {"laque": True}),   # plinthes (gris neutre recoloré dans la page)        # penderie PAX (gris neutre recoloré dans la page)
+    "s_pax":     (PAX_COULEUR, 0.45, {"laque": True}),          # penderie PAX (gris neutre recoloré dans la page)
+    "s_plinthe": (PLINTHE_COULEUR, 0.6, {"laque": True}),   # plinthes (gris neutre recoloré dans la page)
     "s_miroir":  ("#F2F4F5", 0.02, {"metal": True}),
     "s_india":   (INDIA_COULEUR, 0.9, {"enduit": True}),   # India (ou gris neutre recoloré dans la page), entrée
     "s_india_l": (INDIA_COULEUR, 0.45, {"laque": True}),   # porte d'entrée
     "s_tapis":   ("#A88E6A", 0.98, {}),                         # tapis de couloir en jute
+    "s_coussin": (COUSSIN_COULEUR, 0.95, {}),                   # coussin en tissu (gris neutre recoloré dans la page)
 })
 ROLES = {"mur": "s_mur", "linteau": "s_mur", "porte": "porte_peinte", "tableau": "electro_blanc", "banc": "s_chene",
          "caisson": "s_chene", "plateau": "s_chene", "tall": "s_pax", "socle": "s_plinthe", "miroir": "s_miroir",
          "applique": "globe", "patere": "s_chene", "facade": "s_chene_v", "facade_p": "s_pax",
          "haut": "s_india", "facade_h": "s_india_l", "india": "s_india", "india_plafond": "s_india", "india_l": "s_india_l", "interphone": "electro_blanc",
-         "tapis": "s_tapis", "sac": "lin",
+         "tapis": "s_tapis", "sac": "lin", "coussin": "s_coussin",
          "tall_i": "s_india_l", "facade_pi": "s_india_l"}   # penderie en laque India (variante Victor)
 
 
 def carrelage():
-    """Grès cérame M.CARRELAGE : carreaux carrés, nuance par carreau, joints fins, légère brillance."""
+    """Carrelage M.CARRELAGE : la photo d'un carreau (texture), un carreau par cellule, retournée en miroir d'une cellule
+    à l'autre (moins de répétition visible), joints fins ; position dans le monde, pour que les seuils suivent le sol."""
     c = M.CARRELAGE
     m = bpy.data.materials.new("s_carrelage")
     m.use_nodes = True
     nt = m.node_tree
     bsdf = nt.nodes["Principled BSDF"]
-    tc = nt.nodes.new("ShaderNodeTexCoord")
+    geo = nt.nodes.new("ShaderNodeNewGeometry")
+    t = c["taille"] / 100
+    # carreaux : la photo, une image par carreau (échelle 1 / taille), retournée en miroir au-delà de chaque bord
+    mp = nt.nodes.new("ShaderNodeMapping")
+    mp.inputs["Scale"].default_value = (1 / t, 1 / t, 1 / t)
+    nt.links.new(geo.outputs["Position"], mp.inputs["Vector"])
+    img = nt.nodes.new("ShaderNodeTexImage")
+    img.image = bpy.data.images.load(os.path.join(RACINE, c["texture"]), check_existing=True)
+    img.extension = "MIRROR"
+    img.interpolation = "Cubic"
+    nt.links.new(mp.outputs["Vector"], img.inputs["Vector"])
+    # joints : le motif de briques aligné sur les mêmes cellules, son facteur vaut 1 dans le joint
     br = nt.nodes.new("ShaderNodeTexBrick")
     br.offset, br.squash = 0.0, 1.0
-    t = c["taille"] / 100
     br.inputs["Scale"].default_value = 1.0
     br.inputs["Brick Width"].default_value = t
     br.inputs["Row Height"].default_value = t
     br.inputs["Mortar Size"].default_value = c["joint"] / 100
     br.inputs["Mortar Smooth"].default_value = 0.2
     br.inputs["Bias"].default_value = 0.0
-    br.inputs["Color1"].default_value = R.hexrgb(c["couleur"])
-    br.inputs["Color2"].default_value = R.hexrgb(c["nuance"])
-    br.inputs["Mortar"].default_value = R.hexrgb(c["couleur_joint"])
-    nt.links.new(tc.outputs["Object"], br.inputs["Vector"])
-    n = R.noise(nt, 6.0, tc.outputs["Object"], detail=5.0)
+    nt.links.new(geo.outputs["Position"], br.inputs["Vector"])
+    # la photo, aplanie, sort pâle sous la lumière du couloir : plus de contraste (gamma) et teinte beige du sol en place
+    gam = nt.nodes.new("ShaderNodeGamma")
+    gam.inputs["Gamma"].default_value = c["gamma"]
+    nt.links.new(img.outputs["Color"], gam.inputs["Color"])
+    teinte = nt.nodes.new("ShaderNodeMix")
+    teinte.data_type, teinte.blend_type = "RGBA", "MULTIPLY"
+    teinte.inputs["Factor"].default_value = 1.0
+    nt.links.new(gam.outputs["Color"], teinte.inputs["A"])
+    teinte.inputs["B"].default_value = R.hexrgb(c["couleur"])
     mix = nt.nodes.new("ShaderNodeMix")
-    mix.data_type, mix.blend_type = "RGBA", "MULTIPLY"
-    mix.inputs["Factor"].default_value = 0.12
-    nt.links.new(br.outputs["Color"], mix.inputs["A"])
-    nt.links.new(n.outputs["Color"], mix.inputs["B"])
+    mix.data_type = "RGBA"
+    nt.links.new(br.outputs["Fac"], mix.inputs["Factor"])
+    nt.links.new(teinte.outputs["Result"], mix.inputs["A"])
+    mix.inputs["B"].default_value = R.hexrgb(c["couleur_joint"])
     nt.links.new(mix.outputs["Result"], bsdf.inputs["Base Color"])
-    nt.links.new(R.map_range(nt, br.outputs["Fac"], 0.35, 0.8), bsdf.inputs["Roughness"])
+    nt.links.new(R.map_range(nt, br.outputs["Fac"], 0.45, 0.85), bsdf.inputs["Roughness"])   # carreau satiné, joint mat
     bump = nt.nodes.new("ShaderNodeBump")
     bump.inputs["Strength"].default_value = 0.15
     bump.invert = True
@@ -232,8 +258,6 @@ def deco(sc):
     paniers = iter(["wicker_basket_01", "wicker_basket_02"])
     liste = []
     for b in getattr(M, "DECO", []):
-        if SANS_MEUBLE_HAUT and b.nom.endswith("_mh"):   # déco posée dans le meuble haut
-            continue
         if b.role in ("tapis", "sac"):
             boite(f"deco__{b.nom}", b.x0, b.x1, b.y0, b.y1, b.z0, b.z1, ROLES[b.role], chanfrein=b.role == "sac")
             continue
@@ -288,7 +312,8 @@ def nom_de(b):
 
 
 def poignees_v4():
-    """Poignées de la V4 : abattants du meuble à chaussures, portes de la penderie, placard du meuble haut."""
+    """Poignées de la V4 : abattants du meuble à chaussures, portes de la penderie, portes du meuble haut (V4.12 : barres
+    verticales de part et d'autre du joint, en bas des portes)."""
     c = M.CHAUSSURES
     for k, (y0, y1) in enumerate(c["modules"]):
         ym = (y0 + y1) / 2
@@ -299,12 +324,47 @@ def poignees_v4():
     for dx in (-6, 5):
         boite(f"poignee__penderie_{dx}__-", xm + dx, xm + dx + 1, pe["y0"] - 1.5, pe["y0"], 116, 140, "noir")
     mh = M.MEUBLE_HAUT
-    if SANS_MEUBLE_HAUT:
-        return
-    xp = mh["x0"] + 6                                         # cuvette de la porte coulissante, côté ouest
-    boite("poignee__mh_porte__-", xp - 1.5, xp + 1.5, mh["y1"] - 0.3, mh["y1"] + 0.1, mh["z0"] + 6, mh["z0"] + 18, "noir")
-    # rail haut, sur toute la largeur, devant le placard
-    boite("poignee__mh_rail__-", mh["x0"], mh["x1"], mh["y1"], mh["y1"] + 0.6, mh["z1"] - 1.5, mh["z1"], "noir")
+    yj = mh["portes"][0][1]
+    for dy in (-5, 4):
+        boite(f"poignee__mh_{dy}__-", mh["x0"] - 1.5, mh["x0"], yj + dy, yj + dy + 1, mh["z0"] + 3, mh["z0"] + 15, "noir")
+
+
+def _dans_sol(x, y):
+    """Le point (x, y) est-il dans le sol du couloir (piece.SOL) ? Lancer de rayon."""
+    dedans, pts = False, piece.SOL
+    for (x0, y0), (x1, y1) in zip(pts, pts[1:] + pts[:1]):
+        if (y0 > y) != (y1 > y) and x < x0 + (y - y0) * (x1 - x0) / (y1 - y0):
+            dedans = not dedans
+    return dedans
+
+
+def plinthes_murales():
+    """Plinthes le long de chaque mur du couloir (côtés de piece.SOL), arrêtées aux ouvertures des portes ; prolongées
+    de leur épaisseur à chaque bout de mur (angle saillant fermé, angle rentrant caché dans le mur voisin). Chacune
+    porte la lettre de son mur : elle disparaît avec lui dans les vues en coupe."""
+    h, ep = piece.PLINTHE_MUR["h"], piece.PLINTHE_MUR["ep"]
+    pts = piece.SOL
+    for k, ((xa, ya), (xb, yb)) in enumerate(zip(pts, pts[1:] + pts[:1])):
+        horiz = ya == yb
+        c = ya if horiz else xa                                   # coordonnée du nu du mur
+        u0, u1 = sorted((xa, xb) if horiz else (ya, yb))          # étendue le long du mur
+        # côté du couloir : +1 si le couloir est vers les y (ou x) croissants
+        sens = 1 if (_dans_sol((u0 + u1) / 2, c + 1) if horiz else _dans_sol(c + 1, (u0 + u1) / 2)) else -1
+        mur = ("n" if sens > 0 else "s") if horiz else ("o" if sens > 0 else "e")
+        trous = sorted((p["a"], p["b"]) for p in piece.PORTES if p["mur"] == mur and p["face"] == c)
+        morceaux, debut = [], u0 - ep
+        for a, b in trous:
+            if b <= u0 or a >= u1:
+                continue
+            morceaux.append((debut, a))
+            debut = b
+        morceaux.append((debut, u1 + ep))
+        for j, (a, b) in enumerate(morceaux):
+            if b - a < 0.5:
+                continue
+            d0, d1 = sorted((c, c + sens * ep))
+            box = (a, b, d0, d1) if horiz else (d0, d1, a, b)
+            boite(f"plinthe_mur__{k}_{j}__{mur}", *box, 0, h, "s_plinthe")
 
 
 def portes_poignees():
@@ -333,8 +393,6 @@ def build_scene():
     prisme("plafond__couloir__p", piece.SOL, piece.H, piece.H + 2, "plafond", chanfrein=False)   # vue du banc seulement
 
     for b in piece.ENVELOPPE + M.MEUBLES:
-        if SANS_MEUBLE_HAUT and b.role in getattr(M, "MH_ROLES", ()):
-            continue
         nom = nom_de(b)
         if b.role == "angle":                      # quart de cercle plein en chêne (le plateau couvre le haut)
             prisme(nom, contour_arrondi(b.x0, b.x1, b.y0, b.y1, b.arrondi, b.coins), b.z0, b.z1, "s_chene")
@@ -382,6 +440,7 @@ def build_scene():
     else:
         poignees_v4()
     portes_poignees()
+    plinthes_murales()
 
     deco(sc)
     positions = getattr(M, "POSITIONS_HUMAINS", POSITIONS_HUMAINS_DEFAUT)   # une variante place ses silhouettes
@@ -560,9 +619,9 @@ if __name__ == "__main__":
     vues = {n: v for n, v in VIEWS.items() if not VUES_DEMANDEES or n in VUES_DEMANDEES}
     sc = build_scene()
     for name, v in vues.items():
-        rendre(sc, name, v, f"{PREFIXE}-{name}{SUFFIXE_MH}.png")
+        rendre(sc, name, v, f"{PREFIXE}-{name}.png")
     # un rendu qui n'a pas écrit son fichier fait échouer le lancement (la recette ne note rien)
-    attendus = [f"{PREFIXE}-{n}{SUFFIXE_MH}{suffixe}.png" for n in vues
+    attendus = [f"{PREFIXE}-{n}{suffixe}.png" for n in vues
                 for suffixe in ("", *(m[:-4] for m, _ in MASQUES)) if suffixe == "" or INDIA_MODE == "neutre"]   # sans masque si ENTREE_INDIA
     manquants = [f for f in attendus if not os.path.exists(os.path.join(OUT, f))]
     if manquants:

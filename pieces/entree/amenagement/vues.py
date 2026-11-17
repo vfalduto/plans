@@ -26,6 +26,8 @@ LIEU = Lieu(piece.SOL, piece.PORTES, "Position dans l'entrée")
 # Trait de coupe sur le plan : axe du trait (h : horizontal, à y = repère ; v : vertical, à x = repère), bornes
 TRAITS = {"A": ("h", -6, 270), "B": ("v", -6, 380), "C": ("h", -6, 360), "D": ("v", -6, 380)}
 SAILLIE_PORTE = 14                 # cm : la zone d'une porte déborde de l'ouverture dans le couloir (maquette)
+# surfaces recolorées dans les rendus, chacune à travers son masque (le premier : <rendu>-masque.png, puis -masque-<id>.png)
+FILTRES = "teinte pax plinthe murs coussin"
 
 
 def _e(texte):
@@ -87,20 +89,13 @@ def _vue_coupes(M, D):
 def _vue_iso(variante, M):
     enveloppe = (min(b.x0 for b in piece.MURS), min(b.y0 for b in piece.MURS),
                  max(b.x1 for b in piece.MURS), max(b.y1 for b in piece.MURS))
-    return vue_iso(RENDUS_SITE, variante, LIEU, points_iso(enveloppe), alts=dict(M.RENDUS), filtre="teinte pax plinthe",
-                   option=_option_mh(variante))
+    return vue_iso(RENDUS_SITE, variante, LIEU, points_iso(enveloppe), alts=dict(M.RENDUS), filtre=FILTRES)
 
 
 def _vue_camera(variante, M):
     cameras = {c.id: c for c in piece.CAMERAS}
     return vue_camera(RENDUS_SITE, variante, LIEU, [cameras[k] for k in CAMERAS_PRISES], alts=dict(M.RENDUS),
-                      filtre="teinte pax plinthe", option=_option_mh(variante))
-
-
-def _option_mh(variante):
-    """L'option « meuble haut » pour la principale (une image par valeur) ; Victor n'a pas de meuble haut."""
-    from pieces.entree.amenagement import document
-    return document.option_meuble_haut() if variante == "principale" else None
+                      filtre=FILTRES)
 
 
 # ------------------------------------------------------------------ Explication
@@ -129,7 +124,7 @@ def _portes_caisson(M, note):
 def _article(M, D, cle, chapo, stats, achats, matieres, verifier, source, avant=""):
     # le premier rendu du coin sud-ouest, quand il existe, ouvre la page ; son texte est l'alt
     figure = figure_rendu(rendu(RENDUS_SITE, cle, "iso_so"),
-                          dict(M.RENDUS).get("iso_so", "Vue isométrique depuis le sud-ouest"), filtre="teinte pax plinthe")
+                          dict(M.RENDUS).get("iso_so", "Vue isométrique depuis le sud-ouest"), filtre=FILTRES)
     return (tete(chapo, [("#plan", "Ouvrir le plan"), ("#iso", "Voir en iso")], figure)
             + chiffres(stats) + avant + principes(_cartes(M, D)) + achats + materiaux(matieres)
             + a_verifier(verifier, titre="Points à vérifier")
@@ -143,8 +138,8 @@ def _explication_principale(M, D):
     chapo = (f"Le couloir ({virg(M.SURFACE)} m²) dessert cinq portes et le passage du salon : il faut ranger sans gêner. "
              "Un banc sous le tableau électrique, un meuble à chaussures étroit sur plinthe, arrondi côté penderie, dans la branche "
              "d'entrée, relié par son angle à une penderie face à la salle de bain ; côté porte, des patères au-dessus "
-             "du sol libre, et en face un miroir à côté de l'interphone. Un meuble suspendu au plafond marque "
-             "l'entrée ; au-delà, murs, plafond et porte sont peints en India.")
+             "du sol libre, et en face un miroir à côté de l'interphone. Au-delà de la penderie, murs, plafond et porte "
+             "sont peints en India ; le reste du couloir prend la teinte choisie.")
     total = total_achats(_sections(M), approx=True)   # « ≈ … € », le total du tableau des achats
     stats = [(f"PAX {lp} × {pe['caisson']}", f"penderie IKEA, {total}"), (f"≈ {M.PAIRES} paires", "meuble à chaussures"),
              (f'{c["x0"]} cm', "passage le plus étroit"), (f"{virg(M.SURFACE)} m²", "surface du couloir")]
@@ -157,11 +152,12 @@ def _explication_principale(M, D):
                               "porte coulissante sur un seul caisson de 75.")
     matieres = [
         ("Sol", f'Carrelage {M.CARRELAGE["nom"]}, pose droite, joints fins.'),
-        ("Murs", f'Blanc chaud, comme la cuisine et le salon ({M.MUR_COULEUR}) ; l\'entrée, au sud du meuble haut : murs, '
-                 f'plafond, porte et flanc ouest de la penderie en {M.INDIA["nom"]} ({M.INDIA["couleur"]}, valeur affichée '
-                 "par plum-living.com ; à voir sur échantillon)."),
+        ("Murs", "Couloir : teinte Plum Living au choix dans « Personnaliser », Galet par défaut (la peinture murale la "
+                 f"plus proche du blanc chaud de la cuisine et du salon, {M.MUR_COULEUR}) ; l'entrée, au sud du nu de la "
+                 f'penderie : murs, plafond, porte et flanc ouest de la penderie en {M.INDIA["nom"]} ({M.INDIA["couleur"]}, '
+                 "valeur affichée par plum-living.com ; à voir sur échantillon)."),
         ("Meubles", "Proposition des rendus : banc, meuble à chaussures, angle arrondi et plateau en chêne miel (comme "
-                    "le salon) ; meuble haut peint en India comme l'entrée ; penderie PAX blanche (FORSAND) par défaut, teinte Plum Living au choix dans « Personnaliser » ; "
+                    "le salon) ; meuble haut en chêne au-dessus, portes de placard ; penderie PAX blanche (FORSAND) par défaut, teinte Plum Living au choix dans « Personnaliser » ; "
                     "son flanc ouest, dans l'entrée, en India. À choisir.")]
     verifier = [
         "<b>Tableau électrique</b> : encastré entre la cuisine et le WC (indiqué par le client) ; sa position et sa "
@@ -180,8 +176,8 @@ def _explication_principale(M, D):
         "et qu'une prise de courant est à portée, et percer la tablette pour l'aération.",
         f'<b>Cadres et miroir</b> : galerie de {M.CADRES["colonnes"] * M.CADRES["rangs"]} cadres {M.CADRES["l"]} × '
         f'{M.CADRES["h"]} (grille {M.CADRES["colonnes"]} × {M.CADRES["rangs"]}, {M.CADRES["ecart"]} d\'écart, centre à '
-        f'{virg(M.CADRES["zc"])}) entre le meuble haut et le miroir : il ne reste que '
-        f'{virg(M.CADRES["y0"] - M.MEUBLE_HAUT["y1"])} cm de chaque côté. Miroir {M.MIROIR["y1"] - M.MIROIR["y0"]} × '
+        f'{virg(M.CADRES["zc"])}) entre l\'alignement du coin de la salle de bain et le miroir, '
+        f'{virg(M.CADRES["y0"] - M.CADRES_Y0)} cm de chaque côté. Miroir {M.MIROIR["y1"] - M.MIROIR["y0"]} × '
         f'{M.MIROIR["z1"] - M.MIROIR["z0"]} calé {M.INTERPHONE["y0"] - M.MIROIR["y1"]} cm au nord de l\'interphone. '
         f'Ils ne dépassent que de {virg(M.CADRES["ep"])} dans le passage.',
         f'<b>Porte d\'entrée ouverte</b> : calculée avec une béquille de {M.BEQUILLE["saillie"]} de saillie, axe à '
@@ -195,8 +191,11 @@ def _explication_principale(M, D):
         f'{M.PAX_MUR["a"][1] - M.PAX_MUR["b"][1]} en y), d\'après le relevé : à vérifier au mètre.',
         f'<b>Interphone</b> : au mur ouest, à droite de la porte d\'entrée vue de l\'intérieur ; dessiné à '
         f'{M.INTERPHONE["y0"]} du mur nord, haut à {M.INTERPHONE["z1"]} : position et taille à relever.',
-        "<b>Meuble haut</b> : vérifier qu'il n'y a ni spot, ni détecteur, ni bouche d'aération au plafond à cet endroit, "
-        "et la nature des deux murs pour les fixations.",
+        f'<b>Meuble haut</b> : de {M.MEUBLE_HAUT["z0"]} au plafond au-dessus du meuble à chaussures, fixé à la cloison '
+        "de la salle de bain (vérifier sa nature et la charge admise) ; ses portes battantes ouvrent au-dessus du "
+        "passage, hors de portée de tête.",
+        "<b>Carrelage</b> : texture des rendus tirée de la photo du sol en place ; les carreaux y sont dessinés en "
+        "60 × 60 : relever leur taille réelle et le sens de pose.",
         "<b>Sens de la porte d'entrée</b> : sur le relevé, les paumelles sont à droite (côté salle de bain) et la porte "
         "ouvre vers l'intérieur. Si elles sont à gauche, le vantail se range contre le mur ouest.",
         "<b>Portes du mur nord</b> : la gauche est celle de la cuisine (coulissante côté cuisine), la droite celle du WC, "
@@ -209,57 +208,60 @@ def _explication_principale(M, D):
 
 
 def _explication_victor(M, D):
-    b, pe, mi, pl, cd = M.CHAUSSURES, M.PENDERIE, M.MIROIR, M.PLANCHE, M.CADRES
+    b, pe, mi, cd, co, mh = M.CHAUSSURES, M.PENDERIE, M.MIROIR, M.CADRES, M.CONSOLE, M.MEUBLE_HAUT
     lp, pp = pe["y1"] - pe["y0"], pe["x1"] - pe["x0"] - pe["facade"]
-    chapo = (f'Variante de l\'<a href="./">aménagement {M.BASE}</a>. Le mur sous le tableau électrique reste '
-             "libre. Un meuble à chaussures bas à abattants, deux étagères flottantes au-dessus, prend la place de la "
-             "penderie face à la salle de bain ; il file jusqu'à la penderie et s'y termine en arrondi. La penderie, un "
-             "PAX d'IKEA de 75 × 35 qui monte presque au plafond, passe dans la branche d'entrée ; une planche à "
-             "chaussures court sous les patères. En face, sur le mur ouest peint en India, des cadres et un miroir à côté "
-             "de l'interphone.")
+    chapo = (f'Variante de l\'<a href="./">aménagement {M.BASE}</a>. Une console sous le tableau électrique ; en '
+             "face, un banc à chaussures bas à abattants, avec son coussin, prend la place de la penderie face à la salle "
+             "de bain, une étagère flottante et un meuble haut de même forme au-dessus ; il file jusqu'à la penderie et "
+             "s'y termine par un bout plein au coin arrondi. La penderie, un PAX d'IKEA de 75 × 35 sur plinthe, passe "
+             "dans la branche d'entrée ; sol libre sous les patères. En face, sur le mur ouest peint en India, des cadres "
+             "et un miroir à côté de l'interphone.")
     total = total_achats(_sections(M), approx=True)
-    stats = [(f"PAX {lp} × {pp}", f"penderie IKEA, {total}"), (f"≈ {M.PAIRES} paires", "meuble à abattants et planche"),
-             (f'{pe["x0"]} cm', "passage le plus étroit"), (f'{b["y0"]} cm', "devant le meuble à chaussures")]
+    stats = [(f"PAX {lp} × {pp}", f"penderie IKEA, {total}"), (f"≈ {M.PAIRES} paires", "banc à abattants"),
+             (f'{pe["x0"]} cm', "passage le plus étroit"), (f'{b["y0"] - co["y1"]} cm', "entre la console et le banc")]
     achats = _achats(M, False, "Prix IKEA France relevés sur les fiches produit le 13/11/2026, en blanc. Charnières "
                      "KOMPLEMENT en plus (nombre et prix à lire sur la fiche des portes), bandeau et fixation murale non comptés.")
     matieres = [
         ("Sol", f'Carrelage {M.CARRELAGE["nom"]}, comme la {M.BASE}.'),
-        ("Murs", f'Blanc chaud ({M.MUR_COULEUR}) ; l\'entrée en {M.INDIA["nom"]} ({M.INDIA["couleur"]}).'),
-        ("Meubles", "Proposition des rendus : meuble à chaussures, étagères flottantes et planche en chêne miel ; penderie "
-                    "PAX (caisson, portes FORSAND, bandeau) peinte en India comme les murs ; cadres noirs fins, "
-                    "passe-partout blanc. À choisir.")]
+        ("Murs", "Couloir : teinte Plum Living au choix dans « Personnaliser », Galet par défaut ; l'entrée en "
+                 f'{M.INDIA["nom"]} ({M.INDIA["couleur"]}).'),
+        ("Meubles", "Proposition des rendus : banc à chaussures, étagère, meuble haut et console en chêne miel ; coussin "
+                    "en tissu, teinte au choix dans « Personnaliser » ; penderie PAX (caisson, portes FORSAND, bandeau) "
+                    "peinte en India comme les murs ; cadres noirs fins, passe-partout blanc. À choisir.")]
     verifier = [
-        f'<b>Passage</b> : {pe["x0"]} cm entre la penderie et le mur ouest, contre 85 en {M.BASE} ; {pl["x0"]} devant la '
-        f'planche. Porte de 50 ouverte, il reste {pe["x0"] - pe["portes"][0]} cm.',
+        f'<b>Passage</b> : {pe["x0"]} cm entre la penderie et le mur ouest, contre 85 en {M.BASE}. Porte de 50 ouverte, '
+        f'il reste {pe["x0"] - pe["portes"][0]} cm.',
         "<b>Peinture du PAX</b> : caisson et portes FORSAND sont en mélaminé blanc : poncer légèrement, sous-couche "
         "d'accrochage, puis la peinture des murs (ou une laque teintée à l'identique). Autre piste : des façades sur "
         "mesure pour PAX dans la teinte (Plum Living en propose, à vérifier). India n'existe chez Plum Living qu'en laque "
         "de façade, pas en peinture murale (relevé du 13/11/2026) : avec India, faire teinter la peinture sur échantillon ; "
         "l'option « Teinte » de « Personnaliser » indique pour chaque couleur les gammes où elle existe.",
         f'<b>Plafond</b> : IKEA demande au moins 1 cm au-dessus du caisson pour monter et ouvrir des portes battantes ; '
-        f'avec {M.H} sous plafond, il en reste {M.H - pe["z1"]}.',
-        "<b>Porte d'entrée</b> : ouverte à 90°, elle s'arrête contre la planche ; un tampon sur le chant évite les marques.",
-        f'<b>Planche</b> : {pl["z1"] - pl["ep"]} cm sous la planche, assez pour des baskets et des chaussures de ville, '
-        "pas pour des bottes (à ranger dessus).",
-        "<b>Étagères flottantes</b> : fixations cachées dans la cloison de la salle de bain : vérifier sa nature (carreaux "
-        "de plâtre, placo) et la charge admise.",
+        f'avec {M.H} sous plafond et la plinthe de {pe["socle"]}, il en reste {M.H - pe["z1"]}.',
+        f'<b>Console</b> : sous le tableau électrique (bas dessiné à {M.TABLEAU["z0"]}, à relever), dessus à {co["z1"]} ; '
+        "posée, pour la déplacer quand il faut ouvrir le tableau.",
+        f'<b>Meuble haut</b> : {mh["z1"] - mh["z0"]} de haut, de {mh["z0"]} au plafond, fixé à la cloison de la salle de '
+        "bain : vérifier sa nature (carreaux de plâtre, placo) et la charge admise, comme pour l'étagère flottante.",
+        "<b>Porte d'entrée</b> : sans la planche, rien ne l'arrête ; poser un butoir de sol.",
+        f'<b>Banc et salon</b> : {M.BANC_MUR["d"]:.0f} cm en diagonale du coin nord-est du banc (façade) au coin du mur '
+        f'qui sépare le salon du couloir et de la chambre ({M.BANC_MUR["b"][0] - M.BANC_MUR["a"][0]} en x, '
+        f'{M.BANC_MUR["a"][1] - M.BANC_MUR["b"][1]} en y), d\'après le relevé : à vérifier au mètre.',
         f'<b>Interphone</b> : le miroir est calé {M.INTERPHONE["y0"] - mi["y1"]} cm à côté ; sa position est à relever.',
         f'<b>Tableau électrique, plafond</b> : mêmes points que la <a href="./">{M.BASE}</a>.']
     c = M.CHAUSSURES
-    lpl, ppl = pl["y1"] - pl["y0"], pl["x1"] - pl["x0"]
     ncd = cd["colonnes"] * cd["rangs"]
     diff = [
-        ("Sous le tableau électrique", "Banc 95 × 38", "Rien : mur libre"),
+        ("Sous le tableau électrique", "Banc 95 × 38", f'Console {co["x1"] - co["x0"]} × {co["y1"] - co["y0"]} à {co["z1"]}'),
         ("Face nord de la salle de bain", "Penderie 84 × 40 toute hauteur",
-         f'Meuble à chaussures {c["x1"] - c["xa"]} × {b["y1"] - b["y0"]}, un niveau d\'abattants, arrondi jusqu\'au PAX, '
-         "deux étagères flottantes au-dessus"),
-        ("Angle", "Quart de cercle plein R 12, sur plinthe",
-         f'Quart de cercle plein R {b["r"]} centré sur le coin de la salle de bain, bout du meuble à chaussures'),
+         f'Banc à chaussures {c["x1"] - c["x0"]} × {b["y1"] - b["y0"]}, un niveau d\'abattants, coussin, jusqu\'au PAX ; '
+         "une étagère flottante et un meuble haut de même forme au-dessus"),
+        ("Angle", "Quart de cercle R 25", f'Bout plein en chêne, coin R {b["r"]}, sur plinthe'),
         ("Cloison de la salle de bain, après le coin", "Meuble à chaussures, premier module (83)",
-         f'Penderie IKEA PAX {lp} × {pp} × {pe["z1"]}, bandeau jusqu\'au plafond'),
+         f'Penderie IKEA PAX {lp} × {pp} × {pe["h"]} sur plinthe, bandeau jusqu\'au plafond'),
         ("Cloison de la salle de bain, côté porte", "Meuble à chaussures, second module (83), miroir",
-         f'Planche à chaussures {lpl} × {ppl} à {pl["z1"]}, les 4 patères au-dessus, applique'),
-        ("Meuble haut", "En travers de la branche d'entrée, 110 × 40", "Supprimé : deux tablettes en haut de la penderie"),
+         "Sol libre, les 4 patères, applique"),
+        ("Meuble haut", "En travers de la branche d'entrée, 110 × 40",
+         f'Au-dessus du banc et de l\'étagère, de {mh["z0"]} au plafond, 2 portes de placard'),
         ("Mur ouest de l'entrée", "Interphone",
          f'{ncd} cadres, miroir {mi["y1"] - mi["y0"]} × {mi["z1"] - mi["z0"]}, interphone'),
         ("Chaussures", "≈ 24 paires", f"≈ {M.PAIRES} paires"),

@@ -18,7 +18,7 @@ from pieces.salon.meubles import cote
 from pieces.salon.piece import PASSAGE, Bloc, Cyl
 
 
-VERSION, DATE = "V1.6", "30/10/2026"
+VERSION, DATE = "V1.7", "17/11/2026"
 RELEVE = "29/10/2026"   # date de la recherche de prix (en ligne, sans visite en magasin)
 
 # ------------------------------------------------------------------ le meuble dans le salon (modele.py, section ①)
@@ -326,7 +326,8 @@ CAMERAS = (
 # Empreinte des rendus (commun/rendu_cache.py) : la pièce, les deux meubles de la scène (les étagères sont au-dessus),
 # puis le script de rendu et ses volumes. Document sans variante : rendus/<caméra>.jpg.
 CACHE_RENDU = CacheRendu(variantes={"": ("pieces.salon.piece", "pieces.salon.etageres.document",
-                                         "pieces.salon.enfilade.document")},
+                                         "pieces.salon.enfilade.document",
+                                         "pieces.salon.amenagement.document")},   # sol et plinthes
                          code=("pieces/salon/rendu_meubles.py", "pieces/salon/amenagement/rendu.py", "pieces/salon/etageres/volumes.py",
                                "pieces/salon/enfilade/volumes.py", "pieces/salon/meubles.py", "3d/rendu.py"),
                          cameras="pieces.salon.enfilade.document",
@@ -342,6 +343,7 @@ RENDUS = [
 # Textes tels que la page les affiche (valeurs calculées comprises, figées à leur version). Du plus récent au plus
 # ancien, comme les autres documents (la page les listait du plus ancien au plus récent).
 CHANGEMENTS = [
+    ("V1.7", "17/11/2026", "Plans séparés en deux onglets : Plans (dessins cotés, avec Mesurer) et Iso (vues axonométriques : iso fermée et ouverte)."),
     ("V1.6", "30/10/2026",
      "Comparaison METOD en composition mixte, chaque poste pris là où il vaut le mieux : caissons, tiroirs, charnières "
      "95° sans amortisseur, poussoirs et pieds chez IKEA ; plan en chêne massif lamellé 250 × 65 × 2,6 de Leroy Merlin "

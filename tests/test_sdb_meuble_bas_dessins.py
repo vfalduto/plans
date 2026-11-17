@@ -20,19 +20,21 @@ def test_dessin_comme_l_ancienne_page(k):
 def test_cinq_vues_et_verifier():
     doc = Document("sdb", "meuble-bas", "Meuble bas", "construction", (Variante("", "Meuble bas", "V8.5", ()),), vues.vues)
     verifier(doc, V)
-    assert list(V) == ["plans", "decoupe", "montage", "achats", "explication"]
+    assert list(V) == ["plans", "iso", "decoupe", "montage", "achats", "explication"]
     with pytest.raises(ValueError):
         vues.vues("autre")
 
 
 def test_plans():
-    p = V["plans"]
-    assert [e.k for e in p.elements] == ORDRE == list(D.DESSINS)
-    assert [e.nom for e in p.elements] == ["Élévation, vue depuis la salle de bain", "Vue iso", "Sans la porte",
-        "Vue éclatée", "Plan", "Coupe par la machine", "Coupe par le placard", "Porte vue de face", "Joue vue de côté",
-        "Colonne vue de face", "Colonne vue de dessus"]
-    assert {e.titre for e in p.elements} == {"Meuble bas"} and p.outils == ("zoom", "mesure")
-    for e in p.elements:
+    p, i = V["plans"], V["iso"]
+    assert [e.k for e in i.elements + p.elements] == ["iso", "iso-ouvert", "eclate"] + [k for k in ORDRE if k not in D.ISO]
+    assert ORDRE == list(D.DESSINS)
+    assert [e.nom for e in p.elements] == ["Élévation, vue depuis la salle de bain", "Plan", "Coupe par la machine",
+        "Coupe par le placard", "Porte vue de face", "Joue vue de côté", "Colonne vue de face", "Colonne vue de dessus"]
+    assert [e.nom for e in i.elements] == ["Vue iso", "Sans la porte", "Vue éclatée"]
+    assert {e.titre for e in p.elements + i.elements} == {"Meuble bas"} and p.outils == ("zoom", "mesure")
+    assert i.outils == ("zoom",) and 'href="#plans"' in i.fiche
+    for e in p.elements + i.elements:
         assert e.scene.startswith('<svg data-mesure="non"') == (e.k in ("iso", "iso-ouvert", "eclate"))
         assert sans_aria(e.scene).replace(' data-mesure="non"', "") == sans_aria(D.DESSINS[e.k]())
     assert "114,4 × 60, dessus à 88,8" in p.fiche and 'href="#decoupe"' in p.fiche and 'href="#montage"' in p.fiche
@@ -49,7 +51,7 @@ def test_alts():
     assert a["iso-ouvert"].startswith("Sans la porte : ") and a["eclate"].startswith("Vue éclatée : ")
     assert a["elevation"].startswith(D.ARIA["elevation"] + ". Le nord à gauche")
     assert sorted(caps.values()) == sorted(texte(t) for t in D.legendes().values())
-    for e in V["plans"].elements:
+    for e in V["plans"].elements + V["iso"].elements:
         assert f'aria-label="{escape(a[e.k], quote=True)}"' in e.scene
 
 
@@ -61,7 +63,7 @@ def test_aucune_description_visible():
 
 
 def test_classes_ont_une_regle():
-    tous = [e.scene for e in V["plans"].elements]
+    tous = [e.scene for e in V["plans"].elements + V["iso"].elements]
     css = css_dessins(D.CSS_DOCUMENT, tous, ".d-sdb")
     site = (RACINE / "commun/site.css").read_text(encoding="utf-8")
     regle = lambda c, t: re.search(rf"\.{re.escape(c)}(?![\w-])", t) is not None   # noqa: E731
@@ -71,7 +73,7 @@ def test_classes_ont_une_regle():
 
 
 def test_omel_du_meuble_bas_l_emporte():
-    css = css_dessins(D.CSS_DOCUMENT, [e.scene for e in V["plans"].elements], ".d-sdb")
+    css = css_dessins(D.CSS_DOCUMENT, [e.scene for e in V["plans"].elements + V["iso"].elements], ".d-sdb")
     omel = [r for r in css.splitlines() if re.match(r"\.d-sdb \.omel\{", r)]
     assert omel[-1] == ".d-sdb .omel{fill:#fbfaf5;stroke:var(--ink);stroke-width:.25}"
     for interdit in ("JetBrains", "monospace", "var(--tile)", "ol.pose"):

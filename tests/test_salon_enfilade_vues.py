@@ -18,18 +18,20 @@ def _scene(cle):
 def test_cinq_vues_et_verifier():
     doc = Document("salon", "enfilade", "Enfilade", "construction", (Variante("", "Enfilade", "V1.6", ()),), vues.vues)
     verifier(doc, V)
-    assert list(V) == ["plans", "decoupe", "montage", "achats", "explication"]
+    assert list(V) == ["plans", "iso", "decoupe", "montage", "achats", "explication"]
     with pytest.raises(ValueError):
         vues.vues("autre")
 
 
 def test_plans():
-    p = V["plans"]
-    assert [e.k for e in p.elements] == ["elevation", "iso", "ouverte", "profil", "dessus", "eclate"]
-    assert {e.titre for e in p.elements} == {"Enfilade du mur ouest"}
-    for e in p.elements:
+    p, i = V["plans"], V["iso"]
+    assert [e.k for e in p.elements] == ["elevation", "profil", "dessus", "eclate"]
+    assert [e.k for e in i.elements] == ["iso", "ouverte"]
+    assert {e.titre for e in p.elements + i.elements} == {"Enfilade du mur ouest"}
+    for e in p.elements + i.elements:
         assert e.scene.startswith('<svg data-mesure="non"') == (e.k in ("iso", "ouverte"))
-    assert p.outils == ("zoom", "mesure")
+    assert p.outils == ("zoom", "mesure") and i.outils == ("zoom",)
+    assert "240 = 3 × 80" in i.fiche and 'href="#plans"' in i.fiche
     assert "240 = 3 × 80, centré sur le mur (8,8 libres de chaque côté)" in p.fiche
     assert 'href="#decoupe"' in p.fiche and 'href="#montage"' in p.fiche
 
@@ -43,7 +45,7 @@ def test_alts_sont_les_textes_sous_les_dessins():
     ordre = ["iso", "ouverte", "elevation", "profil", "dessus", "eclate"]   # ordre de l'ancienne page
     assert [a[k] for k in ordre] == _caps()
     assert "Quatre portes de 39,7" in a["elevation"]
-    for e in V["plans"].elements:
+    for e in V["plans"].elements + V["iso"].elements:
         assert f'aria-label="{escape(a[e.k], quote=True)}"' in e.scene
 
 

@@ -4,7 +4,7 @@ from commun.modele import Changement
 from pieces.sdb.meuble_bas import dessins, document, vues
 from tests.outils import RACINE, charger_site
 
-ANCRES = {"iso": "plans?k=iso", "structure": "explication", "placard": "explication", "f-placard": "plans?k=placard",
+ANCRES = {"iso": "iso?k=iso", "structure": "explication", "placard": "explication", "f-placard": "plans?k=placard",
           "porte": "explication", "f-porte": "plans?k=porte", "pieds": "explication", "f-joue": "plans?k=joue",
           "finition": "decoupe", "colonne": "explication", "f-colonne": "plans?k=colonne",
           "f-colonne-dessus": "plans?k=colonne-dessus", "plan": "plans?k=plan", "f-plan": "plans?k=plan",
@@ -17,8 +17,8 @@ def test_document():
     assert (d.piece, d.id, d.nom, d.type, d.css, d.generer, d.options) == \
         ("sdb", "meuble-bas", "Meuble bas", "construction", dessins.CSS_DOCUMENT, vues.vues, ())
     (v,) = d.variantes
-    assert (v.id, v.nom, v.version, v.figees) == ("", "Meuble bas", "V8.5", document.FIGEES)
-    assert v.changements == tuple(Changement(*c) for c in document.CHANGEMENTS) and len(v.changements) == 16
+    assert (v.id, v.nom, v.version, v.figees) == ("", "Meuble bas", "V8.6", document.FIGEES)
+    assert v.changements == tuple(Changement(*c) for c in document.CHANGEMENTS) and len(v.changements) == 17
     assert not hasattr(document, "CACHE_RENDU")
 
 

@@ -7,7 +7,7 @@ formules ; les cotes qui se calculent sont calculées depuis le modèle.
 from html import escape
 
 from commun.blocs import Achat, note_source, tableau_achats, vue_lecture
-from commun.blocs_construction import Calepin, Colonne, DessinMeuble, Etape, calepinage, etapes, tableau_debit, vue_plans
+from commun.blocs_construction import Calepin, Colonne, DessinMeuble, Etape, calepinage, etapes, tableau_debit, vues_plans
 from commun.modele import Vue
 from pieces.sdb.achats_communs import deux_meubles, note_article, prix
 from pieces.sdb.meuble_haut import calepinage as CAL, dessins as D, modele as H
@@ -34,12 +34,13 @@ def alt(k: str) -> str:
 
 
 # ------------------------------------------------------------------ Plans
-def _plans() -> Vue:
+def _plans() -> dict[str, Vue]:
     ch = M.CH
     scenes = {"iso": D.iso_meuble(alt("iso")), "eclate": D.vue_eclatee(alt("eclate")),
               "elevation": D.pose_de_face(alt("elevation")), "coupe": D.pose_en_coupe(alt("coupe"))}
-    dessins = [DessinMeuble(k, NOMS[k], scenes[k], mesure=k in ("elevation", "coupe")) for k in NOMS]
-    return vue_plans(dessins, "Meuble haut",
+    dessins = [DessinMeuble(k, NOMS[k], scenes[k], mesure=k in ("elevation", "coupe"),
+                            iso=k in ("iso", "eclate")) for k in NOMS]
+    return vues_plans(dessins, "Meuble haut",
                      formule=f"{cm(ch['y1'] - ch['y0'])} × {cm(ch['x1'] - ch['x0'])}, de {cm(ch['z0'])} à {cm(ch['z1'])} du sol")
 
 
@@ -89,7 +90,7 @@ def _calepinage() -> str:
 def _percages() -> str:
     return ("<h2>Perçages pièce par pièce</h2>"
             "<p>Chaque pièce à plat, face par face, cotes en mm depuis le coin en bas à gauche ; la vue éclatée du caisson "
-            'est dans <a href="#plans?k=eclate">Plans</a>. <span class="lg fta"></span> on perce à travers (passage, '
+            'est dans <a href="#iso?k=eclate">Iso</a>. <span class="lg fta"></span> on perce à travers (passage, '
             'fraisure ou lamage) ; <span class="lg ftb"></span> avant-trou de la vis qui arrive ; '
             '<span class="lg fent"></span> entaille.</p>'
             f'<div class="fiches">{D.fiches()}</div>')
@@ -249,6 +250,6 @@ def _achats() -> str:
 def vues(variante: str) -> dict[str, Vue]:
     if variante != "":
         raise ValueError(f"meuble haut : variante « {variante} » inconnue (une seule, d'id vide)")
-    return {"plans": _plans(), "decoupe": vue_lecture("decoupe", _decoupe()),
+    return {**_plans(), "decoupe": vue_lecture("decoupe", _decoupe()),
             "montage": vue_lecture("montage", _montage()), "achats": vue_lecture("achats", _achats()),
             "explication": vue_explication()}

@@ -277,7 +277,7 @@ def _viewbox(svg):
 
 
 def test_vues_et_variante_inconnue():
-    assert all(list(v) == ["plans", "decoupe", "montage", "achats", "explication"] for v in V.values())
+    assert all(list(v) == ["plans", "iso", "decoupe", "montage", "achats", "explication"] for v in V.values())
     with pytest.raises(ValueError, match="niche"):
         vues.vues("niche")
 
@@ -285,11 +285,13 @@ def test_vues_et_variante_inconnue():
 def test_plans():
     for c, v in V.items():
         p = v["plans"]
-        assert [(x.k, x.nom) for x in p.elements] == list(vues.REPERES)
+        assert [(x.k, x.nom) for x in p.elements] == [r for r in vues.REPERES if r[0] != "iso"]
+        assert [(x.k, x.nom) for x in v["iso"].elements] == [("iso", "Vue iso")]
+        assert v["iso"].outils == ("zoom",) and 'href="#plans"' in v["iso"].fiche
         assert p.outils == ("zoom", "mesure") and {x.titre for x in p.elements} == {f"Disposition {calculs.etat(c).nom}"}
         assert f'<p class="cotes">{escape(calculs.etat(c).kit)}</p>' in p.fiche
         assert 'href="#decoupe"' in p.fiche and 'href="#montage"' in p.fiche
-        for x in p.elements:
+        for x in p.elements + v["iso"].elements:
             (svg,) = balises(x.scene, "svg")[:1]
             assert svg["aria-label"] == dessins.legendes(calculs.etat(c))[x.k]
             assert (svg.get("data-mesure") == "non") == (x.k in ("iso", "detail"))
@@ -297,9 +299,9 @@ def test_plans():
 
 def test_cadrage_commun():
     for k in [k for k, _ in vues.REPERES]:
-        assert len({balises(next(x.scene for x in v["plans"].elements if x.k == k), "svg")[0]["viewbox"]
+        assert len({balises(next(x.scene for x in v["plans"].elements + v["iso"].elements if x.k == k), "svg")[0]["viewbox"]
                     for v in V.values()}) == 1, k
-    iso = _viewbox(next(x.scene for x in V["actuelle"]["plans"].elements if x.k == "iso"))
+    iso = _viewbox(next(x.scene for x in V["actuelle"]["iso"].elements if x.k == "iso"))
     assert iso == pytest.approx([-491.8, -499.6, 553.9, 562.2], abs=0.05)
     dessus = _viewbox(next(x.scene for x in V["actuelle"]["plans"].elements if x.k == "dessus"))
     assert [v * 2.6 for v in dessus] == pytest.approx([-110, -24.4, 786.9, 1028.4], abs=0.05)
@@ -496,10 +498,12 @@ TOUT = {c: D.generer(c) for c in calculs.CLES}
 def test_document():
     assert (D.piece, D.id, D.nom, D.type, D.options) == ("salon", "etageres", "Étagères", "construction", ())
     assert [(v.id, v.nom, v.version, len(v.changements), v.figees) for v in D.variantes] == [
-        ("actuelle", "Actuelle", "V1.8", 9, ()), ("rangs", "Rangs", "V1.8", 0, ()),
-        ("decalee", "Décalée", "V1.8", 0, ()), ("escalier", "Escalier", "V1.8", 0, ())]
-    assert [(c.version, c.date, c.texte) for c in D.variantes[0].changements] == [
-        (c.version, c.date, c.texte) for c in depuis_page(ANCIENNE)]
+        ("actuelle", "Actuelle", "V1.9", 10, ()), ("rangs", "Rangs", "V1.9", 0, ()),
+        ("decalee", "Décalée", "V1.9", 0, ()), ("escalier", "Escalier", "V1.9", 0, ())]
+    # l'historique de l'ancienne page à l'identique, sous la V1.9 (onglet Iso) ajoutée en tête
+    nouveau, *anciens = D.variantes[0].changements
+    assert (nouveau.version, nouveau.date) == ("V1.9", "17/11/2026") and "Iso" in nouveau.texte
+    assert [(c.version, c.date, c.texte) for c in anciens] == [(c.version, c.date, c.texte) for c in depuis_page(ANCIENNE)]
     for c, vs in TOUT.items():
         modele.verifier(D, vs)
         assert list(vs) == list(modele.VUES["construction"]) and all(v.elements for v in vs.values()), c
@@ -560,7 +564,7 @@ def test_bascule():
     assert suivis == ""          # just salon peut réécrire la page à la racine : seul compte que git ne la suive plus
     (r,) = [r for r in module.REDIRECTIONS if r.ancienne == "salon-etageres.html"]
     assert (r.cible, r.pages) == ("salon/etageres/", {"changements": "salon/etageres/historique.html"})
-    for ancre, fragment in (("dispositions", "explication"), ("iso", "plans?k=iso"), ("meuble", "plans?k=elevation"),
+    for ancre, fragment in (("dispositions", "explication"), ("iso", "iso?k=iso"), ("meuble", "plans?k=elevation"),
                             ("presentoir", "explication"), ("rendus", "explication"), ("materiaux", "explication"),
                             ("debit", "decoupe"), ("charges", "explication"), ("achats", "achats"),
                             ("montage", "montage"), ("valider", "explication"), ("inconnue", ""), ("", "")):
@@ -571,8 +575,9 @@ def test_bascule():
 
 def test_journal_apres_la_bascule():
     lignes = [e for e in entrees(charger_site().SITE) if e.piece == "Salon" and e.document == "Étagères"]
-    assert [(e.version, e.texte) for e in lignes] == [(c.version, c.texte) for c in depuis_page(ANCIENNE)]
-    assert len(lignes) == 9 and {e.lien for e in lignes} == {"salon/etageres/"} and {e.variante for e in lignes} == {"Actuelle"}
+    assert lignes[0].version == "V1.9"
+    assert [(e.version, e.texte) for e in lignes[1:]] == [(c.version, c.texte) for c in depuis_page(ANCIENNE)]
+    assert len(lignes) == 10 and {e.lien for e in lignes} == {"salon/etageres/"} and {e.variante for e in lignes} == {"Actuelle"}
 
 
 def _table(html: str, entete: str) -> str:

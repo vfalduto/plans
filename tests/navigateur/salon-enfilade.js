@@ -1,17 +1,18 @@
 /* @site reel : l'Enfilade du salon sur le vrai site/, construit par python3 site.py (tests/navigateur/lancer.sh le sert).
-   - Vues : les cinq vues et les six repères de Plans (élévation, iso, ouverte, profil, dessus, éclaté), à 1440, 1100
-     et 390 px : sans erreur de console ni réponse en erreur, images chargées, rien ne déborde.
+   - Vues : les six vues, les quatre repères de Plans (élévation, profil, dessus, éclaté) et les deux d'Iso (iso,
+     ouverte), à 1440, 1100 et 390 px : sans erreur de console ni réponse en erreur, images chargées, rien ne déborde.
    - Entrée sans fragment : Plans, élévation ; ni Comparer ni variante.
-   - Mesurer : les deux bouts de la plus longue cote de l'élévation donnent « Mesuré : 240 cm » ; caché sur l'iso.
-   - Fiche de Plans : les liens Découpe et Montage.
+   - Mesurer : les deux bouts de la plus longue cote de l'élévation donnent « Mesuré : 240 cm » ; pas de Mesurer
+     dans Iso ; l'ancienne adresse #plans?k=iso ouvre l'onglet Iso (#iso?k=iso).
+   - Fiche de Plans : les liens Découpe et Montage ; fiche d'Iso : le lien Plans.
    - Dessins : aucun aplat noir, aucun texte hors du viewBox.
    - Achats (total) et Explication (deux schémas, deux rendus).
-   - Anciennes adresses, historique (sept entrées, V1.6 en tête), et la page sans JavaScript. */
+   - Anciennes adresses (#iso → #iso?k=iso), historique (huit entrées, V1.7 en tête), et la page sans JavaScript. */
 async page => {
   const BASE = new URL(page.url()).origin;
   const DOC = `${BASE}/salon/enfilade/`;
-  const VUES = ["plans", "decoupe", "montage", "achats", "explication"];
-  const REPERES = ["elevation", "iso", "ouverte", "profil", "dessus", "eclate"];
+  const VUES = ["plans", "iso", "decoupe", "montage", "achats", "explication"];
+  const REPERES = {plans: ["elevation", "profil", "dessus", "eclate"], iso: ["iso", "ouverte"]};   // repères par vue
   const LARGEURS = [[1440, 900], [1100, 800], [390, 844]];
   const echecs = [], erreurs = [];
   const verifier = (vrai, message) => { if (!vrai) echecs.push(message); };
@@ -60,11 +61,11 @@ async page => {
   // images visibles de la vue : chargées (complete et une largeur naturelle)
   const imagesChargees = (p, vue, t) => attendre(p, v => [...document.querySelectorAll(`section[data-vue="${v}"] img`)]
     .filter(i => i.checkVisibility()).every(i => i.complete && i.naturalWidth > 0), vue, `${t} : image non chargée`);
-  // le repère k de Plans est affiché
-  const repereAffiche = (p, k, t) => attendre(p, k => {
-    const e = document.querySelector(`section[data-vue="plans"] .scene > .element[data-k="${k}"]`);
+  // le repère k de la vue (plans ou iso) est affiché
+  const repereAffiche = (p, vue, k, t) => attendre(p, ([v, k]) => {
+    const e = document.querySelector(`section[data-vue="${v}"] .scene > .element[data-k="${k}"]`);
     return e && e.checkVisibility();
-  }, k, `${t} : le repère ne s'affiche pas`);
+  }, [vue, k], `${t} : le repère ne s'affiche pas`);
   const vueAffichee = (p, vue, t) => attendre(p, v => {
     const s = document.querySelector(`section[data-vue="${v}"]`);
     return s && s.checkVisibility();
@@ -78,12 +79,12 @@ async page => {
     for (const [largeur, hauteur] of LARGEURS) {
       await page.setViewportSize({width: largeur, height: hauteur});
       for (const vue of VUES) {
-        const ks = vue === "plans" ? REPERES : [""];
+        const ks = REPERES[vue] || [""];
         for (const k of ks) {
           const t = `${largeur} px, ${vue}${k ? " " + k : ""}`;
           await ouvrir(page, `${DOC}#${vue}${k ? "?k=" + k : ""}`);
           await vueAffichee(page, vue, t);
-          if (k) await repereAffiche(page, k, t);
+          if (k) await repereAffiche(page, vue, k, t);
           const e = await page.evaluate(() => ({
             vues: [...document.querySelectorAll("#contenu > section.vue")].filter(s => s.checkVisibility()).map(s => s.dataset.vue),
             hash: location.hash}));
@@ -100,7 +101,7 @@ async page => {
   await partie("sans fragment", async () => {
     await page.setViewportSize({width: 1440, height: 900});
     await ouvrir(page, DOC);
-    await repereAffiche(page, "elevation", "sans fragment");
+    await repereAffiche(page, "plans", "elevation", "sans fragment");
     const e = await page.evaluate(() => ({
       vues: [...document.querySelectorAll("#contenu > section.vue")].filter(s => s.checkVisibility()).map(s => s.dataset.vue),
       elements: [...document.querySelectorAll('section[data-vue="plans"] .scene > .element')].filter(x => x.checkVisibility()).map(x => x.dataset.k),
@@ -113,7 +114,7 @@ async page => {
   await partie("Mesurer", async () => {
     await page.setViewportSize({width: 1440, height: 900});
     await ouvrir(page, DOC + "#plans?k=elevation");
-    await repereAffiche(page, "elevation", "Mesurer");
+    await repereAffiche(page, "plans", "elevation", "Mesurer");
     await page.click('section[data-vue="plans"] .b-mesure');
     const bouts = await page.evaluate(() => {
       const svg = document.querySelector('section[data-vue="plans"] .scene > .element[data-k="elevation"] > svg');
@@ -131,10 +132,22 @@ async page => {
       return m && !m.hidden ? m.textContent.trim() : "";
     });
     verifier(texte === "Mesuré : 240 cm", `Mesurer : bandeau « ${texte} » (bouts ${JSON.stringify(bouts)})`);
+    for (const k of REPERES.iso) {
+      await ouvrir(page, `${DOC}#iso?k=${k}`);
+      await repereAffiche(page, "iso", k, `Mesurer, ${k}`);
+      const m = await page.evaluate(() => ({
+        dansIso: document.querySelectorAll('section[data-vue="iso"] .b-mesure').length,
+        visibles: [...document.querySelectorAll(".b-mesure")].filter(b => b.checkVisibility()).length}));
+      verifier(m.dansIso === 0 && m.visibles === 0, `Mesurer : présent sur ${k} (Iso) ${JSON.stringify(m)}`);
+    }
+    // ancienne adresse : l'iso était un repère de Plans
     await ouvrir(page, DOC + "#plans?k=iso");
-    await repereAffiche(page, "iso", "Mesurer, iso");
-    const visible = await page.evaluate(() => document.querySelector('section[data-vue="plans"] .b-mesure').checkVisibility());
-    verifier(!visible, "Mesurer : le bouton reste visible sur la vue iso");
+    await repereAffiche(page, "iso", "iso", "#plans?k=iso");
+    await attendre(page, () => location.hash === "#iso?k=iso", null, "#plans?k=iso : l'adresse ne devient pas #iso?k=iso");
+    const o = await page.evaluate(() => ({
+      vues: [...document.querySelectorAll("#contenu > section.vue")].filter(s => s.checkVisibility()).map(s => s.dataset.vue),
+      courant: [...document.querySelectorAll("nav.vues a[aria-current='page']")].map(a => a.dataset.vue)}));
+    verifier(egal(o, {vues: ["iso"], courant: ["iso"]}), `#plans?k=iso : ${JSON.stringify(o)}`);
   });
 
   // ------------------------------------------------------------------ 4. fiche de Plans : liens Découpe et Montage
@@ -142,11 +155,15 @@ async page => {
     await page.setViewportSize({width: 1440, height: 900});
     for (const [nom, hash] of [["Découpe", "#decoupe"], ["Montage", "#montage"]]) {
       await ouvrir(page, DOC + "#plans?k=elevation");
-      await repereAffiche(page, "elevation", `fiche ${nom}`);
+      await repereAffiche(page, "plans", "elevation", `fiche ${nom}`);
       const lien = page.locator(`section[data-vue="plans"] .fiche a:has-text("${nom}")`).first();
       await lien.click();
       await attendre(page, h => location.hash === h, hash, `fiche : le lien « ${nom} » ne mène pas à ${hash}`);
     }
+    await ouvrir(page, DOC + "#iso?k=iso");
+    await repereAffiche(page, "iso", "iso", "fiche d'Iso");
+    await page.locator('section[data-vue="iso"] .fiche a:has-text("Plans")').first().click();
+    await attendre(page, () => location.hash === "#plans", null, "fiche d'Iso : le lien « Plans » ne mène pas à #plans");
   });
 
   // ------------------------------------------------------------------ 5. dessins : pas de noir, texte dans le viewBox
@@ -157,12 +174,13 @@ async page => {
     await page.setViewportSize({width: 1440, height: 900});
     await ouvrir(page, DOC);
     const html = await page.evaluate(async u => (await fetch(u)).text(), DOC);
-    const etats = [...REPERES.map(k => ["plans", k]), ...VUES.slice(1).map(v => [v, ""])];
+    const etats = [...REPERES.plans.map(k => ["plans", k]), ...REPERES.iso.map(k => ["iso", k]),
+                   ...VUES.slice(2).map(v => [v, ""])];
     for (const [vue, k] of etats) {
       const t = `dessins, ${vue}${k ? " " + k : ""}`;
       await ouvrir(page, `${DOC}#${vue}${k ? "?k=" + k : ""}`);
       await vueAffichee(page, vue, t);
-      if (k) await repereAffiche(page, k, t);
+      if (k) await repereAffiche(page, vue, k, t);
       const r = await page.evaluate(([v, source]) => {
         const SEL = "svg.enf, .scene > .element > svg";
         const section = document.querySelector(`section[data-vue="${v}"]`);
@@ -227,7 +245,7 @@ async page => {
     const cas = [
       ["/salon-enfilade.html#debit", "/salon/enfilade/", "#decoupe"],
       ["/salon-enfilade.html#meuble", "/salon/enfilade/", "#plans?k=elevation"],
-      ["/salon-enfilade.html#iso", "/salon/enfilade/", "#plans?k=iso"],
+      ["/salon-enfilade.html#iso", "/salon/enfilade/", "#iso?k=iso"],
       ["/salon-enfilade.html#valider", "/salon/enfilade/", "#explication"],
       ["/salon-enfilade.html#changements", "/salon/enfilade/historique.html", ""],
       ["/salon-enfilade.html#inconnue", "/salon/enfilade/", ""],
@@ -246,8 +264,8 @@ async page => {
       const li = [...document.querySelectorAll("ol.fil li")];
       return {n: li.length, premiere: li.length ? li[0].textContent : ""};
     });
-    verifier(h.n === 7, `historique : ${h.n} entrées au lieu de 7`);
-    verifier(h.premiere.includes("V1.6"), `historique : la première entrée n'est pas en V1.6 : « ${h.premiere.slice(0, 60)} »`);
+    verifier(h.n === 8, `historique : ${h.n} entrées au lieu de 8`);
+    verifier(h.premiere.includes("V1.7"), `historique : la première entrée n'est pas en V1.7 : « ${h.premiere.slice(0, 60)} »`);
   });
 
   // ------------------------------------------------------------------ 9. sans JavaScript

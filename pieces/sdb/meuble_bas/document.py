@@ -4,8 +4,9 @@
 
 from pieces.sdb.archives import FIGEES_COMMUNES
 
-VERSION = "V8.5"
+VERSION = "V8.6"
 CHANGEMENTS = [
+    ("V8.6", "17/11/2026", "Plans séparés en deux onglets : Plans (dessins cotés, avec Mesurer) et Iso (vues axonométriques : iso, sans la porte, éclatée)."),
     ("V8.5", "05/11/2026", "Panneau perforé et ses deux montants retirés, à la demande du client. Le meuble bas revient à 296,82 €."),
     ("V8.4", "05/11/2026", "Colonne en diagonale : un seul panneau biseauté de 18 de large coupe l'angle à 45°, les prises regardent la pièce. Panneau perforé SKÅDIS de 36 × 56 sur le mur nord, au-dessus du plateau, porté par deux montants vissés au plateau et au meuble haut : rien n'est percé dans le carrelage. Le meuble bas passe à 306,82 €."),
     ("V8.3", "05/11/2026", "Arrivée du courant relevée par le client : en bas du mur nord. Le câble traverse la joue nord, longe sa face intérieure jusqu'à l'angle arrière et monte à la colonne. Le bas du placard n'a plus d'entaille. Position exacte de la sortie à relever. Prix inchangé."),

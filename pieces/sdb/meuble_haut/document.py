@@ -4,8 +4,9 @@
 
 from pieces.sdb.archives import FIGEES_COMMUNES
 
-VERSION = "V6.4"
+VERSION = "V6.5"
 CHANGEMENTS = [
+    ("V6.5", "17/11/2026", "Plans séparés en deux onglets : Plans (dessins cotés, avec Mesurer) et Iso (vues axonométriques : iso et éclatée)."),
     ("V6.4", "04/11/2026", "Liste d'achats sortie dans une page à part, pour les deux meubles."),
     ("V6.3", "04/11/2026", "Meuble haut sorti en page autonome, avec sa propre découpe et ses propres achats ; les autres documents du meuble linge sont archivés."),
 ]

@@ -4,7 +4,7 @@ import pytest
 
 from commun.blocs import Achat, SectionAchats, achats, vue_lecture
 from commun.blocs_construction import (Calepin, Colonne, DessinMeuble, Etape, calepinage, etapes, rendus_meuble,
-                                       tableau_debit, vue_plans)
+                                       tableau_debit, vue_plans, vues_plans)
 from commun.gabarit import page_document
 from commun.modele import Document, Piece, Site, Variante
 from tests.outils import RACINE, balises
@@ -29,7 +29,7 @@ def _vues(plans):
     montage = etapes([Etape("Poser", "<p>Les montants.</p>", figure="<svg></svg>")], outils="<p>Visseuse.</p>")
     sections = [SectionAchats("Bois", [Achat("Planche", "P1", 2, 10)]),
                 SectionAchats("Quincaillerie", [Achat("Vis", "V4", 1, None, note="boîte de 100")])]
-    return {"plans": plans, "decoupe": vue_lecture("decoupe", debit), "montage": vue_lecture("montage", montage),
+    return {"plans": plans, "iso": vue_plans([ISO], "A", id="iso"), "decoupe": vue_lecture("decoupe", debit), "montage": vue_lecture("montage", montage),
             "achats": vue_lecture("achats", achats(sections)), "explication": vue_lecture("explication", "<p>Texte.</p>")}
 
 
@@ -50,6 +50,23 @@ def test_vue_plans():
     segments = plans.split('<div class="segments">')[1].split("</div>")[0]
     assert [b["data-k"] for b in balises(segments, "button")] == ["elevation", "iso"]
     assert 'data-titre="Disposition A &amp; B"' in plans
+
+
+def test_vues_plans_separe_les_iso():
+    iso = DessinMeuble("iso", "Vue iso", ISO.scene, mesure=False, iso=True)
+    vues = vues_plans([ELEVATION, iso], "A", formule="80 cm", liens=("decoupe",), legende="<p>L.</p>")
+    assert list(vues) == ["plans", "iso"]
+    assert [e.k for e in vues["plans"].elements] == ["elevation"] and vues["plans"].outils == ("zoom", "mesure")
+    assert vues["iso"].id == "iso" and [e.k for e in vues["iso"].elements] == ["iso"]
+    assert vues["iso"].outils == ("zoom",)
+    assert [a["href"] for a in balises(vues["iso"].fiche, "a")] == ["#plans", "#decoupe"]
+    assert '<p class="cotes">80 cm</p>' in vues["iso"].fiche and "Légende" not in vues["iso"].fiche
+    sans = vues_plans([ELEVATION], "A")
+    assert sans["iso"].elements == [] and sans["iso"].vide == "Sans objet"
+    with pytest.raises(ValueError, match="plans, iso"):
+        vue_plans([ELEVATION], "A", id="decoupe")
+    page = _page({**_vues(vues["plans"]), "iso": vues["iso"]})
+    assert [a["data-vue"] for a in balises(page, "a") if a.get("data-vue")][:2] == ["plans", "iso"]
 
 
 def test_vue_plans_iso_sans_mesure():
@@ -87,7 +104,7 @@ def test_vue_plans_liens_et_legende():
     sans = vue_plans([ELEVATION], "A", liens=())
     assert '<div class="actions">' not in sans.fiche and sans.fiche == ""
     for faux in (("plans", "atelier"), (("#decoupe", "Découpe"),), ("Découpe",)):
-        with pytest.raises(ValueError, match=r"ids acceptés : plans, decoupe, montage, achats, explication"):
+        with pytest.raises(ValueError, match=r"ids acceptés : plans, iso, decoupe, montage, achats, explication"):
             vue_plans([ELEVATION], "A", liens=faux)
     vide = vue_plans([], "A")
     assert vide.id == "plans" and vide.elements == [] and vide.vide == "Sans objet"

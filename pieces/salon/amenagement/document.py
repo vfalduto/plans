@@ -17,7 +17,7 @@ from pieces.salon.etageres.document import (BLOCS as BLOCS_ETAGERES, CHARGE_LIVR
 from pieces.salon.piece import (BAIE, CLIM, COFFRE, DECROCHE, ENVELOPPE, EP, PASSAGE, POUTRE, Bloc, Cyl, H,  # noqa: F401
                                 L, P)
 
-VERSION = "V4.26"
+VERSION = "V4.27"
 
 # versions figées de l'aménagement, déjà dans archives/ (une copie chacune) : (version affichée par la page, chemin
 # sous site/). La V3.1 est celle que la V4.0 a archivée.
@@ -30,10 +30,10 @@ COUPE_B = 480    # x, regard vers l'est : desserte et baie
 COUPE_D = 300    # y, regard vers le sud : meuble bas, écran, clim
 
 # ------------------------------------------------------------------ finitions
-# sol : carrelage grès cérame grand format, pose droite parallèle aux murs, joints fins (teinte à choisir) ;
-# murs : même blanc chaud que la cuisine (piste Farrow & Ball Wimborne White), plinthes de la couleur des murs
-CARRELAGE = dict(taille=60, joint=0.3, couleur="#D9D2C6", nuance="#CFC7B9", couleur_joint="#BDB5A7",
-                 nom="grès cérame 60 × 60 effet pierre claire")
+# sol : le carrelage de l'entrée (V4.27), effet travertin beige d'après photo, carreaux de 60 × 60, pose droite ;
+# murs : même blanc chaud que la cuisine (piste Farrow & Ball Wimborne White) ; plinthes de l'entrée (8 × 1,5, Galet)
+from pieces.entree.amenagement.document import CARRELAGE  # noqa: E402
+PLINTHES = dict(h=8, ep=1.5, couleur="#EBE7E4", nom="Galet (Plum Living), comme dans l'entrée")
 FINITION_MURS = dict(couleur="#EFE9DC", nom="Blanc chaud, comme la cuisine (piste Farrow & Ball Wimborne White)")
 # mur derrière la desserte (mur nord du décroché, x 414 → 544) : papier peint de la cuisine, Hermione (4murs,
 # intissé, cerise noire et vert-de-gris), motif ≈ 64 cm répété en miroir dans la hauteur
@@ -404,6 +404,9 @@ RENDUS = [("Vue isométrique depuis le sud-est (murs sud et est coupés) : table
 COUPE_C = TABLE["cy"]  # y, regard vers le nord : à travers la table (plan.py)
 
 CHANGEMENTS = [
+    ("V4.27", "17/11/2026",
+     "Rendus refaits avec le sol de l'entrée (carrelage effet travertin beige d'après photo, 60 × 60) et des plinthes "
+     "visibles au pied des murs, 8 de haut, teinte Galet comme dans l'entrée."),
     ("V4.26", "30/10/2026",
      "Enfilade de 60 de profond au lieu de 45 (demande du client). L'allée de 60 devant elle est gardée : le canapé, "
      "la table basse, le tapis, le meuble bas, l'écran et le projecteur, centrés sur le canapé, glissent de 15 vers "

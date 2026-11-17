@@ -16,7 +16,7 @@ from commun.rendu_cache import CacheRendu
 from pieces.salon.enfilade.document import ENFILADE
 from pieces.salon.piece import Bloc
 
-VERSION = "V1.8"
+VERSION = "V1.9"
 DATE = "29/10/2026"          # relevé des prix (WebSearch, fiches en ligne ; stock non vérifié)
 
 # ------------------------------------------------------------------ le meuble (modele.py, section ②, V4.21)
@@ -227,7 +227,8 @@ CAMERAS = (
 # Empreinte des rendus (commun/rendu_cache.py) : la pièce, les deux meubles de la scène (l'enfilade est sous les étagères),
 # puis le script de rendu et ses volumes. Les quatre dispositions sont déclarées (une variante oubliée ne serait jamais
 # rendue), mais seule Actuelle a des rendus : la recette `just rendu salon/etageres` ne lance qu'elle, rendus/actuelle-<caméra>.jpg.
-_DONNEES = ("pieces.salon.piece", "pieces.salon.enfilade.document", "pieces.salon.etageres.document")
+_DONNEES = ("pieces.salon.piece", "pieces.salon.enfilade.document", "pieces.salon.etageres.document",
+            "pieces.salon.amenagement.document")   # sol et plinthes (rendu.py du salon)
 CACHE_RENDU = CacheRendu(variantes={"actuelle": _DONNEES, "rangs": _DONNEES, "decalee": _DONNEES, "escalier": _DONNEES},
                          code=("pieces/salon/rendu_meubles.py", "pieces/salon/amenagement/rendu.py",
                                "pieces/salon/etageres/volumes.py", "pieces/salon/enfilade/volumes.py",
@@ -247,6 +248,7 @@ RENDUS = [
 # Textes tels que la page les affiche (valeurs calculées comprises, figées à leur version), du plus récent au plus
 # ancien.
 CHANGEMENTS = [
+    ("V1.9", "17/11/2026", "Plans séparés en deux onglets : Plans (dessins cotés, avec Mesurer) et Iso (vues axonométriques)."),
     ("V1.8", "30/10/2026",
      "Rainure à la défonceuse sous toutes les tablettes, comme au présentoir : 11 × 5 mm au droit de la cheville "
      "avant, sur 9 centrés sur chaque entaille ; la tablette ne peut plus avancer et la cheville avant ne peut plus "

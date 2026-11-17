@@ -6,7 +6,7 @@
 .d-entree .floorbg{fill:#D9D2C6;fill-opacity:.35}
 .d-entree .carreau{fill:none;stroke:#B5AC9C;stroke-width:.4;stroke-opacity:.7}
 .d-entree .w{fill:var(--ink)}
-.d-entree .bgwall{fill:var(--line);fill-opacity:.35}
+.d-entree .bgwall{fill:var(--mur,var(--line));fill-opacity:.6}
 .d-entree .wallv{fill:#D5DADD;stroke:var(--muted);stroke-width:.5}
 .d-entree .app{stroke:var(--ink);stroke-width:.8;fill:none}
 .d-entree .cab{fill:var(--cab);stroke:var(--ink);stroke-width:.7}
@@ -22,18 +22,14 @@
 .d-entree .india{fill:var(--india);fill-opacity:.7;stroke:none}
 .d-entree .indiap{fill:var(--india);stroke:var(--ink);stroke-width:.3}
 .d-entree .india-t{fill:var(--ink);font-weight:700}
-.d-entree .upper{fill:none;stroke:var(--ink);stroke-width:.8;stroke-dasharray:3 2}
-.d-entree .upperh{fill:var(--wood);fill-opacity:.12;stroke:var(--ink);stroke-width:.8;stroke-dasharray:3 2}
 .d-entree .porte{fill:var(--panel);stroke:var(--ink);stroke-width:.6}
 .d-entree .portec{fill:var(--panel);stroke:var(--ink);stroke-width:1}
 .d-entree .inner{fill:none;stroke:var(--muted);stroke-width:.6;stroke-dasharray:3 2}
 .d-entree .doorzone{fill:var(--tri);fill-opacity:.06;stroke:none}
 .d-entree .doorarc{fill:none;stroke:var(--ink);stroke-width:.8}
 .d-entree .doorleaf{stroke:var(--ink);stroke-width:3}
-.d-entree .slide{stroke:var(--ink);stroke-width:.8}
+.d-entree .coussin{fill:var(--coussin,#B4623F);stroke:var(--ink);stroke-width:.6}
 .d-entree .plv{fill:var(--plinthe,#EBE7E4);stroke:var(--ink);stroke-width:.6}
-.d-entree .mhv{fill:var(--india);stroke:var(--ink);stroke-width:.8}
-.d-entree .mhc{fill:var(--india);stroke:var(--ink);stroke-width:1.4}
 .d-entree .swing{fill:none;stroke:var(--muted);stroke-width:.6;stroke-dasharray:2 2}
 .d-entree .plinthe{fill:none;stroke:var(--muted);stroke-width:.5;stroke-dasharray:1.5 1.5}
 .d-entree .leafmax{fill:none;stroke:var(--ink);stroke-width:.6;stroke-dasharray:3 1.5}

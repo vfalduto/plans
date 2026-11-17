@@ -11,7 +11,7 @@ import math
 
 from pieces.entree.piece import Bloc, EP, ENVELOPPE, H, H_PORTE, MURS, PORTES, PRISE_FIBRE, SOL, SURFACE  # noqa: F401
 
-VERSION = "V4.10"
+VERSION = "V4.13"
 
 # Empreinte des rendus (just rendu entree/amenagement) : la pièce puis le module de la variante, le code de rendu de l'entrée puis
 # celui de 3d/. Noms et ordre entrent dans l'empreinte : les changer refait tous les rendus.
@@ -20,8 +20,7 @@ CACHE_RENDU = CacheRendu(variantes={"principale": ("pieces.entree.piece", "docum
                          code=("pieces/entree/amenagement/rendu.py", "3d/rendu.py"),
                          script="pieces/entree/amenagement/rendu.py", sortie=("ENTREE_SORTIE", "3d/sortie"),
                          apercu="ENTREE_APERCU", variante_env="ENTREE_VARIANTE", png="entree-{variante}-{camera}.png",
-                         masque=True,   # un masque par surface recolorable ; un Blender par valeur de « meuble haut »
-                         reglages="pieces.entree.amenagement.document:meuble_haut_rendus")   # un masque par surface recolorable : -masque.png (murs), -masque-pax.png
+                         masque=True)   # un masque par surface recolorable : -masque.png (India), -masque-pax.png…
 
 # silhouette de chaque caméra
 HUMAINS = {"iso_so": "couloir", "iso_no": "couloir", "iso_se": "entree"}
@@ -61,6 +60,16 @@ PAIRES = 18
 # Quart de cercle plein (V4.10 : rayon réduit de 25 à 12), posé sur la plinthe (8) : pas d'arête dans le passage.
 ANGLE = dict(x0=CHAUSSURES["x0"], x1=CHAUSSURES["x1"], y0=NU_PENDERIE, y1=CHAUSSURES["ya"], r=12)
 
+# ------------------------------------------------------------------ meuble haut au-dessus du meuble à chaussures (V4.12)
+# Même forme que le meuble à chaussures, vu de dessus (x 85 → 110, y 170 → 291, angle plein au coin R 12) : l'angle
+# reste un volume plein en chêne, le module de 83 est un caisson fermé par deux portes de placard battantes (au lieu
+# d'abattants), de 180 (57 au-dessus du plateau vide-poche) au plafond. Rien à voir avec l'ancien meuble haut en travers
+# de l'entrée, retiré à la V4.11.
+MEUBLE_HAUT = dict(x0=CHAUSSURES["x0"], x1=CHAUSSURES["x1"], y0=CHAUSSURES["y0"], ya=CHAUSSURES["ya"],
+                   yb=CHAUSSURES["yb"], y1=CHAUSSURES["y1"], z0=180, z1=H, facade=CHAUSSURES["facade"], r=ANGLE["r"])
+_ym = (MEUBLE_HAUT["ya"] + MEUBLE_HAUT["yb"]) / 2
+MEUBLE_HAUT["portes"] = [(MEUBLE_HAUT["ya"], _ym), (_ym, MEUBLE_HAUT["yb"])]
+
 # ------------------------------------------------------------------ ③ penderie IKEA PAX (V4.7)
 # Contre la face nord de la salle de bain, à partir de la cloison (x 110) : caisson PAX 75 × 35 × 236 (cotes réelles
 # 74,8 × 35,5 × 236,4, pieds réglables), le seul qui tienne dans les 84 (un 100 mangerait l'huisserie de la salle de
@@ -72,6 +81,9 @@ ANGLE = dict(x0=CHAUSSURES["x0"], x1=CHAUSSURES["x1"], y0=NU_PENDERIE, y1=CHAUSS
 # caisson : profondeur du caisson PAX (35 sur la fiche IKEA), celle des cotes ; l'emprise (38) compte la porte et le jeu.
 # V4.10 : posée sur une plinthe de 8 en retrait de 4, comme le meuble à chaussures (même hauteur, même teinte) : caisson
 # de 8 à 244, bandeau de 6 au-dessus ; hauteurs intérieures (tringle, tablettes, étagères) depuis le sol fini.
+# V4.11 : plinthe continue avec celle de l'angle du meuble à chaussures : pas de retrait à l'ouest (elle bute contre la
+# plinthe de l'angle, à x 110) et nu avant aligné sur elle (4 en retrait des portes, y 174) ; avant, le flanc India de la
+# penderie se voyait entre les deux plinthes.
 PENDERIE = dict(x0=110, x1=185, y0=NU_PENDERIE, y1=208, h=236, socle=8, retrait=4, facade=2, portes=(50, 25),
                 barres=(129, 166), manteaux=10, caisson=35)
 PENDERIE.update(z1=PENDERIE["socle"] + PENDERIE["h"], porte_z=(PENDERIE["socle"] + 4, PENDERIE["socle"] + 233.4),
@@ -111,24 +123,15 @@ INTERPHONE = dict(y0=335, y1=345, z0=140, z1=162)
 # 50 × 100 à coins arrondis R 12, juste au nord de l'interphone (8 d'écart), de 110 à 210.
 MIROIR = dict(y0=INTERPHONE["y0"] - 8 - 50, y1=INTERPHONE["y0"] - 8, z0=110, z1=210, r=12)
 
-# ------------------------------------------------------------------ ④ meuble haut (V4.1)
-# Suspendu au plafond en travers de la branche d'entrée, du mur ouest à la cloison de la salle de bain, au droit du
-# coin de la salle de bain : il marque l'entrée. Dessous à 204 (hauteur des portes), dessus au plafond. Côté nord,
-# étagères ouvertes (vers le couloir) ; côté sud, placard à deux portes (vers la porte d'entrée), séparés par un dos.
-# V4.3 : aligné sur la penderie (mêmes nus nord et sud, y 168 → 208), donc 40 de profondeur
-# V4.10 : tablette de la niche retirée (une seule niche ouverte côté couloir) ; placard fermé par une seule porte
-# coulissante (moitié de la largeur + 2), sur un rail haut, qui glisse de gauche (ouest, fermée) à droite (est) ;
-# caisson et porte peints comme les murs qui l'entourent, en India (plus de chêne).
-MEUBLE_HAUT = dict(x0=0, x1=110, y0=NU_PENDERIE, y1=208, z0=204, z1=250, ep=2, etagere=14, facade=2, recouvrement=2)
-MEUBLE_HAUT["porte"] = (MEUBLE_HAUT["x1"] - MEUBLE_HAUT["x0"]) / 2 + MEUBLE_HAUT["recouvrement"]
-# option « meuble haut » (avec ou sans, voir option_meuble_haut) ; rôles des volumes qu'elle retire
-MH_OPTION = dict(id="meuble-haut", defaut="avec", sans="sans")
-MH_ROLES = ("haut", "facade_h")
+# ------------------------------------------------------------------ meuble haut : retiré (V4.11)
+# Le meuble suspendu au plafond en travers de la branche d'entrée (V4.1 → V4.10, en option avec / sans à la V4.10) est
+# retiré définitivement à la demande du client ; la peinture India commence toujours au nu nord de la penderie.
 
 # ------------------------------------------------------------------ peinture de l'entrée (V4.1)
 # Au sud du meuble haut : murs, plafond et porte d'entrée en India Yellow (Farrow & Ball n° 66, teinte supposée).
 # V4.2 : India de Plum Living (« Beige 11 - India », jaune soleil lumineux), valeur écran relevée sur plum-living.com
-INDIA = dict(nom="India de Plum Living (Beige 11)", couleur="#F5D58C", y0=MEUBLE_HAUT["y0"])
+# V4.11 : sans meuble haut, l'India commence toujours au nu nord de la penderie (y 170).
+INDIA = dict(nom="India de Plum Living (Beige 11)", couleur="#F5D58C", y0=NU_PENDERIE)
 
 MEUBLES = [
     Bloc("tableau", "tableau", TABLEAU["x0"], TABLEAU["x1"], -1, 0.5, TABLEAU["z0"], TABLEAU["z1"], "tableau", mur="n"),
@@ -147,8 +150,13 @@ MEUBLES = [
          CHAUSSURES["yb"], CHAUSSURES["socle"], CHAUSSURES["z1"], "② chaussures"),
     Bloc("plateau", "vide_poche", CHAUSSURES["x0"], CHAUSSURES["x1"], CHAUSSURES["y0"], CHAUSSURES["y1"], CHAUSSURES["z1"],
          CHAUSSURES["z1"] + CHAUSSURES["plateau"], arrondi=ANGLE["r"]),
-    Bloc("socle", "penderie_socle", PENDERIE["x0"] + PENDERIE["retrait"], PENDERIE["x1"] - PENDERIE["retrait"],
-         PENDERIE["y0"] + PENDERIE["facade"] + PENDERIE["retrait"], PENDERIE["y1"], 0, PENDERIE["socle"]),
+    # meuble haut (V4.12) : angle plein, caisson ; ses portes avec les façades, plus bas
+    Bloc("angle", "mh_angle", MEUBLE_HAUT["x0"], MEUBLE_HAUT["x1"], MEUBLE_HAUT["y0"], MEUBLE_HAUT["ya"], MEUBLE_HAUT["z0"],
+         MEUBLE_HAUT["z1"], arrondi=MEUBLE_HAUT["r"]),
+    Bloc("caisson", "mh_caisson", MEUBLE_HAUT["x0"] + MEUBLE_HAUT["facade"], MEUBLE_HAUT["x1"], MEUBLE_HAUT["ya"],
+         MEUBLE_HAUT["yb"], MEUBLE_HAUT["z0"], MEUBLE_HAUT["z1"], "meuble haut"),
+    Bloc("socle", "penderie_socle", PENDERIE["x0"], PENDERIE["x1"] - PENDERIE["retrait"],
+         PENDERIE["y0"] + PENDERIE["retrait"], PENDERIE["y1"], 0, PENDERIE["socle"]),
     Bloc("tall", "penderie", PENDERIE["x0"], PENDERIE["x1"], PENDERIE["y0"] + PENDERIE["facade"], PENDERIE["y1"],
          PENDERIE["socle"], PENDERIE["z1"], "③ penderie PAX"),
     Bloc("tall", "bandeau", PENDERIE["x0"], PENDERIE["x1"], PENDERIE["y0"], PENDERIE["y1"], PENDERIE["z1"], H),
@@ -164,10 +172,12 @@ MEUBLES.append(Bloc("interphone", "interphone", 0, 3, INTERPHONE["y0"], INTERPHO
 # écarts égaux et serrés, 5 à 8).
 # V4.9 : le miroir prend la place côté interphone ; 4 cadres 30 × 40 en grille 2 × 2 (66 de large) dans les 69 libres
 # entre le meuble haut (y 208) et le miroir (y 277), centrés à la hauteur du centre du miroir (160), comme Victor.
+# V4.11 : meuble haut retiré, la galerie garde sa place (y 208 : l'alignement du coin de la salle de bain).
+CADRES_Y0 = PENDERIE["y1"]
 CADRES = dict(l=30, h=40, ecart=6, colonnes=2, rangs=2, zc=(MIROIR["z0"] + MIROIR["z1"]) / 2, ep=2.5)
 _lg = CADRES["colonnes"] * CADRES["l"] + (CADRES["colonnes"] - 1) * CADRES["ecart"]
 _hg = CADRES["rangs"] * CADRES["h"] + (CADRES["rangs"] - 1) * CADRES["ecart"]
-CADRES["yc"] = (MEUBLE_HAUT["y1"] + MIROIR["y0"]) / 2
+CADRES["yc"] = (CADRES_Y0 + MIROIR["y0"]) / 2
 CADRES["y0"], CADRES["y1"] = CADRES["yc"] - _lg / 2, CADRES["yc"] + _lg / 2
 CADRES["z0"], CADRES["z1"] = CADRES["zc"] - _hg / 2, CADRES["zc"] + _hg / 2
 for i in range(CADRES["colonnes"]):
@@ -175,20 +185,6 @@ for i in range(CADRES["colonnes"]):
         _y = CADRES["y0"] + i * (CADRES["l"] + CADRES["ecart"])
         _z = CADRES["z0"] + j * (CADRES["h"] + CADRES["ecart"])
         MEUBLES.append(Bloc("cadre_mur", f"cadre_{i}{j}", 0, CADRES["ep"], _y, _y + CADRES["l"], _z, _z + CADRES["h"], mur="o"))
-
-# meuble haut : niche ouverte au nord, dos, placard à porte coulissante au sud
-_mh = MEUBLE_HAUT
-_yd = _mh["y0"] + _mh["etagere"]
-MEUBLES += [
-    Bloc("haut", "mh_dessous", _mh["x0"], _mh["x1"], _mh["y0"], _yd, _mh["z0"], _mh["z0"] + _mh["ep"], "④ meuble haut"),
-    Bloc("haut", "mh_dessus", _mh["x0"], _mh["x1"], _mh["y0"], _yd, _mh["z1"] - _mh["ep"], _mh["z1"]),
-    Bloc("haut", "mh_joue_o", _mh["x0"], _mh["x0"] + _mh["ep"], _mh["y0"], _yd, _mh["z0"], _mh["z1"]),
-    Bloc("haut", "mh_joue_e", _mh["x1"] - _mh["ep"], _mh["x1"], _mh["y0"], _yd, _mh["z0"], _mh["z1"]),
-    Bloc("haut", "mh_placard", _mh["x0"], _mh["x1"], _yd, _mh["y1"] - _mh["facade"], _mh["z0"], _mh["z1"]),
-    # porte coulissante, fermée à l'ouest (dessinée là) ; elle glisse vers l'est sur le rail du haut
-    Bloc("facade_h", "mh_porte", _mh["x0"] + 0.2, _mh["x0"] + _mh["porte"] - 0.2, _mh["y1"] - _mh["facade"], _mh["y1"],
-         _mh["z0"] + 0.2, _mh["z1"] - 0.2),
-]
 
 # peinture India : fines couches sur les faces côté couloir, au sud du meuble haut ; le plafond aussi
 _y = INDIA["y0"]
@@ -200,7 +196,7 @@ MEUBLES += [
     Bloc("india", "india_sud_linteau", 2, 77, 373.7, 374, H_PORTE, H, mur="s"),
     Bloc("india_plafond", "india_plafond", 0, 110, _y, 374, H - 0.3, H, mur="p"),
     # V4.2 : flanc ouest de la penderie, dans le prolongement de l'angle arrondi, en laque India
-    Bloc("india_l", "india_penderie", PENDERIE["x0"] - 0.3, PENDERIE["x0"], PENDERIE["y0"], PENDERIE["y1"], 0, H),
+    Bloc("india_l", "india_penderie", PENDERIE["x0"] - 0.3, PENDERIE["x0"], PENDERIE["y0"], PENDERIE["y1"], PENDERIE["socle"], H),
 ]
 
 # façades : abattants du meuble à chaussures, portes de la penderie
@@ -208,6 +204,9 @@ for k, (y0, y1) in enumerate(CHAUSSURES["modules"]):
     for r, (z0, z1) in enumerate(zip(CHAUSSURES["rangs"], CHAUSSURES["rangs"][1:])):
         MEUBLES.append(Bloc("facade", f"abattant_{k}{r}", CHAUSSURES["x0"], CHAUSSURES["x0"] + CHAUSSURES["facade"],
                             y0 + 0.2, y1 - 0.2, z0 + 0.2, z1 - 0.2))
+for k, (y0, y1) in enumerate(MEUBLE_HAUT["portes"]):     # portes de placard du meuble haut, face à l'ouest
+    MEUBLES.append(Bloc("facade", f"mh_porte_{k}", MEUBLE_HAUT["x0"], MEUBLE_HAUT["x0"] + MEUBLE_HAUT["facade"],
+                        y0 + 0.2, y1 - 0.2, MEUBLE_HAUT["z0"] + 0.2, MEUBLE_HAUT["z1"] - 0.2))
 _xm = PENDERIE["x0"] + PENDERIE["portes"][0]          # joint des portes de 50 (ouest) et 25 (est)
 for k, (x0, x1) in enumerate(((PENDERIE["x0"], _xm), (_xm, PENDERIE["x1"]))):
     MEUBLES.append(Bloc("facade_p", f"porte_penderie_{k}", x0 + 0.2, x1 - 0.2, PENDERIE["y0"],
@@ -221,8 +220,6 @@ DECO = [
     Bloc("plante", "plante_angle", 88, 108, 172, 194, 123, 175),                 # sur le plateau, au-dessus de l'angle
     Bloc("bol", "bol_cles", 89, 107, 226, 244, 123, 129),                        # vide-poche pour les clés
     Bloc("vase", "vase_plateau", 92, 106, 270, 284, 123, 153),
-    Bloc("livres", "livres_mh", 8, 52, 169, 181, 206, 224),                      # meuble haut, étagère ouverte du bas
-    Bloc("vase", "vase_mh", 64, 76, 170, 180, 206, 230),                          # meuble haut, niche
     Bloc("sac", "sac_patere", 104.5, 108, 318, 346, 140, 180),                   # tote en toile à la première patère
 ]
 
@@ -326,11 +323,18 @@ OUVERTURE["cause"] = ("le vantail touche la première patère" if OUVERTURE["obs
                       else f"contact : {OUVERTURE['obstacle']}")
 OUVERTURE["butoir"] = 5 * math.floor((OUVERTURE["max"] - 3) / 5)      # butoir de sol quelques degrés avant le contact
 
-CARRELAGE = dict(taille=60, joint=0.3, couleur="#D9D2C6", nuance="#CFC7B9", couleur_joint="#BDB5A7",
-                 nom="grès cérame 60 × 60 effet pierre claire, comme le salon")
-MUR_COULEUR = "#EFE9DC"
-PAX_TEINTE = "color_blanc_pur"
-PLINTHE_TEINTE = "color_galet"   # plinthes du meuble à chaussures et de la penderie, proches du blanc des murs   # teinte d'origine de la penderie (FORSAND blanc) dans le sélecteur Plum Living
+# V4.11 : texture tirée de la photo du carrelage en place (client, 17/11/2026) : un carreau entier, éclairage aplani
+# (tache de soleil et ombre retirées), retourné en miroir d'un carreau à l'autre ; taille des carreaux non relevée.
+# couleur : teinte multipliée à la photo, gamma : contraste (rendu seulement ; le plan garde son fond clair).
+CARRELAGE = dict(taille=60, joint=0.3, couleur="#DDD6CB", gamma=1.3, nuance="#CFC7B9", couleur_joint="#7E766B",
+                 texture="pieces/entree/textures/carrelage_travertin.jpg",
+                 nom="existant, effet travertin beige (d'après photo), carreaux dessinés en 60 × 60")
+MUR_COULEUR = "#EFE9DC"            # blanc chaud de la cuisine et du salon (texte, variante Victor)
+PAX_TEINTE = "color_blanc_pur"     # teinte d'origine de la penderie (FORSAND blanc) dans le sélecteur Plum Living
+PLINTHE_TEINTE = "color_galet"     # plinthes du meuble à chaussures et de la penderie, proches du blanc des murs
+# V4.11 : murs du couloir hors de l'entrée India, au choix dans « Personnaliser » ; par défaut Galet, la peinture murale
+# Plum Living la plus proche du blanc chaud de la cuisine et du salon
+MUR_TEINTE = "color_galet"
 
 # meubles touchables du plan : meuble = nom du dictionnaire dont la zone prend l'emprise et la fiche ses cotes
 # (vues.py) ; porte = nom de la porte de la pièce ; un bord donné ici (x0…y1) remplace celui du meuble.
@@ -339,18 +343,27 @@ ZONES = (
     dict(meuble="BANC", principe=0, coupe="A", iso="so"),
     dict(meuble="CHAUSSURES", plateau=True, principe=1, coupe="B", iso="so"),
     dict(meuble="PENDERIE", principe=2, coupe="C", iso="no"),
-    dict(meuble="MEUBLE_HAUT", x1=ANGLE["x0"], principe=3, coupe="B", iso="se",     # arrêtée à l'angle arrondi, dessous
-         si=f'{MH_OPTION["id"]}:avec'),
     dict(porte="ouest", principe=4, coupe=None, iso="no"),
 )
 
 RENDUS = [("iso_so", "Isométrique depuis le sud-ouest : banc sous le tableau, meuble à chaussures sur plinthe, patères"),
           ("iso_no", "Isométrique depuis le nord-ouest : penderie, meuble à chaussures sur plinthe, porte d'entrée"),
-          ("iso_se", "Isométrique depuis le sud-est, sur l'entrée : mur ouest en India avec cadres, miroir et interphone, "
-                     "meuble haut côté placard"),
-          ("banc", "Assis sur le banc, vers la porte d'entrée : penderie, meuble haut, entrée en India")]
+          ("iso_se", "Isométrique depuis le sud-est, sur l'entrée : mur ouest en India avec cadres, miroir et interphone"),
+          ("banc", "Assis sur le banc, vers la porte d'entrée : penderie, entrée en India")]
 
 CHANGEMENTS = [
+    ("V4.13", "17/11/2026", "Plinthes murales de 8 le long de tous les murs du couloir, arrêtées aux ouvertures, dans "
+     "les rendus ; même teinte que les plinthes des meubles (option « Teinte des plinthes »). Rendus refaits."),
+    ("V4.12", "17/11/2026", "Meuble haut au-dessus du meuble à chaussures, de la même forme vu de dessus (angle plein "
+     "au coin arrondi R 12, module de 83) : de 180 au plafond, fermé par deux portes de placard battantes au lieu "
+     "d'abattants. Rendus refaits."),
+    ("V4.11", "17/11/2026", "Plinthe continue de l'angle du meuble à chaussures à la penderie : la plinthe de la "
+     "penderie n'est plus en retrait côté ouest et s'aligne sur celle de l'angle (4 en retrait des portes) ; le bout de "
+     "flanc peint en India qui se voyait entre les deux a disparu. Meuble haut retiré définitivement (et l'option "
+     "« Meuble haut ») ; l'India commence toujours au nu de la penderie, les cadres gardent leur place. Teinte des murs "
+     "du reste du couloir au choix dans « Personnaliser » (sélecteur Plum Living, Galet par défaut) : rendus et murs "
+     "vus de face sur les coupes. Sol des rendus refait d'après la photo du carrelage en place (effet travertin beige). "
+     "Rendus refaits."),
     ("V4.10", "16/11/2026", "Meuble à chaussures : l'arrondi sud et ses étagères sont retirés, le meuble s'arrête net au "
      "bout du module (121 de long, angle arrondi au nord compris). L'angle devient un quart de cercle plein en chêne "
      "(R 12, de la plinthe au plateau), sans étagères ; la box fibre passe dans le compartiment du bas. Meuble haut "
@@ -434,32 +447,29 @@ CHANGEMENTS = [
 # pas à l'import, pour éviter l'import circulaire.
 
 
-# Option « meuble haut » (V4.10) : avec (origine) ou sans. Le plan et les coupes portent les deux états (data-si) ; les
-# rendus de la principale sont faits deux fois (ENTREE_MEUBLE_HAUT=avec|sans, fichiers -sans pour le second).
-
-
-def meuble_haut_rendus(variante=""):
-    """Un Blender par valeur rendue : [(variable, code, suffixe)] ; Victor n'a pas de meuble haut : un seul rendu."""
-    if variante != "principale":
-        return [("", "", "")]
-    return [("ENTREE_MEUBLE_HAUT", "avec", ""), ("ENTREE_MEUBLE_HAUT", "sans", "-sans")]
-
-
-def option_meuble_haut():
-    return Option(id=MH_OPTION["id"], nom="Meuble haut", surfaces=(), type="choix", defaut=MH_OPTION["defaut"],
-                  valeurs=(Valeur(code="avec", nom="Avec"), Valeur(code="sans", nom="Sans")),
-                  portee="Variante principale : plan, coupes et rendus.")
-
-
 def _options():
-    """Deux sélecteurs Plum Living : la teinte des murs de l'entrée (India) et celle de la penderie PAX (laques)."""
+    """Sélecteurs Plum Living : la teinte de l'entrée (India), celle de la penderie PAX (laques), des plinthes et des
+    murs du reste du couloir (V4.11)."""
     from pieces.entree.amenagement import plum
-    return (plum.selecteur("teinte", "Teinte de l'entrée", ("murs", "plafond", "porte", "meuble haut"), css="--india"),
+    return (plum.selecteur("teinte", "Teinte de l'entrée", ("murs", "plafond", "porte"), css="--india"),
             plum.selecteur("pax", "Teinte de la penderie PAX", ("caisson", "portes"), defaut=PAX_TEINTE, css="--pax",
                            laques=True, portee="Penderie de la variante principale : plan, coupes et rendus."),
-            plum.selecteur("plinthe", "Teinte des plinthes", ("meuble à chaussures", "penderie"), defaut=PLINTHE_TEINTE,
+            plum.selecteur("plinthe", "Teinte des plinthes", ("meuble à chaussures", "penderie", "murs"), defaut=PLINTHE_TEINTE,
                            css="--plinthe", portee="Coupes et rendus."),
-            option_meuble_haut())
+            plum.selecteur("murs", "Teinte des murs du couloir", ("murs hors de l'entrée",), defaut=MUR_TEINTE,
+                           css="--mur", portee="Coupes et rendus."),
+            option_coussin())
+
+
+def option_coussin():
+    """Teinte du coussin du banc de la version Victor (V1.6) : tissus, pas des peintures."""
+    from pieces.entree.amenagement import victor
+    return Option(id="coussin", nom="Teinte du coussin", surfaces=("coussin du banc",), type="nuancier",
+                  defaut=victor.COUSSIN_DEFAUT, css="--coussin", filtre=True,
+                  valeurs=tuple(Valeur(code=c, nom=n, couleur=h, groupe="Tissus",
+                                       note="valeur d'écran indicative, à choisir sur échantillon")
+                                for c, n, h in victor.COUSSIN_TEINTES),
+                  portee="Version Victor : coupes et rendus.")
 
 
 def _changements(liste):

@@ -9,7 +9,7 @@ from functools import lru_cache
 from html import escape, unescape
 
 from commun.blocs import Achat, note_source, tableau_achats, vue_lecture
-from commun.blocs_construction import Colonne, DessinMeuble, Etape, etapes, tableau_debit, vue_plans
+from commun.blocs_construction import Colonne, DessinMeuble, Etape, etapes, tableau_debit, vues_plans
 from commun.modele import Vue
 from pieces.sdb import iso, piece as P
 from pieces.sdb.achats_communs import deux_meubles, note_article, prix
@@ -38,9 +38,10 @@ def alts() -> dict[str, str]:
     return res
 
 
-def _plans() -> Vue:
+def _plans() -> dict[str, Vue]:
     a = alts()
-    return vue_plans([DessinMeuble(k, NOMS[k], DESSINS[k](a[k]), mesure=k not in ISO) for k in DESSINS], "Meuble bas",
+    return vues_plans([DessinMeuble(k, NOMS[k], DESSINS[k](a[k]), mesure=k not in ISO, iso=k in ISO) for k in DESSINS],
+                      "Meuble bas",
                      formule=f"{B.cm(B.PY1 - B.PY0)} × {B.cm(B.PLATEAU_P)}, dessus à {B.cm(B.Z_DESSUS)}")
 
 
@@ -183,5 +184,5 @@ def _achats() -> str:
 def vues(variante: str) -> dict[str, Vue]:
     if variante != "":
         raise ValueError(f"meuble bas : variante « {variante} » inconnue (une seule, d'id vide)")
-    return {"plans": _plans(), "decoupe": vue_lecture("decoupe", _decoupe()),
+    return {**_plans(), "decoupe": vue_lecture("decoupe", _decoupe()),
             "montage": vue_lecture("montage", _montage()), "achats": vue_lecture("achats", _achats()), "explication": vue_explication()}

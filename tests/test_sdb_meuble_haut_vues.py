@@ -29,8 +29,9 @@ def test_61_dessins_de_l_ancienne_page_repris():
               "icones": len(re.findall(r'<svg class="ico"', _scenes(V["montage"])))}
     assert compte == {"iso": 1, "cartes": 9, "faces": 23, "calepinages": 6, "icones": 15}
     # 1 iso + 9 cartes + 3 étapes + 1 éclatée + 23 faces + 6 calepinages + 1 perçage type + 2 poses + 15 icônes = 61 ;
-    # les 2 de plus sont les icônes des boutons Découpe et Montage de la fiche de Plans
-    assert len(re.findall(r"<svg", nouveau)) == 61 + 2      
+    # les 5 de plus sont les icônes des boutons de fiche : Découpe et Montage dans Plans, Plans, Découpe et
+    # Montage dans Iso
+    assert len(re.findall(r"<svg", nouveau)) == 61 + 5      
 
 
 def test_dessins_comme_l_ancienne_page():
@@ -58,7 +59,7 @@ def test_cinq_vues_et_verifier():
     doc = Document("sdb", "meuble-haut", "Meuble haut", "construction", (Variante("", "Meuble haut", "V6.4", ()),),
                    vues.vues)
     verifier(doc, V)
-    assert list(V) == ["plans", "decoupe", "montage", "achats", "explication"]
+    assert list(V) == ["plans", "iso", "decoupe", "montage", "achats", "explication"]
     try:
         vues.vues("autre")
     except ValueError:
@@ -68,11 +69,11 @@ def test_cinq_vues_et_verifier():
 
 
 def test_plans():
-    p = V["plans"]
-    assert [e.k for e in p.elements] == ["iso", "eclate", "elevation", "coupe"]
-    assert [e.nom for e in p.elements] == ["Vue iso", "Vue éclatée", "Pose, de face", "Pose, en coupe"]
-    assert p.outils == ("zoom", "mesure")
-    for e in p.elements:
+    p, i = V["plans"], V["iso"]
+    assert [e.k for e in p.elements] == ["elevation", "coupe"] and [e.k for e in i.elements] == ["iso", "eclate"]
+    assert [e.nom for e in i.elements + p.elements] == ["Vue iso", "Vue éclatée", "Pose, de face", "Pose, en coupe"]
+    assert p.outils == ("zoom", "mesure") and i.outils == ("zoom",)
+    for e in i.elements + p.elements:
         assert e.scene.startswith('<svg data-mesure="non"') == (e.k in ("iso", "eclate"))
         assert f'aria-label="{escape(vues.alt(e.k), quote=True)}"' in e.scene
     assert "114 × 45, de 158 à 248 du sol" in p.fiche and 'href="#decoupe"' in p.fiche

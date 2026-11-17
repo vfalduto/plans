@@ -57,13 +57,16 @@ def build_scene(ouvert):
     RS._mats.clear()
     sc = bpy.context.scene
     b = RS.boite
-    # sol, mur ouest (cloison) et un retour du mur nord, plinthe au sud de l'enfilade
+    # sol, mur ouest (cloison) et un retour du mur nord, plinthes de l'entrée au pied des deux murs
     b("sol__carrelage", 0, 260, -12, M.P, -2, 0, "s_carrelage", chanfrein=False)
     # murs minces : leur tranche du haut, à l'ombre du plafond, ne fait pas de bandeau sombre dans les vues plongeantes
     b("mur__ouest", -0.5, 0, -0.5, M.P, 0, M.H, "s_mur", False)
     b("mur__nord", -0.5, 260, -0.5, 0, 0, M.H, "s_mur", False)
     b("plafond__salon", -12, 260, -12, M.P, M.H, M.H + 2, "s_plafond", False)
-    b("plinthe__ouest_s", 0, 1.5, E["y1"], M.PASSAGE["y0"] - M.PASSAGE["cadre"], 0, 8, "s_plinthe", False)
+    pl, ep = RS.M.PLINTHES["h"], RS.M.PLINTHES["ep"]
+    b("plinthe__nord", 0, 260, 0, ep, 0, pl, "s_plinthe", False)
+    b("plinthe__ouest_n", 0, ep, ep, E["y0"], 0, pl, "s_plinthe", False)
+    b("plinthe__ouest_s", 0, ep, E["y1"], M.PASSAGE["y0"] - M.PASSAGE["cadre"], 0, pl, "s_plinthe", False)
     pieces = ET.pieces_3d() + EN.pieces_3d(ouvert=ouvert)
     for p in pieces:
         if p.forme == "cyl_y":

@@ -77,9 +77,9 @@ def table_repliables() -> str:
 def matieres() -> str:
     cr, mu, pp, ri = M.CARRELAGE, M.FINITION_MURS, M.PAPIER_PEINT, M.RIDEAU
     return materiaux([
-        ("Sol", f'Carrelage {escape(cr["nom"])}, pose droite parallèle aux murs, joints fins ; teinte à choisir (rendu : '
-                f'{cr["couleur"]}).'),
-        ("Murs et plinthes", f'{escape(mu["nom"])}, {mu["couleur"]} ; plinthes de la couleur des murs.'),
+        ("Sol", f'Carrelage de l\'entrée, {escape(cr["nom"])}, pose droite parallèle aux murs, joints fins.'),
+        ("Murs et plinthes", f'{escape(mu["nom"])}, {mu["couleur"]} ; plinthes de {M.PLINTHES["h"]} cm, teinte '
+                             f'{escape(M.PLINTHES["nom"])}.'),
         ("Mur derrière la desserte", f'Papier peint {escape(pp["nom"])} ; motif ≈ {pp["motif"]} cm, de la plinthe au '
                                      "plafond, sur le mur nord du décroché (violet sur le plan)."),
         ("Bois", "Enfilade, étagères, desserte, meuble bas : chêne miel (comme les meubles hauts de la cuisine) ; table "

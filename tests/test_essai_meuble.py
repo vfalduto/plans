@@ -44,7 +44,10 @@ def test_meuble_verifie():
 
 def test_meuble_comparaison_plans():
     reperes = {id: [e.k for e in MEUBLE.vues(id)["plans"].elements] for id in IDS}
-    assert reperes == {"actuelle": ["elevation", "iso"], "rangs": ["elevation", "iso"], "escalier": ["elevation"]}
+    assert reperes == {"actuelle": ["elevation"], "rangs": ["elevation"], "escalier": ["elevation"]}
+    isos = {id: [e.k for e in MEUBLE.vues(id)["iso"].elements] for id in IDS}
+    assert isos == {"actuelle": ["iso"], "rangs": ["iso"], "escalier": []}
+    assert MEUBLE.vues("escalier")["iso"].vide == "Sans objet"
     boites = {re.search(r'viewBox="([^"]+)"', _scene(MEUBLE.vues(id)["plans"])).group(1) for id in IDS}
     assert boites == {"0 0 300 140"}
 

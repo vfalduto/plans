@@ -235,5 +235,7 @@ def test_lit_le_meuble_haut():
 
 
 def test_changements_comme_l_ancienne_page():
-    assert document.VERSION == "V8.5" and len(document.CHANGEMENTS) == 16
-    assert [(c.version, c.date, c.texte) for c in depuis_page(page_bas())] == [tuple(c) for c in document.CHANGEMENTS]
+    # les seize changements de l'ancienne page à l'identique, sous la V8.6 (onglet Iso) ajoutée en tête
+    assert document.VERSION == "V8.6" and len(document.CHANGEMENTS) == 17
+    assert document.CHANGEMENTS[0][:2] == ("V8.6", "17/11/2026") and "Iso" in document.CHANGEMENTS[0][2]
+    assert [(c.version, c.date, c.texte) for c in depuis_page(page_bas())] == [tuple(c) for c in document.CHANGEMENTS[1:]]

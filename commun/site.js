@@ -94,7 +94,12 @@ function lireEtat(hash) {
   let c = q.get("c");
   if (c === "1") c = ids.find(x => x !== base) || null;
   if (figee || !ids.includes(c) || c === base) c = null;
-  return {vue: vues.includes(chemin) ? chemin : vues[0], k: q.get("k") || "", c};
+  const k = q.get("k") || "";
+  let vue = vues.includes(chemin) ? chemin : vues[0];
+  // k absent de la vue mais présent dans une autre (ancienne adresse #plans?k=iso) : la vue qui le porte
+  const porte = v => sections.some(s => s.dataset.vue === v && s.querySelector(`.scene > .element[data-k="${CSS.escape(k)}"]:not(.b)`));
+  if (k && !porte(vue)) vue = vues.find(porte) || vue;
+  return {vue, k, c};
 }
 function fragment(etat) {
   const q = new URLSearchParams();

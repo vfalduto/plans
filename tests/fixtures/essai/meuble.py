@@ -6,7 +6,7 @@ Toutes ses longueurs viennent de `TABLETTES`, `PROFONDEUR` et `EPAISSEUR`. `actu
 """
 from commun.blocs import Achat, SectionAchats, achats, chiffres, nombre, tete, total_achats, vue_lecture
 from commun.blocs_construction import (Calepin, Colonne, DessinMeuble, Etape, calepinage, etapes, tableau_debit,
-                                       vue_plans)
+                                       vues_plans)
 from commun.modele import Changement, Document, Piece, Site, Variante, Vue
 
 VARIANTES = (
@@ -143,7 +143,7 @@ def vues(variante: str) -> dict[str, Vue]:
                 "montage": _montage(liste, variante)}
     dessins = [DessinMeuble("elevation", "Élévation", _elevation(variante))]
     if variante != "escalier":
-        dessins.append(DessinMeuble("iso", "Vue iso", _iso(variante), mesure=False))
+        dessins.append(DessinMeuble("iso", "Vue iso", _iso(variante), mesure=False, iso=True))
     liens = (("#plans", "Plans détaillés"),) if variante == "actuelle" else ()
     explication = tete(CHAPOS[variante], liens) + chiffres((
         (formule, "Tablettes"),
@@ -152,8 +152,8 @@ def vues(variante: str) -> dict[str, Vue]:
         (total_achats(ACHATS[variante], arrondi=ARRONDI.get(variante, True)), "Total"),
     ))
     return {
-        "plans": vue_plans(dessins, titre=f"Étagère {nom}", formule=formule,
-                           liens=[k for k in ("decoupe", "montage") if contenus[k]]),
+        **vues_plans(dessins, titre=f"Étagère {nom}", formule=formule,
+                     liens=[k for k in ("decoupe", "montage") if contenus[k]]),
         "decoupe": vue_lecture("decoupe", contenus["decoupe"]),
         "montage": vue_lecture("montage", contenus["montage"]),
         "achats": vue_lecture("achats", achats(ACHATS[variante], arrondi=ARRONDI.get(variante, True))),

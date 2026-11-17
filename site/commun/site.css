@@ -293,6 +293,7 @@ a.b-case[aria-current="page"] > .ico{color:inherit}
   .vues{position:fixed;left:0;right:0;bottom:0;z-index:20;height:var(--bas);padding:0 0 env(safe-area-inset-bottom);border-top:1px solid var(--line);background:var(--panel)}
   .vues a{flex:1;flex-direction:column;justify-content:center;gap:2px;padding:0 2px;font:500 13px var(--ui);border-bottom:0;border-top:3px solid transparent;margin-top:-1px;min-width:0}
   .vues a .ico{width:22px;height:22px}
+  .vues a span{max-width:100%;overflow:hidden;text-overflow:ellipsis}   /* six onglets à 390 px : le libellé actif ne déborde pas */
   .vues a[aria-current="page"]{border-top-color:var(--actif)}
   .planche{display:block;position:relative}
   .planche .scene{position:absolute;inset:0 0 48px 0}

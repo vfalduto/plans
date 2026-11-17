@@ -10,7 +10,7 @@ from pathlib import Path
 
 from commun.blocs import Achat, SectionAchats, achats, euros, note_source, vue_lecture
 from commun.blocs_construction import (Calepin, Colonne, DessinMeuble, Etape, calepinage, etapes, tableau_debit,
-                                       vue_plans)
+                                       vues_plans)
 from commun.modele import Vue
 from pieces.salon.etageres import calculs
 from pieces.salon.etageres.calculs import prix
@@ -45,9 +45,10 @@ def _scene(e, k):
     return svg
 
 
-def plans(e) -> Vue:
-    dessins = [DessinMeuble(k, nom, _scene(e, k), mesure=k not in ("iso", "detail")) for k, nom in REPERES]
-    return vue_plans(dessins, titre=f"Disposition {e.nom}", formule=e.kit, liens=("decoupe", "montage"))
+def plans(e) -> dict[str, Vue]:
+    dessins = [DessinMeuble(k, nom, _scene(e, k), mesure=k not in ("iso", "detail"), iso=k == "iso")
+               for k, nom in REPERES]
+    return vues_plans(dessins, titre=f"Disposition {e.nom}", formule=e.kit, liens=("decoupe", "montage"))
 
 
 # ------------------------------------------------------------------ Découpe
@@ -192,7 +193,7 @@ def vues(variante: str) -> dict[str, Vue]:
     from pieces.salon.etageres.explication import explication   # explication.py importe ce module
     e = calculs.etat(variante)
     return {
-        "plans": plans(e),
+        **plans(e),
         "decoupe": vue_lecture("decoupe", decoupe(e)),
         "montage": vue_lecture("montage", montage(e)),
         "achats": vue_lecture("achats", achats_vue(e)),

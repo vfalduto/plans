@@ -54,12 +54,12 @@ ANCRES_ENTREE = {"plan": "plan", "vues-3d": "iso", "principe": "explication", "a
 COUPES = ((r"^coupe-([a-d])-", "coupes?k={1}"),)
 HISTORIQUE_ENTREE = {"changements": "entree/amenagement/historique.html"}
 # anciennes ancres de salon-enfilade.html, posées en dur par son générateur
-ANCRES_ENFILADE = {"iso": "plans?k=iso", "meuble": "plans?k=elevation", "rendus": "explication",
+ANCRES_ENFILADE = {"iso": "iso?k=iso", "meuble": "plans?k=elevation", "rendus": "explication",
                    "construction": "explication", "materiaux": "explication", "comparaison": "explication",
                    "metod": "explication", "debit": "decoupe", "achats": "achats", "montage": "montage",
                    "valider": "explication"}
 # anciennes ancres de salon-etageres.html, posées en dur sur ses titres h2 par son générateur
-ANCRES_ETAGERES = {"dispositions": "explication", "iso": "plans?k=iso", "meuble": "plans?k=elevation",
+ANCRES_ETAGERES = {"dispositions": "explication", "iso": "iso?k=iso", "meuble": "plans?k=elevation",
                    "presentoir": "explication", "rendus": "explication", "materiaux": "explication",
                    "debit": "decoupe", "charges": "explication", "achats": "achats", "montage": "montage",
                    "valider": "explication"}
@@ -68,14 +68,14 @@ ANCRES_ETAGERES = {"dispositions": "explication", "iso": "plans?k=iso", "meuble"
 ANCRES_CHAMBRE = {"verifier": "explication", "plan-a-l-echelle": "plan", "elevations": "coupes",
                   "principe": "explication"}
 # anciennes ancres de sdb-meuble-bas.html : ses titres h2 et h3, et ses figures (f-…)
-ANCRES_SDB_BAS = {"iso": "plans?k=iso", "structure": "explication", "placard": "explication",
+ANCRES_SDB_BAS = {"iso": "iso?k=iso", "structure": "explication", "placard": "explication",
                   "f-placard": "plans?k=placard", "porte": "explication", "f-porte": "plans?k=porte",
                   "pieds": "explication", "f-joue": "plans?k=joue", "finition": "decoupe", "colonne": "explication",
                   "f-colonne": "plans?k=colonne", "f-colonne-dessus": "plans?k=colonne-dessus", "plan": "plans?k=plan",
                   "f-plan": "plans?k=plan", "elevation": "plans?k=elevation", "f-face": "plans?k=elevation",
                   "coupe": "plans?k=coupe", "f-coupe": "plans?k=coupe", "mesures": "explication"}
 # anciennes ancres de sdb-meuble-haut.html : ses h2 (posés en dur), et ceux des étapes (id de leur section, par ancres.js)
-ANCRES_SDB_HAUT = {"iso": "plans?k=iso", "montage": "montage", "comment-percer": "montage", "fixer-haut": "montage",
+ANCRES_SDB_HAUT = {"iso": "iso?k=iso", "montage": "montage", "comment-percer": "montage", "fixer-haut": "montage",
                    "fiches": "decoupe", "decoupe": "decoupe", "achats": "achats", "materiaux": "explication"}
 MOTIFS_SDB_HAUT = ((r"^etape-\d+$", "montage"), (r"^op-\d+-\d+$", "montage"))
 # sdb-meuble-achats.html (la liste d'achats des deux meubles) : la liste du haut seul et le total des deux sont dans

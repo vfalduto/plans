@@ -43,6 +43,10 @@ SURFACE = 8.1           # m², relevé
 # bain (indiqué par le client le 16/11/2026 : « en bas à gauche » vue du couloir, à 26 du sol) ; y à relever.
 PRISE_FIBRE = dict(x=110, y0=210, y1=218, z0=22, z1=30, axe=26)
 
+# Plinthes murales (V4.13 / Victor V1.7, rendus) : le long de tous les murs du couloir, arrêtées aux ouvertures ; peintes
+# comme les plinthes des meubles (option « plinthe »). Hauteur, épaisseur (cm).
+PLINTHE_MUR = dict(h=8, ep=1.5)
+
 # Portes : mur, ouverture (a → b le long du mur), côté des paumelles (a ou b), sens d'ouverture, type.
 #   mur n / s : a, b en x ; mur e / o : a, b en y ; face : coordonnée du nu du mur côté couloir.
 PORTES = [
@@ -112,7 +116,7 @@ CAMERAS = (
     # depuis le nord-ouest : penderie, angle arrondi, meuble à chaussures, porte d'entrée, portes de la SDB et de la chambre
     Camera("iso_no", "Isométrique nord-ouest", (CX - 640, CY - 600, 640), (CX, CY, 60), ortho=6.4,
            reglages=dict(murs="nop")),
-    # depuis le sud-est, sur la branche d'entrée : mur ouest, placard du meuble haut, angle
+    # depuis le sud-est, sur la branche d'entrée : mur ouest (cadres, miroir, interphone), angle
     Camera("iso_se", "Isométrique sud-est", (55 + 640, 270 + 600, 640), (60, 260, 130), ortho=5.4,
            reglages=dict(murs="sep", ombres=False, expo=-1.0)),
     # assis sur le banc (yeux à 112), vers la porte d'entrée ; plafond en place, perspective

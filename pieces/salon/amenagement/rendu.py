@@ -57,7 +57,7 @@ CHENE = {"tex": "noyer", "sens": "h", "teinte": R.NOYER["teinte"]}   # remplacé
 R.MATS.update({
     "s_mur":        (MUR, 0.9, {"enduit": True}),
     "s_plafond":    ("#F4F1EA", 0.95, {"enduit": True}),
-    "s_plinthe":    (MUR, 0.6, {}),
+    "s_plinthe":    (M.PLINTHES["couleur"], 0.6, {"laque": True}),   # plinthes de l'entrée
     "s_chene":      ("#A8743F", 0.5, CHENE),
     "s_chene_v":    ("#A8743F", 0.5, dict(CHENE, sens="v")),
     "s_noyer":      ("#45291A", 0.45, dict(R.NOYER, sens="h")),        # table Louis-Philippe ancienne
@@ -86,37 +86,50 @@ SANS_CHANFREIN = {"tapis", "mur", "linteau", "poutre", "sol", "plafond", "livres
 
 
 def carrelage():
-    """Grès cérame M.CARRELAGE : carreaux carrés, nuance par carreau, joints fins, légère brillance."""
+    """Carrelage M.CARRELAGE : la photo d'un carreau (texture), un carreau par cellule, retournée en miroir d'une cellule
+    à l'autre (moins de répétition visible), joints fins ; position dans le monde, pour que les seuils suivent le sol."""
     c = M.CARRELAGE
     m = bpy.data.materials.new("s_carrelage")
     m.use_nodes = True
     nt = m.node_tree
     bsdf = nt.nodes["Principled BSDF"]
-    tc = nt.nodes.new("ShaderNodeTexCoord")
-    br = nt.nodes.new("ShaderNodeTexBrick")
-    br.offset = 0.0
-    br.squash = 1.0
+    geo = nt.nodes.new("ShaderNodeNewGeometry")
     t = c["taille"] / 100
+    # carreaux : la photo, une image par carreau (échelle 1 / taille), retournée en miroir au-delà de chaque bord
+    mp = nt.nodes.new("ShaderNodeMapping")
+    mp.inputs["Scale"].default_value = (1 / t, 1 / t, 1 / t)
+    nt.links.new(geo.outputs["Position"], mp.inputs["Vector"])
+    img = nt.nodes.new("ShaderNodeTexImage")
+    img.image = bpy.data.images.load(os.path.join(RACINE, c["texture"]), check_existing=True)
+    img.extension = "MIRROR"
+    img.interpolation = "Cubic"
+    nt.links.new(mp.outputs["Vector"], img.inputs["Vector"])
+    # joints : le motif de briques aligné sur les mêmes cellules, son facteur vaut 1 dans le joint
+    br = nt.nodes.new("ShaderNodeTexBrick")
+    br.offset, br.squash = 0.0, 1.0
     br.inputs["Scale"].default_value = 1.0
     br.inputs["Brick Width"].default_value = t
     br.inputs["Row Height"].default_value = t
     br.inputs["Mortar Size"].default_value = c["joint"] / 100
     br.inputs["Mortar Smooth"].default_value = 0.2
     br.inputs["Bias"].default_value = 0.0
-    br.inputs["Color1"].default_value = R.hexrgb(c["couleur"])
-    br.inputs["Color2"].default_value = R.hexrgb(c["nuance"])
-    br.inputs["Mortar"].default_value = R.hexrgb(c["couleur_joint"])
-    nt.links.new(tc.outputs["Object"], br.inputs["Vector"])
-    # voile de pierre dans chaque carreau
-    n = R.noise(nt, 6.0, tc.outputs["Object"], detail=5.0)
+    nt.links.new(geo.outputs["Position"], br.inputs["Vector"])
+    # la photo, aplanie, sort pâle sous la lumière du couloir : plus de contraste (gamma) et teinte beige du sol en place
+    gam = nt.nodes.new("ShaderNodeGamma")
+    gam.inputs["Gamma"].default_value = c["gamma"]
+    nt.links.new(img.outputs["Color"], gam.inputs["Color"])
+    teinte = nt.nodes.new("ShaderNodeMix")
+    teinte.data_type, teinte.blend_type = "RGBA", "MULTIPLY"
+    teinte.inputs["Factor"].default_value = 1.0
+    nt.links.new(gam.outputs["Color"], teinte.inputs["A"])
+    teinte.inputs["B"].default_value = R.hexrgb(c["couleur"])
     mix = nt.nodes.new("ShaderNodeMix")
     mix.data_type = "RGBA"
-    mix.blend_type = "MULTIPLY"
-    mix.inputs["Factor"].default_value = 0.12
-    nt.links.new(br.outputs["Color"], mix.inputs["A"])
-    nt.links.new(n.outputs["Color"], mix.inputs["B"])
+    nt.links.new(br.outputs["Fac"], mix.inputs["Factor"])
+    nt.links.new(teinte.outputs["Result"], mix.inputs["A"])
+    mix.inputs["B"].default_value = R.hexrgb(c["couleur_joint"])
     nt.links.new(mix.outputs["Result"], bsdf.inputs["Base Color"])
-    nt.links.new(R.map_range(nt, br.outputs["Fac"], 0.35, 0.8), bsdf.inputs["Roughness"])   # joints mats
+    nt.links.new(R.map_range(nt, br.outputs["Fac"], 0.45, 0.85), bsdf.inputs["Roughness"])   # carreau satiné, joint mat
     bump = nt.nodes.new("ShaderNodeBump")
     bump.inputs["Strength"].default_value = 0.15
     bump.invert = True
@@ -349,13 +362,14 @@ def build_scene():
     bpy.ops.wm.read_factory_settings(use_empty=True)
     sc = bpy.context.scene
     rnd = random.Random(4)
-    # sol carrelé, plafond, plinthes (couleur des murs)
+    # sol carrelé (celui de l'entrée), plafond, plinthes (celles de l'entrée)
     boite("sol__carrelage", 0, M.L, 0, M.P, -2, 0, "s_carrelage", chanfrein=False)
     boite("sol__couloir", -130, 0, M.PASSAGE["y0"] - 10, M.PASSAGE["y1"] + 10, -2, 0, "s_carrelage", chanfrein=False)
     boite("plafond__salon", -12, M.L + 12, -12, M.P + 12, M.H, M.H + 2, "s_plafond", chanfrein=False)
-    pl, ep = 8, 1.5
+    pl, ep = M.PLINTHES["h"], M.PLINTHES["ep"]
     boite("plinthe__nord", 0, M.DECROCHE["x0"], 0, ep, 0, pl, "s_plinthe", False)
     boite("plinthe__nord_decroche", M.DECROCHE["x0"], M.L, M.DECROCHE["y"], M.DECROCHE["y"] + ep, 0, pl, "s_plinthe", False)
+    boite("plinthe__nord_retour", M.DECROCHE["x0"] - ep, M.DECROCHE["x0"], ep, M.DECROCHE["y"] + ep, 0, pl, "s_plinthe", False)
     boite("plinthe__ouest_n", 0, ep, 0, M.PASSAGE["y0"] - M.PASSAGE["cadre"], 0, pl, "s_plinthe", False)
     boite("plinthe__coffre_n", 0, M.COFFRE["x1"], M.COFFRE["y0"] - ep, M.COFFRE["y0"], 0, pl, "s_plinthe", False)
     boite("plinthe__coffre_e", M.COFFRE["x1"], M.COFFRE["x1"] + ep, M.COFFRE["y0"], M.P, 0, pl, "s_plinthe", False)

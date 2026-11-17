@@ -5,7 +5,7 @@ from dataclasses import dataclass, field
 
 VUES = {
     "amenagement": ("plan", "coupes", "iso", "camera", "explication"),
-    "construction": ("plans", "decoupe", "montage", "achats", "explication"),
+    "construction": ("plans", "iso", "decoupe", "montage", "achats", "explication"),
 }
 
 NOMS_VUES = {

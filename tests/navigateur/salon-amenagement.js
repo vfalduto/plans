@@ -8,7 +8,7 @@
      localStorage, les défauts.
    - Dessins : aucun aplat noir, aucun texte hors du viewBox, dans chaque état des options.
    - Explication : 17 cartes « Principe », « Montrer sur le plan », liens vers les deux meubles.
-   - Anciennes adresses (salon-v4.html et ses ancres), historique (28 changements, V4.26 en tête, trois versions
+   - Anciennes adresses (salon-v4.html et ses ancres), historique (29 changements, V4.27 en tête, trois versions
      figées) et la page sans JavaScript. */
 async page => {
   const BASE = new URL(page.url()).origin;
@@ -208,7 +208,7 @@ async page => {
     for (const e of document.querySelectorAll(`section[data-vue="${v}"] .scene [data-si]`))
       if (vu(e)) for (const j of e.dataset.si.split(" ")) jetons.add(j);
     return {options: document.documentElement.dataset.options, jetons: [...jetons].sort(),
-            images: [...document.querySelectorAll(`section[data-vue="${v}"] .scene img`)].filter(vu).map(i => i.getAttribute("src"))};
+            images: [...document.querySelectorAll(`section[data-vue="${v}"] .scene img`)].filter(vu).map(i => i.getAttribute("src").split("?")[0])};   // sans l’empreinte ?v=
   }, vue);
   await partie("personnaliser", async () => {
     await page.setViewportSize({width: 1440, height: 900});
@@ -416,8 +416,8 @@ async page => {
       premiere: (document.querySelector("ol.fil li") || {textContent: ""}).textContent,
     }));
     verifier(egal(h.figees, ["V3.1", "V2.1", "V1"]), `historique : versions figées ${JSON.stringify(h.figees)}`);
-    verifier(egal(h.journaux, [28]), `historique : changements ${JSON.stringify(h.journaux)}`);
-    verifier(h.premiere.includes("V4.26"), `historique : la première entrée n'est pas V4.26 : « ${h.premiere.slice(0, 60)} »`);
+    verifier(egal(h.journaux, [29]), `historique : changements ${JSON.stringify(h.journaux)}`);
+    verifier(h.premiere.includes("V4.27"), `historique : la première entrée n'est pas V4.27 : « ${h.premiere.slice(0, 60)} »`);
     const statuts = await page.evaluate(liens => Promise.all(liens.map(l => fetch(l).then(x => x.status))), h.liens);
     verifier(statuts.length === 3 && statuts.every(s => s === 200), `historique : versions figées introuvables ${JSON.stringify(statuts)}`);
   });

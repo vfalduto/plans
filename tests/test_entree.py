@@ -10,9 +10,9 @@ def test_piece():
 
 
 def test_versions():
-    assert document.VERSION == "V4.10"
-    assert victor.VERSION == "V1.5"
-    assert victor.CHANGEMENTS[0][0] == "V1.5"
+    assert document.VERSION == "V4.13"
+    assert victor.VERSION == "V1.7"
+    assert victor.CHANGEMENTS[0][0] == "V1.7"
 
 
 def test_cameras_communes():
@@ -93,9 +93,9 @@ def _plan(variante):
 def test_plan_zones():
     v, e = _plan("principale")
     assert e.k == ""
-    assert len(balises(e.scene, "rect", classe="zone")) == 5
+    assert len(balises(e.scene, "rect", classe="zone")) == 4
     modeles = balises(e.fiche + v.fiche, "template")
-    assert len(modeles) == 5 and all("data-meuble" in m for m in modeles)
+    assert len(modeles) == 4 and all("data-meuble" in m for m in modeles)
     for z in balises(e.scene, "rect", classe="zone"):
         assert {"data-meuble", "tabindex", "role", "aria-label"} <= set(z)
     assert [z["data-meuble"] for z in balises(e.scene, "rect", classe="zone")] == [m["data-meuble"] for m in modeles]
@@ -126,9 +126,9 @@ def _zones_lues(variante):
 ZONES_ATTENDUES = {
     "principale": [((92, 0, 187, 38), "95 × 38, h 45 cm"), ((85, 170, 110, 291), "121 × 25, h 123 cm"),
                    ((110, 170, 185, 208), "75 × 35, h 244 cm"),
-                   ((0, 170, 85, 208), "110 × 38, h 46, dessous à 204 cm"), ((-10, 83, 14, 160), "vantail de 77")],
-    "victor": [((73, 171, 194, 208), "121 × 37, h 53 cm"), ((73, 208, 110, 283), "75 × 35, h 236 cm"),
-               ((82, 284, 110, 373), "89 × 28, h 25 cm"), ((0, 215, 9, 350), "mur ouest de l'entrée")],
+                   ((-10, 83, 14, 160), "vantail de 77")],
+    "victor": [((73, 171, 194, 208), "121 × 37, h 53 cm"), ((73, 208, 110, 283), "75 × 35, h 244 cm"),
+               ((95, 0, 185, 30), "90 × 30, h 80 cm"), ((0, 215, 9, 350), "mur ouest de l'entrée")],
 }
 
 
@@ -153,8 +153,8 @@ def test_zone_confrontee_a_son_meuble(variante):
         assert cotes.startswith(f"{longueur:g} × "), (variante, z["meuble"], cotes)
 
 
-@pytest.mark.parametrize("variante,meuble,bord", [("principale", "BANC", "x1"), ("principale", "MEUBLE_HAUT", "y1"),
-                                                  ("victor", "PLANCHE", "y1"), ("victor", "CHAUSSURES", "z1")])
+@pytest.mark.parametrize("variante,meuble,bord", [("principale", "BANC", "x1"), ("principale", "PENDERIE", "x1"),
+                                                  ("victor", "CONSOLE", "x1"), ("victor", "CHAUSSURES", "z1")])
 def test_zone_suit_son_meuble(monkeypatch, variante, meuble, bord):
     # un meuble retouché : sa zone et les cotes de sa fiche suivent, sans rien recopier
     M = DESSINS[variante][0]
@@ -213,10 +213,13 @@ def test_document():
     d = document.DOCUMENT
     assert (d.piece, d.id, d.nom, d.type) == ("entree", "amenagement", "Aménagement", "amenagement")
     assert [x.id for x in d.variantes] == ["principale", "victor"]
-    assert d.variantes[0].version == "V4.10" and d.variantes[1].version == "V1.5"
-    teinte, pax, plinthe, mh = d.options
+    assert d.variantes[0].version == "V4.13" and d.variantes[1].version == "V1.7"
+    teinte, pax, plinthe, murs, coussin = d.options
+    assert (coussin.id, coussin.css, coussin.filtre, coussin.defaut) == ("coussin", "--coussin", True, victor.COUSSIN_DEFAUT)
+    assert len(coussin.valeurs) == len(victor.COUSSIN_TEINTES)
     assert (plinthe.id, plinthe.css, plinthe.defaut) == ("plinthe", "--plinthe", document.PLINTHE_TEINTE)
-    assert (mh.id, mh.type, mh.defaut, [v.code for v in mh.valeurs]) == ("meuble-haut", "choix", "avec", ["avec", "sans"])
+    assert (murs.id, murs.css, murs.filtre, murs.defaut) == ("murs", "--mur", True, document.MUR_TEINTE)
+    assert len(murs.valeurs) == 52
     assert (pax.id, pax.css, pax.filtre, pax.defaut) == ("pax", "--pax", True, document.PAX_TEINTE)
     assert all(x.groupe != "Peinture murale seulement" for x in pax.valeurs) and len(pax.valeurs) == 40
     assert (teinte.id, teinte.css, teinte.filtre, teinte.defaut) == ("teinte", "--india", True, plum.DEFAUT)
@@ -231,7 +234,7 @@ def test_document():
 
 
 def test_plan_role_group():
-    for variante, n in (("principale", 5), ("victor", 4)):
+    for variante, n in (("principale", 4), ("victor", 4)):
         _, e = _plan(variante)
         (svg,) = balises(e.scene, "svg")
         assert svg["role"] == "group" and svg["aria-label"]
@@ -299,7 +302,7 @@ def test_explication_complete():
     total = round(sum(q * p for _, _, q, p in document.IKEA))
     assert re.search(rf"Total.*?≈ {total},00 €", scene, re.S)
     (liste,) = re.findall(r'<ul class="liste">(.*?)</ul>', scene, re.S)
-    assert liste.count("<li>") == 13
+    assert liste.count("<li>") == 14
     assert "Portes pour ce caisson" in scene
     for variante in ("principale", "victor"):
         texte = _explication(variante)
@@ -310,7 +313,7 @@ def test_explication_complete():
     victor_total = sum(q * p for _, _, q, p in victor.IKEA)
     assert re.search("Total.*?" + f"{victor_total:.2f}".replace(".", ",") + " €", _explication("victor"), re.S)
     (liste,) = re.findall(r'<ul class="liste">(.*?)</ul>', _explication("victor"), re.S)
-    assert liste.count("<li>") == 8
+    assert liste.count("<li>") == 9
 
 
 def test_alt_sans_texte_visible():

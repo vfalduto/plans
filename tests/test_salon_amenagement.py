@@ -14,7 +14,7 @@ def test_emprises_une_seule_source():
 
 
 def test_changements():
-    assert len(amenagement.CHANGEMENTS) == 28
+    assert len(amenagement.CHANGEMENTS) == 29   # 28 à la bascule, puis V4.27
     assert amenagement.CHANGEMENTS[0][0] == amenagement.VERSION
 
 

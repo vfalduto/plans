@@ -6,7 +6,7 @@ from pieces.sdb.meuble_haut import dessins, document, vues
 from tests.outils import RACINE, charger_site
 from tests.sdb_anciennes import ancien
 
-ANCRES = {"iso": "plans?k=iso", "montage": "montage", "comment-percer": "montage", "fixer-haut": "montage",
+ANCRES = {"iso": "iso?k=iso", "montage": "montage", "comment-percer": "montage", "fixer-haut": "montage",
           "fiches": "decoupe", "decoupe": "decoupe", "achats": "achats", "materiaux": "explication"}
 ANCIENNES_ANCRES = ("iso", "montage", "etape-8", "etape-9", "etape-10", "op-8-1", "op-8-4", "op-9-3", "op-10-1",
                     "op-10-3", "comment-percer", "fixer-haut", "fiches", "decoupe", "achats", "materiaux",
@@ -18,15 +18,17 @@ def test_document():
     assert (d.piece, d.id, d.nom, d.type, d.css, d.generer, d.options) == \
         ("sdb", "meuble-haut", "Meuble haut", "construction", dessins.CSS_DOCUMENT, vues.vues, ())
     (v,) = d.variantes
-    assert (v.id, v.nom, v.version, v.figees) == ("", "Meuble haut", "V6.4", document.FIGEES)
+    assert (v.id, v.nom, v.version, v.figees) == ("", "Meuble haut", "V6.5", document.FIGEES)
     assert v.figees[0] == ("V6.2", "archives/sdb-meuble-v4-haut.html")
-    assert len(v.changements) == 2 and v.changements[0].version == "V6.4"
+    assert len(v.changements) == 3 and [c.version for c in v.changements] == ["V6.5", "V6.4", "V6.3"]
 
 
 def test_changements_comme_modele_py():
+    """V6.4 et V6.3 à l'identique de modele.py (figé à la V6.4) ; la V6.5 (onglet Iso) s'ajoute en tête."""
     M = ancien("modele")
-    assert [tuple(c) for c in document.CHANGEMENTS] == [c for c in M.CHANGEMENTS if c[0] in ("V6.4", "V6.3")]
-    assert document.VERSION == M.VERSION == "V6.4"
+    assert [tuple(c) for c in document.CHANGEMENTS[1:]] == [c for c in M.CHANGEMENTS if c[0] in ("V6.4", "V6.3")]
+    assert M.VERSION == "V6.4" and document.VERSION == document.CHANGEMENTS[0][0] == "V6.5"
+    assert document.CHANGEMENTS[0][1] == "17/11/2026" and "Iso" in document.CHANGEMENTS[0][2]
 
 
 def test_archives_existent():
@@ -54,8 +56,9 @@ def test_redirection_des_achats():
 
 
 def test_journal_garde_deux_changements():
+    """Les deux changements de modele.py restent au journal, sous la V6.5 (onglet Iso)."""
     lignes = [e for e in entrees(charger_site().SITE) if (e.piece, e.document) == ("Salle de bain", "Meuble haut")]
-    assert [e.version for e in lignes] == ["V6.4", "V6.3"]
+    assert [e.version for e in lignes] == ["V6.5", "V6.4", "V6.3"]
     assert [(e.version, e.texte) for e in lignes] == [(c.version, c.texte) for c in document.DOCUMENT.variantes[0].changements]
 
 

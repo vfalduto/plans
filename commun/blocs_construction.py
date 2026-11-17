@@ -1,6 +1,6 @@
 """Blocs des vues d'un document de construction (un meuble) : Plans, Découpe, Montage, Achats.
 
-Plans est une vue de scène (`vue_plans`) ; Découpe, Montage, Achats et Explication se font par
+Plans et Iso sont deux vues de scène (`vues_plans` : les dessins `iso` vont dans Iso, les autres dans Plans) ; Découpe, Montage, Achats et Explication se font par
 `vue_lecture(id, <blocs concaténés>)`. Un bloc de section (`tableau_debit`, `calepinage`, `etapes`, `rendus_meuble`)
 écrit son `<h2>` depuis `titre`, et ne rend rien (`""`) quand sa séquence est vide : `vue_lecture` grise alors
 l'onglet. Titres, noms, cotes et cellules de débit sont échappés ; les textes longs (`corps` d'une étape, `outils`,
@@ -24,11 +24,13 @@ def _e(texte):
 @dataclass(frozen=True)
 class DessinMeuble:
     """`k` : « elevation », « iso » (repères de la comparaison) ou un repère stable de la page ; `nom` du bouton ;
-    `scene` SVG ; `mesure` faux : Mesurer est sans objet sur ce dessin (une iso axonométrique, par exemple)."""
+    `scene` SVG ; `mesure` faux : Mesurer est sans objet sur ce dessin (une iso axonométrique, par exemple) ;
+    `iso` vrai : le dessin va dans la vue Iso, pas dans Plans."""
     k: str
     nom: str
     scene: str
     mesure: bool = True
+    iso: bool = False
 
 
 def _scene(d):
@@ -47,10 +49,14 @@ def _scene(d):
 
 
 def vue_plans(dessins: Sequence[DessinMeuble], titre: str, formule: str = "",
-              liens: Sequence[str] = ("decoupe", "montage"), legende: str = "", vide: str = "Sans objet") -> Vue:
-    """Un élément par dessin, même `titre` de fiche ; la fiche : cotes (`formule`), liens vers d'autres vues, légende."""
+              liens: Sequence[str] = ("decoupe", "montage"), legende: str = "", vide: str = "Sans objet",
+              id: str = "plans") -> Vue:
+    """Un élément par dessin, même `titre` de fiche ; la fiche : cotes (`formule`), liens vers d'autres vues, légende.
+    `id` : « plans » ou « iso »."""
+    if id not in ("plans", "iso"):
+        raise ValueError(f"vue_plans : id {id!r} ; ids acceptés : plans, iso")
     if not dessins:
-        return Vue("plans", [], vide=vide)
+        return Vue(id, [], vide=vide)
     for i in liens:
         if not isinstance(i, str) or i not in VUES["construction"]:
             raise ValueError(f"vue_plans, liens : {i!r} n'est pas un id de vue ; ids acceptés : "
@@ -63,7 +69,17 @@ def vue_plans(dessins: Sequence[DessinMeuble], titre: str, formule: str = "",
     if legende:
         fiche += f"<h3>Légende</h3>{legende}"
     outils = ("zoom", "mesure") if any(d.mesure for d in dessins) else ("zoom",)
-    return Vue("plans", elements, fiche=fiche, outils=outils)
+    return Vue(id, elements, fiche=fiche, outils=outils)
+
+
+def vues_plans(dessins: Sequence[DessinMeuble], titre: str, formule: str = "",
+               liens: Sequence[str] = ("decoupe", "montage"), legende: str = "") -> dict[str, Vue]:
+    """Les vues « plans » (dessins cotés, à l'échelle) et « iso » (dessins `iso`), même fiche ; Iso a pour lien
+    Plans en plus de `liens`, et pas de légende."""
+    plans = [d for d in dessins if not d.iso]
+    isos = [d for d in dessins if d.iso]
+    return {"plans": vue_plans(plans, titre, formule, liens, legende),
+            "iso": vue_plans(isos, titre, formule, ("plans", *(i for i in liens if i != "plans")), id="iso")}
 
 
 # ------------------------------------------------------------------ Découpe

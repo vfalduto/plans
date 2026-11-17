@@ -1,5 +1,5 @@
 import re
-from pieces.sdb.meuble_bas import modele as B, vues
+from pieces.sdb.meuble_bas import document, modele as B, vues
 from tests.sdb_anciennes import corrige, entre, morceaux, page_achats, page_bas, section, texte
 
 V = vues.vues("")
@@ -39,6 +39,8 @@ def test_achats():
     # le titre « Achats » de l'ancienne page est devenu l'onglet ; chaque paragraphe est pris entier
     vieux = entre(page_bas(), "<p>Le meuble bas entier", "</p>") + "</p>" \
         + section(page_achats(), "bas").split("<div", 1)[0] + "<p>" + section(page_achats(), "bas").split('<p class="note">', 1)[1]
+    # la phrase d'en-tête nomme la version courante du meuble bas (V8.5 sur l'ancienne page)
+    vieux = vieux.replace("le meuble bas V8.5</a>", f"le meuble bas {document.VERSION}</a>")
     for m in morceaux(vieux):
         assert corrige(m) in texte(s), m
 

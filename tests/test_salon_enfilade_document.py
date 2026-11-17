@@ -5,7 +5,7 @@ from commun.modele import Changement
 from pieces.salon.enfilade import dessins, document, vues
 from tests.outils import RACINE, charger_site
 
-ANCRES = {"iso": "plans?k=iso", "meuble": "plans?k=elevation", "rendus": "explication", "construction": "explication",
+ANCRES = {"iso": "iso?k=iso", "meuble": "plans?k=elevation", "rendus": "explication", "construction": "explication",
           "materiaux": "explication", "comparaison": "explication", "metod": "explication", "debit": "decoupe",
           "achats": "achats", "montage": "montage", "valider": "explication"}
 
@@ -15,8 +15,8 @@ def test_document():
     assert (d.piece, d.id, d.nom, d.type, d.css, d.generer) == ("salon", "enfilade", "Enfilade", "construction",
                                                                dessins.CSS, vues.vues)
     (v,) = d.variantes
-    assert (v.id, v.version, v.figees) == ("", "V1.6", ())
-    assert v.changements == tuple(Changement(*c) for c in document.CHANGEMENTS) and len(v.changements) == 7
+    assert (v.id, v.version, v.figees) == ("", "V1.7", ())
+    assert v.changements == tuple(Changement(*c) for c in document.CHANGEMENTS) and len(v.changements) == 8
 
 
 def test_site_declare_l_enfilade():
@@ -32,8 +32,9 @@ def test_redirection():
 
 
 def test_journal_garde_sept_changements():
+    """Les sept changements de l'ancienne page restent au journal, sous la V1.7 (onglet Iso)."""
     lignes = [e for e in entrees(charger_site().SITE) if (e.piece, e.document) == ("Salon", "Enfilade")]
-    assert [e.version for e in lignes] == ["V1.6", "V1.5", "V1.4", "V1.3", "V1.2", "V1.1", "V1.0"]
+    assert [e.version for e in lignes] == ["V1.7", "V1.6", "V1.5", "V1.4", "V1.3", "V1.2", "V1.1", "V1.0"]
 
 
 def test_ancienne_page_retiree():

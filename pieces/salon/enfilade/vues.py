@@ -9,7 +9,7 @@ from pathlib import Path
 
 from commun.blocs import Achat, SectionAchats, achats, euros, note_source, vue_lecture
 from commun.blocs_construction import (Calepin, Colonne, DessinMeuble, Etape, calepinage, etapes, tableau_debit,
-                                       vue_plans)
+                                       vues_plans)
 from commun.modele import Vue
 from pieces.salon.enfilade import chiffrage
 from pieces.salon.enfilade.chiffrage import debit, degagements, format_de, lettre, poids_caisson, volume_utile
@@ -70,17 +70,17 @@ def alts(ch: dict) -> dict[str, str]:
     }
 
 
-def _plans(ch):
+def _plans(ch) -> dict[str, Vue]:
     g, a = ch["g"], alts(ch)
     dessins = [
         DessinMeuble("elevation", "Élévation", en_cm(face_svg(g, a["elevation"]), ECHELLES["elevation"])),
-        DessinMeuble("iso", "Vue iso", iso(False, a["iso"]), mesure=False),
-        DessinMeuble("ouverte", "Iso ouverte", iso(True, a["ouverte"]), mesure=False),
+        DessinMeuble("iso", "Vue iso", iso(False, a["iso"]), mesure=False, iso=True),
+        DessinMeuble("ouverte", "Iso ouverte", iso(True, a["ouverte"]), mesure=False, iso=True),
         DessinMeuble("profil", "Profils", en_cm(profil_svg(g, a["profil"]), ECHELLES["profil"])),
         DessinMeuble("dessus", "Dessus", en_cm(dessus_svg(g, a["dessus"]), ECHELLES["dessus"])),
         DessinMeuble("eclate", "Éclatée", en_cm(eclate_svg(g, a["eclate"]), ECHELLES["eclate"])),
     ]
-    return vue_plans(dessins, titre="Enfilade du mur ouest", formule=formule_longueur(g))
+    return vues_plans(dessins, titre="Enfilade du mur ouest", formule=formule_longueur(g))
 
 
 # ------------------------------------------------------------------ Découpe
@@ -223,7 +223,7 @@ def vues(variante: str) -> dict[str, Vue]:
     ch = chiffrage.retenu(chs)
     sections = _sections_achats(ch)
     return {
-        "plans": _plans(ch),
+        **_plans(ch),
         "decoupe": vue_lecture("decoupe", _decoupe(ch)),
         "montage": vue_lecture("montage", _montage(ch)),
         "achats": vue_lecture("achats", _achats(ch, sections)),

@@ -178,7 +178,8 @@ def test_tableaux_et_listes_de_l_ancienne_page(ancienne_page):
         a = sections(h2)
         # le début de la section (jusqu'à la première note) se retrouve tel quel
         for morceau in re.split(r"(?<=\.)\s", a):
-            if len(morceau) > 25 and "Source" not in morceau:
+            # V4.27 : sol et plinthes de l'entrée, la ligne Sol / Murs et plinthes a changé
+            if len(morceau) > 25 and "Source" not in morceau and not morceau.startswith(("SolCarrelage", "plinthes de")):
                 assert morceau in nouveau, (h2, morceau)
 
 
@@ -262,19 +263,19 @@ def test_images_rendues():
 def test_document():
     assert (DOC.piece, DOC.id, DOC.nom, DOC.type) == ("salon", "amenagement", "Aménagement", "amenagement")
     (v,) = DOC.variantes
-    assert (v.id, v.nom, v.version) == ("", "Principale", "V4.26")
+    assert (v.id, v.nom, v.version) == ("", "Principale", "V4.27")
     assert DOC.css == dessins.CSS_DESSINS
     assert document.DOCUMENT is DOC
 
 
 def test_changements_et_journal():
     (v,) = DOC.variantes
-    assert len(v.changements) == 28 and v.changements[0].version == "V4.26" and v.changements[-1].version == "V4.0"
+    assert len(v.changements) == 29 and v.changements[0].version == "V4.27" and v.changements[-1].version == "V4.0"
     for c, (version, date, texte) in zip(v.changements, document.CHANGEMENTS, strict=True):
         assert (c.version, c.date, c.texte) == (version, date, texte.replace(" · ", ", "))
     site = Site((Piece("salon", "Salon", (DOC,)),))
     lignes = [e for e in entrees(site) if (e.piece, e.document) == ("Salon", "Aménagement")]
-    assert len(lignes) == 28 and all(e.variante is None for e in lignes)
+    assert len(lignes) == 29 and all(e.variante is None for e in lignes)
 
 
 def test_figees():

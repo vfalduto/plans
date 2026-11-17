@@ -1,19 +1,22 @@
 /* @site reel : le meuble bas de la salle de bain sur le vrai site/, construit par python3 site.py (lancer.sh le sert).
-   - Vues : les cinq vues et les onze repères de Plans, à 1440, 1100 et 390 px : sans erreur de console ni réponse en
-     erreur, rien ne déborde (onze boutons dans la fiche, tableaux à trois colonnes).
+   - Vues : les six vues, les huit repères de Plans et les trois d'Iso (iso, iso-ouvert, éclaté), à 1440, 1100 et
+     390 px : sans erreur de console ni réponse en erreur, rien ne déborde (huit boutons dans la fiche de Plans,
+     tableaux à trois colonnes).
    - Entrée sans fragment : Plans, élévation ; ni Comparer, ni variante, ni Personnaliser.
-   - Mesurer : les deux bouts de la plus longue cote de l'élévation donnent « Mesuré : 115 cm » ; caché sur l'iso.
-   - Fiche de Plans : les liens Découpe et Montage.
+   - Mesurer : les deux bouts de la plus longue cote de l'élévation donnent « Mesuré : 115 cm » ; pas de Mesurer
+     dans Iso ; l'ancienne adresse #plans?k=iso ouvre l'onglet Iso (#iso?k=iso).
+   - Fiche de Plans : les liens Découpe et Montage ; fiche d'Iso : le lien Plans.
    - Dessins : aucun aplat noir, aucun texte hors du viewBox (exceptions dans GARDES).
    - Achats : totaux, lien « Meuble haut » vers les achats du meuble haut.
-   - Anciennes adresses, historique (seize entrées, V8.5 en tête, onze versions figées), redirections, accueil, et la
-     page sans JavaScript. */
+   - Anciennes adresses (#iso → #iso?k=iso), historique (dix-sept entrées, V8.6 en tête, onze versions figées),
+     redirections, accueil, et la page sans JavaScript. */
 async page => {
   const BASE = new URL(page.url()).origin;
   const DOC = `${BASE}/sdb/meuble-bas/`;
-  const VUES = ["plans", "decoupe", "montage", "achats", "explication"];
-  const REPERES = ["elevation", "iso", "iso-ouvert", "eclate", "plan", "coupe", "placard", "porte", "joue", "colonne",
-                    "colonne-dessus"];
+  const VUES = ["plans", "iso", "decoupe", "montage", "achats", "explication"];
+  const REPERES = {plans: ["elevation", "plan", "coupe", "placard", "porte", "joue", "colonne", "colonne-dessus"],
+                   iso: ["iso", "iso-ouvert", "eclate"]};   // repères par vue
+  const TOUS = Object.entries(REPERES).flatMap(([v, ks]) => ks.map(k => [v, k]));   // [vue, repère]
   const LARGEURS = [[1440, 900], [1100, 800], [390, 844]];
   const echecs = [], erreurs = [];
   const verifier = (vrai, message) => { if (!vrai) echecs.push(message); };
@@ -59,11 +62,11 @@ async page => {
     }
     return res;
   });
-  // le repère k de Plans est affiché
-  const repereAffiche = (p, k, t) => attendre(p, k => {
-    const e = document.querySelector(`section[data-vue="plans"] .scene > .element[data-k="${k}"]`);
+  // le repère k de la vue (plans ou iso) est affiché
+  const repereAffiche = (p, vue, k, t) => attendre(p, ([v, k]) => {
+    const e = document.querySelector(`section[data-vue="${v}"] .scene > .element[data-k="${k}"]`);
     return e && e.checkVisibility();
-  }, k, `${t} : le repère ne s'affiche pas`);
+  }, [vue, k], `${t} : le repère ne s'affiche pas`);
   const vueAffichee = (p, vue, t) => attendre(p, v => {
     const s = document.querySelector(`section[data-vue="${v}"]`);
     return s && s.checkVisibility();
@@ -80,12 +83,12 @@ async page => {
     for (const [largeur, hauteur] of LARGEURS) {
       await page.setViewportSize({width: largeur, height: hauteur});
       for (const vue of VUES) {
-        const ks = vue === "plans" ? REPERES : [""];
+        const ks = REPERES[vue] || [""];
         for (const k of ks) {
           const t = `${largeur} px, ${vue}${k ? " " + k : ""}`;
           await ouvrir(page, `${DOC}#${vue}${k ? "?k=" + k : ""}`);
           await vueAffichee(page, vue, t);
-          if (k) await repereAffiche(page, k, t);
+          if (k) await repereAffiche(page, vue, k, t);
           const e = await page.evaluate(() => ({
             vues: [...document.querySelectorAll("#contenu > section.vue")].filter(s => s.checkVisibility()).map(s => s.dataset.vue),
             hash: location.hash}));
@@ -101,7 +104,7 @@ async page => {
   await partie("sans fragment", async () => {
     await page.setViewportSize({width: 1440, height: 900});
     await ouvrir(page, DOC);
-    await repereAffiche(page, "elevation", "sans fragment");
+    await repereAffiche(page, "plans", "elevation", "sans fragment");
     const e = await page.evaluate(() => ({
       vues: [...document.querySelectorAll("#contenu > section.vue")].filter(s => s.checkVisibility()).map(s => s.dataset.vue),
       elements: [...document.querySelectorAll('section[data-vue="plans"] .scene > .element')].filter(x => x.checkVisibility()).map(x => x.dataset.k),
@@ -115,7 +118,7 @@ async page => {
   await partie("Mesurer", async () => {
     await page.setViewportSize({width: 1440, height: 900});
     await ouvrir(page, DOC + "#plans?k=elevation");
-    await repereAffiche(page, "elevation", "Mesurer");
+    await repereAffiche(page, "plans", "elevation", "Mesurer");
     await page.click('section[data-vue="plans"] .b-mesure');
     const bouts = await page.evaluate(() => {
       const svg = document.querySelector('section[data-vue="plans"] .scene > .element[data-k="elevation"] > svg');
@@ -133,10 +136,22 @@ async page => {
       return m && !m.hidden ? m.textContent.trim() : "";
     });
     verifier(texte === "Mesuré : 115 cm", `Mesurer : bandeau « ${texte} » (bouts ${JSON.stringify(bouts)})`);
+    for (const k of REPERES.iso) {
+      await ouvrir(page, `${DOC}#iso?k=${k}`);
+      await repereAffiche(page, "iso", k, `Mesurer, ${k}`);
+      const m = await page.evaluate(() => ({
+        dansIso: document.querySelectorAll('section[data-vue="iso"] .b-mesure').length,
+        visibles: [...document.querySelectorAll(".b-mesure")].filter(b => b.checkVisibility()).length}));
+      verifier(m.dansIso === 0 && m.visibles === 0, `Mesurer : présent sur ${k} (Iso) ${JSON.stringify(m)}`);
+    }
+    // ancienne adresse : l'iso était un repère de Plans
     await ouvrir(page, DOC + "#plans?k=iso");
-    await repereAffiche(page, "iso", "Mesurer, iso");
-    const visible = await page.evaluate(() => document.querySelector('section[data-vue="plans"] .b-mesure').checkVisibility());
-    verifier(!visible, "Mesurer : le bouton reste visible sur la vue iso");
+    await repereAffiche(page, "iso", "iso", "#plans?k=iso");
+    await attendre(page, () => location.hash === "#iso?k=iso", null, "#plans?k=iso : l'adresse ne devient pas #iso?k=iso");
+    const o = await page.evaluate(() => ({
+      vues: [...document.querySelectorAll("#contenu > section.vue")].filter(s => s.checkVisibility()).map(s => s.dataset.vue),
+      courant: [...document.querySelectorAll("nav.vues a[aria-current='page']")].map(a => a.dataset.vue)}));
+    verifier(egal(o, {vues: ["iso"], courant: ["iso"]}), `#plans?k=iso : ${JSON.stringify(o)}`);
   });
 
   // ------------------------------------------------------------------ 4. fiche de Plans : liens Découpe et Montage
@@ -144,24 +159,28 @@ async page => {
     await page.setViewportSize({width: 1440, height: 900});
     for (const [nom, hash] of [["Découpe", "#decoupe"], ["Montage", "#montage"]]) {
       await ouvrir(page, DOC + "#plans?k=elevation");
-      await repereAffiche(page, "elevation", `fiche ${nom}`);
+      await repereAffiche(page, "plans", "elevation", `fiche ${nom}`);
       const lien = page.locator(`section[data-vue="plans"] .fiche a:has-text("${nom}")`).first();
       await lien.click();
       await attendre(page, h => location.hash === h, hash, `fiche : le lien « ${nom} » ne mène pas à ${hash}`);
     }
+    await ouvrir(page, DOC + "#iso?k=iso");
+    await repereAffiche(page, "iso", "iso", "fiche d'Iso");
+    await page.locator('section[data-vue="iso"] .fiche a:has-text("Plans")').first().click();
+    await attendre(page, () => location.hash === "#plans", null, "fiche d'Iso : le lien « Plans » ne mène pas à #plans");
   });
 
   // ------------------------------------------------------------------ 5. dessins : pas de noir, texte dans le viewBox
-  // Le svg de tête de chaque élément de Plans. site.js agrandit le viewBox des dessins de scène : le texte se compare
+  // Le svg de tête de chaque élément de Plans et d'Iso. site.js agrandit le viewBox des dessins de scène : le texte se compare
   // au viewBox d'origine, lu dans le HTML servi (même rang parmi les dessins de la section).
   await partie("dessins", async () => {
     await page.setViewportSize({width: 1440, height: 900});
     await ouvrir(page, DOC);
     const html = await page.evaluate(async u => (await fetch(u)).text(), DOC);
-    for (const k of REPERES) {
-      const t = `dessins, ${k}`;
-      await ouvrir(page, `${DOC}#plans?k=${k}`);
-      await repereAffiche(page, k, t);
+    for (const [vue, k] of TOUS) {
+      const t = `dessins, ${vue} ${k}`;
+      await ouvrir(page, `${DOC}#${vue}?k=${k}`);
+      await repereAffiche(page, vue, k, t);
       const r = await page.evaluate(([v, source]) => {
         const SEL = ".scene > .element > svg";
         const section = document.querySelector(`section[data-vue="${v}"]`);
@@ -190,7 +209,7 @@ async page => {
           }
         }
         return {n: svgs.length, noirs, dehors};
-      }, ["plans", html]);
+      }, [vue, html]);
       verifier(r.n > 0, `${t} : aucun dessin visible`);
       verifier(r.noirs.length === 0, `${t} : aplat noir ${JSON.stringify(r.noirs.slice(0, 8))}`);
       verifier(r.dehors.length === 0 || k in GARDES, `${t} : texte hors du viewBox ${JSON.stringify(r.dehors.slice(0, 8))}`);
@@ -220,6 +239,7 @@ async page => {
       return page.evaluate(() => ({chemin: location.pathname, hash: location.hash}));
     };
     const cas = [
+      ["/sdb-meuble-bas.html#iso", "/sdb/meuble-bas/", "#iso?k=iso"],
       ["/sdb-meuble-bas.html#f-placard", "/sdb/meuble-bas/", "#plans?k=placard"],
       ["/sdb-meuble-bas.html#finition", "/sdb/meuble-bas/", "#decoupe"],
       ["/sdb-meuble-bas.html#structure", "/sdb/meuble-bas/", "#explication"],
@@ -242,8 +262,8 @@ async page => {
       return {n: li.length, premiere: li.length ? li[0].textContent : "",
               figees: [...document.querySelectorAll('a[href*="archives/"]')].map(a => a.href)};
     });
-    verifier(h.n === 16, `historique : ${h.n} entrées au lieu de 16`);
-    verifier(h.premiere.includes("V8.5"), `historique : la première entrée n'est pas en V8.5 : « ${h.premiere.slice(0, 60)} »`);
+    verifier(h.n === 17, `historique : ${h.n} entrées au lieu de 17`);
+    verifier(h.premiere.includes("V8.6"), `historique : la première entrée n'est pas en V8.6 : « ${h.premiere.slice(0, 60)} »`);
     verifier(h.figees.length === 11, `historique : ${h.figees.length} versions figées au lieu de 11`);
     for (const u of h.figees) {
       const statut = await page.evaluate(async u => (await fetch(u)).status, u);

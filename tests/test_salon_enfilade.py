@@ -25,8 +25,10 @@ def test_rendus():
 
 
 def test_changements():
-    assert len(enfilade.CHANGEMENTS) == 7
-    assert enfilade.CHANGEMENTS[0][0] == enfilade.VERSION
+    # les sept changements de l'ancienne page (V1.0 à V1.6), et la V1.7 (onglet Iso) ajoutée en tête
+    assert len(enfilade.CHANGEMENTS) == 8
+    assert enfilade.CHANGEMENTS[0][0] == enfilade.VERSION == "V1.7"
+    assert [c[0] for c in enfilade.CHANGEMENTS[1:]] == ["V1.6", "V1.5", "V1.4", "V1.3", "V1.2", "V1.1", "V1.0"]
 
 
 def test_geometrie():
